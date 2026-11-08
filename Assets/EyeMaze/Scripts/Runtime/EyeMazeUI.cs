@@ -33,8 +33,7 @@ namespace EyeMaze
         [Tooltip("Play 시작 시 이 톱니가 들어 있는 칸을 숨긴다")]
         [SerializeField, FormerlySerializedAs("springGear")] private RectTransform _springGear;
 
-        [Header("깜빡임")]
-        [SerializeField, FormerlySerializedAs("blinkOverlay")] private Image _blinkOverlay;
+        // 스펙 003: 깜빡임 전체 화면 페이드 필드 제거
 
         void Start()
         {
@@ -101,12 +100,6 @@ namespace EyeMaze
                 ? "WASD / 방향키로 이동   ·   Space 시선 거두기   ·   금색 = 잠긴 문   ·   하늘색 점 = 파편"
                 : d.CurrentMode == EyeMazeDirector.Mode.Ending ? (d.HeartFinished ? "Space / Z  돌아가기" : "Space / Z  계속")
                 : "Space = 눈 들여다보기   ·   1 2 3 대화   ·   Q 자리 떠나기");
-
-            if (_blinkOverlay != null)
-            {
-                var c = new Color(0f, 0f, 0f, d.BlinkAmount * 0.97f);
-                if (_blinkOverlay.color != c) _blinkOverlay.color = c;
-            }
         }
 
         /// <summary>

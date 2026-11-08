@@ -73,9 +73,25 @@ namespace EyeMaze
 
         [Header("눈 깜빡임")]
         [Tooltip("들여다보는 동안 몇 초마다 눈을 깜빡이는지 (0이면 깜빡이지 않음)")]
-        [SerializeField] private float _blinkInterval = 4f;
-        [SerializeField, FormerlySerializedAs("blinkDuration")] private float _blinkDuration = 0.45f;
+        // 스펙 001: 깜빡임 주기 기본값을 8초로 조정
+        [SerializeField] private float _blinkInterval = 8f;
+        // 스펙 003: 깜빡임 길이를 감기, 회전, 뜨기 구간으로 분리
+        [Tooltip("눈이 감기는 시간(초)")]
+        [SerializeField] private float _blinkCloseSeconds = 0.35f;
+        [Tooltip("완전히 감긴 채 미로가 도는 시간(초)")]
+        [SerializeField] private float _blinkTurnSeconds = 0.1f;
+        [Tooltip("눈이 떠지는 시간(초)")]
+        [SerializeField] private float _blinkOpenSeconds = 0.35f;
         [SerializeField, FormerlySerializedAs("blinkAmount"), Range(0f, 1f)] private float _blinkAmount;
+        // 스펙 003: 회전량을 칸 단위로 바꾸고 누적 각도 제한과 뜬 직후 유예 추가
+        [Tooltip("깜빡임 한 번에 미로가 도는 최소 칸 수")]
+        [SerializeField] private int _blinkTurnMinSectors = 1;
+        [Tooltip("깜빡임 한 번에 미로가 도는 최대 칸 수")]
+        [SerializeField] private int _blinkTurnMaxSectors = 2;
+        [Tooltip("처음 방향에서 벗어날 수 있는 최대 각도(도). 넘게 되면 반대로 돈다")]
+        [SerializeField] private float _blinkTurnLimitDeg = 45f;
+        [Tooltip("눈을 뜬 직후 이동 입력을 받지 않는 시간(초)")]
+        [SerializeField] private float _blinkRecoverSeconds = 0.2f;
 
         [Header("파편 읽은 뒤")]
         [Tooltip("파편을 다 읽고 나면 지금 층을 뺀 나머지 층의 벽을 무작위로 다시 만든다 (멈춰 있는 동안 길을 외우지 못하게)")]
@@ -96,6 +112,14 @@ namespace EyeMaze
         [NonSerialized] private Vector2 _velocity;
         [NonSerialized] private float _blinkPhase = -1f;
         [NonSerialized] private float _blinkElapsed;
+        // 스펙 003: 미로 누적 회전각과 이번 깜빡임의 회전량 추가
+        [NonSerialized] private float _mazeTurnDeg;
+        [NonSerialized] private float _blinkTurnFrom;
+        [NonSerialized] private float _blinkTurnDelta;
+        // 스펙 003: 눈을 뜬 직후 입력 유예 시간 추가
+        [NonSerialized] private float _blinkRecoverT;
+        // 스펙 003: 눈꺼풀 값을 전달할 눈 그림 참조 추가
+        [NonSerialized] private EyeVisual _eye;
         [NonSerialized] private int _lastLayer = -1;
         [NonSerialized] private int _heartIndex;
         [NonSerialized] private List<string> _endingLines;
@@ -115,7 +139,7 @@ namespace EyeMaze
         public string IdleSituation => _idleSituation;
         public List<EndingDef> Endings => _endings;
         public ClientCase ActiveCase => _activeCase;
-        public float BlinkAmount => _blinkAmount;
+        // 스펙 003: 페이드 제거로 쓰이지 않는 BlinkAmount 프로퍼티 제거
 
         /// <summary>미로를 지나 동공 안(심연)에 들어와 있는지</summary>
         public bool InAbyss => _mode == Mode.Gaze && _inAbyss;
@@ -180,15 +204,11 @@ namespace EyeMaze
             float dt = Time.deltaTime;
             _bumpFlash = Mathf.MoveTowards(_bumpFlash, 0f, dt * 3f);
 
-            // 깜빡임은 0에서 0.5(완전히 감김, 이때 회전)를 거쳐 1로 진행한다.
-            if (_blinkPhase >= 0f)
-            {
-                float prev = _blinkPhase;
-                _blinkPhase += dt / Mathf.Max(0.05f, _blinkDuration);
-                if (prev < 0.5f && _blinkPhase >= 0.5f) ApplyBlinkRotation();
-                if (_blinkPhase >= 1f) _blinkPhase = -1f;
-            }
-            _blinkAmount = _blinkPhase >= 0f ? Mathf.Sin(_blinkPhase * Mathf.PI) : 0f;
+            // 스펙 003: 감기, 완전히 감김, 뜨기 순서로 진행하고 눈꺼풀 값을 눈 그림에 전달한다.
+            if (_blinkRecoverT > 0f) _blinkRecoverT -= dt;
+            if (_blinkPhase >= 0f) AdvanceBlink(dt);
+            if (_eye == null && _maze != null) _eye = _maze.GetComponentInParent<EyeVisual>();
+            if (_eye != null) _eye.Closed = _blinkAmount;
 
             // 들여다보는 동안 태엽 값이 차고, 정해진 시간마다 눈을 깜빡인다.
             if (_mode == Mode.Gaze && !_inAbyss && !_reading)
@@ -302,10 +322,12 @@ namespace EyeMaze
         /// </summary>
         public void Steer(Vector2 input, float dt)
         {
-            if (_mode != Mode.Gaze || _reading) { _velocity = Vector2.zero; return; }
+            // 스펙 003: 깜빡임 중과 뜬 직후에는 이동 입력을 받지 않음
+            if (_mode != Mode.Gaze || _reading || _blinkPhase >= 0f || _blinkRecoverT > 0f) { _velocity = Vector2.zero; return; }
             Vector2 target = Vector2.ClampMagnitude(input, 1f) * _moveSpeed;
             _velocity = Vector2.MoveTowards(_velocity, target, _acceleration * _moveSpeed * dt);
-            if (_velocity.sqrMagnitude > 1e-8f) MoveBy(_velocity * dt);
+            // 스펙 003: 화면 기준 이동량을 미로 기준으로 변환
+            if (_velocity.sqrMagnitude > 1e-8f) MoveBy(ScreenToMaze(_velocity * dt));
         }
 
         /// <summary>
@@ -315,7 +337,8 @@ namespace EyeMaze
         public void Nudge(Vector2 dir)
         {
             if (_mode != Mode.Gaze) return;
-            MoveBy(dir.normalized * _editNudge);
+            // 스펙 003: 화면 기준 이동량을 미로 기준으로 변환
+            MoveBy(ScreenToMaze(dir.normalized * _editNudge));
             if (!Application.isPlaying && !_inAbyss && _intro != null) _intro.Unwind(_editStepUnwind);
         }
 
@@ -362,16 +385,20 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 눈을 깜빡인다. Play 모드에서는 감겼다 뜨는 중간에 층이 돌고, 에디트 모드에서는 바로 돈다.
-        /// 입력값은 없으며, 깜빡임 단계 또는 층 회전량을 바꾼다.
+        /// 눈을 깜빡인다. 이미 깜빡이는 중이면 무시하고, 이번에 미로가 돌 칸 수와 방향을 무작위로 정한다.
+        /// 칸 수 범위와 _blinkTurnLimitDeg를 사용하며, 깜빡임 단계와 이번 회전량을 바꾼다.
         /// </summary>
         public void Blink()
         {
-            if (Application.isPlaying)
-            {
-                if (_blinkPhase < 0f) _blinkPhase = 0f;
-            }
-            else ApplyBlinkRotation();
+            // 스펙 003: 칸 단위로 돌고 처음 방향에서 제한 각도를 넘으면 반대로 돈다.
+            if (_blinkPhase >= 0f) return;
+            _blinkPhase = 0f;
+            _blinkTurnFrom = _mazeTurnDeg;
+            float sectorDeg = _maze != null ? _maze.SectorDeg : 0f;
+            int sectors = UnityEngine.Random.Range(_blinkTurnMinSectors, _blinkTurnMaxSectors + 1);
+            float direction = UnityEngine.Random.value < 0.5f ? -1f : 1f;
+            _blinkTurnDelta = direction * sectors * sectorDeg;
+            if (Mathf.Abs(_mazeTurnDeg + _blinkTurnDelta) > _blinkTurnLimitDeg + 0.01f) _blinkTurnDelta = -_blinkTurnDelta;
         }
 
         /// <summary>
@@ -526,6 +553,9 @@ namespace EyeMaze
             _blinkAmount = 0f;
             _blinkPhase = -1f;
             _blinkElapsed = 0f;
+            // 스펙 003: 깜빡임으로 돌아간 미로를 원래 각도로 복원
+            SetMazeTurn(0f);
+            _blinkRecoverT = 0f;
             _velocity = Vector2.zero;
             if (_person != null) { _person.Trust = 0; _person.Dilation = 0.2f; }
             if (_intro != null) _intro.ResetForEncounter(true);
@@ -718,22 +748,64 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 깜빡일 때 도는 층들을 돌린다. 시선이 그 층에 있으면 함께 돈다.
-        /// 각 층의 rotateOnBlink를 사용하며, 층 회전량과 시선 각도, 문구를 바꾼다.
+        /// 깜빡임을 한 프레임 진행한다. 구간 경계에서 시간을 멈춰 회전이 감기기나 뜨기 구간에 섞이지 않게 한다.
+        /// dt와 세 구간 길이를 사용하며, _blinkPhase(경과 초), _blinkAmount, 문구, 미로 회전각을 바꾼다.
         /// </summary>
-        private void ApplyBlinkRotation()
+        private void AdvanceBlink(float dt)
         {
-            if (_maze == null) return;
-            bool rotated = false;
-            foreach (MazeLayer layer in _maze.Layers)
-            {
-                if (layer.RotateOnBlink == 0) continue;
-                bool riding = _cursor != null && _maze.LayerOfRing(_cursor.Ring) == layer.Index;
-                layer.Offset += layer.RotateOnBlink;
-                rotated = true;
-                if (riding) _cursor.Angle = Mathf.Repeat(_cursor.Angle + layer.RotateOnBlink * _maze.SectorDeg, 360f);
-            }
-            if (rotated && _mode == Mode.Gaze) _message = "눈을 깜빡였다. 무언가가 돌아갔다.";
+            float close = Mathf.Max(0.01f, _blinkCloseSeconds);
+            float turn = Mathf.Max(0.01f, _blinkTurnSeconds);
+            float open = Mathf.Max(0.01f, _blinkOpenSeconds);
+            float openFrom = close + turn;
+
+            float prev = _blinkPhase;
+            float next = prev + dt;
+            if (prev < close) next = Mathf.Min(next, close);
+            else if (prev < openFrom) next = Mathf.Min(next, openFrom);
+            _blinkPhase = next;
+
+            if (prev < close && next >= close && _mode == Mode.Gaze) _message = "눈을 깜빡였다. 무언가가 돌아갔다.";
+            if (prev >= close && prev < openFrom) ApplyBlinkRotation((next - close) / turn);
+
+            if (next < close) _blinkAmount = Mathf.SmoothStep(0f, 1f, next / close);
+            else if (next <= openFrom) _blinkAmount = 1f;
+            else _blinkAmount = 1f - Mathf.SmoothStep(0f, 1f, (next - openFrom) / open);
+
+            if (next < openFrom + open) return;
+            _blinkRecoverT = _blinkRecoverSeconds;
+            _blinkPhase = -1f;
+            _blinkAmount = 0f;
+        }
+
+        /// <summary>
+        /// 완전히 감겨 있는 구간의 진행도만큼 미로를 시선과 함께 돌린다.
+        /// phase(0~1)와 이번 회전량을 사용하며, 미로의 회전각을 바꾼다.
+        /// </summary>
+        private void ApplyBlinkRotation(float phase)
+        {
+            // 스펙 003: 층별 회전을 미로 전체 회전으로 교체
+            SetMazeTurn(_blinkTurnFrom + _blinkTurnDelta * Mathf.SmoothStep(0f, 1f, phase));
+        }
+
+        /// <summary>
+        /// 미로의 깜빡임 회전각을 지정한 값으로 맞춘다. 씬에 저장된 기본 각도는 그대로 두고 차이만큼만 돌린다.
+        /// degrees를 사용하며, 미로 Transform의 회전과 _mazeTurnDeg를 바꾼다.
+        /// </summary>
+        private void SetMazeTurn(float degrees)
+        {
+            if (_maze == null || Mathf.Approximately(degrees, _mazeTurnDeg)) return;
+            _maze.transform.Rotate(0f, 0f, degrees - _mazeTurnDeg, Space.Self);
+            _mazeTurnDeg = degrees;
+        }
+
+        /// <summary>
+        /// 화면 기준 벡터를 지금 미로 회전을 뺀 미로 기준 벡터로 바꾼다.
+        /// screen과 미로 Transform의 회전을 사용하며, 변환된 벡터를 반환한다.
+        /// </summary>
+        private Vector2 ScreenToMaze(Vector2 screen)
+        {
+            // 스펙 003: 씬 기본 회전까지 반영하도록 Transform 기준으로 변환
+            return _maze != null ? _maze.transform.InverseTransformDirection(screen) : screen;
         }
 
         /// <summary>

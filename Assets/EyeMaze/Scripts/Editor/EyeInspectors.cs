@@ -27,7 +27,7 @@ namespace EyeMaze.EditorTools
             {
                 string g = d.CurrentMode == EyeMazeDirector.Mode.Gaze ? "시선 거두기" : "눈을 들여다보기";
                 if (GUILayout.Button(g, GUILayout.Height(26))) EyeEditorOps.Run("들여다보기", d.ToggleGaze, roots);
-                if (GUILayout.Button("깜빡임", GUILayout.Height(26), GUILayout.Width(80))) EyeEditorOps.Run("깜빡임", d.Blink, roots);
+                // 스펙 003: 회전값이 씬에 저장되지 않게 깜빡임 버튼 제거
             }
 
             // 이동 패드
