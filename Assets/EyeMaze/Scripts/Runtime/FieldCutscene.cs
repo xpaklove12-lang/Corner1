@@ -8,15 +8,15 @@ namespace EyeMaze
 {
     /// <summary>
     /// 손님 입장 컷신 (Play 모드에서만).
-    /// 오프닝 독백이 끝나면 어머니가 문으로 들어와 대화하고 나가며, 은재가 들어와 창가 의자에 앉는다.
-    /// 상담이 끝나면 그 손님이 나가고 다음 손님(ClientCase 순서)이 들어와 앉아 첫마디를 한다.
-    /// 컷신 동안 플레이어는 움직일 수 없고 대사만 넘긴다. 끄면 어머니가 소파에 앉아 있고 말을 걸면 대화한다.
+    /// 오프닝 독백이 끝나면 문에 호출 글씨가 뜨고 주인공의 혼잣말 두 줄이 이어진다. 플레이어가 문을 열어 주면 어머니가 들어와 대화하고 나가며,
+    /// 은재가 들어와 창가 의자에 앉는다. 상담이 끝나면 그 손님이 나가고 다음 손님(ClientCase 순서)이 들어와 앉아 첫마디를 한다.
+    /// 문을 기다리는 동안을 빼고, 컷신 동안 플레이어는 움직일 수 없고 대사만 넘긴다. 끄면 어머니가 소파에 앉아 있고 말을 걸면 대화한다.
     /// </summary>
     public class FieldCutscene : MonoBehaviour
     {
         public enum Step
         {
-            WaitOpening, Delay, MotherIn, Talk, Talking, MotherOut, Between, DaughterIn, Sitting, Reveal, Done,
+            WaitOpening, CallFirst, CallTalking, CallSecond, WaitDoor, Arrive, Pause, Talk, Talking, MotherOut, Between, DaughterIn, Sitting, Reveal, Done,
             WaitResolved, ClientOut, ClientBetween, ClientIn, ClientSitting, ClientGreet, AllDone
         }
 
@@ -26,16 +26,38 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("flow")] private GameFlow _flow;
         [SerializeField, FormerlySerializedAs("mother")] private FieldNPC _mother;
         [SerializeField, FormerlySerializedAs("daughter")] private FieldNPC _daughter;
+        [Tooltip("독백 뒤 울리는 상담실 문. 플레이어가 열어 주면 어머니가 들어온다")]
+        [SerializeField] private FieldDoor _door;
 
         [Header("연출")]
         [Tooltip("문 위치 (x). 여기서 들어오고 나간다")]
         [SerializeField, FormerlySerializedAs("doorX")] private float _doorX = 6.4f;
-        [Tooltip("어머니가 멈춰 서는 곳: 플레이어 오른쪽으로 이만큼")]
-        [SerializeField, FormerlySerializedAs("talkDistance")] private float _talkDistance = 1.1f;
-        [Tooltip("오프닝이 끝난 뒤 문이 열리기까지 (초)")]
-        [SerializeField, FormerlySerializedAs("startDelay")] private float _startDelay = 0.8f;
         [Tooltip("앞사람이 나간 뒤 다음 사람이 들어오기까지 (초)")]
         [SerializeField, FormerlySerializedAs("betweenDelay")] private float _betweenDelay = 1.0f;
+
+        [Header("문 앞 호출")]
+        [Tooltip("독백이 걷히고 띵-동이 뜬 뒤 첫 혼잣말이 나오기까지 (초)")]
+        [SerializeField] private float _firstCallDelay = 2f;
+        [Tooltip("첫 혼잣말을 넘긴 뒤 띵-동이 다시 뜨고 두 번째 혼잣말이 나오기까지 (초)")]
+        [SerializeField] private float _secondCallDelay = 1f;
+        [SerializeField, TextArea(1, 3)] private string _firstCallLine = "뭐야..? 한창 분위기 잡고있는데.";
+        [SerializeField, TextArea(1, 3)] private string _secondCallLine = "아직 첫 상담까지는 시간이 남았을 텐데...";
+        [Tooltip("문을 열어 줄 때까지 필드 조작 안내 자리에 띄우는 문구")]
+        [SerializeField] private string _doorGuide = "문을 열어서 손님을 맞이하세요.";
+
+        [Header("첫 손님 맞이")]
+        [Tooltip("출입구에서 방 안쪽을 향하는 x 방향 (-1: 왼쪽, 1: 오른쪽)")]
+        [SerializeField] private float _inwardSign = -1f;
+        [Tooltip("어머니가 출입구에서 방 안쪽으로 걸어 들어오는 한 걸음 거리 (걷는 속도는 어머니 FieldNPC 설정)")]
+        [SerializeField] private float _motherStep = 0.6f;
+        [Tooltip("플레이어가 출입구에서 멀어지며 물러서는 한 걸음 거리")]
+        [SerializeField] private float _playerStep = 0.6f;
+        [Tooltip("플레이어가 한 걸음 물러서는 데 걸리는 시간 (초)")]
+        [SerializeField] private float _playerStepSeconds = 0.35f;
+        [Tooltip("두 사람 사이 최소 간격. 플레이어가 문에 너무 붙어 있으면 이만큼 떨어지도록 더 물러선다")]
+        [SerializeField, FormerlySerializedAs("talkDistance")] private float _talkDistance = 1.1f;
+        [Tooltip("두 사람의 이동이 모두 끝난 뒤 대화가 시작되기까지 (초)")]
+        [SerializeField] private float _talkDelay = 2f;
 
         [Header("상태")]
         [SerializeField, FormerlySerializedAs("step")] private Step _step = Step.WaitOpening;
@@ -44,10 +66,19 @@ namespace EyeMaze
         [NonSerialized] private bool _hidInitial;
         [NonSerialized] private FieldNPC _seated;
         [NonSerialized] private ClientCase _nextCase;
+        [NonSerialized] private bool _motherArrived;
+        [NonSerialized] private float _playerFromX;
+        [NonSerialized] private float _playerToX;
+        [NonSerialized] private float _playerStepT;
 
-        /// <summary>컷신 중이면 플레이어 이동/상호작용을 막는다 (대사 넘기기는 가능).</summary>
+        /// <summary>컷신 중이면 플레이어 이동/상호작용을 막는다 (대사 넘기기는 가능). 문을 기다리는 동안은 막지 않는다.</summary>
         public static bool IsPlaying => _current != null && _current.isActiveAndEnabled && Application.isPlaying
+                                        && _current._step != Step.WaitDoor
                                         && _current._step != Step.WaitResolved && _current._step != Step.AllDone;
+
+        /// <summary>문을 열어 주기를 기다리는 동안의 안내 문구. 그 밖에는 null.</summary>
+        public static string DoorGuide => _current != null && _current.isActiveAndEnabled && Application.isPlaying
+                                          && _current._step == Step.WaitDoor ? _current._doorGuide : null;
 
         void OnEnable() => _current = this;
 
@@ -73,18 +104,32 @@ namespace EyeMaze
             switch (_step)
             {
                 case Step.WaitOpening:
-                    if (!OpeningMonologue.IsPlaying) { _step = Step.Delay; _timer = _startDelay; }
+                    if (!OpeningMonologue.IsPlaying) { _step = Step.CallFirst; _timer = _firstCallDelay; _door.ShowBell(true); }
                     break;
 
-                case Step.Delay:
+                case Step.CallFirst:
                     _timer -= Time.deltaTime;
-                    if (_timer <= 0f)
-                    {
-                        _step = Step.MotherIn;
-                        _mother.StandAt(_doorX);
-                        float px = _flow.Player != null ? _flow.Player.Position.x : 0f;
-                        _mother.WalkTo(px + _talkDistance, () => _step = Step.Talk);
-                    }
+                    if (_timer <= 0f) ShowCallLine(_firstCallLine, () => { _step = Step.CallSecond; _timer = _secondCallDelay; _door.ShowBell(true); });
+                    break;
+
+                case Step.CallSecond:
+                    _timer -= Time.deltaTime;
+                    if (_timer <= 0f) ShowCallLine(_secondCallLine, () => { _step = Step.WaitDoor; _door.Ring(); });
+                    break;
+
+                case Step.WaitDoor:
+                    // 플레이어가 문을 열어 줄 때까지 자동으로 진행하지 않는다.
+                    if (_door.Answered) BeginArrival();
+                    break;
+
+                case Step.Arrive:
+                    StepPlayer(Time.deltaTime);
+                    if (_motherArrived && _playerStepT >= 1f) { _step = Step.Pause; _timer = _talkDelay; }
+                    break;
+
+                case Step.Pause:
+                    _timer -= Time.deltaTime;
+                    if (_timer <= 0f) _step = Step.Talk;
                     break;
 
                 case Step.Talk:
@@ -154,6 +199,53 @@ namespace EyeMaze
                     }
                     break;
             }
+        }
+
+        /// <summary>
+        /// 문 앞 혼잣말 한 줄을 화자 이름과 초상화 없이 띄운다. 대사창이 열려 있는 동안 호출 글씨는 숨긴다.
+        /// line과 닫힌 뒤 부를 done을 사용하며, _step을 CallTalking으로 바꾸고 글 상자를 연다.
+        /// </summary>
+        private void ShowCallLine(string line, Action done)
+        {
+            _step = Step.CallTalking;
+            _door.ShowBell(false);
+            _flow.ShowConversation(null, null, new List<string> { line }, done);
+        }
+
+        /// <summary>
+        /// 문을 열어 준 직후 어머니를 출입구에 세우고, 어머니의 전진과 플레이어의 후퇴를 함께 시작한다.
+        /// _doorX, _inwardSign, 한 걸음 거리와 _talkDistance, 플레이어 위치를 사용하며, _step과 두 사람의 이동 상태를 바꾼다.
+        /// </summary>
+        private void BeginArrival()
+        {
+            _step = Step.Arrive;
+            float motherX = _doorX + _inwardSign * _motherStep;
+            _motherArrived = false;
+            _mother.StandAt(_doorX);
+            _mother.WalkTo(motherX, () => _motherArrived = true);
+
+            FieldPlayer player = _flow.Player;
+            _playerFromX = player.Position.x;
+            _playerToX = _playerFromX + _inwardSign * _playerStep;
+            // 문에 바짝 붙어 있었다면 어머니와 겹치지 않도록 최소 간격까지 더 물러선다.
+            float limitX = motherX + _inwardSign * _talkDistance;
+            if ((_playerToX - limitX) * _inwardSign < 0f) _playerToX = limitX;
+            _playerStepT = 0f;
+            // 물러서면서도 들어오는 손님 쪽을 바라본다.
+            player.Facing = new Vector2(-Mathf.Sign(_inwardSign), 0f);
+        }
+
+        /// <summary>
+        /// 플레이어의 한 걸음 후퇴를 한 프레임 진행한다.
+        /// dt와 _playerStepSeconds를 사용하며, _playerStepT와 플레이어 위치를 바꾼다.
+        /// </summary>
+        private void StepPlayer(float dt)
+        {
+            if (_playerStepT >= 1f) return;
+            _playerStepT = Mathf.Min(1f, _playerStepT + dt / Mathf.Max(0.01f, _playerStepSeconds));
+            float x = Mathf.Lerp(_playerFromX, _playerToX, Mathf.SmoothStep(0f, 1f, _playerStepT));
+            FieldPlayer player = _flow.Player;
+            player.MoveBy(new Vector2(x - player.Position.x, 0f));
         }
 
         /// <summary>
