@@ -23,3 +23,11 @@
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude Code / Codex 로컬
+.claude/settings.local.json
+.claude/agent-memory/
+.claude/worktrees/
+CLAUDE.local.md
+.codex/
+.codex-inbox/
