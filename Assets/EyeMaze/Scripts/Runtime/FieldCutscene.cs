@@ -90,11 +90,14 @@ namespace EyeMaze
                 case Step.Talk:
                     // 대화가 끝나면 콜백에서 다음 단계로 넘어간다.
                     _step = Step.Talking;
-                    _flow.ShowConversation(_mother.DisplayName, _mother.Portrait, _mother.TalkLines, () =>
+                    Action motherDone = () =>
                     {
                         _step = Step.MotherOut;
                         _mother.WalkTo(_doorX, () => { _mother.Present = false; _step = Step.Between; _timer = _betweenDelay; });
-                    });
+                    };
+                    // 필드 대화 CSV의 enter 대화가 있으면 그걸, 없으면 인스펙터의 talkLines를 쓴다.
+                    if (!_mother.TryTalk(_flow, TalkScript.Enter, null, motherDone))
+                        _flow.ShowConversation(_mother.DisplayName, _mother.Portrait, _mother.TalkLines, motherDone);
                     break;
 
                 case Step.Between:
@@ -110,7 +113,8 @@ namespace EyeMaze
                             _daughter.SitDown(() =>
                             {
                                 _step = Step.Reveal;
-                                if (!string.IsNullOrEmpty(_mother.RevealLine))
+                                if (_mother.TryTalk(_flow, TalkScript.Reveal, _daughter.Portrait, () => { _seated = _daughter; _step = Step.WaitResolved; })) { }
+                                else if (!string.IsNullOrEmpty(_mother.RevealLine))
                                     _flow.ShowConversation(null, _daughter.Portrait, new List<string> { _mother.RevealLine }, () => { _seated = _daughter; _step = Step.WaitResolved; });
                                 else { _seated = _daughter; _step = Step.WaitResolved; }
                             });
@@ -143,7 +147,8 @@ namespace EyeMaze
                             npc.SitDown(() =>
                             {
                                 _seated = npc;
-                                if (!string.IsNullOrEmpty(_nextCase.EntryLine))
+                                if (npc.TryTalk(_flow, TalkScript.Enter, null, () => _step = Step.WaitResolved)) _step = Step.ClientGreet;
+                                else if (!string.IsNullOrEmpty(_nextCase.EntryLine))
                                 {
                                     _step = Step.ClientGreet;
                                     _flow.ShowConversation(_nextCase.PersonName, npc.Portrait, new List<string> { _nextCase.EntryLine }, () => _step = Step.WaitResolved);

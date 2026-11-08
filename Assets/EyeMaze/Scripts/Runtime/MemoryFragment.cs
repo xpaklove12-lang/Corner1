@@ -23,6 +23,8 @@ namespace EyeMaze
 
         [Header("상태")]
         [SerializeField, FormerlySerializedAs("collected")] private bool _collected;
+        [Tooltip("주우면 켜지는 플래그 id (Data/Flags.csv에 적힌 것). 대화 CSV의 need 칸에서 쓴다")]
+        [SerializeField] private string _flag;
 
         [Header("그림")]
         [SerializeField, FormerlySerializedAs("color")] private Color _color = new Color(0.6f, 0.95f, 1f, 1f);
@@ -31,11 +33,20 @@ namespace EyeMaze
         [NonSerialized] private int _drawnKey = int.MinValue;
         private IrisMaze _maze;
 
-        public string Title => _title;
-        public string Text => _text;
+        /// <summary>파편 이름. Flags.csv에서 이 파편 플래그 줄의 title 칸이 있으면 그걸 쓴다.</summary>
+        public string Title => Flags.TitleOf(_flag) ?? _title;
+        /// <summary>파편을 주울 때 나오는 글. Flags.csv의 text 칸이 있으면 그걸 쓴다.</summary>
+        public string Text => Flags.TextOf(_flag) ?? _text;
         public int Ring { get => _ring; set => _ring = value; }
         public int Sector { get => _sector; set => _sector = value; }
-        public bool Collected { get => _collected; set => _collected = value; }
+        public string Flag => _flag;
+
+        /// <summary>주웠는지. 바꾸면 플래그도 함께 켜지고 꺼진다.</summary>
+        public bool Collected
+        {
+            get => _collected;
+            set { _collected = value; Flags.Set(_flag, value); }
+        }
         public MazeLayer Layer => GetComponentInParent<MazeLayer>(true);
 
         /// <summary>화면 기준 sector (층 회전 반영).</summary>
