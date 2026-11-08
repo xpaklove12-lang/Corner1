@@ -547,7 +547,7 @@ LineRenderer:
   - {x: -0.90000004, y: -0.0000000786805, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -574,8 +574,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -888,7 +888,7 @@ LineRenderer:
   - {x: 1.6263455, y: 1.6263455, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -915,8 +915,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -1061,7 +1061,7 @@ LineRenderer:
   - {x: 1.3788582, y: 1.3788582, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -1088,8 +1088,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -1320,7 +1320,7 @@ LineRenderer:
   - {x: 1.95, y: 0.00000034094884, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -1347,8 +1347,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -1514,8 +1514,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
-      key1: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -1552,106 +1552,6 @@ LineRenderer:
   m_UseWorldSpace: 0
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
---- !u!1 &89992875
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 89992878}
-  - component: {fileID: 89992876}
-  m_Layer: 0
-  m_Name: "\uD0DC\uC5FD (Mainspring)"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &89992876
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 89992875}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e1fd7b670b350d4eaa00bde6c59a07d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.WindingIntro
-  _director: {fileID: 534245099}
-  _maze: {fileID: 1624392688}
-  _eye: {fileID: 1265701164}
-  _pupil: {fileID: 435341547}
-  _crown: {fileID: 1799897963}
-  _showCrown: 0
-  _gauge: {fileID: 0}
-  _cam: {fileID: 1413807250}
-  _wound: 0
-  _baseCapacity: 14
-  _capacityPerTrust: 5
-  _unwindPerSecond: 1
-  _ticksPerBlink: 4
-  _focusTicks: 3
-  _strain: 0
-  _strainPerTick: 0.45
-  _strainRecovery: 0.9
-  _slipDilation: -0.05
-  _resistance: 0.4
-  _targetPoint: 0.85
-  _falloff: 0.45
-  _minQuality: 0.15
-  _anxiousFillSeconds: 0.9
-  _calmFillSeconds: 1.9
-  _anxiousJitter: 0.6
-  _perfectQuality: 0.9
-  _anxiousGrace: 0.18
-  _calmGrace: 0.6
-  _tapThreshold: 0.15
-  _teeth: 40
-  _crownGap: 0.22
-  _toothDepth: 0.14
-  _crownColor: {r: 1, g: 1, b: 1, a: 1}
-  _strainColor: {r: 1, g: 0.3, b: 0.25, a: 1}
-  _gaugeColor: {r: 1, g: 0.85, b: 0.5, a: 0.9}
-  _shake: 0.025
-  _firstPrompt: "Space\uB97C \uB204\uB974\uACE0 \uC788\uC73C\uBA74 \uD0DC\uC5FD\uC774
-    \uAC10\uAE34\uB2E4. \uB9C9\uB300\uAC00 \uD30C\uB780 \uC120\uC5D0 \uB2FF\uC744
-    \uB54C \uC190\uC744 \uB5BC\uBA74 \uAC00\uC7A5 \uAE38\uAC8C \uAC10\uAE34\uB2E4.
-    \uB5BC\uB294 \uC21C\uAC04 \uC740\uC7AC\uC758 \uB208\uC744 \uB4E4\uC5EC\uB2E4\uBCF8\uB2E4."
-  _againPrompt: "\uB2E4\uC2DC \uB9C8\uC8FC \uC549\uC558\uB2E4. Space\uB97C \uB204\uB974\uACE0
-    \uC788\uB2E4\uAC00 \uD30C\uB780 \uC120\uC5D0\uC11C \uB5C0\uB2E4."
-  _fullMessage: "\uB9C9\uB300\uAC00 \uB05D\uAE4C\uC9C0 \uCC3C\uB2E4. \uC9C0\uAE08
-    \uB5BC\uC9C0 \uC54A\uC73C\uBA74 \uBBF8\uB044\uB7EC\uC9C4\uB2E4."
-  _slipMessage: "\uB108\uBB34 \uC138\uAC8C \uAC10\uC558\uB2E4. \uD0DC\uC5FD\uC774
-    \uBBF8\uB044\uB7EC\uC838 \uD480\uB9AC\uACE0, \uC740\uC7AC\uAC00 \uC6C0\uCC14\uD588\uB2E4."
-  _emptyMessage: "\uD0DC\uC5FD\uC774 \uB2E4 \uD480\uB838\uB2E4. \uC740\uC7AC\uAC00
-    \uB208\uC744 \uAC10\uC558\uB2E4."
-  _needWindMessage: "\uD0DC\uC5FD\uC774 \uD480\uB824 \uC788\uB2E4. \uBA3C\uC800 \uAC10\uC544\uC57C
-    \uD55C\uB2E4."
-  _perfectMessage: "\uB531 \uB9DE\uC558\uB2E4. \uD0DC\uC5FD\uC774 \uB2E8\uB2E8\uD788
-    \uAC10\uACBC\uB2E4."
-  _goodMessage: "\uC870\uAE08 \uC5B4\uAE0B\uB0AC\uB2E4. \uD0DC\uC5FD\uC774 \uB35C
-    \uAC10\uACBC\uB2E4."
-  _poorMessage: "\uB9CE\uC774 \uC5B4\uAE0B\uB0AC\uB2E4. \uD0DC\uC5FD\uC774 \uD5D0\uAC81\uAC8C
-    \uAC10\uACBC\uB2E4."
---- !u!4 &89992878
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 89992875}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &93703360
 GameObject:
   m_ObjectHideFlags: 0
@@ -1739,7 +1639,7 @@ LineRenderer:
   - {x: 0.8838833, y: -0.8838836, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -1766,8 +1666,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -1912,7 +1812,7 @@ LineRenderer:
   - {x: -1.1548494, y: -0.47835428, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -1939,8 +1839,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -2107,8 +2007,13 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
+<<<<<<< HEAD
       key0: {r: 0.6, g: 0.9490196, b: 1, a: 0.05882353}
       key1: {r: 0.6, g: 0.9490196, b: 1, a: 0.05882353}
+=======
+      key0: {r: 0.6, g: 0.9490196, b: 1, a: 0.49411765}
+      key1: {r: 0.6, g: 0.9490196, b: 1, a: 0.49411765}
+>>>>>>> origin/feature/eyeproduction
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -2165,6 +2070,7 @@ MonoBehaviour:
   _ring: 2
   _sector: 8
   _collected: 0
+  _flag: eunjae_red_button
   _color: {r: 0.6, g: 0.95, b: 1, a: 1}
   _line: {fileID: 103944950}
 --- !u!1 &105450283
@@ -2254,7 +2160,7 @@ LineRenderer:
   - {x: 1.4782072, y: 0.61229354, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -2281,8 +2187,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -2335,82 +2241,6 @@ MonoBehaviour:
   _ring: 3
   _sector: 0
   _line: {fileID: 105450285}
---- !u!1 &121211358
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 121211359}
-  - component: {fileID: 121211361}
-  - component: {fileID: 121211360}
-  m_Layer: 0
-  m_Name: "\uD1B1\uB2C8 \uCE78"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &121211359
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 121211358}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 865549896}
-  m_Father: {fileID: 1971056411}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.231, y: 0.883}
-  m_AnchorMax: {x: 0.28, y: 0.974}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &121211360
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 121211358}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &121211361
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 121211358}
-  m_CullTransparentMesh: 1
 --- !u!1 &122577324
 GameObject:
   m_ObjectHideFlags: 0
@@ -2445,6 +2275,7 @@ RectTransform:
   - {fileID: 798086354}
   - {fileID: 1146002103}
   - {fileID: 1490724460}
+  - {fileID: 751328766}
   m_Father: {fileID: 905663167}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2745,7 +2576,7 @@ LineRenderer:
   - {x: -1.95, y: -0.00000017047442, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -2772,8 +2603,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -3086,7 +2917,7 @@ LineRenderer:
   - {x: 1.1313709, y: 1.1313709, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -3113,8 +2944,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -3259,7 +3090,7 @@ LineRenderer:
   - {x: 0.6122935, y: 1.4782072, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -3286,8 +3117,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -3427,7 +3258,7 @@ LineRenderer:
   - {x: -2.1249228, y: -0.88017184, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -3454,8 +3285,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -3712,8 +3543,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.21960784, g: 0.2, b: 0.1882353, a: 1}
-      key1: {r: 0.21960784, g: 0.2, b: 0.1882353, a: 1}
+      key0: {r: 0, g: 0, b: 0, a: 1}
+      key1: {r: 0, g: 0, b: 0, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -4010,7 +3841,7 @@ LineRenderer:
   - {x: 2.1249228, y: 0.88017195, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -4037,8 +3868,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -4351,7 +4182,7 @@ LineRenderer:
   - {x: 0.000000010732393, y: -0.90000004, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -4378,8 +4209,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -4519,7 +4350,7 @@ LineRenderer:
   - {x: -0.000000115835185, y: 2.65, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -4546,8 +4377,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -5195,7 +5026,7 @@ LineRenderer:
   - {x: -2.1249228, y: -0.88017184, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -5222,8 +5053,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -5825,7 +5656,7 @@ LineRenderer:
   - {x: -0.34441522, y: -0.8314916, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -5852,8 +5683,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -5961,7 +5792,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: -1
     _dilation: 0
-    _spring: -2
     _advance: 0
     _ending: 
   - _text: "\uADF8\uB0A0 \uC77C, \uB2E4\uB4E4 \uC544\uB294 \uC774\uC57C\uAE30\uB791
@@ -5973,7 +5803,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: 2
     _dilation: 0.25
-    _spring: 2
     _advance: 0
     _ending: 
   - _text: "\uB4E4\uC5B4 \uBCF4\uBA74 \uD3B8\uD574\uC9C8 \uAC70\uC608\uC694. \uC9C0\uAE08
@@ -5983,7 +5812,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: 0
     _dilation: 0
-    _spring: 0
     _advance: 0
     _ending: delete
 --- !u!1 &275511731
@@ -6567,7 +6395,7 @@ LineRenderer:
   - {x: -0.000000054639237, y: 1.25, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -6594,8 +6422,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -6648,83 +6476,6 @@ MonoBehaviour:
   _ring: 4
   _sector: 3
   _line: {fileID: 288058435}
---- !u!1 &289717200
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 289717201}
-  - component: {fileID: 289717203}
-  - component: {fileID: 289717202}
-  m_Layer: 0
-  m_Name: "\uC18D\uC9C0"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &289717201
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 289717200}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1049329018}
-  - {fileID: 970411363}
-  m_Father: {fileID: 1429019348}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -20, y: -20}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &289717202
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 289717200}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &289717203
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 289717200}
-  m_CullTransparentMesh: 1
 --- !u!1 &296597234
 GameObject:
   m_ObjectHideFlags: 0
@@ -6812,7 +6563,7 @@ LineRenderer:
   - {x: 0.000000010732393, y: -0.90000004, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -6839,8 +6590,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -7453,7 +7204,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1.15
-  m_Text: "Space \uAFB9 \u2192 \uD30C\uB780 \uC120\uC5D0\uC11C \uB5BC\uAE30"
+  m_Text: "\uB4E4\uC5EC\uB2E4\uBCF4\uAE30 (Space)"
 --- !u!222 &342704015
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7505,6 +7256,7 @@ MonoBehaviour:
   _resolved: 0
   _portrait: {fileID: -2730927549540315392, guid: 178b6fb6f2058704eb2fbbc1536bdc04, type: 3}
   _talkOnly: 0
+  _talkCsv: {fileID: 4900000, guid: fd5cf4d4e97a4438b2bdc0d9af4e1972, type: 3}
   _talkLines: []
   _lineAfterTalk: "\u2026"
   _leavesAfterTalk: 0
@@ -7806,8 +7558,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
-      key1: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -8519,7 +8271,7 @@ LineRenderer:
   - {x: -1.6263455, y: 1.6263455, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -8546,8 +8298,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -8692,7 +8444,7 @@ LineRenderer:
   - {x: -2.1249228, y: 0.880172, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -8719,8 +8471,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -8886,8 +8638,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
-      key1: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -9179,7 +8931,7 @@ LineRenderer:
   - {x: 0.74623305, y: -1.8015649, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -9206,8 +8958,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -9584,7 +9336,7 @@ LineRenderer:
   - {x: 3.0882034, y: -0.27018368, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.52
+    widthMultiplier: 0.12
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -9611,8 +9363,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0, g: 0, b: 0, a: 0.2509804}
-      key1: {r: 0, g: 0, b: 0, a: 0.2509804}
+      key0: {r: 0, g: 0, b: 0, a: 1}
+      key1: {r: 0, g: 0, b: 0, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -10272,8 +10024,13 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
+<<<<<<< HEAD
       key0: {r: 0.6, g: 0.9490196, b: 1, a: 0.05882353}
       key1: {r: 0.6, g: 0.9490196, b: 1, a: 0.05882353}
+=======
+      key0: {r: 0.6, g: 0.9490196, b: 1, a: 0.49411765}
+      key1: {r: 0.6, g: 0.9490196, b: 1, a: 0.49411765}
+>>>>>>> origin/feature/eyeproduction
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -10329,6 +10086,7 @@ MonoBehaviour:
   _ring: 0
   _sector: 13
   _collected: 0
+  _flag: eunjae_phone_flipped
   _color: {r: 0.6, g: 0.95, b: 1, a: 1}
   _line: {fileID: 435395899}
 --- !u!1 &438578154
@@ -10591,7 +10349,7 @@ LineRenderer:
   - {x: -0.6122934, y: 1.4782073, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -10618,8 +10376,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -10852,6 +10610,7 @@ MonoBehaviour:
   _resolved: 0
   _portrait: {fileID: -3604548235104814106, guid: 76af8779ced393f4fb322bcc8c7d0251, type: 3}
   _talkOnly: 1
+  _talkCsv: {fileID: 4900000, guid: e082857978424ab5be04cbcdc647f427, type: 3}
   _talkLines:
   - "\uC120\uC0DD\uB2D8, \uC640 \uC8FC\uC154\uC11C \uAC10\uC0AC\uD574\uC694. \uC0C1\uB2F4
     \uC2E0\uCCAD\uD55C \uC0AC\uB78C\uC774 \uC800\uC608\uC694."
@@ -11086,7 +10845,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: -1
     _dilation: 0
-    _spring: -2
     _advance: 0
     _ending: 
   - _text: "\uAD1C\uCC2E\uB2E4\uB294 \uB9D0\uC774 \uCC38 \uBE68\uB9AC \uB098\uC624\uC2DC\uB124\uC694.
@@ -11098,7 +10856,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: 1
     _dilation: 0.15
-    _spring: 0
     _advance: 1
     _ending: 
   - _text: "\uC6C3\uB294 \uC5BC\uAD74\uC774\u2026 \uC870\uAE08 \uBB34\uAC70\uC6CC
@@ -11110,7 +10867,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: 1
     _dilation: 0.1
-    _spring: 2
     _advance: 0
     _ending: 
 --- !u!1 &455425400
@@ -11356,7 +11112,7 @@ LineRenderer:
   - {x: -0.000000054639237, y: 1.25, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -11383,8 +11139,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -11529,7 +11285,7 @@ LineRenderer:
   - {x: -1.8738331, y: 1.8738331, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -11556,8 +11312,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -11966,7 +11722,7 @@ LineRenderer:
   - {x: 0.00000001907981, y: -1.6, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -11993,8 +11749,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -12112,7 +11868,6 @@ MonoBehaviour:
   _room: {fileID: 1648634122}
   _player: {fileID: 280656058}
   _director: {fileID: 534245099}
-  _intro: {fileID: 89992876}
   _eyeAnchor: {fileID: 1265701163}
   _state: 0
   _currentNpc: {fileID: 0}
@@ -12236,7 +11991,7 @@ LineRenderer:
   - {x: 1.6263453, y: -1.6263458, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -12263,8 +12018,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -12577,7 +12332,7 @@ LineRenderer:
   - {x: -0.34441507, y: 0.83149165, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -12604,8 +12359,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -12750,7 +12505,7 @@ LineRenderer:
   - {x: -0.6057113, y: 0.665668, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.57600003
+    widthMultiplier: 0.14400001
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -12777,8 +12532,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 0.72156864, b: 0.2, a: 0.07450981}
-      key1: {r: 1, g: 0.72156864, b: 0.2, a: 0.07450981}
+      key0: {r: 1, g: 0.72156864, b: 0.2, a: 0.6117647}
+      key1: {r: 1, g: 0.72156864, b: 0.2, a: 0.6117647}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -13000,14 +12755,15 @@ MonoBehaviour:
   - {fileID: 1021435105}
   - {fileID: 984894230}
   - {fileID: 1036565335}
+  _returnButton: {fileID: 950528596}
+  _returnLabel: {fileID: 242840088}
   _gazeButtonLabel: {fileID: 342704014}
-  _springFill: {fileID: 1049329018}
-  _springFillImage: {fileID: 1049329019}
-  _springLabel: {fileID: 0}
-  _springGear: {fileID: 1444077898}
-  _springVertical: 1
-  _springTarget: {fileID: 970411363}
-  _blinkOverlay: {fileID: 693505697}
+  _burdenFill: {fileID: 1049329018}
+  _burdenGraphics:
+  - {fileID: 1429019349}
+  - {fileID: 289717202}
+  - {fileID: 1049329019}
+  - {fileID: 869949150}
 --- !u!114 &523666711
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13144,12 +12900,13 @@ MonoBehaviour:
   _maze: {fileID: 1624392688}
   _cursor: {fileID: 329404233}
   _person: {fileID: 1802569233}
-  _dialogue: {fileID: 208043395}
-  _intro: {fileID: 89992876}
   _core: {fileID: 914019899}
   _acceptInput: 0
+  _flagsCsv: {fileID: 4900000, guid: 9aec3d82c85b41d981f0deed6e4e0eb5, type: 3}
+  _stringsCsv: {fileID: 4900000, guid: aeff16836a244fdab802a3a301fa3d7e, type: 3}
   _mode: 0
-  _currentNode: 0
+  _currentNodeId: 
+  _nodeHistory: []
   _message: "Space\uB97C \uB204\uB974\uACE0 \uC788\uC73C\uBA74 \uD0DC\uC5FD\uC774
     \uAC10\uAE34\uB2E4. \uB9C9\uB300\uAC00 \uD30C\uB780 \uC120\uC5D0 \uB2FF\uC744
     \uB54C \uC190\uC744 \uB5BC\uBA74 \uAC00\uC7A5 \uAE38\uAC8C \uAC10\uAE34\uB2E4.
@@ -13238,11 +12995,17 @@ MonoBehaviour:
   _acceleration: 10
   _wallMargin: 0.07
   _editNudge: 0.2
-  _blinkDuration: 0.45
+  _blinkInterval: 8
+  _blinkCloseSeconds: 0.35
+  _blinkTurnSeconds: 0.1
+  _blinkOpenSeconds: 0.35
   _blinkAmount: 0
+  _blinkTurnMinSectors: 1
+  _blinkTurnMaxSectors: 2
+  _blinkTurnLimitDeg: 45
+  _blinkRecoverSeconds: 0.2
   _respawnMazeAfterReading: 1
   _talkWallAlpha: 0.22
-  _editStepUnwind: 0.5
   _startRing: 0
   _startSector: 4
   _bumpFlash: 0
@@ -13668,7 +13431,7 @@ LineRenderer:
   - {x: 0.7462327, y: 1.801565, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -13695,8 +13458,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -13915,7 +13678,7 @@ LineRenderer:
   - {x: -0.00000008523721, y: 1.95, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -13942,8 +13705,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -13996,6 +13759,182 @@ MonoBehaviour:
   _ring: 2
   _sector: 3
   _line: {fileID: 559927631}
+<<<<<<< HEAD
+=======
+--- !u!1 &561551926
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 561551927}
+  - component: {fileID: 561551929}
+  - component: {fileID: 561551928}
+  m_Layer: 0
+  m_Name: "\uB2E8\uC11C \xB7 \uB2EB\uD78C \uD53C\uC544\uB178"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &561551927
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 561551926}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.9, y: -1.45, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 666196738}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!120 &561551928
+LineRenderer:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 561551926}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 149f1079840626443b8eb4c369e46f8f, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 2
+  m_MaskInteraction: 0
+  m_Positions:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0.001, z: 0}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 0.16
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 2
+    numCapVertices: 8
+    alignment: 0
+    textureMode: 0
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_UseWorldSpace: 0
+  m_Loop: 0
+  m_ApplyActiveColorSpace: 1
+--- !u!114 &561551929
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 561551926}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9e8d18b18e247240969655b774625f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.FieldClue
+  _displayName: "\uB2EB\uD78C \uD53C\uC544\uB178"
+  _interactRange: 0.5
+  _radius: 0.15
+  _blocks: 0
+  _text: "\uB69C\uAED1 \uC704\uC5D0 \uBA3C\uC9C0\uAC00 \uC587\uAC8C \uC313\uC5EC
+    \uC788\uB2E4. \uC11D \uB2EC\uCBE4 \uB41C \uBA3C\uC9C0\uB2E4."
+  _examined: 0
+  _flag: clue_closed_piano
+  _sparkle: {fileID: 561551928}
+>>>>>>> origin/feature/eyeproduction
 --- !u!1 &565921718
 GameObject:
   m_ObjectHideFlags: 0
@@ -14088,7 +14027,7 @@ LineRenderer:
   - {x: -0.6122937, y: -1.4782072, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -14115,8 +14054,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -14256,7 +14195,7 @@ LineRenderer:
   - {x: 1.6263453, y: -1.6263458, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -14283,8 +14222,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -14900,7 +14839,7 @@ LineRenderer:
   - {x: -1.1313709, y: 1.1313709, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -14927,8 +14866,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -15219,9 +15158,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1.15
-  m_Text: "Space \uAFB9 = \uD0DC\uC5FD \uAC10\uAE30, \uD30C\uB780 \uC120\uC5D0\uC11C
-    \uB5BC\uBA74 \uB4E4\uC5EC\uB2E4\uBCF4\uAE30   \xB7   1 2 3 \uB300\uD654   \xB7  
-    Q \uC790\uB9AC \uB5A0\uB098\uAE30"
+  m_Text: "Space = \uB208 \uB4E4\uC5EC\uB2E4\uBCF4\uAE30   \xB7   1 2 3 \uB300\uD654  
+    \xB7   Q \uC790\uB9AC \uB5A0\uB098\uAE30"
 --- !u!222 &630990376
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -15641,7 +15579,7 @@ LineRenderer:
   - {x: 2.65, y: 0.00000046334074, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -15668,8 +15606,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -15814,7 +15752,7 @@ LineRenderer:
   - {x: 0.88017225, y: -2.1249228, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -15841,8 +15779,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -15982,7 +15920,7 @@ LineRenderer:
   - {x: -0.63639617, y: -0.63639605, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -16009,8 +15947,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -16155,7 +16093,7 @@ LineRenderer:
   - {x: 1.1313707, y: -1.131371, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -16182,8 +16120,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -16706,7 +16644,7 @@ LineRenderer:
   - {x: -1.801565, y: 0.7462328, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -16733,8 +16671,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -17047,7 +16985,7 @@ LineRenderer:
   - {x: 0.000000027427225, y: -2.3, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -17074,8 +17012,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -17388,7 +17326,7 @@ LineRenderer:
   - {x: 0.000000023253518, y: -1.95, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -17415,8 +17353,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -17561,7 +17499,7 @@ LineRenderer:
   - {x: -2.3, y: -0.00000020107238, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -17588,8 +17526,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -18065,7 +18003,7 @@ LineRenderer:
   - {x: -0.000000069938224, y: 1.6, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -18092,8 +18030,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -18308,7 +18246,7 @@ LineRenderer:
   - {x: 2.448281, y: -1.0141112, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -18335,8 +18273,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -18423,8 +18361,8 @@ RectTransform:
   - {fileID: 1021435104}
   m_Father: {fileID: 122577325}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.52, y: 0.68}
-  m_AnchorMax: {x: 1, y: 0.95000005}
+  m_AnchorMin: {x: 0.52, y: 0.75}
+  m_AnchorMax: {x: 1, y: 0.95}
   m_AnchoredPosition: {x: -6, y: 0}
   m_SizeDelta: {x: -28, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -18868,7 +18806,7 @@ LineRenderer:
   - {x: 1.1313707, y: -1.131371, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -18895,8 +18833,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -19545,7 +19483,7 @@ LineRenderer:
   - {x: 1.6, y: 0.0000002797529, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -19572,8 +19510,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -19962,82 +19900,6 @@ MonoBehaviour:
   _ring: 2
   _sector: 14
   _line: {fileID: 851718514}
---- !u!1 &865549895
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 865549896}
-  - component: {fileID: 865549898}
-  - component: {fileID: 865549897}
-  m_Layer: 0
-  m_Name: "\uC18D\uC9C0"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &865549896
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 865549895}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1444077898}
-  m_Father: {fileID: 121211359}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -20, y: -20}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &865549897
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 865549895}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 0, g: 0, b: 0, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &865549898
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 865549895}
-  m_CullTransparentMesh: 1
 --- !u!1 &874777826
 GameObject:
   m_ObjectHideFlags: 0
@@ -20284,6 +20146,7 @@ MonoBehaviour:
   _ring: 0
   _sector: 5
   _collected: 0
+  _flag: jisu_messenger_0312
   _color: {r: 0.6, g: 0.95, b: 1, a: 1}
   _line: {fileID: 887896107}
 --- !u!1 &892811441
@@ -20440,8 +20303,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
-      key1: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -20570,7 +20433,7 @@ LineRenderer:
   - {x: -0.8801722, y: -2.1249228, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -20597,8 +20460,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -20781,7 +20644,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: -1
     _dilation: 0
-    _spring: -2
     _advance: 0
     _ending: 
   - _text: "\uC9C0\uC218 \uC528\uAC00 \uBC84\uD2F0\uB294 \uAC8C\u2026 \uC9C0\uC218
@@ -20793,7 +20655,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: 2
     _dilation: 0.25
-    _spring: 2
     _advance: 0
     _ending: 
   - _text: "\uC9C0\uB09C\uC8FC \uADF8 \uC77C\u2026 \uD68C\uC0AC\uC5D0\uB3C4 \uC81C\uB300\uB85C
@@ -20803,7 +20664,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: 0
     _dilation: 0
-    _spring: 0
     _advance: 0
     _ending: expose
 --- !u!1 &914019898
@@ -20962,7 +20822,7 @@ LineRenderer:
   - {x: -1.4782072, y: 0.6122936, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -20989,8 +20849,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -21489,7 +21349,7 @@ LineRenderer:
   - {x: -0.7462326, y: 1.8015652, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -21516,8 +21376,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -21683,8 +21543,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
-      key1: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -21889,81 +21749,6 @@ MonoBehaviour:
   _ring: 0
   _sector: 0
   _line: {fileID: 968772128}
---- !u!1 &970411362
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 970411363}
-  - component: {fileID: 970411365}
-  - component: {fileID: 970411364}
-  m_Layer: 0
-  m_Name: "\uBAA9\uD45C\uC120 (\uD30C\uB780 \uC120)"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &970411363
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 970411362}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 289717201}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.85}
-  m_AnchorMax: {x: 1, y: 0.85}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 24, y: 6}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &970411364
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 970411362}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 0.3, g: 0.6, b: 1, a: 1}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &970411365
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 970411362}
-  m_CullTransparentMesh: 1
 --- !u!1 &977926168
 GameObject:
   m_ObjectHideFlags: 0
@@ -22425,7 +22210,6 @@ MonoBehaviour:
   _displayName: "\uCE35 2 \xB7 \uC228\uAE34 \uAC83 \u2014 \uAE5C\uBE61\uC77C \uB54C\uB9C8\uB2E4
     \uB3C8\uB2E4"
   _offset: 0
-  _rotateOnBlink: 1
 --- !u!1 &989149804
 GameObject:
   m_ObjectHideFlags: 0
@@ -22585,7 +22369,7 @@ LineRenderer:
   - {x: -2.3, y: -0.00000020107238, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -22612,8 +22396,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -22737,6 +22521,7 @@ MonoBehaviour:
     \uADC0\uD241\uC774\uC5D0 \uC544\uBE60 \uAE00\uC528: '\uACB0\uC120 \uB0A0 \uB9E8
     \uB4B7\uC904\uC5D0\uC11C \uB4E3\uB294\uB2E4. \uC740\uC7AC\uD55C\uD150 \uBE44\uBC00!'"
   _examined: 0
+  _flag: clue_sheet_music
   _sparkle: {fileID: 995711290}
 --- !u!120 &995711290
 LineRenderer:
@@ -22905,7 +22690,8 @@ MonoBehaviour:
   _personName: "\uC740\uC7AC"
   _pronoun: "\uADF8\uB140"
   _npc: {fileID: 2118138529}
-  _dialogue: {fileID: 208043395}
+  _dialogueCsv: {fileID: 4900000, guid: cde56ac62c9d4e898f79edc8882a916f, type: 3}
+  _endingCsv: {fileID: 4900000, guid: 4c40bd88f0e34a289bc321f60768623b, type: 3}
   _fragmentGroups:
   - {fileID: 650812699}
   - {fileID: 1341038375}
@@ -23181,7 +22967,7 @@ LineRenderer:
   - {x: -2.4482808, y: 1.0141113, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -23208,8 +22994,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -23354,7 +23140,7 @@ LineRenderer:
   - {x: 0.6122938, y: -1.4782071, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -23381,8 +23167,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -23601,7 +23387,7 @@ LineRenderer:
   - {x: 1.1548494, y: -0.47835428, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -23628,8 +23414,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -23849,7 +23635,7 @@ LineRenderer:
   - {x: 1.8738331, y: 1.8738331, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -23876,8 +23662,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -24022,7 +23808,7 @@ LineRenderer:
   - {x: 2.124923, y: -0.88017184, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -24049,8 +23835,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -24103,81 +23889,6 @@ MonoBehaviour:
   _ring: 1
   _sector: 14
   _line: {fileID: 1042565908}
---- !u!1 &1049329017
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1049329018}
-  - component: {fileID: 1049329020}
-  - component: {fileID: 1049329019}
-  m_Layer: 0
-  m_Name: Fill
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1049329018
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1049329017}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 289717201}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -12, y: -12}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1049329019
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1049329017}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.85, b: 0.5, a: 0.9}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1049329020
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1049329017}
-  m_CullTransparentMesh: 1
 --- !u!1 &1073633214
 GameObject:
   m_ObjectHideFlags: 0
@@ -24438,7 +24149,7 @@ LineRenderer:
   - {x: -0.63639617, y: -0.63639605, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -24465,8 +24176,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -24611,7 +24322,7 @@ LineRenderer:
   - {x: -1.1313709, y: 1.1313709, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -24638,8 +24349,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -25033,9 +24744,15 @@ LineRenderer:
   m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Positions:
+<<<<<<< HEAD
   - {x: 0.13965356, y: 0.024443192, z: -0}
   - {x: 0, y: 0, z: 0}
   - {x: -0.13965356, y: -0.024443192, z: 0}
+=======
+  - {x: -0.18201312, y: 0.09470687, z: -0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0.18201312, y: -0.09470687, z: 0}
+>>>>>>> origin/feature/eyeproduction
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.035
@@ -25463,7 +25180,7 @@ LineRenderer:
   - {x: 1.4477229, y: -0.6812476, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.57600003
+    widthMultiplier: 0.14400001
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -25490,8 +25207,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 0.72156864, b: 0.2, a: 0.07450981}
-      key1: {r: 1, g: 0.72156864, b: 0.2, a: 0.07450981}
+      key0: {r: 1, g: 0.72156864, b: 0.2, a: 0.6117647}
+      key1: {r: 1, g: 0.72156864, b: 0.2, a: 0.6117647}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -25635,7 +25352,7 @@ LineRenderer:
   - {x: 1.0141116, y: -2.4482806, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -25662,8 +25379,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -25887,6 +25604,7 @@ MonoBehaviour:
   _ring: 1
   _sector: 11
   _collected: 0
+  _flag: jisu_elevator_mirror
   _color: {r: 0.6, g: 0.95, b: 1, a: 1}
   _line: {fileID: 1140141018}
 --- !u!1 &1146002102
@@ -25923,8 +25641,8 @@ RectTransform:
   - {fileID: 984894229}
   m_Father: {fileID: 122577325}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.52, y: 0.37}
-  m_AnchorMax: {x: 1, y: 0.64}
+  m_AnchorMin: {x: 0.52, y: 0.52}
+  m_AnchorMax: {x: 1, y: 0.72}
   m_AnchoredPosition: {x: -6, y: 0}
   m_SizeDelta: {x: -28, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -26541,7 +26259,7 @@ LineRenderer:
   - {x: 2.2974467, y: -0.108345576, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.57600003
+    widthMultiplier: 0.14400001
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -26568,8 +26286,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 0.72156864, b: 0.2, a: 0.07450981}
-      key1: {r: 1, g: 0.72156864, b: 0.2, a: 0.07450981}
+      key0: {r: 1, g: 0.72156864, b: 0.2, a: 0.6117647}
+      key1: {r: 1, g: 0.72156864, b: 0.2, a: 0.6117647}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -27055,7 +26773,7 @@ LineRenderer:
   - {x: -0.00000010053619, y: 2.3, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -27082,8 +26800,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -27917,7 +27635,7 @@ LineRenderer:
   - {x: -1.25, y: -0.000000109278474, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -27944,8 +27662,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -28041,7 +27759,6 @@ Transform:
   - {fileID: 395232666}
   - {fileID: 1624392687}
   - {fileID: 435341545}
-  - {fileID: 1799897962}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1265701164
@@ -28065,13 +27782,14 @@ MonoBehaviour:
   _irisDiscPadding: 0.2
   _rimWidth: 0.12
   _lidColor: {r: 1, g: 1, b: 1, a: 1}
+  _lidCoverColor: {r: 0, g: 0, b: 0, a: 1}
   _lidWidth: 0.22
   _lidOvershoot: 0.35
   _lashCount: 7
   _lashLength: 0.6
   _lashWidth: 0.13
   _lashSpread: 35
-  _focus: 0
+  _focus: 1
   _sclera: {fileID: 353142858}
   _irisDisc: {fileID: 178111342}
   _irisRim: {fileID: 430455524}
@@ -28138,7 +27856,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: -1
     _dilation: 0
-    _spring: -2
     _advance: 0
     _ending: 
   - _text: "\uB4A4\uC9D1\uC5B4 \uB450\uC2E0 \uAC74, \uBCF4\uACE0 \uC2F6\uC9C0 \uC54A\uC740
@@ -28150,7 +27867,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: 1
     _dilation: 0.2
-    _spring: 0
     _advance: 1
     _ending: 
   - _text: "\uADF8 \uC545\uBCF4\u2026 \uC740\uC7AC \uC528 \uC5F0\uC8FC\uB97C \uC815\uB9D0
@@ -28161,7 +27877,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 995711289}
     _trust: 1
     _dilation: 0.1
-    _spring: 3
     _advance: 0
     _ending: 
 --- !u!1 &1272912971
@@ -28251,7 +27966,7 @@ LineRenderer:
   - {x: 0.88017184, y: 2.1249228, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -28278,8 +27993,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -28760,7 +28475,7 @@ LineRenderer:
   - {x: -0.000000069938224, y: 1.6, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -28787,8 +28502,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -28928,7 +28643,7 @@ LineRenderer:
   - {x: -2.4482808, y: -1.0141112, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -28955,8 +28670,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -29269,7 +28984,7 @@ LineRenderer:
   - {x: -1.6, y: -0.00000013987645, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -29296,8 +29011,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -29950,7 +29665,7 @@ LineRenderer:
   - {x: -0.746233, y: -1.801565, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -29977,8 +29692,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -30079,7 +29794,8 @@ MonoBehaviour:
   _personName: "\uC9C0\uC218"
   _pronoun: "\uADF8\uB140"
   _npc: {fileID: 347521245}
-  _dialogue: {fileID: 1940857934}
+  _dialogueCsv: {fileID: 4900000, guid: 9645e3951c884dba85eb5b4c028d980c, type: 3}
+  _endingCsv: {fileID: 4900000, guid: 7a1bc3f00a064ac9a914adcea49c7940, type: 3}
   _fragmentGroups:
   - {fileID: 576662002}
   - {fileID: 994507320}
@@ -30246,7 +29962,7 @@ LineRenderer:
   - {x: -0.8801718, y: 2.124923, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -30273,8 +29989,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -30615,7 +30331,7 @@ LineRenderer:
   - {x: 2.1249228, y: 0.88017195, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -30642,8 +30358,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -30993,7 +30709,6 @@ MonoBehaviour:
   _index: 0
   _displayName: "\uCE35 1 \xB7 \uBC14\uAE65 \u2014 \uBCF4\uC5EC\uC8FC\uB294 \uC5BC\uAD74"
   _offset: 0
-  _rotateOnBlink: 0
 --- !u!1 &1378718841
 GameObject:
   m_ObjectHideFlags: 0
@@ -31333,7 +31048,7 @@ LineRenderer:
   - {x: 0.8838835, y: 0.8838835, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -31360,8 +31075,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -32252,7 +31967,7 @@ LineRenderer:
   - {x: 0.83149165, y: -0.3444151, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -32279,8 +31994,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -32501,82 +32216,6 @@ MonoBehaviour:
   _ring: 2
   _sector: 9
   _line: {fileID: 1425586071}
---- !u!1 &1429019347
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1429019348}
-  - component: {fileID: 1429019350}
-  - component: {fileID: 1429019349}
-  m_Layer: 0
-  m_Name: "\uD0DC\uC5FD \uB9C9\uB300 \uCE78"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1429019348
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1429019347}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 289717201}
-  m_Father: {fileID: 1971056411}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.231, y: 0.368}
-  m_AnchorMax: {x: 0.28, y: 0.876}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1429019349
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1429019347}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1429019350
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1429019347}
-  m_CullTransparentMesh: 1
 --- !u!1 &1436327721
 GameObject:
   m_ObjectHideFlags: 0
@@ -32664,7 +32303,7 @@ LineRenderer:
   - {x: 0.000000027427225, y: -2.3, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -32691,8 +32330,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -32745,81 +32384,6 @@ MonoBehaviour:
   _ring: 1
   _sector: 11
   _line: {fileID: 1436327723}
---- !u!1 &1444077897
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1444077898}
-  - component: {fileID: 1444077900}
-  - component: {fileID: 1444077899}
-  m_Layer: 0
-  m_Name: "\uD0DC\uC5FD \uD1B1\uB2C8"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1444077898
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1444077897}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 865549896}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -12, y: -12}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1444077899
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1444077897}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: -3994580565960718611, guid: f669df70608e38544aa553fa7a7cdab1, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 1
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1444077900
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1444077897}
-  m_CullTransparentMesh: 1
 --- !u!1 &1470189082
 GameObject:
   m_ObjectHideFlags: 0
@@ -32933,8 +32497,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
-      key1: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -33063,7 +32627,7 @@ LineRenderer:
   - {x: 0.636396, y: -0.6363962, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -33090,8 +32654,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -33387,7 +32951,7 @@ LineRenderer:
   - {x: -0.8314916, y: -0.3444151, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -33414,8 +32978,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -33631,7 +33195,7 @@ LineRenderer:
   - {x: -0.6363961, y: 0.6363961, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -33658,8 +33222,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -33746,8 +33310,8 @@ RectTransform:
   - {fileID: 1036565334}
   m_Father: {fileID: 122577325}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.52, y: 0.06}
-  m_AnchorMax: {x: 1, y: 0.33}
+  m_AnchorMin: {x: 0.52, y: 0.29}
+  m_AnchorMax: {x: 1, y: 0.49}
   m_AnchoredPosition: {x: -6, y: 0}
   m_SizeDelta: {x: -28, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -33845,6 +33409,219 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1490724459}
   m_CullTransparentMesh: 1
+--- !u!1 &606909419
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 751328766}
+  - component: {fileID: 321547363}
+  - component: {fileID: 1648801510}
+  - component: {fileID: 950528596}
+  m_Layer: 0
+  m_Name: "\uC120\uD0DD\uC9C0 4"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &751328766
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 606909419}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 432800429}
+  m_Father: {fileID: 122577325}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.52, y: 0.06}
+  m_AnchorMax: {x: 1, y: 0.26}
+  m_AnchoredPosition: {x: -6, y: 0}
+  m_SizeDelta: {x: -28, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &321547363
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 606909419}
+  m_CullTransparentMesh: 1
+--- !u!114 &1648801510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 606909419}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!114 &950528596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 606909419}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 0, g: 0, b: 0, a: 1}
+    m_HighlightedColor: {r: 0.22, g: 0.22, b: 0.22, a: 1}
+    m_PressedColor: {r: 0.45, g: 0.45, b: 0.45, a: 1}
+    m_SelectedColor: {r: 0, g: 0, b: 0, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1648801510}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 534245099}
+        m_TargetAssemblyTypeName: EyeMaze.EyeMazeDirector, Assembly-CSharp
+        m_MethodName: ReturnToStart
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!1 &1128383521
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 432800429}
+  - component: {fileID: 293488809}
+  - component: {fileID: 242840088}
+  m_Layer: 0
+  m_Name: Label
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &432800429
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128383521}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 751328766}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: -40, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &293488809
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128383521}
+  m_CullTransparentMesh: 1
+--- !u!114 &242840088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128383521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: d6c7c57c89d060046b78887ca2a29c98, type: 3}
+    m_FontSize: 22
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 3
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 1
+    m_LineSpacing: 1.15
+  m_Text: "3. \uB9D0 \uC548 \uD574\uB3C4 \uB3FC\uC694. \uADF8\uB0E5 \uAC19\uC774
+    \uC549\uC544 \uC788\uC744\uAC8C\uC694."
 --- !u!1 &1495636476
 GameObject:
   m_ObjectHideFlags: 0
@@ -34105,7 +33882,7 @@ LineRenderer:
   - {x: 0.83149165, y: -0.3444151, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -34132,8 +33909,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -34356,6 +34133,7 @@ MonoBehaviour:
   _ring: 3
   _sector: 6
   _collected: 0
+  _flag: jisu_autopay_25
   _color: {r: 0.6, g: 0.95, b: 1, a: 1}
   _line: {fileID: 1500823411}
 --- !u!1 &1501518339
@@ -34408,7 +34186,6 @@ MonoBehaviour:
   _index: 2
   _displayName: "\uCE35 3 \xB7 \uC544\uBB34\uB3C4 \uBAA8\uB974\uB294 \uACF3"
   _offset: 0
-  _rotateOnBlink: 0
 --- !u!1 &1505797687
 GameObject:
   m_ObjectHideFlags: 0
@@ -34916,7 +34693,7 @@ LineRenderer:
   - {x: -1.1313709, y: -1.1313708, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -34943,8 +34720,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -35755,7 +35532,11 @@ LineRenderer:
   - {x: 0, y: 0.001, z: 0}
   m_Parameters:
     serializedVersion: 3
+<<<<<<< HEAD
     widthMultiplier: 0.3611891
+=======
+    widthMultiplier: 0.47160318
+>>>>>>> origin/feature/eyeproduction
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -35782,8 +35563,13 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
+<<<<<<< HEAD
       key0: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.26666668}
       key1: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.26666668}
+=======
+      key0: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.48235294}
+      key1: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.48235294}
+>>>>>>> origin/feature/eyeproduction
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -36248,7 +36034,7 @@ LineRenderer:
   - {x: -0.00000003934025, y: 0.90000004, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -36275,8 +36061,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -36416,7 +36202,7 @@ LineRenderer:
   - {x: -1.8738332, y: -1.8738328, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -36443,8 +36229,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -36925,7 +36711,7 @@ LineRenderer:
   - {x: 0.88017184, y: 2.1249228, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -36952,8 +36738,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -37063,7 +36849,7 @@ MonoBehaviour:
   _wallWidth: 0.06
   _wallColorBase: {r: 1, g: 1, b: 1, a: 1}
   _wallAlpha: 0.22
-  _focus: 0
+  _focus: 1
   _seed: 7
   _loopChance: 0.08
   _pupilDilationRequired: 0.75
@@ -37123,7 +36909,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: -1
     _dilation: 0
-    _spring: -2
     _advance: 0
     _ending: 
   - _text: "\uC190\uAC00\uB77D\uC740\u2026 \uC544\uC9C1 \uADF8 \uACE1\uC744 \uAE30\uC5B5\uD558\uACE0
@@ -37134,7 +36919,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: 1
     _dilation: 0.15
-    _spring: 0
     _advance: 1
     _ending: 
   - _text: "\uB9D0 \uC548 \uD574\uB3C4 \uB3FC\uC694. \uADF8\uB0E5 \uAC19\uC774 \uC549\uC544
@@ -37144,7 +36928,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: 0
     _dilation: 0
-    _spring: 3
     _advance: 0
     _ending: 
 --- !u!1 &1639954322
@@ -37239,7 +37022,7 @@ LineRenderer:
   - {x: 0.8838833, y: -0.8838836, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -37266,8 +37049,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -37879,7 +37662,7 @@ LineRenderer:
   - {x: 0.8314916, y: 0.34441513, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -37906,8 +37689,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -38052,7 +37835,7 @@ LineRenderer:
   - {x: -1.0141115, y: -2.4482808, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -38079,8 +37862,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -38225,7 +38008,7 @@ LineRenderer:
   - {x: 0.47835428, y: 1.1548494, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -38252,8 +38035,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -38393,7 +38176,7 @@ LineRenderer:
   - {x: 0.90000004, y: 0.000000157361, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -38420,8 +38203,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -38587,8 +38370,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
-      key1: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -38906,8 +38689,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
-      key1: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -39036,7 +38819,7 @@ LineRenderer:
   - {x: -0.8801718, y: 2.124923, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -39063,8 +38846,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -39456,8 +39239,359 @@ MonoBehaviour:
   _ring: 2
   _sector: 14
   _collected: 0
+  _flag: jisu_resignation
   _color: {r: 0.6, g: 0.95, b: 1, a: 1}
   _line: {fileID: 1721098271}
+<<<<<<< HEAD
+=======
+--- !u!1 &1724386267
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1724386268}
+  - component: {fileID: 1724386270}
+  - component: {fileID: 1724386269}
+  m_Layer: 0
+  m_Name: "\uCC45\uC0C1"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1724386268
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1724386267}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.4, y: -2.5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 666196738}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!120 &1724386269
+LineRenderer:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1724386267}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 149f1079840626443b8eb4c369e46f8f, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: -20
+  m_MaskInteraction: 0
+  m_Positions:
+  - {x: -1.2, y: -0.5, z: 0}
+  - {x: 1.2, y: -0.5, z: 0}
+  - {x: 1.2, y: 0.5, z: 0}
+  - {x: -1.2, y: 0.5, z: 0}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 0.07
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 0
+    numCapVertices: 0
+    alignment: 0
+    textureMode: 0
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_UseWorldSpace: 0
+  m_Loop: 1
+  m_ApplyActiveColorSpace: 1
+--- !u!114 &1724386270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1724386267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c53f91ef5fcecd418e06bf35a8349df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.FieldObstacle
+  _size: {x: 2.4, y: 1}
+  _color: {r: 1, g: 1, b: 1, a: 1}
+  _outline: 1
+  _lineWidth: 0.07
+  _blocks: 0
+  _line: {fileID: 1724386269}
+--- !u!1 &1739122823
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1739122824}
+  - component: {fileID: 1739122826}
+  - component: {fileID: 1739122825}
+  m_Layer: 0
+  m_Name: "\uB2E8\uC11C \xB7 \uC0C1\uB2F4 \uC2E0\uCCAD\uC11C"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1739122824
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739122823}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 5.3, y: -1.4, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 666196738}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!120 &1739122825
+LineRenderer:
+  serializedVersion: 3
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739122823}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 149f1079840626443b8eb4c369e46f8f, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 2
+  m_MaskInteraction: 0
+  m_Positions:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0.001, z: 0}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 0.16
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 2
+    numCapVertices: 8
+    alignment: 0
+    textureMode: 0
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_UseWorldSpace: 0
+  m_Loop: 0
+  m_ApplyActiveColorSpace: 1
+--- !u!114 &1739122826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739122823}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d9e8d18b18e247240969655b774625f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.FieldClue
+  _displayName: "\uC0C1\uB2F4 \uC2E0\uCCAD\uC11C"
+  _interactRange: 0.5
+  _radius: 0.15
+  _blocks: 0
+  _text: "\uC2E0\uCCAD\uC778: \uC740\uC7AC \uC5B4\uBA38\uB2C8. \uB300\uC0C1: \uB538
+    \uC740\uC7AC(22). \uC0AC\uC720: \uC11D \uB2EC\uC9F8 \uB9D0\uC744 \uD558\uC9C0
+    \uC54A\uC74C. \uBE44\uACE0: \uB0A8\uD3B8 \uC0AC\uB9DD \u2014 \uCF69\uCFE0\uB974
+    \uACB0\uC120 \uB2F9\uC77C, \uACF5\uC5F0\uC7A5 \uB85C\uBE44."
+  _examined: 0
+  _flag: clue_counsel_form
+  _sparkle: {fileID: 1739122825}
+>>>>>>> origin/feature/eyeproduction
 --- !u!1 &1772119124
 GameObject:
   m_ObjectHideFlags: 0
@@ -39794,235 +39928,6 @@ MonoBehaviour:
   _ring: 0
   _sector: 11
   _line: {fileID: 1797143724}
---- !u!1 &1799897961
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1799897962}
-  - component: {fileID: 1799897963}
-  m_Layer: 0
-  m_Name: "\uD0DC\uC5FD \uD1B1\uB2C8 (Crown)"
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1799897962
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1799897961}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1265701163}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!120 &1799897963
-LineRenderer:
-  serializedVersion: 3
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1799897961}
-  m_Enabled: 0
-  m_CastShadows: 0
-  m_ReceiveShadows: 0
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 0
-  m_LightProbeUsage: 0
-  m_ReflectionProbeUsage: 0
-  m_RayTracingMode: 0
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 149f1079840626443b8eb4c369e46f8f, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: -2
-  m_MaskInteraction: 0
-  m_Positions:
-  - {x: 3.36, y: 0, z: 0}
-  - {x: 3.2100737, y: 0.2526383, z: 0}
-  - {x: 3.3186328, y: 0.5256198, z: 0}
-  - {x: 3.131031, y: 0.7516941, z: 0}
-  - {x: 3.19555, y: 1.038297, z: 0}
-  - {x: 2.9748921, y: 1.2322408, z: 0}
-  - {x: 2.9937818, y: 1.525408, z: 0}
-  - {x: 2.7455013, y: 1.6824453, z: 0}
-  - {x: 2.718297, y: 1.9749583, z: 0}
-  - {x: 2.4485073, y: 2.0912228, z: 0}
-  - {x: 2.3758786, y: 2.3758786, z: 0}
-  - {x: 2.0912228, y: 2.4485073, z: 0}
-  - {x: 1.9749585, y: 2.718297, z: 0}
-  - {x: 1.6824455, y: 2.7455013, z: 0}
-  - {x: 1.5254081, y: 2.9937818, z: 0}
-  - {x: 1.2322407, y: 2.9748921, z: 0}
-  - {x: 1.0382969, y: 3.19555, z: 0}
-  - {x: 0.75169426, y: 3.131031, z: 0}
-  - {x: 0.52561986, y: 3.3186328, z: 0}
-  - {x: 0.25263825, y: 3.2100737, z: 0}
-  - {x: -0.00000014687026, y: 3.36, z: 0}
-  - {x: -0.25263816, y: 3.2100737, z: 0}
-  - {x: -0.52561975, y: 3.3186328, z: 0}
-  - {x: -0.75169414, y: 3.131031, z: 0}
-  - {x: -1.0382969, y: 3.19555, z: 0}
-  - {x: -1.2322406, y: 2.9748921, z: 0}
-  - {x: -1.5254077, y: 2.993782, z: 0}
-  - {x: -1.6824452, y: 2.7455015, z: 0}
-  - {x: -1.9749582, y: 2.718297, z: 0}
-  - {x: -2.0912228, y: 2.4485073, z: 0}
-  - {x: -2.3758786, y: 2.3758786, z: 0}
-  - {x: -2.4485073, y: 2.0912228, z: 0}
-  - {x: -2.7182972, y: 1.9749582, z: 0}
-  - {x: -2.745501, y: 1.6824458, z: 0}
-  - {x: -2.9937816, y: 1.5254083, z: 0}
-  - {x: -2.9748921, y: 1.2322408, z: 0}
-  - {x: -3.1955497, y: 1.0382972, z: 0}
-  - {x: -3.131031, y: 0.75169414, z: 0}
-  - {x: -3.3186328, y: 0.52561975, z: 0}
-  - {x: -3.210074, y: 0.2526381, z: 0}
-  - {x: -3.36, y: -0.00000029374053, z: 0}
-  - {x: -3.210074, y: -0.25263792, z: 0}
-  - {x: -3.3186328, y: -0.52561945, z: 0}
-  - {x: -3.131031, y: -0.7516939, z: 0}
-  - {x: -3.19555, y: -1.0382969, z: 0}
-  - {x: -2.9748921, y: -1.2322407, z: 0}
-  - {x: -2.9937818, y: -1.5254081, z: 0}
-  - {x: -2.7455013, y: -1.6824455, z: 0}
-  - {x: -2.7182972, y: -1.974958, z: 0}
-  - {x: -2.4485073, y: -2.0912225, z: 0}
-  - {x: -2.3758788, y: -2.3758786, z: 0}
-  - {x: -2.0912223, y: -2.4485075, z: 0}
-  - {x: -1.974959, y: -2.7182965, z: 0}
-  - {x: -1.6824459, y: -2.745501, z: 0}
-  - {x: -1.5254086, y: -2.9937816, z: 0}
-  - {x: -1.2322412, y: -2.9748921, z: 0}
-  - {x: -1.0382974, y: -3.1955497, z: 0}
-  - {x: -0.7516944, y: -3.131031, z: 0}
-  - {x: -0.52562, y: -3.3186326, z: 0}
-  - {x: -0.25263834, y: -3.2100737, z: 0}
-  - {x: 0.000000040067597, y: -3.36, z: 0}
-  - {x: 0.25263843, y: -3.2100737, z: 0}
-  - {x: 0.52562004, y: -3.3186326, z: 0}
-  - {x: 0.7516944, y: -3.131031, z: 0}
-  - {x: 1.0382975, y: -3.1955497, z: 0}
-  - {x: 1.2322413, y: -2.974892, z: 0}
-  - {x: 1.5254072, y: -2.9937823, z: 0}
-  - {x: 1.6824448, y: -2.7455018, z: 0}
-  - {x: 1.9749577, y: -2.7182975, z: 0}
-  - {x: 2.0912223, y: -2.4485075, z: 0}
-  - {x: 2.3758783, y: -2.375879, z: 0}
-  - {x: 2.448507, y: -2.091223, z: 0}
-  - {x: 2.7182968, y: -1.9749585, z: 0}
-  - {x: 2.7455013, y: -1.6824455, z: 0}
-  - {x: 2.9937818, y: -1.5254081, z: 0}
-  - {x: 2.9748921, y: -1.2322407, z: 0}
-  - {x: 3.19555, y: -1.0382969, z: 0}
-  - {x: 3.131031, y: -0.75169384, z: 0}
-  - {x: 3.3186328, y: -0.52561945, z: 0}
-  - {x: 3.210074, y: -0.25263783, z: 0}
-  m_Parameters:
-    serializedVersion: 3
-    widthMultiplier: 0.05
-    widthCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    colorGradient:
-      serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.6156863}
-      key1: {r: 1, g: 1, b: 1, a: 0.6156863}
-      key2: {r: 0, g: 0, b: 0, a: 0}
-      key3: {r: 0, g: 0, b: 0, a: 0}
-      key4: {r: 0, g: 0, b: 0, a: 0}
-      key5: {r: 0, g: 0, b: 0, a: 0}
-      key6: {r: 0, g: 0, b: 0, a: 0}
-      key7: {r: 0, g: 0, b: 0, a: 0}
-      ctime0: 0
-      ctime1: 65535
-      ctime2: 0
-      ctime3: 0
-      ctime4: 0
-      ctime5: 0
-      ctime6: 0
-      ctime7: 0
-      atime0: 0
-      atime1: 65535
-      atime2: 0
-      atime3: 0
-      atime4: 0
-      atime5: 0
-      atime6: 0
-      atime7: 0
-      m_Mode: 0
-      m_ColorSpace: -1
-      m_NumColorKeys: 2
-      m_NumAlphaKeys: 2
-    numCornerVertices: 2
-    numCapVertices: 0
-    alignment: 0
-    textureMode: 0
-    textureScale: {x: 1, y: 1}
-    shadowBias: 0.5
-    generateLightingData: 0
-  m_UseWorldSpace: 0
-  m_Loop: 1
-  m_ApplyActiveColorSpace: 1
 --- !u!1 &1802569232
 GameObject:
   m_ObjectHideFlags: 0
@@ -40408,7 +40313,7 @@ LineRenderer:
   - {x: -1.6263456, y: -1.6263454, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -40435,8 +40340,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -41480,7 +41385,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: -1
     _dilation: 0
-    _spring: -2
     _advance: 0
     _ending: 
   - _text: "\uB5A0\uB098\uACE0 \uC2F6\uC740 \uB9C8\uC74C\uC774\uB791 \uBD99\uC7A1\uB294
@@ -41492,7 +41396,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: 1
     _dilation: 0.2
-    _spring: 0
     _advance: 1
     _ending: 
   - _text: "\uD798\uB4E4\uBA74 \uADF8\uB9CC\uB450\uC154\uB3C4 \uB3FC\uC694. \uBAB8\uC774
@@ -41503,7 +41406,6 @@ MonoBehaviour:
     _requiresClue: {fileID: 0}
     _trust: -1
     _dilation: 0
-    _spring: -2
     _advance: 0
     _ending: 
 --- !u!1 &1880164808
@@ -41598,7 +41500,7 @@ LineRenderer:
   - {x: 0.90000004, y: 0.000000157361, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -41625,8 +41527,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -41934,7 +41836,7 @@ LineRenderer:
   - {x: -1.4782072, y: -0.6122935, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -41961,8 +41863,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -42258,7 +42160,7 @@ LineRenderer:
   - {x: -1.3788583, y: -1.3788581, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -42285,8 +42187,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -42675,7 +42577,7 @@ LineRenderer:
   - {x: 0.6363961, y: 0.6363961, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -42702,8 +42604,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -42823,9 +42725,15 @@ LineRenderer:
   m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Positions:
+<<<<<<< HEAD
   - {x: -0.01711067, y: 0.09775742, z: -0}
   - {x: 0, y: 0, z: 0}
   - {x: 0.01711067, y: -0.09775742, z: 0}
+=======
+  - {x: -0.06635644, y: -0.1273771, z: -0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0.06635644, y: 0.1273771, z: 0}
+>>>>>>> origin/feature/eyeproduction
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.035
@@ -43737,8 +43645,13 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
+<<<<<<< HEAD
       key0: {r: 0.6, g: 0.9490196, b: 1, a: 0.05882353}
       key1: {r: 0.6, g: 0.9490196, b: 1, a: 0.05882353}
+=======
+      key0: {r: 0.6, g: 0.9490196, b: 1, a: 0.49411765}
+      key1: {r: 0.6, g: 0.9490196, b: 1, a: 0.49411765}
+>>>>>>> origin/feature/eyeproduction
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -43793,6 +43706,7 @@ MonoBehaviour:
   _ring: 1
   _sector: 10
   _collected: 0
+  _flag: eunjae_piano_hands
   _color: {r: 0.6, g: 0.95, b: 1, a: 1}
   _line: {fileID: 1941098038}
 --- !u!1 &1944515488
@@ -44055,7 +43969,7 @@ LineRenderer:
   - {x: 0.34441525, y: -0.83149153, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -44082,8 +43996,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -44178,8 +44092,8 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1909009139}
-  - {fileID: 121211359}
   - {fileID: 1429019348}
+  - {fileID: 648563996}
   - {fileID: 630990374}
   - {fileID: 1487862218}
   - {fileID: 905663167}
@@ -44191,6 +44105,312 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1437671202
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 648563996}
+  - component: {fileID: 1692975436}
+  - component: {fileID: 869949150}
+  m_Layer: 0
+  m_Name: "\uBD80\uB2F4\uAC10 \uAE00"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &648563996
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1437671202}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1971056411}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.231, y: 0.935}
+  m_AnchorMax: {x: 0.28, y: 0.977}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &1692975436
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1437671202}
+  m_CullTransparentMesh: 1
+--- !u!114 &869949150
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1437671202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Text
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.6, g: 0.6, b: 0.6, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: d6c7c57c89d060046b78887ca2a29c98, type: 3}
+    m_FontSize: 22
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 10
+    m_MaxSize: 40
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 1
+    m_VerticalOverflow: 1
+    m_LineSpacing: 1.15
+  m_Text: "\uBD80\uB2F4\uAC10"
+--- !u!1 &1429019347
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1429019348}
+  - component: {fileID: 1429019350}
+  - component: {fileID: 1429019349}
+  m_Layer: 0
+  m_Name: "\uBD80\uB2F4\uAC10 \uB9C9\uB300 \uCE78"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1429019348
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1429019347}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 289717201}
+  m_Father: {fileID: 1971056411}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.231, y: 0.368}
+  m_AnchorMax: {x: 0.28, y: 0.93}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &1429019350
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1429019347}
+  m_CullTransparentMesh: 1
+--- !u!114 &1429019349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1429019347}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!1 &289717200
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 289717201}
+  - component: {fileID: 289717203}
+  - component: {fileID: 289717202}
+  m_Layer: 0
+  m_Name: "\uC18D\uC9C0"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &289717201
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 289717200}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1049329018}
+  m_Father: {fileID: 1429019348}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: -20, y: -20}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &289717203
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 289717200}
+  m_CullTransparentMesh: 1
+--- !u!114 &289717202
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 289717200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!1 &1049329017
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1049329018}
+  - component: {fileID: 1049329020}
+  - component: {fileID: 1049329019}
+  m_Layer: 0
+  m_Name: "\uCC44\uC6C0"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1049329018
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1049329017}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 0, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 289717201}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 6}
+  m_SizeDelta: {x: -12, y: -12}
+  m_Pivot: {x: 0.5, y: 0}
+--- !u!222 &1049329020
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1049329017}
+  m_CullTransparentMesh: 1
+--- !u!114 &1049329019
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1049329017}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 0.3, b: 0.25, a: 0.9}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
 --- !u!1 &1976616890
 GameObject:
   m_ObjectHideFlags: 0
@@ -44472,8 +44692,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
-      key1: {r: 0.4509804, g: 0.4509804, b: 0.4509804, a: 1}
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -44821,7 +45041,7 @@ LineRenderer:
   - {x: -0.8314916, y: 0.34441516, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -44848,8 +45068,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -45459,7 +45679,7 @@ LineRenderer:
   - {x: -0.8838835, y: 0.8838835, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -45486,8 +45706,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -45823,8 +46043,13 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
+<<<<<<< HEAD
       key0: {r: 0.6, g: 0.9490196, b: 1, a: 0.05882353}
       key1: {r: 0.6, g: 0.9490196, b: 1, a: 0.05882353}
+=======
+      key0: {r: 0.6, g: 0.9490196, b: 1, a: 0.49411765}
+      key1: {r: 0.6, g: 0.9490196, b: 1, a: 0.49411765}
+>>>>>>> origin/feature/eyeproduction
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -45879,6 +46104,7 @@ MonoBehaviour:
   _ring: 3
   _sector: 2
   _collected: 0
+  _flag: eunjae_voicemail
   _color: {r: 0.6, g: 0.95, b: 1, a: 1}
   _line: {fileID: 2051122684}
 --- !u!1 &2062816632
@@ -45973,7 +46199,7 @@ LineRenderer:
   - {x: -1.4782072, y: -0.6122935, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -46000,8 +46226,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -46222,7 +46448,7 @@ LineRenderer:
   - {x: 1.8015652, y: -0.7462327, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -46249,8 +46475,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -46395,7 +46621,7 @@ LineRenderer:
   - {x: 1.4782072, y: 0.61229354, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -46422,8 +46648,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -46514,6 +46740,7 @@ MonoBehaviour:
   _ring: 5
   _sector: 3
   _collected: 0
+  _flag: jisu_er_receipt
   _color: {r: 0.6, g: 0.95, b: 1, a: 1}
   _line: {fileID: 2092412454}
 --- !u!120 &2092412454
@@ -46932,8 +47159,13 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
+<<<<<<< HEAD
       key0: {r: 0.6, g: 0.9490196, b: 1, a: 0.05882353}
       key1: {r: 0.6, g: 0.9490196, b: 1, a: 0.05882353}
+=======
+      key0: {r: 0.6, g: 0.9490196, b: 1, a: 0.49411765}
+      key1: {r: 0.6, g: 0.9490196, b: 1, a: 0.49411765}
+>>>>>>> origin/feature/eyeproduction
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -46990,6 +47222,7 @@ MonoBehaviour:
   _ring: 5
   _sector: 12
   _collected: 0
+  _flag: eunjae_empty_seat
   _color: {r: 0.6, g: 0.95, b: 1, a: 1}
   _line: {fileID: 2097229963}
 --- !u!1 &2099675249
@@ -47252,7 +47485,7 @@ LineRenderer:
   - {x: 0.3444151, y: 0.8314916, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -47279,8 +47512,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -47512,6 +47745,7 @@ MonoBehaviour:
   _resolved: 0
   _portrait: {fileID: -223924168, guid: 76af8779ced393f4fb322bcc8c7d0251, type: 3}
   _talkOnly: 0
+  _talkCsv: {fileID: 4900000, guid: 67224b7ee0bd433289fd0396c4e41141, type: 3}
   _talkLines: []
   _lineAfterTalk: "\u2026"
   _leavesAfterTalk: 0
@@ -47690,7 +47924,7 @@ LineRenderer:
   - {x: -0.47835445, y: -1.1548494, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.24
+    widthMultiplier: 0.06
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -47717,8 +47951,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 1, g: 1, b: 1, a: 0.02745098}
-      key1: {r: 1, g: 1, b: 1, a: 0.02745098}
+      key0: {r: 1, g: 1, b: 1, a: 0.21960784}
+      key1: {r: 1, g: 1, b: 1, a: 0.21960784}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -47781,7 +48015,6 @@ SceneRoots:
   - {fileID: 666196738}
   - {fileID: 208043395}
   - {fileID: 534245100}
-  - {fileID: 89992878}
   - {fileID: 495374274}
   - {fileID: 523666715}
   - {fileID: 1393123758}

@@ -30,7 +30,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("wallColorBase")] private Color _wallColorBase = new Color(0.96f, 0.86f, 0.66f, 1f);
         [Tooltip("디렉터가 모드에 따라 바꾼다 (대화 중엔 흐리게, 들여다볼 땐 선명하게)")]
         [SerializeField, FormerlySerializedAs("wallAlpha"), Range(0f, 1f)] private float _wallAlpha = 1f;
-        [Tooltip("초점. 0이면 벽이 굵고 흐릿하게, 1이면 선명하게. 태엽이 조절한다")]
+        [Tooltip("초점. 0이면 벽이 굵고 흐릿하게, 1이면 선명하게")]
         [SerializeField, FormerlySerializedAs("focus"), Range(0f, 1f)] private float _focus = 1f;
 
         [Header("생성")]
