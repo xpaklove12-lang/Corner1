@@ -1,3 +1,5 @@
+using System;
+
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -33,6 +35,10 @@ namespace EyeMaze
         [Header("부담감")]
         [Tooltip("부담감 막대의 채움. 피벗을 아래에 두고 세로 스케일로 채운다")]
         [SerializeField] private RectTransform _burdenFill;
+        [Tooltip("대화로 부담감이 갑자기 바뀔 때 막대가 따라가는 속도 (초당 0~1 비율)")]
+        [SerializeField] private float _burdenAnimSpeed = 0.5f;
+
+        [NonSerialized] private float _burdenShown = -1f;
 
         [Header("깜빡임")]
         [SerializeField, FormerlySerializedAs("blinkOverlay")] private Image _blinkOverlay;
@@ -79,7 +85,10 @@ namespace EyeMaze
 
             if (_burdenFill != null)
             {
-                Vector3 scale = new Vector3(1f, d.Burden, 1f);
+                // Play에서는 막대가 실제 값을 일정한 속도로 따라가 차오르거나 떨어지는 모습이 보인다. 에디트 모드에서는 바로 맞춘다.
+                bool snap = !Application.isPlaying || _burdenShown < 0f;
+                _burdenShown = snap ? d.Burden : Mathf.MoveTowards(_burdenShown, d.Burden, _burdenAnimSpeed * Time.deltaTime);
+                Vector3 scale = new Vector3(1f, _burdenShown, 1f);
                 if (_burdenFill.localScale != scale) _burdenFill.localScale = scale;
             }
 
