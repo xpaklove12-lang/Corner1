@@ -441,7 +441,7 @@ namespace EyeMaze
             o != null && (o.Requires == null || o.Requires.Collected) && (o.RequiresClue == null || o.RequiresClue.Examined);
 
         /// <summary>
-        /// 대화 선택지를 고른다. 좋은 말은 한 번만 통하며, 신뢰가 바닥나면 leave 엔딩이 된다.
+        /// 대화 선택지를 고른다. 좋은 말은 한 번만 통하고(다시 고르면 대화만 넘어간다), 신뢰가 바닥나면 leave 엔딩이 된다.
         /// index를 사용하며, 상대의 신뢰와 동공, 문구, 대화 진행 또는 엔딩을 바꾼다.
         /// </summary>
         public void ChooseOption(int index)
@@ -454,9 +454,15 @@ namespace EyeMaze
             if (!IsAvailable(o)) { _message = "아직 모르는 이야기다. 눈 속에서 단서를 찾아야 한다."; return; }
 
             // 같은 말을 반복해서 신뢰를 올릴 수 없게 좋은 말은 한 번만 통한다.
+            // 다만 처음 이야기로 돌아온 뒤에도 대화를 이어갈 수 있게, 넘어가는 선택지는 다음 노드로 보낸다.
             string key = _currentNode + ":" + index;
             bool helpful = o.Trust > 0 || o.Dilation > 0f;
-            if (helpful && _usedOptions.Contains(key)) { _message = $"이미 한 이야기다. {Name}는 다음 말을 기다리고 있다."; return; }
+            if (helpful && _usedOptions.Contains(key))
+            {
+                _message = $"이미 한 이야기다. {Name}는 다음 말을 기다리고 있다.";
+                if (o.Advance) _currentNode++;
+                return;
+            }
             _usedOptions.Add(key);
 
             if (_person != null)
