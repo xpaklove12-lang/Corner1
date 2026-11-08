@@ -71,7 +71,9 @@ namespace EyeMaze
         [Tooltip("에디트 모드에서 버튼 한 번에 움직이는 거리")]
         [SerializeField, FormerlySerializedAs("editNudge")] private float _editNudge = 0.2f;
 
-        [Header("눈 깜빡임 (태엽이 풀릴 때 일어남)")]
+        [Header("눈 깜빡임")]
+        [Tooltip("들여다보는 동안 몇 초마다 눈을 깜빡이는지 (0이면 깜빡이지 않음)")]
+        [SerializeField] private float _blinkInterval = 4f;
         [SerializeField, FormerlySerializedAs("blinkDuration")] private float _blinkDuration = 0.45f;
         [SerializeField, FormerlySerializedAs("blinkAmount"), Range(0f, 1f)] private float _blinkAmount;
 
@@ -93,6 +95,7 @@ namespace EyeMaze
 
         [NonSerialized] private Vector2 _velocity;
         [NonSerialized] private float _blinkPhase = -1f;
+        [NonSerialized] private float _blinkElapsed;
         [NonSerialized] private int _lastLayer = -1;
         [NonSerialized] private int _heartIndex;
         [NonSerialized] private List<string> _endingLines;
@@ -138,7 +141,7 @@ namespace EyeMaze
         /// <summary>지금 케이스의 파편만 (다른 손님의 파편 묶음은 꺼져 있음)</summary>
         public MemoryFragment[] Fragments => _maze != null ? _maze.GetComponentsInChildren<MemoryFragment>(false) : new MemoryFragment[0];
 
-        public bool CanGaze => _mode == Mode.Talk && (_intro == null || _intro.CanGaze);
+        public bool CanGaze => _mode == Mode.Talk;
         public MazeLayer CursorLayer => _maze != null && _cursor != null ? _maze.GetLayer(_maze.LayerOfRing(_cursor.Ring)) : null;
 
         private string Name => _person != null ? _person.DisplayName : "그 사람";
@@ -187,8 +190,12 @@ namespace EyeMaze
             }
             _blinkAmount = _blinkPhase >= 0f ? Mathf.Sin(_blinkPhase * Mathf.PI) : 0f;
 
-            // 들여다보는 동안 태엽이 풀린다. 깜빡임과 시간 제한은 태엽이 처리한다.
-            if (_mode == Mode.Gaze && !_inAbyss && !_reading && _intro != null) _intro.Unwind(_intro.UnwindPerSecond * dt);
+            // 들여다보는 동안 태엽 값이 차고, 정해진 시간마다 눈을 깜빡인다.
+            if (_mode == Mode.Gaze && !_inAbyss && !_reading)
+            {
+                if (_intro != null) _intro.Unwind(_intro.UnwindPerSecond * dt);
+                TickBlink(dt);
+            }
             if (_reading) _readT += dt;
 
             if (!_acceptInput)
@@ -268,7 +275,7 @@ namespace EyeMaze
             if (_mode == Mode.Ending) return;
             if (_mode == Mode.Gaze && _inAbyss) { _message = _abyssMessage; return; }
             if (_mode == Mode.Gaze) { ExitGaze("시선을 거뒀다. 남은 태엽은 그대로다."); return; }
-            if (!CanGaze) { _message = _intro != null ? _intro.NeedWindMessage : ""; return; }
+            if (!CanGaze) return;
             _mode = Mode.Gaze;
             _velocity = Vector2.zero;
             if (_cursor != null) _cursor.Visible = true;
@@ -343,7 +350,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 다음 파편을 읽은 뒤처럼 눈을 한 번 깜빡이며, 지금 시선이 있는 층을 뺀 나머지 층의 벽을 무작위로 새로 만든다.
+        /// 파편을 읽은 뒤 지금 시선이 있는 층을 뺀 나머지 층의 벽을 무작위로 새로 만든다.
         /// 지금 시선의 층을 사용하며, 미로의 벽과 문구를 바꾼다.
         /// </summary>
         public void RespawnMaze()
@@ -351,8 +358,7 @@ namespace EyeMaze
             if (!_respawnMazeAfterReading || _maze == null) return;
             int keep = _cursor != null ? _maze.LayerOfRing(_cursor.Ring) : -1;
             _maze.Generate(UnityEngine.Random.Range(1, 999999), keep);
-            if (Application.isPlaying && _blinkPhase < 0f) _blinkPhase = 0f;
-            _message = "눈을 깜빡이자, 다른 층의 길이 바뀌었다.";
+            _message = "다른 층의 길이 바뀌었다.";
         }
 
         /// <summary>
@@ -366,6 +372,19 @@ namespace EyeMaze
                 if (_blinkPhase < 0f) _blinkPhase = 0f;
             }
             else ApplyBlinkRotation();
+        }
+
+        /// <summary>
+        /// 들여다본 시간을 쌓아 _blinkInterval초마다 눈을 깜빡인다.
+        /// dt를 사용하며, _blinkElapsed와 깜빡임 단계를 바꾼다.
+        /// </summary>
+        private void TickBlink(float dt)
+        {
+            if (_blinkInterval <= 0f) return;
+            _blinkElapsed += dt;
+            if (_blinkElapsed < _blinkInterval) return;
+            _blinkElapsed -= _blinkInterval;
+            Blink();
         }
 
         // 심연과 결말
@@ -506,6 +525,7 @@ namespace EyeMaze
             _message = _introMessage;
             _blinkAmount = 0f;
             _blinkPhase = -1f;
+            _blinkElapsed = 0f;
             _velocity = Vector2.zero;
             if (_person != null) { _person.Trust = 0; _person.Dilation = 0.2f; }
             if (_intro != null) _intro.ResetForEncounter(true);

@@ -161,18 +161,16 @@ namespace EyeMaze.EditorTools
         {
             var w = (WindingIntro)target;
             var roots = new Object[] { w, w.Maze, w.Eye, w.Director, w.Director != null ? w.Director.Person : null };
-            EditorGUILayout.LabelField($"태엽 {w.Wound:0.0} / {w.Capacity}   (긴장 {w.Strain * 100f:0}%)", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField($"태엽 {w.Wound:0.0} / {w.Capacity}", EditorStyles.boldLabel);
             using (new EditorGUILayout.HorizontalScope())
             {
-                if (GUILayout.Button("한 칸 감기")) EyeEditorOps.Run("태엽 감기", () => w.Wind(1f), roots);
-                if (GUILayout.Button("가득")) EyeEditorOps.Run("태엽 가득", w.FillUp, roots);
-                if (GUILayout.Button("다 풀기")) EyeEditorOps.Run("태엽 풀기", () => { w.Wound = 0f; w.Strain = 0f; }, roots);
+                if (GUILayout.Button("0으로")) EyeEditorOps.Run("태엽 0으로", w.FillUp, roots);
+                if (GUILayout.Button("거의 채우기")) EyeEditorOps.Run("태엽 채우기", () => w.Wound = w.Capacity - 1f, roots);
             }
-            EditorGUILayout.HelpBox("태엽 = 눈을 들여다볼 수 있는 시간이다.\n" +
-                "· 대화 중에 감고, 들여다보는 동안 풀린다 (unwindPerSecond).\n" +
-                "· 가득 찬 뒤 더 감으면 긴장이 쌓이다가 미끄러져 다 풀린다.\n" +
-                "· 용량 = baseCapacity + 신뢰 × capacityPerTrust\n" +
-                "· ticksPerBlink칸 풀릴 때마다 깜빡이고 2층이 돈다.", MessageType.None);
+            EditorGUILayout.HelpBox("태엽은 화면에 보이지 않는 값이다.\n" +
+                "· 들여다보는 동안 0에서 용량까지 찬다 (unwindPerSecond).\n" +
+                "· 다 차면 그대로 멈춘다.\n" +
+                "· 용량 = baseCapacity + 신뢰 × capacityPerTrust", MessageType.None);
             EditorGUILayout.Space();
             DrawDefaultInspector();
         }
