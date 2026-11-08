@@ -25,6 +25,9 @@ namespace EyeMaze
         [Header("선택지")]
         [SerializeField, FormerlySerializedAs("optionButtons")] private Button[] _optionButtons = new Button[3];
         [SerializeField, FormerlySerializedAs("optionLabels")] private Text[] _optionLabels = new Text[3];
+        [Tooltip("첫 노드가 아닐 때 보이는 '처음 이야기로' 공통 선택지 버튼")]
+        [SerializeField] private Button _returnButton;
+        [SerializeField] private Text _returnLabel;
         [SerializeField, FormerlySerializedAs("gazeButtonLabel")] private Text _gazeButtonLabel;
 
         [Header("깜빡임")]
@@ -70,6 +73,11 @@ namespace EyeMaze
                 Set(_optionLabels[i], d.IsAvailable(o) ? $"{i + 1}. {o.Text}" : $"{i + 1}. ??? (아직 모르는 이야기)");
             }
 
+            bool showReturn = d.CanReturnToStart;
+            if (_returnButton != null && _returnButton.gameObject.activeSelf != showReturn)
+                _returnButton.gameObject.SetActive(showReturn);
+            if (showReturn) Set(_returnLabel, $"4. {d.ReturnText}");
+
             Set(_gazeButtonLabel, d.CurrentMode == EyeMazeDirector.Mode.Gaze ? "시선 거두기 (Space)" : "들여다보기 (Space)");
             Set(_hint, d.IsReading
                 ? "Space / Z  계속"
@@ -78,7 +86,7 @@ namespace EyeMaze
                 : d.CurrentMode == EyeMazeDirector.Mode.Gaze
                 ? "WASD / 방향키로 이동   ·   Space 시선 거두기   ·   금색 = 잠긴 문   ·   하늘색 점 = 파편"
                 : d.CurrentMode == EyeMazeDirector.Mode.Ending ? (d.HeartFinished ? "Space / Z  돌아가기" : "Space / Z  계속")
-                : "Space = 눈 들여다보기   ·   1 2 3 대화   ·   Q 자리 떠나기");
+                : "Space = 눈 들여다보기   ·   1 2 3 4 대화   ·   Q 자리 떠나기");
 
             if (_blinkOverlay != null)
             {

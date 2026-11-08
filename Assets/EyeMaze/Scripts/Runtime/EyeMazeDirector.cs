@@ -11,7 +11,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 만남 화면의 흐름: 대화 → 눈 들여다보기(미로 탐색, 기억 파편 모으기) → 알게 된 것으로 대화 → 신뢰와 동공이 커짐 → 더 깊은 층 → 심연.
-    /// Play 모드에서는 WASD / 방향키 / 왼쪽 스틱으로 이동하고, Space(패드 A)로 시선을 거두며, 1 / 2 / 3으로 대화를 고르고, R로 처음부터 한다.
+    /// Play 모드에서는 WASD / 방향키 / 왼쪽 스틱으로 이동하고, Space(패드 A)로 시선을 거두며, 1 / 2 / 3 / 4로 대화를 고르고, R로 처음부터 한다.
     /// 에디트 모드에서는 디렉터 인스펙터의 버튼으로 같은 조작을 한다.
     /// </summary>
     [ExecuteAlways]
@@ -37,6 +37,10 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("inAbyss")] private bool _inAbyss;
 
         [Header("이야기")]
+        [Tooltip("첫 노드가 아닐 때 맨 마지막에 보이는 공통 선택지. 고르면 첫 노드로 돌아간다")]
+        [SerializeField, TextArea(1, 2)] private string _returnText = "다른 이야기를 해볼까요?";
+        [Tooltip("공통 선택지를 고른 뒤 보이는 문구")]
+        [SerializeField, TextArea(1, 2)] private string _returnMessage = "화제를 돌렸다.";
         [SerializeField, FormerlySerializedAs("introMessage"), TextArea(2, 4)] private string _introMessage = "은재는 석 달째 말을 하지 않았다. 눈을 들여다보면 마음속으로 들어갈 수 있다.";
         [SerializeField, TextArea(2, 4)] private string _firstGuide = "Space를 누르면 은재의 눈을 들여다본다.";
         [SerializeField, TextArea(2, 4)] private string _againGuide = "다시 마주 앉았다. Space를 누르면 눈을 들여다본다.";
@@ -114,6 +118,10 @@ namespace EyeMaze
         public List<EndingDef> Endings => _endings;
         public ClientCase ActiveCase => _activeCase;
         public float BlinkAmount => _blinkAmount;
+        public string ReturnText => _returnText;
+
+        /// <summary>대화 중이고 첫 노드가 아니면 처음 이야기로 돌아가는 공통 선택지를 고를 수 있다.</summary>
+        public bool CanReturnToStart => _mode == Mode.Talk && _currentNode > 0;
 
         /// <summary>미로를 지나 동공 안(심연)에 들어와 있는지</summary>
         public bool InAbyss => _mode == Mode.Gaze && _inAbyss;
@@ -489,6 +497,17 @@ namespace EyeMaze
         public void ChooseOption2() => ChooseOption(2);
 
         /// <summary>
+        /// 공통 선택지를 고르고 대화를 첫 노드로 되돌린다. 신뢰, 동공, 파편, 이야기 기록은 그대로 둔다.
+        /// 입력값은 없으며, 대화 진행과 문구를 바꾼다.
+        /// </summary>
+        public void ReturnToStart()
+        {
+            if (!CanReturnToStart) return;
+            _currentNode = 0;
+            _message = _returnMessage;
+        }
+
+        /// <summary>
         /// 지금 케이스에서 모은 파편 목록을 글로 만든다.
         /// 활성화된 파편들을 사용하며, 화면에 보일 요약 글을 반환한다.
         /// </summary>
@@ -570,6 +589,7 @@ namespace EyeMaze
                     if (kb.digit1Key.wasPressedThisFrame) ChooseOption(0);
                     else if (kb.digit2Key.wasPressedThisFrame) ChooseOption(1);
                     else if (kb.digit3Key.wasPressedThisFrame) ChooseOption(2);
+                    else if (kb.digit4Key.wasPressedThisFrame) ReturnToStart();
                 }
             }
             if (pad != null)

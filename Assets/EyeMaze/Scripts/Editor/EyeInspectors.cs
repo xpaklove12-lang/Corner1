@@ -63,6 +63,8 @@ namespace EyeMaze.EditorTools
                     if (GUILayout.Button(label)) EyeEditorOps.Run("대화 선택", () => d.ChooseOption(idx), roots);
                 }
             }
+            if (d.CanReturnToStart && GUILayout.Button($"4. {d.ReturnText}"))
+                EyeEditorOps.Run("처음 이야기로", d.ReturnToStart, roots);
 
             EditorGUILayout.Space(4);
             using (new EditorGUILayout.HorizontalScope())
