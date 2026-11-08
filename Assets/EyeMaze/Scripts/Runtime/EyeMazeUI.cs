@@ -1,3 +1,5 @@
+using System;
+
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -25,31 +27,20 @@ namespace EyeMaze
         [Header("선택지")]
         [SerializeField, FormerlySerializedAs("optionButtons")] private Button[] _optionButtons = new Button[3];
         [SerializeField, FormerlySerializedAs("optionLabels")] private Text[] _optionLabels = new Text[3];
+        [Tooltip("첫 노드가 아닐 때 보이는 '처음 이야기로' 공통 선택지 버튼")]
+        [SerializeField] private Button _returnButton;
+        [SerializeField] private Text _returnLabel;
         [SerializeField, FormerlySerializedAs("gazeButtonLabel")] private Text _gazeButtonLabel;
 
-        [Header("태엽")]
-        [Tooltip("Play 시작 시 이 막대가 들어 있는 칸을 숨긴다")]
-        [SerializeField, FormerlySerializedAs("springFill")] private RectTransform _springFill;
-        [Tooltip("Play 시작 시 이 톱니가 들어 있는 칸을 숨긴다")]
-        [SerializeField, FormerlySerializedAs("springGear")] private RectTransform _springGear;
+        [Header("부담감")]
+        [Tooltip("부담감 막대의 채움. 피벗을 아래에 두고 세로 스케일로 채운다")]
+        [SerializeField] private RectTransform _burdenFill;
+        [Tooltip("대화로 부담감이 갑자기 바뀔 때 막대가 따라가는 속도 (초당 0~1 비율)")]
+        [SerializeField] private float _burdenAnimSpeed = 0.5f;
 
-        // 스펙 003: 깜빡임 전체 화면 페이드 필드 제거
+        [NonSerialized] private float _burdenShown = -1f;
 
-        void Start()
-        {
-            if (!Application.isPlaying) return;
-            HideCell(_springFill);
-            HideCell(_springGear);
-        }
-
-        /// <summary>
-        /// 태엽 표시가 들어 있는 UI 칸(속지의 부모)을 숨긴다.
-        /// part를 사용하며, 그 칸의 활성 상태를 끈다.
-        /// </summary>
-        private static void HideCell(RectTransform part)
-        {
-            if (part != null) part.parent.parent.gameObject.SetActive(false);
-        }
+        // 스펙 006: 깜빡임 전체 화면 페이드 필드 제거
 
         void Update()
         {
@@ -68,7 +59,7 @@ namespace EyeMaze
                 sit = e != null && !string.IsNullOrEmpty(e.Situation) ? e.Situation : $"{(p != null ? p.DisplayName : "그녀")}의 마음이 들린다.";
             }
             else if (d.InAbyss) sit = "그녀의 마음 속 심연";
-            else if (d.IsReading) sit = "시선이 파편에 머문다. 태엽이 잠시 멈췄다.";
+            else if (d.IsReading) sit = "시선이 파편에 머문다.";
             else if (d.CurrentMode == EyeMazeDirector.Mode.Gaze)
             {
                 MazeLayer layer = d.CursorLayer;
@@ -91,15 +82,29 @@ namespace EyeMaze
                 Set(_optionLabels[i], d.IsAvailable(o) ? $"{i + 1}. {o.Text}" : $"{i + 1}. ??? (아직 모르는 이야기)");
             }
 
+            if (_burdenFill != null)
+            {
+                // Play에서는 막대가 실제 값을 일정한 속도로 따라가 차오르거나 떨어지는 모습이 보인다. 에디트 모드에서는 바로 맞춘다.
+                bool snap = !Application.isPlaying || _burdenShown < 0f;
+                _burdenShown = snap ? d.Burden : Mathf.MoveTowards(_burdenShown, d.Burden, _burdenAnimSpeed * Time.deltaTime);
+                Vector3 scale = new Vector3(1f, _burdenShown, 1f);
+                if (_burdenFill.localScale != scale) _burdenFill.localScale = scale;
+            }
+
+            bool showReturn = d.CanReturnToStart;
+            if (_returnButton != null && _returnButton.gameObject.activeSelf != showReturn)
+                _returnButton.gameObject.SetActive(showReturn);
+            if (showReturn) Set(_returnLabel, $"4. {d.ReturnText}");
+
             Set(_gazeButtonLabel, d.CurrentMode == EyeMazeDirector.Mode.Gaze ? "시선 거두기 (Space)" : "들여다보기 (Space)");
             Set(_hint, d.IsReading
-                ? "Space / Z  계속 (읽는 동안 태엽이 멈춤)"
+                ? "Space / Z  계속"
                 : d.InAbyss
                 ? "WASD / 방향키로 가장 반짝이는 파편에 다가간다"
                 : d.CurrentMode == EyeMazeDirector.Mode.Gaze
                 ? "WASD / 방향키로 이동   ·   Space 시선 거두기   ·   금색 = 잠긴 문   ·   하늘색 점 = 파편"
                 : d.CurrentMode == EyeMazeDirector.Mode.Ending ? (d.HeartFinished ? "Space / Z  돌아가기" : "Space / Z  계속")
-                : "Space = 눈 들여다보기   ·   1 2 3 대화   ·   Q 자리 떠나기");
+                : "Space = 눈 들여다보기   ·   1 2 3 4 대화   ·   Q 자리 떠나기");
         }
 
         /// <summary>

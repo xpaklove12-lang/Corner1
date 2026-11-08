@@ -16,7 +16,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("displayName")] private string _displayName = "층";
         [Tooltip("현재 회전량 (칸 단위, 반시계 +)")]
         [SerializeField, FormerlySerializedAs("offset")] private int _offset;
-        // 스펙 003: 깜빡임 층 회전 설정 제거
+        // 스펙 006: 깜빡임 층 회전 설정 제거
 
         private IrisMaze _maze;
 

@@ -13,7 +13,7 @@ namespace EyeMaze
     [ExecuteAlways]
     public class EyeVisual : MonoBehaviour
     {
-        // 스펙 003: 눈꺼풀 덮개 그리기 상수 추가
+        // 스펙 006: 눈꺼풀 덮개 그리기 상수 추가
         private const int COVER_COLUMNS = 33;
         private const int COVER_SORTING_ORDER = 21;
         private const float COVER_MARGIN = 0.05f;
@@ -40,7 +40,7 @@ namespace EyeMaze
 
         [Header("눈꺼풀 / 속눈썹")]
         [SerializeField, FormerlySerializedAs("lidColor")] private Color _lidColor = Color.white;
-        // 스펙 003: 눈을 감을 때 덮는 색 추가
+        // 스펙 006: 눈을 감을 때 덮는 색 추가
         [Tooltip("눈을 감을 때 눈 안쪽을 덮는 색")]
         [SerializeField] private Color _lidCoverColor = Color.black;
         [Tooltip("윗눈꺼풀 선 두께")]
@@ -54,7 +54,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("lashSpread")] private float _lashSpread = 35f;
 
         [Header("초점")]
-        [Tooltip("초점. 0이면 어둡고 테두리가 번져 보인다. 태엽이 조절한다")]
+        [Tooltip("초점. 0이면 어둡고 테두리가 번져 보인다")]
         [SerializeField, FormerlySerializedAs("focus"), Range(0f, 1f)] private float _focus = 1f;
 
         [Header("그림")]
@@ -65,13 +65,13 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("lashes")] private LineRenderer[] _lashes = new LineRenderer[0];
 
         [NonSerialized] private int _drawnKey = int.MinValue;
-        // 스펙 003: 눈꺼풀 닫힘 정도와 덮개 메시 상태 추가
+        // 스펙 006: 눈꺼풀 닫힘 정도와 덮개 메시 상태 추가
         [NonSerialized] private float _closed;
         [NonSerialized] private Mesh _coverMesh;
         [NonSerialized] private MeshRenderer _coverRenderer;
         [NonSerialized] private Vector3[] _coverVertices;
         [NonSerialized] private Color[] _coverColors;
-        // 스펙 003: 깜빡임 중 힙 할당을 막는 재사용 배열과 눈꺼풀 캐시 키 추가
+        // 스펙 006: 깜빡임 중 힙 할당을 막는 재사용 배열과 눈꺼풀 캐시 키 추가
         [NonSerialized] private int _drawnLidKey = int.MinValue;
         [NonSerialized] private Vector3[] _lidPoints;
         [NonSerialized] private readonly Vector3[] _lashPoints = new Vector3[2];
@@ -102,7 +102,7 @@ namespace EyeMaze
                 HashCode.Combine(_scleraWidth, _scleraHeight, _scleraColor, _irisColor, _rimColor, irisRadius, _focus, _irisDiscPadding),
                 HashCode.Combine(_rimWidth, _lidColor, _lidWidth, _lidOvershoot, _lashCount, _lashLength, _lashWidth, _lashSpread),
                 _lashes != null ? _lashes.Length : 0);
-            // 스펙 003: 깜빡임 중에는 눈꺼풀 부분만 다시 그린다.
+            // 스펙 006: 깜빡임 중에는 눈꺼풀 부분만 다시 그린다.
             bool shapeChanged = key != _drawnKey;
             int lidKey = HashCode.Combine(key, _closed, _lidCoverColor);
             if (!shapeChanged && lidKey == _drawnLidKey) return;
@@ -186,7 +186,7 @@ namespace EyeMaze
                 }
             }
 
-            // 스펙 003: 흰자와 미로를 덮는 눈꺼풀 그리기
+            // 스펙 006: 흰자와 미로를 덮는 눈꺼풀 그리기
             DrawCover();
         }
 
