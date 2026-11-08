@@ -30,6 +30,10 @@ namespace EyeMaze
         [SerializeField] private Text _returnLabel;
         [SerializeField, FormerlySerializedAs("gazeButtonLabel")] private Text _gazeButtonLabel;
 
+        [Header("부담감")]
+        [Tooltip("부담감 막대의 채움. 피벗을 아래에 두고 세로 스케일로 채운다")]
+        [SerializeField] private RectTransform _burdenFill;
+
         [Header("깜빡임")]
         [SerializeField, FormerlySerializedAs("blinkOverlay")] private Image _blinkOverlay;
 
@@ -71,6 +75,12 @@ namespace EyeMaze
                 if (!show || i >= _optionLabels.Length) continue;
                 DialogueOption o = node.Options[i];
                 Set(_optionLabels[i], d.IsAvailable(o) ? $"{i + 1}. {o.Text}" : $"{i + 1}. ??? (아직 모르는 이야기)");
+            }
+
+            if (_burdenFill != null)
+            {
+                Vector3 scale = new Vector3(1f, d.Burden, 1f);
+                if (_burdenFill.localScale != scale) _burdenFill.localScale = scale;
             }
 
             bool showReturn = d.CanReturnToStart;

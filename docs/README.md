@@ -45,3 +45,4 @@ SDD 작업을 시작할 때 이 파일을 가장 먼저 읽는다.
 | 001 | `specs/001-blink-single-condition.md` | 눈 깜빡임 조건을 시간 경과 하나로 단일화 | 구현완료 |
 | 003 | `specs/003-remove-winding.md` | 태엽 값, 태엽 문구, 태엽 씬 오브젝트를 모두 삭제 | 구현완료 |
 | 004 | `specs/004-return-to-start-option.md` | 모든 대화 노드에 처음 이야기로 돌아가는 공통 선택지 추가 | 구현완료 |
+| 005 | `specs/005-burden-gauge.md` | 들여다보는 동안 차오르고 가득 차면 상담이 끝나는 부담감 게이지 | 구현완료 |

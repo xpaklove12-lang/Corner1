@@ -16,7 +16,7 @@ namespace EyeMaze.EditorTools
 
             EditorGUILayout.LabelField("Play 없이 바로 플레이", EditorStyles.boldLabel);
             if (p != null)
-                EditorGUILayout.LabelField($"모드 {d.CurrentMode} · 신뢰 {p.Trust} · 동공 {p.Dilation * 100f:0}%", EditorStyles.miniBoldLabel);
+                EditorGUILayout.LabelField($"모드 {d.CurrentMode} · 신뢰 {p.Trust} · 동공 {p.Dilation * 100f:0}% · 부담감 {d.Burden * 100f:0}%", EditorStyles.miniBoldLabel);
 
             DialogueNode node = d.CurrentNode;
             if (d.CurrentMode == EyeMazeDirector.Mode.Talk && node != null) GUILayout.Label(node.Situation, EyeEditorOps.Box);

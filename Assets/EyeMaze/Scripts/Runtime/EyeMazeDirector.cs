@@ -85,6 +85,18 @@ namespace EyeMaze
         [Tooltip("파편을 다 읽고 나면 지금 층을 뺀 나머지 층의 벽을 무작위로 다시 만든다 (멈춰 있는 동안 길을 외우지 못하게)")]
         [SerializeField, FormerlySerializedAs("respawnMazeAfterReading")] private bool _respawnMazeAfterReading = true;
 
+        [Header("부담감")]
+        [Tooltip("지금 부담감 (0~1). 들여다보는 동안 차오르고, 가득 차면 leave 엔딩이 된다")]
+        [SerializeField, Range(0f, 1f)] private float _burden;
+        [Tooltip("신뢰 0일 때 0에서 가득까지 걸리는 들여다보기 시간(초)")]
+        [SerializeField] private float _burdenFillSeconds = 30f;
+        [Tooltip("신뢰 1당 늘어나는 시간(초)")]
+        [SerializeField] private float _burdenSecondsPerTrust = 6f;
+        [Tooltip("좋은 말을 처음 했을 때 줄어드는 양")]
+        [SerializeField, Range(0f, 1f)] private float _burdenRelief = 0.25f;
+        [Tooltip("가득 찼을 때 엔딩 앞에 보이는 한 줄. '은재'는 지금 손님 이름으로 바뀐다")]
+        [SerializeField, TextArea(1, 3)] private string _burdenEndLine = "은재가 시선을 피했다. 더는 마주 보기 힘든 것 같다.";
+
         [Header("연출")]
         [SerializeField, FormerlySerializedAs("talkWallAlpha"), Range(0f, 1f)] private float _talkWallAlpha = 0.22f;
         [SerializeField, FormerlySerializedAs("startRing")] private int _startRing;
@@ -119,6 +131,7 @@ namespace EyeMaze
         public ClientCase ActiveCase => _activeCase;
         public float BlinkAmount => _blinkAmount;
         public string ReturnText => _returnText;
+        public float Burden => _burden;
 
         /// <summary>대화 중이고 첫 노드가 아니면 처음 이야기로 돌아가는 공통 선택지를 고를 수 있다.</summary>
         public bool CanReturnToStart => _mode == Mode.Talk && _currentNode > 0;
@@ -196,8 +209,12 @@ namespace EyeMaze
             }
             _blinkAmount = _blinkPhase >= 0f ? Mathf.Sin(_blinkPhase * Mathf.PI) : 0f;
 
-            // 들여다보는 동안 정해진 시간마다 눈을 깜빡인다.
-            if (_mode == Mode.Gaze && !_inAbyss && !_reading) TickBlink(dt);
+            // 들여다보는 동안 정해진 시간마다 눈을 깜빡이고, 부담감이 차오른다.
+            if (_mode == Mode.Gaze && !_inAbyss && !_reading)
+            {
+                TickBlink(dt);
+                if (Application.isPlaying) TickBurden(dt);
+            }
             if (_reading) _readT += dt;
 
             if (!_acceptInput)
@@ -378,6 +395,22 @@ namespace EyeMaze
         }
 
         /// <summary>
+        /// 들여다보는 동안 부담감을 채운다. 신뢰가 높을수록 느리게 차고, 가득 차면 leave 엔딩을 시작한다.
+        /// dt와 상대의 신뢰를 사용하며, _burden과 모드를 바꾼다.
+        /// </summary>
+        private void TickBurden(float dt)
+        {
+            int trust = _person != null ? Mathf.Max(0, _person.Trust) : 0;
+            float seconds = Mathf.Max(0.1f, _burdenFillSeconds + _burdenSecondsPerTrust * trust);
+            _burden = Mathf.Min(1f, _burden + dt / seconds);
+            if (_burden < 1f) return;
+
+            // 가득 차면 상담이 끝난다. leave 엔딩이 없는 손님이면 시선만 거둔다.
+            if (FindEnding("leave") != null) StartEnding("leave", _burdenEndLine);
+            else ExitGaze(_burdenEndLine);
+        }
+
+        /// <summary>
         /// 들여다본 시간을 쌓아 _blinkInterval초마다 눈을 깜빡인다.
         /// dt를 사용하며, _blinkElapsed와 깜빡임 단계를 바꾼다.
         /// </summary>
@@ -470,11 +503,14 @@ namespace EyeMaze
                 _person.Trust += o.Trust;
                 _person.Dilation = Mathf.Clamp01(_person.Dilation + o.Dilation);
             }
+            float burdenBefore = _burden;
+            if (helpful) _burden = Mathf.Max(0f, _burden - _burdenRelief);
             if (!string.IsNullOrEmpty(o.Ending)) { StartEnding(o.Ending, o.Response); return; }
             var sb = new StringBuilder(o.Response);
             if (o.Trust > 0) sb.Append("\n(신뢰가 깊어졌다. 눈 속 어딘가의 문이 열렸다.)");
             if (o.Dilation > 0.05f) sb.Append("\n(동공이 조금 커졌다.)");
             if (o.Dilation < -0.05f) sb.Append("\n(동공이 좁아졌다.)");
+            if (_burden < burdenBefore) sb.Append("\n(부담이 조금 줄었다.)");
             _message = sb.ToString();
             if (_person != null && _person.Trust <= _leaveTrust && FindEnding("leave") != null)
             {
@@ -552,6 +588,7 @@ namespace EyeMaze
             _blinkAmount = 0f;
             _blinkPhase = -1f;
             _blinkElapsed = 0f;
+            _burden = 0f;
             _velocity = Vector2.zero;
             if (_person != null) { _person.Trust = 0; _person.Dilation = 0.2f; }
             ShowEncounterGuide(true);
