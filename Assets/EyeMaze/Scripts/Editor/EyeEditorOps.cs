@@ -72,7 +72,7 @@ namespace EyeMaze.EditorTools
 
         /// <summary>
         /// 디렉터 조작에서 함께 되돌려야 할 오브젝트들을 모은다.
-        /// d를 사용하며, 디렉터와 미로, 상대, 대화 루트 오브젝트 배열을 반환한다.
+        /// d를 사용하며, 디렉터와 미로, 상대 오브젝트 배열을 반환한다.
         /// </summary>
         public static Object[] Roots(EyeMazeDirector d)
         {
@@ -82,7 +82,6 @@ namespace EyeMaze.EditorTools
                 d.gameObject,
                 d.Maze != null ? d.Maze.gameObject : null,
                 d.Person != null ? d.Person.gameObject : null,
-                d.Dialogue != null ? d.Dialogue.gameObject : null,
             };
         }
     }

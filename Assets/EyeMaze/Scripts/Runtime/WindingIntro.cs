@@ -120,7 +120,7 @@ namespace EyeMaze
         public EyeVisual Eye => _eye;
         public float Wound { get => _wound; set => _wound = value; }
         public float Strain { get => _strain; set => _strain = value; }
-        public string NeedWindMessage => _needWindMessage;
+        public string NeedWindMessage => Strings.Get("wind.need", _needWindMessage);
         public float TargetPoint => _targetPoint;
         public float UnwindPerSecond => _unwindPerSecond;
         public Color GaugeColor => _gaugeColor;
@@ -209,7 +209,7 @@ namespace EyeMaze
             _hasPrevMouse = false;
             _lastWhole = 0;
             if (_cam != null) { _camBase = _cam.transform.position; _camBaseSet = true; }
-            if (_director != null) _director.Message = first ? _firstPrompt : _againPrompt;
+            if (_director != null) _director.Message = first ? Strings.Get("wind.first", _firstPrompt) : Strings.Get("wind.again", _againPrompt);
         }
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace EyeMaze
             if (_wound <= 1e-4f)
             {
                 _wound = 0f;
-                if (_director != null && _director.CurrentMode == EyeMazeDirector.Mode.Gaze) _director.ExitGaze(_emptyMessage);
+                if (_director != null && _director.CurrentMode == EyeMazeDirector.Mode.Gaze) _director.ExitGaze(Strings.Get("wind.empty", _emptyMessage));
             }
         }
 
@@ -284,7 +284,7 @@ namespace EyeMaze
         {
             _wasFull = true;
             if (_pupil != null) _pupil.Pulse = 1f;
-            if (_director != null) _director.Message = _fullMessage;
+            if (_director != null) _director.Message = Strings.Get("wind.full", _fullMessage);
             _shakeAmt = _shake * 2f;
         }
 
@@ -301,7 +301,7 @@ namespace EyeMaze
             if (_director != null)
             {
                 if (_director.Person != null) _director.Person.Dilation = Mathf.Clamp01(_director.Person.Dilation + _slipDilation);
-                _director.Message = _slipMessage;
+                _director.Message = Strings.Get("wind.slip", _slipMessage);
             }
             _shakeAmt = _shake * 3f;
         }
@@ -373,7 +373,7 @@ namespace EyeMaze
                 int stepsNow = Mathf.FloorToInt(_holdProgress * 12f);
                 if (stepsNow > stepsBefore) { _shakeAmt = Mathf.Max(_shakeAmt, _shake * 0.5f); }
                 if (!_passedTarget && _holdProgress >= _targetPoint) { _passedTarget = true; if (_pupil != null) _pupil.Pulse = 0.6f; }
-                if (_holdProgress >= 1f && _director != null) _director.Message = _fullMessage;
+                if (_holdProgress >= 1f && _director != null) _director.Message = Strings.Get("wind.full", _fullMessage);
             }
             else
             {
@@ -408,7 +408,7 @@ namespace EyeMaze
                 float q = QualityAt(p);
                 _wound = Capacity * q;
                 _wasFull = false;
-                _director.Message = q >= _perfectQuality ? _perfectMessage : (q >= 0.55f ? _goodMessage : _poorMessage);
+                _director.Message = q >= _perfectQuality ? Strings.Get("wind.perfect", _perfectMessage) : (q >= 0.55f ? Strings.Get("wind.good", _goodMessage) : Strings.Get("wind.poor", _poorMessage));
                 if (q >= _perfectQuality && _pupil != null) _pupil.Pulse = 1f;
             }
 
@@ -418,7 +418,7 @@ namespace EyeMaze
                 _director.ToggleGaze();
                 if (!tapped) _director.Message = keep;
             }
-            else _director.Message = _needWindMessage;
+            else _director.Message = Strings.Get("wind.need", _needWindMessage);
         }
 
         /// <summary>

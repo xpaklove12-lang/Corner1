@@ -15,7 +15,7 @@ namespace EyeMaze
         [Tooltip("다른 물체처럼 플레이어를 막는지")]
         [SerializeField, FormerlySerializedAs("blocks")] private bool _blocks = true;
 
-        public string DisplayName => _displayName;
+        public virtual string DisplayName => _displayName;
         public float InteractRange => _interactRange;
         public float Radius => _radius;
         public bool Blocks => _blocks;

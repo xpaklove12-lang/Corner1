@@ -31,7 +31,10 @@ namespace EyeMaze
 
         public int Ring => _ring;
         public int Sector => _sector;
-        public string LockedMessage => _lockedMessage;
+        /// <summary>
+        /// 막혔을 때 문구. Strings.csv의 gate.pupil(동공 문) / gate.first(첫 문) / gate.deep(그 안쪽 문)이 있으면 그걸 쓴다.
+        /// </summary>
+        public string LockedMessage => Strings.Get(_requiredDilation >= 0f ? "gate.pupil" : _requiredTrust <= 1 ? "gate.first" : "gate.deep", _lockedMessage);
 
         /// <summary>
         /// 새로 만든 문의 위치, 조건, 그림을 한 번에 설정한다.

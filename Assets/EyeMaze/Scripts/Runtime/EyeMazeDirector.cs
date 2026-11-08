@@ -11,7 +11,8 @@ namespace EyeMaze
 {
     /// <summary>
     /// 만남 화면의 흐름: 대화 → 눈 들여다보기(미로 탐색, 기억 파편 모으기) → 알게 된 것으로 대화 → 신뢰와 동공이 커짐 → 더 깊은 층 → 심연.
-    /// Play 모드에서는 WASD / 방향키 / 왼쪽 스틱으로 이동하고, Space(패드 A)로 시선을 거두며, 1 / 2 / 3으로 대화를 고르고, R로 처음부터 한다.
+    /// Play 모드에서는 WASD / 방향키 / 왼쪽 스틱으로 이동하고, Space(패드 A)로 시선을 거두며, 1~4로 대화를 고르고, R로 처음부터 한다.
+    /// 대화는 지금 손님의 대화 CSV(ClientCase.DialogueCsv)에서 읽는다.
     /// 에디트 모드에서는 디렉터 인스펙터의 버튼으로 같은 조작을 한다.
     /// </summary>
     [ExecuteAlways]
@@ -23,18 +24,23 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("maze")] private IrisMaze _maze;
         [SerializeField, FormerlySerializedAs("cursor")] private GazeCursor _cursor;
         [SerializeField, FormerlySerializedAs("person")] private Person _person;
-        [Tooltip("자식 DialogueNode들이 순서대로 진행된다")]
-        [SerializeField, FormerlySerializedAs("dialogue")] private Transform _dialogue;
         [Tooltip("태엽 (없어도 된다)")]
         [SerializeField, FormerlySerializedAs("intro")] private WindingIntro _intro;
         [Tooltip("동공 한가운데의 가장 반짝이는 파편")]
         [SerializeField, FormerlySerializedAs("core")] private CoreFragment _core;
         [Tooltip("키 입력을 받을지. 필드 화면에 있을 땐 GameFlow가 끈다")]
         [SerializeField, FormerlySerializedAs("acceptInput")] private bool _acceptInput = true;
+        [Tooltip("플래그 목록 (Data/Flags.csv). condition이 있는 계산 플래그를 여기서 읽는다")]
+        [SerializeField] private TextAsset _flagsCsv;
+        [Tooltip("공용 문구 표 (Data/Strings.csv). 안내/시스템 문구를 여기서 읽는다")]
+        [SerializeField] private TextAsset _stringsCsv;
 
         [Header("상태")]
         [SerializeField, FormerlySerializedAs("mode")] private Mode _mode = Mode.Talk;
-        [SerializeField, FormerlySerializedAs("currentNode")] private int _currentNode;
+        [Tooltip("지금 대화 장면 id (대화 CSV의 node)")]
+        [SerializeField] private string _currentNodeId;
+        [Tooltip("지나온 장면 id들. '다른 질문을 해볼까요?'를 고르면 하나씩 되돌아간다")]
+        [SerializeField] private List<string> _nodeHistory = new List<string>();
         [SerializeField, FormerlySerializedAs("message"), TextArea(2, 5)] private string _message;
         [SerializeField, FormerlySerializedAs("inAbyss")] private bool _inAbyss;
 
@@ -100,17 +106,30 @@ namespace EyeMaze
         [NonSerialized] private bool _reading;
         [NonSerialized] private float _readT;
         [NonSerialized] private bool _typingPrev;
+        [NonSerialized] private readonly List<ChoiceView> _choices = new List<ChoiceView>();
+
+        /// <summary>화면에 보여줄 선택지 하나 (뒤로가기 포함)</summary>
+        public struct ChoiceView
+        {
+            public string Text;
+            public bool Available;
+            public bool IsBack;
+            /// <summary>아직 켜지지 않은 need 플래그들</summary>
+            public string Missing;
+        }
 
         public IrisMaze Maze => _maze;
         public GazeCursor Cursor => _cursor;
         public Person Person => _person;
-        public Transform Dialogue => _dialogue;
         public WindingIntro Intro => _intro;
         public Mode CurrentMode => _mode;
         public bool AcceptInput { get => _acceptInput; set => _acceptInput = value; }
         public string Message { get => _message; set => _message = value; }
-        public string IdleSituation => _idleSituation;
-        public List<EndingDef> Endings => _endings;
+        public string IdleSituation => _activeCase != null && !string.IsNullOrEmpty(_activeCase.IdleSituation) ? _activeCase.IdleSituation : _idleSituation;
+        /// <summary>지금 손님의 결말 목록 (엔딩 CSV가 바뀌면 바로 반영된다)</summary>
+        public List<EndingDef> Endings => _activeCase != null ? _activeCase.Endings : _endings;
+        private string IntroText => _activeCase != null && !string.IsNullOrEmpty(_activeCase.IntroMessage) ? _activeCase.IntroMessage : _introMessage;
+        private string AbyssText => _activeCase != null && !string.IsNullOrEmpty(_activeCase.AbyssMessage) ? _activeCase.AbyssMessage : _abyssMessage;
         public ClientCase ActiveCase => _activeCase;
         public float BlinkAmount => _blinkAmount;
 
@@ -124,14 +143,27 @@ namespace EyeMaze
         public bool HeartFinished => _mode == Mode.Ending && _heartIndex >= EndingLines.Count - 1;
 
         public EndingDef CurrentEnding => FindEnding(_currentEnding);
-        public DialogueNode[] Nodes => _dialogue != null ? _dialogue.GetComponentsInChildren<DialogueNode>(false) : new DialogueNode[0];
+        /// <summary>지금 손님의 대화 (CSV를 읽은 것)</summary>
+        public DialogueScript Script => _activeCase != null ? _activeCase.Script : null;
 
-        public DialogueNode CurrentNode
+        /// <summary>지금 대화 장면. id가 비었거나 CSV에 없으면 시작 장면</summary>
+        public DialogueScript.Node CurrentNode
         {
             get
             {
-                DialogueNode[] n = Nodes;
-                return _currentNode >= 0 && _currentNode < n.Length ? n[_currentNode] : null;
+                DialogueScript s = Script;
+                if (s == null) return null;
+                return s.Find(_currentNodeId) ?? s.Root;
+            }
+        }
+
+        /// <summary>지금 장면에서 뒤로가기('다른 질문을 해볼까요?')를 보여줄지</summary>
+        public bool CanGoBack
+        {
+            get
+            {
+                DialogueScript.Node n = CurrentNode;
+                return n != null && n != Script.Root && n.BackLabel != DialogueScript.NoBack;
             }
         }
 
@@ -152,7 +184,36 @@ namespace EyeMaze
             }
         }
 
-        void OnValidate() => EyeHooks.Repaint();
+        void OnValidate()
+        {
+            Strings.Load(_stringsCsv);
+            Flags.LoadDefinitions(_flagsCsv);
+            EyeHooks.Repaint();
+        }
+
+        void Awake() => Strings.Load(_stringsCsv);
+
+        void OnEnable()
+        {
+            Strings.Load(_stringsCsv);
+            Flags.Values = FlagValue;
+            Flags.LoadDefinitions(_flagsCsv);
+        }
+
+        /// <summary>
+        /// 계산 플래그의 condition에서 쓰는 수치를 알려준다.
+        /// name(trust / dilation / spring)을 사용하며, 지금 상대의 값 또는 null을 반환한다.
+        /// </summary>
+        private float? FlagValue(string name)
+        {
+            switch (name)
+            {
+                case "trust": return _person != null ? _person.Trust : (float?)null;
+                case "dilation": return _person != null ? _person.Dilation : (float?)null;
+                case "spring": return _intro != null ? _intro.Wound : (float?)null;
+                default: return null;
+            }
+        }
 
         void Update()
         {
@@ -213,7 +274,6 @@ namespace EyeMaze
             if (c == null) return;
             _activeCase = c;
             if (_person != null) _person.DisplayName = c.PersonName;
-            _dialogue = c.Dialogue;
             _endings = c.Endings;
             _keyFragment = c.KeyFragment;
             _truthTrust = c.TruthTrust;
@@ -226,9 +286,6 @@ namespace EyeMaze
             foreach (ClientCase other in all)
                 foreach (GameObject g in other.FragmentGroups)
                     if (g != null && g.activeSelf != (other == c)) g.SetActive(other == c);
-            foreach (ClientCase other in all)
-                if (other.Dialogue != null && other.Dialogue.gameObject.activeSelf != (other == c))
-                    other.Dialogue.gameObject.SetActive(other == c);
 
             if (_maze != null && _maze.Seed != c.MazeSeed) _maze.Generate(c.MazeSeed);
             ResetAll();
@@ -252,8 +309,9 @@ namespace EyeMaze
         /// </summary>
         public EndingDef FindEnding(string id)
         {
-            if (_endings == null || string.IsNullOrEmpty(id)) return null;
-            foreach (EndingDef e in _endings) if (e != null && e.Id == id) return e;
+            List<EndingDef> list = Endings;
+            if (list == null || string.IsNullOrEmpty(id)) return null;
+            foreach (EndingDef e in list) if (e != null && e.Id == id) return e;
             return null;
         }
 
@@ -266,14 +324,14 @@ namespace EyeMaze
         public void ToggleGaze()
         {
             if (_mode == Mode.Ending) return;
-            if (_mode == Mode.Gaze && _inAbyss) { _message = _abyssMessage; return; }
-            if (_mode == Mode.Gaze) { ExitGaze("시선을 거뒀다. 남은 태엽은 그대로다."); return; }
+            if (_mode == Mode.Gaze && _inAbyss) { _message = AbyssText; return; }
+            if (_mode == Mode.Gaze) { ExitGaze(Strings.Get("msg.gaze_off", "시선을 거뒀다. 남은 태엽은 그대로다.")); return; }
             if (!CanGaze) { _message = _intro != null ? _intro.NeedWindMessage : ""; return; }
             _mode = Mode.Gaze;
             _velocity = Vector2.zero;
             if (_cursor != null) _cursor.Visible = true;
             _lastLayer = _maze != null && _cursor != null ? _maze.LayerOfRing(_cursor.Ring) : -1;
-            _message = $"{Name}의 눈을 들여다본다. 태엽이 풀리는 동안만 볼 수 있다.";
+            _message = Strings.Get("msg.gaze_on", "{name}의 눈을 들여다본다. 태엽이 풀리는 동안만 볼 수 있다.", ("name", Name));
         }
 
         /// <summary>
@@ -352,7 +410,7 @@ namespace EyeMaze
             int keep = _cursor != null ? _maze.LayerOfRing(_cursor.Ring) : -1;
             _maze.Generate(UnityEngine.Random.Range(1, 999999), keep);
             if (Application.isPlaying && _blinkPhase < 0f) _blinkPhase = 0f;
-            _message = "눈을 깜빡이자, 다른 층의 길이 바뀌었다.";
+            _message = Strings.Get("msg.respawn", "눈을 깜빡이자, 다른 층의 길이 바뀌었다.");
         }
 
         /// <summary>
@@ -413,28 +471,66 @@ namespace EyeMaze
 
         /// <summary>
         /// 선택지를 고를 수 있는지 판단한다.
-        /// o의 필요 파편과 필요 단서를 사용하며, 고를 수 있으면 true를 반환한다.
+        /// o의 need 플래그들을 사용하며, 모두 켜져 있으면 true를 반환한다.
         /// </summary>
-        public bool IsAvailable(DialogueOption o) =>
-            o != null && (o.Requires == null || o.Requires.Collected) && (o.RequiresClue == null || o.RequiresClue.Examined);
+        public bool IsAvailable(DialogueScript.Choice o) => o != null && Flags.AllSet(o.Need);
+
+        /// <summary>
+        /// 지금 장면에서 보여줄 선택지 목록을 만든다. 시작 장면이 아니면 맨 끝에 뒤로가기가 붙는다.
+        /// 지금 장면과 플래그를 사용하며, 선택지 목록을 반환한다 (매번 같은 리스트를 다시 채운다).
+        /// </summary>
+        public IReadOnlyList<ChoiceView> CurrentChoices()
+        {
+            _choices.Clear();
+            DialogueScript.Node node = CurrentNode;
+            if (node == null) return _choices;
+            foreach (DialogueScript.Choice c in node.Choices)
+            {
+                bool ok = IsAvailable(c);
+                _choices.Add(new ChoiceView
+                {
+                    Text = c.Text,
+                    Available = ok,
+                    Missing = ok ? "" : string.Join(", ", c.Need.Where(f => !Flags.IsOn(f))),
+                });
+            }
+            if (CanGoBack)
+                _choices.Add(new ChoiceView
+                {
+                    Text = string.IsNullOrEmpty(node.BackLabel) ? Strings.Get("dialogue.back", DialogueScript.DefaultBackLabel) : node.BackLabel,
+                    Available = true,
+                    IsBack = true,
+                    Missing = "",
+                });
+            return _choices;
+        }
 
         /// <summary>
         /// 대화 선택지를 고른다. 좋은 말은 한 번만 통하며, 신뢰가 바닥나면 leave 엔딩이 된다.
-        /// index를 사용하며, 상대의 신뢰와 동공, 태엽, 문구, 대화 진행 또는 엔딩을 바꾼다.
+        /// 마지막 번호가 뒤로가기면 이전 장면으로 돌아간다.
+        /// index를 사용하며, 상대의 신뢰와 동공, 태엽, 플래그, 문구, 대화 장면 또는 엔딩을 바꾼다.
         /// </summary>
         public void ChooseOption(int index)
         {
             if (_mode == Mode.Ending) return;
-            if (_mode == Mode.Gaze) { _message = "들여다보는 중에는 말할 수 없다. (Space로 시선 거두기)"; return; }
-            DialogueNode node = CurrentNode;
-            if (node == null || index < 0 || index >= node.Options.Count) return;
-            DialogueOption o = node.Options[index];
-            if (!IsAvailable(o)) { _message = "아직 모르는 이야기다. 눈 속에서 단서를 찾아야 한다."; return; }
+            if (_mode == Mode.Gaze) { _message = Strings.Get("msg.no_talk_in_gaze", "들여다보는 중에는 말할 수 없다. (Space로 시선 거두기)"); return; }
+            DialogueScript.Node node = CurrentNode;
+            if (node == null || index < 0) return;
+            if (index == node.Choices.Count && CanGoBack) { GoBack(); return; }
+            if (index >= node.Choices.Count) return;
+            DialogueScript.Choice o = node.Choices[index];
+            if (!IsAvailable(o)) { _message = Strings.Get("msg.locked_choice", "아직 모르는 이야기다. 눈 속에서 단서를 찾아야 한다."); return; }
 
             // 같은 말을 반복해서 신뢰를 올릴 수 없게 좋은 말은 한 번만 통한다.
-            string key = _currentNode + ":" + index;
+            // 다른 장면으로 넘어가는 말이면 수치는 다시 주지 않고 그 장면으로만 간다 (뒤로 갔다가 다시 들어올 때).
+            string key = node.Id + ":" + index;
             bool helpful = o.Trust > 0 || o.Dilation > 0f || o.Spring > 0;
-            if (helpful && _usedOptions.Contains(key)) { _message = $"이미 한 이야기다. {Name}는 다음 말을 기다리고 있다."; return; }
+            if (helpful && _usedOptions.Contains(key))
+            {
+                if (!string.IsNullOrEmpty(o.Goto) && string.IsNullOrEmpty(o.Ending)) { _message = o.Response; GoTo(o.Goto); }
+                else _message = Strings.Get("msg.already", "이미 한 이야기다. {name}는 다음 말을 기다리고 있다.", ("name", Name));
+                return;
+            }
             _usedOptions.Add(key);
 
             if (_person != null)
@@ -443,20 +539,56 @@ namespace EyeMaze
                 _person.Dilation = Mathf.Clamp01(_person.Dilation + o.Dilation);
             }
             if (_intro != null && o.Spring != 0) _intro.AddFree(o.Spring);
+            foreach (string f in o.Set) Flags.Set(f);
             if (!string.IsNullOrEmpty(o.Ending)) { StartEnding(o.Ending, o.Response); return; }
             var sb = new StringBuilder(o.Response);
-            if (o.Trust > 0) sb.Append("\n(신뢰가 깊어졌다. 눈 속 어딘가의 문이 열렸다.)");
-            if (o.Dilation > 0.05f) sb.Append("\n(동공이 조금 커졌다.)");
-            if (o.Dilation < -0.05f) sb.Append("\n(동공이 좁아졌다.)");
-            if (o.Spring > 0) sb.Append($"\n(태엽이 {o.Spring}칸 감겼다.)");
-            if (o.Spring < 0) sb.Append($"\n(태엽이 {-o.Spring}칸 풀렸다.)");
+            if (o.Trust > 0) sb.Append("\n" + Strings.Get("msg.trust_up", "(신뢰가 깊어졌다. 눈 속 어딘가의 문이 열렸다.)"));
+            if (o.Trust < 0) sb.Append(Strings.Get("msg.trust_down", "") is string td && td.Length > 0 ? "\n" + td : "");
+            if (o.Dilation > 0.05f) sb.Append("\n" + Strings.Get("msg.dilation_up", "(동공이 조금 커졌다.)"));
+            if (o.Dilation < -0.05f) sb.Append("\n" + Strings.Get("msg.dilation_down", "(동공이 좁아졌다.)"));
+            if (o.Spring > 0) sb.Append("\n" + Strings.Get("msg.spring_up", "(태엽이 {n}칸 감겼다.)", ("n", o.Spring)));
+            if (o.Spring < 0) sb.Append("\n" + Strings.Get("msg.spring_down", "(태엽이 {n}칸 풀렸다.)", ("n", -o.Spring)));
             _message = sb.ToString();
             if (_person != null && _person.Trust <= _leaveTrust && FindEnding("leave") != null)
             {
                 StartEnding("leave", o.Response);
                 return;
             }
-            if (o.Advance) _currentNode++;
+            if (!string.IsNullOrEmpty(o.Goto)) GoTo(o.Goto);
+        }
+
+        /// <summary>
+        /// 다른 장면으로 간다. 이미 지나온 장면이면 그곳까지 되감는다 (뒤로가기가 꼬이지 않게).
+        /// id를 사용하며, 지금 장면과 지나온 장면 목록을 바꾼다.
+        /// </summary>
+        public void GoTo(string id)
+        {
+            DialogueScript s = Script;
+            if (s == null || s.Find(id) == null) return;
+            DialogueScript.Node cur = CurrentNode;
+            if (cur != null && cur.Id == id) return;
+            int seen = _nodeHistory.LastIndexOf(id);
+            if (seen >= 0) _nodeHistory.RemoveRange(seen, _nodeHistory.Count - seen);
+            else if (cur != null) _nodeHistory.Add(cur.Id);
+            _currentNodeId = id;
+        }
+
+        /// <summary>
+        /// 바로 전 장면으로 돌아간다 ('다른 질문을 해볼까요?').
+        /// 지나온 장면 목록을 사용하며, 지금 장면과 문구를 바꾼다.
+        /// </summary>
+        public void GoBack()
+        {
+            DialogueScript s = Script;
+            DialogueScript.Node node = CurrentNode;
+            if (s == null || node == null) return;
+            _message = string.IsNullOrEmpty(node.BackLabel) ? Strings.Get("dialogue.back", DialogueScript.DefaultBackLabel) : node.BackLabel;
+            if (_nodeHistory.Count > 0)
+            {
+                _currentNodeId = _nodeHistory[_nodeHistory.Count - 1];
+                _nodeHistory.RemoveAt(_nodeHistory.Count - 1);
+            }
+            else _currentNodeId = s.Root != null ? s.Root.Id : "";
         }
 
         /// <summary>
@@ -478,6 +610,12 @@ namespace EyeMaze
         public void ChooseOption2() => ChooseOption(2);
 
         /// <summary>
+        /// 네 번째 선택지(보통 뒤로가기)를 고른다. UI 버튼에서 쓴다.
+        /// 입력값은 없으며, ChooseOption(3)과 같은 상태를 바꾼다.
+        /// </summary>
+        public void ChooseOption3() => ChooseOption(3);
+
+        /// <summary>
         /// 지금 케이스에서 모은 파편 목록을 글로 만든다.
         /// 활성화된 파편들을 사용하며, 화면에 보일 요약 글을 반환한다.
         /// </summary>
@@ -485,7 +623,8 @@ namespace EyeMaze
         {
             MemoryFragment[] all = Fragments;
             string[] got = all.Where(f => f.Collected).Select(f => "· " + f.Title).ToArray();
-            return $"파편들 ({got.Length}/{all.Length})\n" + (got.Length > 0 ? string.Join("\n", got) : "· 아직 없음");
+            return Strings.Get("ui.fragments", "파편들 ({got}/{all})", ("got", got.Length), ("all", all.Length)) + "\n"
+                + (got.Length > 0 ? string.Join("\n", got) : Strings.Get("ui.fragments_none", "· 아직 없음"));
         }
 
         /// <summary>
@@ -502,8 +641,12 @@ namespace EyeMaze
             _endingLines = null;
             _usedOptions.Clear();
             if (_core != null) _core.ResetState();
-            _currentNode = 0;
-            _message = _introMessage;
+            DialogueScript script = Script;
+            _currentNodeId = script != null && script.Root != null ? script.Root.Id : "";
+            _nodeHistory.Clear();
+            // 이 대화의 선택지가 켜는 플래그는 만남을 다시 시작하면 끈다 (단서처럼 필드에서 켠 플래그는 유지).
+            if (script != null) foreach (string f in script.FlagsSet()) Flags.Set(f, false);
+            _message = IntroText;
             _blinkAmount = 0f;
             _blinkPhase = -1f;
             _velocity = Vector2.zero;
@@ -549,6 +692,7 @@ namespace EyeMaze
                     if (kb.digit1Key.wasPressedThisFrame) ChooseOption(0);
                     else if (kb.digit2Key.wasPressedThisFrame) ChooseOption(1);
                     else if (kb.digit3Key.wasPressedThisFrame) ChooseOption(2);
+                    else if (kb.digit4Key.wasPressedThisFrame) ChooseOption(3);
                 }
             }
             if (pad != null)
@@ -674,7 +818,7 @@ namespace EyeMaze
             if (layer != _lastLayer)
             {
                 MazeLayer l = _maze.GetLayer(layer);
-                if (layer > _lastLayer && l != null) _message = $"더 깊은 곳으로 들어왔다 — {l.DisplayName}";
+                if (layer > _lastLayer && l != null) _message = Strings.Get("msg.deeper", "더 깊은 곳으로 들어왔다 — {layer}", ("layer", l.DisplayName));
                 _lastLayer = layer;
             }
             CheckFragment();
@@ -692,7 +836,7 @@ namespace EyeMaze
                 if (f.Collected || f.Ring != _cursor.Ring || f.WorldSector != _cursor.Sector) continue;
                 if (Vector3.Distance(pos, _maze.CellLocal(f.Ring, f.WorldSector)) > _maze.RingWidth * 0.55f) continue;
                 f.Collected = true;
-                _message = $"파편 — {f.Title}\n{f.Text}";
+                _message = Strings.Get("msg.fragment", "파편 — {title}\n{text}", ("title", f.Title), ("text", f.Text));
                 if (Application.isPlaying) { _reading = true; _readT = 0f; _velocity = Vector2.zero; }
             }
         }
@@ -713,7 +857,7 @@ namespace EyeMaze
                 rotated = true;
                 if (riding) _cursor.Angle = Mathf.Repeat(_cursor.Angle + layer.RotateOnBlink * _maze.SectorDeg, 360f);
             }
-            if (rotated && _mode == Mode.Gaze) _message = "눈을 깜빡였다. 무언가가 돌아갔다.";
+            if (rotated && _mode == Mode.Gaze) _message = Strings.Get("msg.blink_rotate", "눈을 깜빡였다. 무언가가 돌아갔다.");
         }
 
         /// <summary>
@@ -723,7 +867,7 @@ namespace EyeMaze
         private void EnterAbyss()
         {
             _inAbyss = true;
-            _message = _abyssMessage;
+            _message = AbyssText;
         }
 
         /// <summary>

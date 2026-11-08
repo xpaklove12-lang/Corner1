@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 
 namespace EyeMaze
 {
-    /// <summary>대화 선택지 하나. 조건(파편, 단서)과 고른 결과(신뢰, 동공, 태엽, 반응, 엔딩)를 가진다.</summary>
+    /// <summary>(옛 방식) 대화 선택지 하나. 지금은 Data/Dialogue/*.csv를 쓴다. 씬의 옛 대화 오브젝트를 지우면 이 파일도 지워도 된다.</summary>
     [Serializable]
     public class DialogueOption
     {
@@ -41,7 +41,7 @@ namespace EyeMaze
         public string Ending => _ending;
     }
 
-    /// <summary>현실의 대화 한 장면. 대화 루트 아래 순서대로 진행한다. 복제(Ctrl+D)로 장면을 늘린다.</summary>
+    /// <summary>(옛 방식) 씬에 두던 대화 장면. 더 이상 읽지 않는다 — 대화는 Data/Dialogue/*.csv로 옮겼다.</summary>
     public class DialogueNode : MonoBehaviour
     {
         [Header("장면")]

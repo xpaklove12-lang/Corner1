@@ -21,6 +21,10 @@ namespace EyeMaze
         [Tooltip("상담이 끝났는지")]
         [SerializeField, FormerlySerializedAs("resolved")] private bool _resolved;
 
+        [Header("필드 대화 CSV")]
+        [Tooltip("말을 걸었을 때 나오는 대사 CSV (Data/Talk/이름.csv, UTF-8). 비우거나 맞는 대화가 없으면 아래 칸들의 대사를 쓴다")]
+        [SerializeField] private TextAsset _talkCsv;
+
         [Header("초상화 / 대화")]
         [Tooltip("말할 때 텍스트 상자 왼쪽에 뜨는 초상화")]
         [SerializeField, FormerlySerializedAs("portrait")] private Sprite _portrait;
@@ -77,6 +81,8 @@ namespace EyeMaze
         public List<string> TalkLines => _talkLines;
         public string RevealLine => _revealLine;
         public bool IsMoving => _walking || _sitT >= 0f;
+        public TextAsset TalkCsv => _talkCsv;
+        public TalkScript Talk => TalkScript.Get(_talkCsv);
 
         /// <summary>씬에 놓인 원래 자리 (의자 위)</summary>
         public Vector3 SeatPosition { get { SaveSeat(); return _seatPos; } }
@@ -89,7 +95,7 @@ namespace EyeMaze
         }
 
         public override bool Available => Present;
-        public override string Verb => _talkOnly || _resolved ? "이야기하기" : "눈을 마주하기";
+        public override string Verb => _talkOnly || _resolved ? Strings.Get("verb.talk", "이야기하기") : Strings.Get("verb.gaze", "눈을 마주하기");
 
         void OnEnable() { _drawnKey = int.MinValue; }
         protected override void OnValidate() { _drawnKey = int.MinValue; base.OnValidate(); }
@@ -153,12 +159,59 @@ namespace EyeMaze
         {
             if (_talkOnly)
             {
+                bool first = !_talked;
+                if (TryTalk(flow, null, null, first ? () => FinishTalk(flow) : (Action)null)) return;
                 if (_talked) { flow.ShowConversation(DisplayName, _portrait, new List<string> { _lineAfterTalk }, null); return; }
                 flow.ShowConversation(DisplayName, _portrait, _talkLines, () => FinishTalk(flow));
                 return;
             }
-            if (_resolved) flow.ShowConversation(DisplayName, _portrait, new List<string> { _lineAfterResolved }, null);
+            if (_resolved)
+            {
+                if (TryTalk(flow, null, null, null)) return;
+                flow.ShowConversation(DisplayName, _portrait, new List<string> { _lineAfterResolved }, null);
+            }
             else flow.BeginEncounter(this);
+        }
+
+        /// <summary>
+        /// 필드 대화 CSV에서 대화를 골라 보여준다. 다 보면 그 대화의 set 플래그를 켜고 done을 부른다.
+        /// flow, groupId(null이면 need가 맞는 첫 대화), narrationPortrait(서술 줄의 초상화), done을 사용하며,
+        /// 보여줄 대화가 있으면 true를 반환한다 (없으면 호출한 쪽이 원래 대사를 쓴다).
+        /// </summary>
+        public bool TryTalk(GameFlow flow, string groupId, Sprite narrationPortrait, Action done)
+        {
+            TalkScript t = Talk;
+            TalkScript.Group g = t == null ? null : groupId == null ? t.Pick() : t.Find(groupId);
+            if (g == null || g.Lines.Count == 0 || !Flags.AllSet(g.Need)) return false;
+
+            var speakers = new List<string>();
+            var portraits = new List<Sprite>();
+            var lines = new List<string>();
+            foreach (TalkScript.Line l in g.Lines)
+            {
+                if (string.IsNullOrEmpty(l.Speaker)) { speakers.Add(DisplayName); portraits.Add(_portrait); }
+                else if (l.Speaker == TalkScript.Narration) { speakers.Add(null); portraits.Add(narrationPortrait); }
+                else { speakers.Add(l.Speaker); portraits.Add(PortraitOf(l.Speaker)); }
+                lines.Add(l.Text);
+            }
+            string[] set = g.Set;
+            flow.ShowConversationLines(speakers, portraits, lines, () =>
+            {
+                foreach (string f in set) Flags.Set(f);
+                done?.Invoke();
+            });
+            return true;
+        }
+
+        /// <summary>
+        /// 이름으로 씬의 다른 사람 초상화를 찾는다 (speaker 칸에 다른 사람 이름을 쓴 줄용).
+        /// name을 사용하며, 찾은 초상화 또는 null을 반환한다.
+        /// </summary>
+        private static Sprite PortraitOf(string name)
+        {
+            foreach (FieldNPC n in FindObjectsByType<FieldNPC>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (n.DisplayName == name) return n.Portrait;
+            return null;
         }
 
         /// <summary>
@@ -263,6 +316,7 @@ namespace EyeMaze
             if (_revealAfterTalk != null)
             {
                 _revealAfterTalk.Present = true;
+                if (TryTalk(flow, TalkScript.Reveal, _revealAfterTalk.Portrait, null)) return;
                 if (!string.IsNullOrEmpty(_revealLine))
                     flow.ShowConversation(null, _revealAfterTalk.Portrait, new List<string> { _revealLine }, null);
             }

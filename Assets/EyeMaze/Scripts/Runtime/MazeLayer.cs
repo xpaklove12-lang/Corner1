@@ -23,7 +23,8 @@ namespace EyeMaze
         private IrisMaze _maze;
 
         public int Index => _index;
-        public string DisplayName => _displayName;
+        /// <summary>층 이름. Strings.csv의 layer.0, layer.1 … 이 있으면 그걸 쓴다.</summary>
+        public string DisplayName => Strings.Get("layer." + _index, _displayName);
         public int Offset { get => _offset; set => _offset = value; }
         public int RotateOnBlink => _rotateOnBlink;
 

@@ -60,6 +60,8 @@ namespace EyeMaze
         [NonSerialized] private bool _returnResolved;
         [NonSerialized] private List<string> _convLines;
         [NonSerialized] private string _convSpeaker;
+        [NonSerialized] private List<string> _convSpeakers;
+        [NonSerialized] private List<Sprite> _convPortraits;
         [NonSerialized] private int _convIndex;
         [NonSerialized] private Action _convDone;
 
@@ -213,12 +215,27 @@ namespace EyeMaze
         {
             _convLines = lines != null && lines.Count > 0 ? lines : new List<string> { "…" };
             _convSpeaker = speaker;
+            _convSpeakers = null;
+            _convPortraits = null;
             _convIndex = 0;
             _convDone = done;
             _fieldPortrait = portrait;
             _showingText = true;
             ShowConvLine();
             if (_player != null) _player.Stop();
+        }
+
+        /// <summary>
+        /// 줄마다 말하는 사람과 초상화가 다른 대화를 연다 (필드 대화 CSV용).
+        /// speakers, portraits, lines(같은 길이), done을 사용하며, 글 상자 상태를 바꾸고 플레이어를 멈춘다.
+        /// </summary>
+        public void ShowConversationLines(List<string> speakers, List<Sprite> portraits, List<string> lines, Action done)
+        {
+            ShowConversation(speakers != null && speakers.Count > 0 ? speakers[0] : null,
+                portraits != null && portraits.Count > 0 ? portraits[0] : null, lines, done);
+            _convSpeakers = speakers;
+            _convPortraits = portraits;
+            ShowConvLine();
         }
 
         /// <summary>
@@ -248,6 +265,8 @@ namespace EyeMaze
             _fieldText = "";
             _fieldPortrait = null;
             _convLines = null;
+            _convSpeakers = null;
+            _convPortraits = null;
             _convDone = null;
         }
 
@@ -381,7 +400,10 @@ namespace EyeMaze
         /// </summary>
         private void ShowConvLine()
         {
-            string line = _convLines[Mathf.Clamp(_convIndex, 0, _convLines.Count - 1)];
+            int i = Mathf.Clamp(_convIndex, 0, _convLines.Count - 1);
+            string line = _convLines[i];
+            if (_convSpeakers != null && i < _convSpeakers.Count) _convSpeaker = _convSpeakers[i];
+            if (_convPortraits != null && i < _convPortraits.Count) _fieldPortrait = _convPortraits[i];
             _fieldText = string.IsNullOrEmpty(_convSpeaker) ? line : $"{_convSpeaker}\n{line}";
         }
 
