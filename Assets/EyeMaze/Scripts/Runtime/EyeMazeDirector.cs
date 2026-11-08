@@ -153,7 +153,8 @@ namespace EyeMaze
         public string IdleSituation => _idleSituation;
         public List<EndingDef> Endings => _endings;
         public ClientCase ActiveCase => _activeCase;
-        // 스펙 006: 페이드 제거로 쓰이지 않는 BlinkAmount 프로퍼티 제거
+        // 스펙 006: 부담감 막대를 가리는 데 쓰는 눈꺼풀 닫힘 정도 공개
+        public float BlinkAmount => _blinkAmount;
         public string ReturnText => _returnText;
         public float Burden => _burden;
 

@@ -37,8 +37,12 @@ namespace EyeMaze
         [SerializeField] private RectTransform _burdenFill;
         [Tooltip("대화로 부담감이 갑자기 바뀔 때 막대가 따라가는 속도 (초당 0~1 비율)")]
         [SerializeField] private float _burdenAnimSpeed = 0.5f;
+        // 스펙 006: 깜빡일 때 가릴 부담감 표시 참조와 현재 투명도 추가
+        [Tooltip("깜빡일 때 함께 가려지는 부담감 막대와 글")]
+        [SerializeField] private Graphic[] _burdenGraphics = new Graphic[0];
 
         [NonSerialized] private float _burdenShown = -1f;
+        [NonSerialized] private float _burdenAlpha = -1f;
 
         // 스펙 006: 깜빡임 전체 화면 페이드 필드 제거
 
@@ -89,6 +93,14 @@ namespace EyeMaze
                 _burdenShown = snap ? d.Burden : Mathf.MoveTowards(_burdenShown, d.Burden, _burdenAnimSpeed * Time.deltaTime);
                 Vector3 scale = new Vector3(1f, _burdenShown, 1f);
                 if (_burdenFill.localScale != scale) _burdenFill.localScale = scale;
+            }
+
+            // 스펙 006: 눈꺼풀이 닫히는 만큼 부담감 막대와 글을 가린다.
+            float burdenAlpha = 1f - d.BlinkAmount;
+            if (!Mathf.Approximately(burdenAlpha, _burdenAlpha))
+            {
+                _burdenAlpha = burdenAlpha;
+                foreach (Graphic g in _burdenGraphics) g.canvasRenderer.SetAlpha(burdenAlpha);
             }
 
             bool showReturn = d.CanReturnToStart;

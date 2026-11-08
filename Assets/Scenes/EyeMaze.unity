@@ -12816,6 +12816,11 @@ MonoBehaviour:
   _returnLabel: {fileID: 242840088}
   _gazeButtonLabel: {fileID: 342704014}
   _burdenFill: {fileID: 1049329018}
+  _burdenGraphics:
+  - {fileID: 1429019349}
+  - {fileID: 289717202}
+  - {fileID: 1049329019}
+  - {fileID: 869949150}
 --- !u!114 &523666711
 MonoBehaviour:
   m_ObjectHideFlags: 0
