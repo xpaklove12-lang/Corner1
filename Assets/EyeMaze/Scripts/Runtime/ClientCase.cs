@@ -7,7 +7,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 상담 한 건(손님 한 명)의 데이터. 그 사람에게 말을 걸어 눈 속으로 들어갈 때 디렉터가 이 데이터를 불러온다.
-    /// 대화 장면(dialogue 아래 DialogueNode들), 기억 파편 묶음, 결말과 문구를 가진다.
+    /// 대화 CSV(Data/Dialogue/이름.csv), 기억 파편 묶음, 결말과 문구를 가진다.
     /// 상담 순서는 order 값으로 정한다.
     /// </summary>
     public class ClientCase : MonoBehaviour
@@ -22,8 +22,8 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("npc")] private FieldNPC _npc;
 
         [Header("눈 속")]
-        [Tooltip("대화 장면들의 부모")]
-        [SerializeField, FormerlySerializedAs("dialogue")] private Transform _dialogue;
+        [Tooltip("이 사람의 대화 CSV (UTF-8). Data/Dialogue 폴더에 있다")]
+        [SerializeField] private TextAsset _dialogueCsv;
         [Tooltip("이 케이스의 기억 파편 묶음들 (층마다 하나)")]
         [SerializeField, FormerlySerializedAs("fragmentGroups")] private List<GameObject> _fragmentGroups = new List<GameObject>();
         [Tooltip("미로 모양 (seed)")]
@@ -46,14 +46,28 @@ namespace EyeMaze
         public string PersonName => _personName;
         public string Pronoun => _pronoun;
         public FieldNPC Npc => _npc;
-        public Transform Dialogue => _dialogue;
+        public TextAsset DialogueCsv => _dialogueCsv;
+        public DialogueScript Script => DialogueScript.Get(_dialogueCsv);
+
+        [Tooltip("이 사람의 엔딩과 문구 CSV (Data/Ending/이름.csv). 비우면 아래 인스펙터 값을 쓴다")]
+        [SerializeField] private TextAsset _endingCsv;
+        public TextAsset EndingCsv => _endingCsv;
+        public EndingScript EndingData => EndingScript.Get(_endingCsv);
         public List<GameObject> FragmentGroups => _fragmentGroups;
         public int MazeSeed => _mazeSeed;
-        public string IntroMessage => _introMessage;
-        public string IdleSituation => _idleSituation;
-        public string AbyssMessage => _abyssMessage;
+        public string IntroMessage => EndingData?.Text(EndingScript.Intro) ?? _introMessage;
+        public string IdleSituation => EndingData?.Text(EndingScript.Idle) ?? _idleSituation;
+        public string AbyssMessage => EndingData?.Text(EndingScript.Abyss) ?? _abyssMessage;
         public string EntryLine => _entryLine;
-        public List<EndingDef> Endings => _endings;
+        /// <summary>결말 목록. 엔딩 CSV가 있으면 그걸, 없으면 인스펙터의 목록을 쓴다.</summary>
+        public List<EndingDef> Endings
+        {
+            get
+            {
+                EndingScript e = EndingData;
+                return e != null && e.Endings.Count > 0 ? e.Endings : _endings;
+            }
+        }
         public int TruthTrust => _truthTrust;
         public MemoryFragment KeyFragment => _keyFragment;
         public int LeaveTrust => _leaveTrust;

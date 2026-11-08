@@ -52,7 +52,7 @@ namespace EyeMaze
                 }
                 if (_fieldHint != null)
                 {
-                    string h = _flow.ShowingText ? "Z  다음" : FieldCutscene.IsPlaying ? "" : "A D / ← →  이동   ·   Z  말 걸기 / 살펴보기";
+                    string h = _flow.ShowingText ? Strings.Get("hint.text_next", "Z  다음") : FieldCutscene.IsPlaying ? "" : Strings.Get("hint.field", "A D / ← →  이동   ·   Z  말 걸기 / 살펴보기");
                     if (_fieldHint.text != h) _fieldHint.text = h;
                 }
             }

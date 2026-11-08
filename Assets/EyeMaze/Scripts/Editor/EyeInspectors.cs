@@ -18,7 +18,7 @@ namespace EyeMaze.EditorTools
             if (p != null)
                 EditorGUILayout.LabelField($"모드 {d.CurrentMode} · 신뢰 {p.Trust} · 동공 {p.Dilation * 100f:0}% · 태엽 {(d.Intro != null ? d.Intro.Wound : 0f):0.0} / {(d.Intro != null ? d.Intro.Capacity : 0)}", EditorStyles.miniBoldLabel);
 
-            DialogueNode node = d.CurrentNode;
+            DialogueScript.Node node = d.CurrentNode;
             if (d.CurrentMode == EyeMazeDirector.Mode.Talk && node != null) GUILayout.Label(node.Situation, EyeEditorOps.Box);
             if (!string.IsNullOrEmpty(d.Message)) GUILayout.Label("<i>" + d.Message + "</i>", EyeEditorOps.Box);
 
@@ -54,12 +54,13 @@ namespace EyeMaze.EditorTools
             if (d.CurrentMode == EyeMazeDirector.Mode.Talk && node != null)
             {
                 EditorGUILayout.Space(4);
-                for (int i = 0; i < node.Options.Count; i++)
+                EditorGUILayout.LabelField($"장면 '{node.Id}'  ·  {d.Script?.Name}.csv", EditorStyles.miniLabel);
+                var choices = d.CurrentChoices();
+                for (int i = 0; i < choices.Count; i++)
                 {
-                    DialogueOption o = node.Options[i];
+                    EyeMazeDirector.ChoiceView c = choices[i];
                     int idx = i;
-                    string need = o.Requires != null && !o.Requires.Collected ? o.Requires.Title : (o.RequiresClue != null ? o.RequiresClue.DisplayName : "");
-                    string label = d.IsAvailable(o) ? $"{i + 1}. {o.Text}" : $"{i + 1}. ??? ({need} 필요)";
+                    string label = c.Available ? $"{i + 1}. {c.Text}" : $"{i + 1}. ??? (플래그 {c.Missing} 필요)";
                     if (GUILayout.Button(label)) EyeEditorOps.Run("대화 선택", () => d.ChooseOption(idx), roots);
                 }
             }
