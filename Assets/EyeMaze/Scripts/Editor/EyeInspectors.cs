@@ -16,7 +16,7 @@ namespace EyeMaze.EditorTools
 
             EditorGUILayout.LabelField("Play 없이 바로 플레이", EditorStyles.boldLabel);
             if (p != null)
-                EditorGUILayout.LabelField($"모드 {d.CurrentMode} · 신뢰 {p.Trust} · 동공 {p.Dilation * 100f:0}% · 태엽 {(d.Intro != null ? d.Intro.Wound : 0f):0.0} / {(d.Intro != null ? d.Intro.Capacity : 0)}", EditorStyles.miniBoldLabel);
+                EditorGUILayout.LabelField($"모드 {d.CurrentMode} · 신뢰 {p.Trust} · 동공 {p.Dilation * 100f:0}%", EditorStyles.miniBoldLabel);
 
             DialogueNode node = d.CurrentNode;
             if (d.CurrentMode == EyeMazeDirector.Mode.Talk && node != null) GUILayout.Label(node.Situation, EyeEditorOps.Box);
@@ -68,7 +68,6 @@ namespace EyeMaze.EditorTools
             using (new EditorGUILayout.HorizontalScope())
             {
                 if (GUILayout.Button("처음부터")) EyeEditorOps.Run("리셋", d.ResetAll, roots);
-                if (GUILayout.Button("태엽 가득") && d.Intro != null) EyeEditorOps.Run("태엽 가득", d.Intro.FillUp, d.Intro);
                 if (GUILayout.Button("시선 커서 선택") && d.Cursor != null) Selection.activeGameObject = d.Cursor.gameObject;
             }
             using (new EditorGUILayout.HorizontalScope())
@@ -88,7 +87,7 @@ namespace EyeMaze.EditorTools
                         if (GUILayout.Button(e.Title.Replace("엔딩 · ", ""))) EyeEditorOps.Run("엔딩 보기", () => d.StartEnding(id, null), roots);
                     }
             }
-            EditorGUILayout.HelpBox("모든 버튼은 Ctrl+Z로 되돌릴 수 있다. 에디트 모드에서는 시간이 흐르지 않으니, 이동 한 번마다 태엽이 반 칸씩 풀린다.", MessageType.None);
+            EditorGUILayout.HelpBox("모든 버튼은 Ctrl+Z로 되돌릴 수 있다.", MessageType.None);
 
             EditorGUILayout.Space();
             DrawDefaultInspector();
@@ -150,29 +149,6 @@ namespace EyeMaze.EditorTools
             if (d == null || d.Cursor == null) return;
             if (GUILayout.Button("시선 커서를 이 조각 위치로"))
                 EyeEditorOps.Run("커서 이동", () => d.Cursor.SnapTo(f.Ring, f.WorldSector), d.Cursor.gameObject);
-        }
-    }
-
-    /// <summary>태엽 인스펙터: 감기, 가득, 다 풀기 버튼을 보여준다.</summary>
-    [CustomEditor(typeof(WindingIntro))]
-    public class WindingIntroEditor : Editor
-    {
-        public override void OnInspectorGUI()
-        {
-            var w = (WindingIntro)target;
-            var roots = new Object[] { w, w.Maze, w.Eye, w.Director, w.Director != null ? w.Director.Person : null };
-            EditorGUILayout.LabelField($"태엽 {w.Wound:0.0} / {w.Capacity}", EditorStyles.boldLabel);
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                if (GUILayout.Button("0으로")) EyeEditorOps.Run("태엽 0으로", w.FillUp, roots);
-                if (GUILayout.Button("거의 채우기")) EyeEditorOps.Run("태엽 채우기", () => w.Wound = w.Capacity - 1f, roots);
-            }
-            EditorGUILayout.HelpBox("태엽은 화면에 보이지 않는 값이다.\n" +
-                "· 들여다보는 동안 0에서 용량까지 찬다 (unwindPerSecond).\n" +
-                "· 다 차면 그대로 멈춘다.\n" +
-                "· 용량 = baseCapacity + 신뢰 × capacityPerTrust", MessageType.None);
-            EditorGUILayout.Space();
-            DrawDefaultInspector();
         }
     }
 }

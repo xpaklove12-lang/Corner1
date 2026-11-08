@@ -46,7 +46,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("lashSpread")] private float _lashSpread = 35f;
 
         [Header("초점")]
-        [Tooltip("초점. 0이면 어둡고 테두리가 번져 보인다. 태엽이 조절한다")]
+        [Tooltip("초점. 0이면 어둡고 테두리가 번져 보인다")]
         [SerializeField, FormerlySerializedAs("focus"), Range(0f, 1f)] private float _focus = 1f;
 
         [Header("그림")]

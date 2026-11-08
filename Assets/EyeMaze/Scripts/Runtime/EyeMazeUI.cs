@@ -27,30 +27,8 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("optionLabels")] private Text[] _optionLabels = new Text[3];
         [SerializeField, FormerlySerializedAs("gazeButtonLabel")] private Text _gazeButtonLabel;
 
-        [Header("태엽")]
-        [Tooltip("Play 시작 시 이 막대가 들어 있는 칸을 숨긴다")]
-        [SerializeField, FormerlySerializedAs("springFill")] private RectTransform _springFill;
-        [Tooltip("Play 시작 시 이 톱니가 들어 있는 칸을 숨긴다")]
-        [SerializeField, FormerlySerializedAs("springGear")] private RectTransform _springGear;
-
         [Header("깜빡임")]
         [SerializeField, FormerlySerializedAs("blinkOverlay")] private Image _blinkOverlay;
-
-        void Start()
-        {
-            if (!Application.isPlaying) return;
-            HideCell(_springFill);
-            HideCell(_springGear);
-        }
-
-        /// <summary>
-        /// 태엽 표시가 들어 있는 UI 칸(속지의 부모)을 숨긴다.
-        /// part를 사용하며, 그 칸의 활성 상태를 끈다.
-        /// </summary>
-        private static void HideCell(RectTransform part)
-        {
-            if (part != null) part.parent.parent.gameObject.SetActive(false);
-        }
 
         void Update()
         {
@@ -69,7 +47,7 @@ namespace EyeMaze
                 sit = e != null && !string.IsNullOrEmpty(e.Situation) ? e.Situation : $"{(p != null ? p.DisplayName : "그녀")}의 마음이 들린다.";
             }
             else if (d.InAbyss) sit = "그녀의 마음 속 심연";
-            else if (d.IsReading) sit = "시선이 파편에 머문다. 태엽이 잠시 멈췄다.";
+            else if (d.IsReading) sit = "시선이 파편에 머문다.";
             else if (d.CurrentMode == EyeMazeDirector.Mode.Gaze)
             {
                 MazeLayer layer = d.CursorLayer;
@@ -94,7 +72,7 @@ namespace EyeMaze
 
             Set(_gazeButtonLabel, d.CurrentMode == EyeMazeDirector.Mode.Gaze ? "시선 거두기 (Space)" : "들여다보기 (Space)");
             Set(_hint, d.IsReading
-                ? "Space / Z  계속 (읽는 동안 태엽이 멈춤)"
+                ? "Space / Z  계속"
                 : d.InAbyss
                 ? "WASD / 방향키로 가장 반짝이는 파편에 다가간다"
                 : d.CurrentMode == EyeMazeDirector.Mode.Gaze
