@@ -12,12 +12,12 @@ namespace EyeMaze
     [ExecuteAlways]
     public class MemoryFragment : MonoBehaviour
     {
-        // 스펙 010: 저해상도에서도 형태가 보이도록 마름모 본체의 대각선 배율과 폭 곡선 추가
+        // 스펙 012: 저해상도에서도 형태가 보이도록 마름모 본체의 대각선 배율과 폭 곡선 추가
         private const float BODY_SIZE_RATIO = 0.46f;
         private static readonly AnimationCurve DIAMOND_WIDTH = new AnimationCurve(
             new Keyframe(0f, 0f, 0f, 2f), new Keyframe(0.5f, 1f, 2f, -2f), new Keyframe(1f, 0f, -2f, 0f));
 
-        // 스펙 010: 획득 순간과 연출 정리를 알리는 이벤트 추가
+        // 스펙 012: 획득 순간과 연출 정리를 알리는 이벤트 추가
         public static event Action<MemoryFragment> PickedUp;
         public static event Action FeedbackCleared;
 
@@ -39,7 +39,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("color")] private Color _color = new Color(0.6f, 0.95f, 1f, 1f);
         [SerializeField, FormerlySerializedAs("line")] private LineRenderer _line;
 
-        // 스펙 010: 맥동 주기와 최소 밝기 설정 추가
+        // 스펙 012: 맥동 주기와 최소 밝기 설정 추가
         [Header("맥동")]
         [Tooltip("맥동 한 주기(초)")]
         [SerializeField] private float _pulseSeconds = 1.6f;
@@ -63,7 +63,7 @@ namespace EyeMaze
             get => _collected;
             set
             {
-                // 스펙 010: Play 중 값이 바뀔 때만 획득 또는 연출 정리를 알림
+                // 스펙 012: Play 중 값이 바뀔 때만 획득 또는 연출 정리를 알림
                 bool changed = _collected != value;
                 _collected = value;
                 Flags.Set(_flag, value);
@@ -73,10 +73,10 @@ namespace EyeMaze
             }
         }
         public MazeLayer Layer => GetComponentInParent<MazeLayer>(true);
-        // 스펙 010: 연출이 쓰는 파편 색, 본체 지름, 현재 표시 색 추가
+        // 스펙 012: 연출이 쓰는 파편 색, 본체 지름, 현재 표시 색 추가
         public Color Tint => _color;
         public float BodyDiameter => _maze.RingWidth * BODY_SIZE_RATIO;
-        // 스펙 010: 후광이 쓰는 맥동 없는 색과 맥동 파형(0~1) 추가
+        // 스펙 012: 후광이 쓰는 맥동 없는 색과 맥동 파형(0~1) 추가
         public Color MazeColor
         {
             get
@@ -113,12 +113,12 @@ namespace EyeMaze
         void OnEnable()
         {
             _drawnKey = int.MinValue;
-            // 스펙 010: 켜진 프레임의 후광 갱신이 첫 Update보다 먼저 돌아도 미로를 쓸 수 있게 여기서 찾음
+            // 스펙 012: 켜진 프레임의 후광 갱신이 첫 Update보다 먼저 돌아도 미로를 쓸 수 있게 여기서 찾음
             _maze = GetComponentInParent<IrisMaze>();
         }
         void OnValidate() { _drawnKey = int.MinValue; EyeHooks.Repaint(); }
 
-        // 스펙 010: 손님 전환으로 파편 묶음이 꺼질 때 연출 정리를 알림
+        // 스펙 012: 손님 전환으로 파편 묶음이 꺼질 때 연출 정리를 알림
         void OnDisable()
         {
             if (Application.isPlaying) FeedbackCleared?.Invoke();
@@ -131,7 +131,7 @@ namespace EyeMaze
             int key = HashCode.Combine(_ring, _sector, _maze.GeometryKey, _collected, _color, _maze.WallAlpha, _maze.Focus);
             if (key == _drawnKey)
             {
-                // 스펙 010: 그림이 그대로여도 Play 중에는 맥동 색을 매 프레임 갱신
+                // 스펙 012: 그림이 그대로여도 Play 중에는 맥동 색을 매 프레임 갱신
                 if (Application.isPlaying && !_collected) Shapes.SetColor(_line, DrawColor);
                 return;
             }
@@ -141,14 +141,14 @@ namespace EyeMaze
             _sector = _maze.Mod(_sector);
             transform.localPosition = _maze.CellLocal(_ring, _sector);
             transform.localRotation = Quaternion.identity;
-            // 스펙 010: 본체를 마름모로 그리고 표시 색을 공용 프로퍼티로 계산
+            // 스펙 012: 본체를 마름모로 그리고 표시 색을 공용 프로퍼티로 계산
             DrawDiamond(_line, BodyDiameter);
             Shapes.SetColor(_line, DrawColor);
             _line.sortingOrder = 7;
             _line.enabled = !_collected;
         }
 
-        // 스펙 010: 층이 돌아도 마름모가 같은 모양으로 찍히도록 Play 중 회전과 화면 픽셀 위치를 고정
+        // 스펙 012: 층이 돌아도 마름모가 같은 모양으로 찍히도록 Play 중 회전과 화면 픽셀 위치를 고정
         void LateUpdate()
         {
             if (!Application.isPlaying || _maze == null) return;

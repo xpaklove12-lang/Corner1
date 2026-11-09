@@ -17,7 +17,7 @@ namespace EyeMaze
         private const int COVER_COLUMNS = 33;
         private const int COVER_SORTING_ORDER = 21;
         private const float COVER_MARGIN = 0.05f;
-        // 스펙 009: 눈물 메시 그리기 상수 추가
+        // 스펙 011: 눈물 메시 그리기 상수 추가
         private const int TEAR_SORTING_ORDER = 20;
         private const float TEAR_WAVE_FREQUENCY = 9f;
 
@@ -60,7 +60,7 @@ namespace EyeMaze
         [Tooltip("초점. 0이면 어둡고 테두리가 번져 보인다")]
         [SerializeField, FormerlySerializedAs("focus"), Range(0f, 1f)] private float _focus = 1f;
 
-        // 스펙 009: 눈물 모양과 색 설정 추가
+        // 스펙 011: 눈물 모양과 색 설정 추가
         [Header("눈물")]
         [SerializeField] private Color _tearColor = new Color(0.62f, 0.8f, 1f, 0.45f);
         [Tooltip("가득 찼을 때 눈 높이 대비 수위")]
@@ -88,7 +88,7 @@ namespace EyeMaze
         [NonSerialized] private int _drawnLidKey = int.MinValue;
         [NonSerialized] private Vector3[] _lidPoints;
         [NonSerialized] private readonly Vector3[] _lashPoints = new Vector3[2];
-        // 스펙 009: 눈물 수위와 메시 상태 추가
+        // 스펙 011: 눈물 수위와 메시 상태 추가
         [NonSerialized] private float _tearLevel;
         [NonSerialized] private Mesh _tearMesh;
         [NonSerialized] private MeshRenderer _tearRenderer;
@@ -119,7 +119,7 @@ namespace EyeMaze
 
         void Update()
         {
-            // 스펙 009: 수면이 일렁이므로 눈 모양 캐시와 상관없이 매 프레임 그린다.
+            // 스펙 011: 수면이 일렁이므로 눈 모양 캐시와 상관없이 매 프레임 그린다.
             DrawTear();
             float irisRadius = _maze != null ? _maze.OuterRadius : 3f;
             int key = HashCode.Combine(

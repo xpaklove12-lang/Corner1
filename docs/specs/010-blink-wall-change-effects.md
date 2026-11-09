@@ -13,7 +13,7 @@
   - F5 동공 파문 연출
   - 깜빡임 문구를 "눈이 깜빡였다."로 통일
 - 제외:
-  - 스펙 007의 F6 자물쇠 맞춤 동작 변경
+  - 스펙 009의 F6 자물쇠 맞춤 동작 변경
   - 벽 생성 규칙과 미로 난이도 변경
   - 파편을 읽은 뒤의 벽 재생성 연출
 
@@ -22,7 +22,7 @@
 - 사용 기술/API: `LineRenderer`, `AnimationCurve`, `Shapes.SetCircle`, `Shapes.SetColor`, `UnityEngine.Random`, `Mathf.Clamp01`
 - 핵심 방식: 눈이 완전히 감긴 순간 옛 벽과 문의 선을 판정 없는 표시 전용 잔상으로 복사하고, 기존 `IrisMaze.Generate(seed, keepLayer)`로 새 벽을 만든다. 벽 판정은 이 순간 새 벽으로 확정되고, 눈을 뜨는 동안에는 파문이 닿은 순서대로 잔상과 새 벽의 표시값만 바꾼다.
 - 선택하지 않은 방식: 옛 `MazeWall`을 남기는 방식은 `IrisMaze.FindWall`에 함께 검색되므로 사용하지 않는다. 연출 도중 벽을 하나씩 판정에 반영하는 방식은 보이는 벽과 판정이 어긋나기 쉬워 사용하지 않는다. UI 오브젝트는 만들지 않는다.
-- 외부 의존성: `IrisMaze`, `MazeLayer`, `MazeWall`, `MazeGate`, `GazeCursor`, `Shapes`, `BlinkTurnPreset`, 스펙 001, 스펙 005, 스펙 007
+- 외부 의존성: `IrisMaze`, `MazeLayer`, `MazeWall`, `MazeGate`, `GazeCursor`, `Shapes`, `BlinkTurnPreset`, 스펙 001, 스펙 005, 스펙 009
 
 ## 4. 구조
 
@@ -58,7 +58,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     H[시간 경과 깜빡임] --> I[기본 F6 후보 재생 - FR-016]
-    I --> F[스펙 007 회전 연출 - FR-015]
+    I --> F[스펙 009 회전 연출 - FR-015]
 ```
 
 ## 6. 요구사항
@@ -84,7 +84,7 @@ F5 동공 파문
 
 기본 후보
 
-- FR-015: F6 후보로 깜빡일 때 `EyeMazeDirector`는 스펙 007의 회전 연출을 그대로 재생한다.
+- FR-015: F6 후보로 깜빡일 때 `EyeMazeDirector`는 스펙 009의 회전 연출을 그대로 재생한다.
 - FR-016: 시간 경과로 깜빡일 때 `EyeMazeDirector`는 `_blinkPresetIndex`의 기본값인 F6 후보를 쓴다.
 
 ### 상태와 데이터
@@ -117,7 +117,7 @@ F5 동공 파문
 | 키 | 후보 | 감기 / 유지 / 뜨기(초) | `BlinkChangeKind` |
 |----|------|------|------|
 | F5 | 동공 파문 | 0.4 / 0.08 / 0.55 | PupilRipple |
-| F6 | 자물쇠 맞춤 | 스펙 007 값 | Rotate |
+| F6 | 자물쇠 맞춤 | 스펙 009 값 | Rotate |
 
 ## 8. 인수 조건
 
@@ -134,7 +134,7 @@ F5 동공 파문
 - FR-011: F5와 F6 모두 눈이 완전히 감길 때 문구 줄에 "눈이 깜빡였다."만 표시된다.
 - FR-012: `_blinkPresetIndex`를 0으로 두고 깜빡임이 재생되면 동공 테두리에서 시작한 원이 부드럽게 바깥까지 퍼지고 끝에서 사라진다.
 - FR-013: F5를 재생할 때 파문이 지나간 벽부터 새 모양으로 바뀐다.
-- FR-015: F6 후보가 재생되면 스펙 007과 같은 회전 연출이 나오고 벽 구성은 바뀌지 않는다.
+- FR-015: F6 후보가 재생되면 스펙 009과 같은 회전 연출이 나오고 벽 구성은 바뀌지 않는다.
 - FR-016: Play를 시작해 기다리면 자동 깜빡임이 F6 후보로 재생된다.
 
 ## 9. 미결 사항

@@ -18,7 +18,7 @@ namespace EyeMaze
         [Tooltip("1을 넣으면 한 번 움찔 수축했다가 돌아온다")]
         [SerializeField, FormerlySerializedAs("pulse"), Range(0f, 1f)] private float _pulse;
 
-        // 스펙 009: 동공 떨림 설정 추가
+        // 스펙 011: 동공 떨림 설정 추가
         [Header("떨림")]
         [Tooltip("동공이 떨리는 거리")]
         [SerializeField] private float _trembleDistance = 0.05f;
@@ -32,7 +32,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("shown"), HideInInspector] private float _shown = -1f;
 
         [NonSerialized] private int _drawnKey = int.MinValue;
-        // 스펙 009: 떨림 세기와 떨리기 전 위치 추가
+        // 스펙 011: 떨림 세기와 떨리기 전 위치 추가
         [NonSerialized] private float _tremble;
         [NonSerialized] private bool _trembling;
         [NonSerialized] private Vector3 _restPosition;
@@ -47,7 +47,7 @@ namespace EyeMaze
 
         void Update()
         {
-            // 스펙 009: 신호 중에는 동공을 제자리 주변에서 떨리게 한다.
+            // 스펙 011: 신호 중에는 동공을 제자리 주변에서 떨리게 한다.
             if (Application.isPlaying) ApplyTremble();
             float target = TargetRadius;
             if (_shown < 0f || !Application.isPlaying) _shown = target;

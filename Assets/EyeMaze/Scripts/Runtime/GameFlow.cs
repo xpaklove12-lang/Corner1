@@ -187,7 +187,7 @@ namespace EyeMaze
                             if (_director.HeartFinished) BeginReturn(true);
                             else _director.NextHeartLine();
                         }
-                        // 스펙 009: 대화 중 Q는 휴식 신호가 있으면 승낙을 기록하고 바로 나간다.
+                        // 스펙 011: 대화 중 Q는 휴식 신호가 있으면 승낙을 기록하고 바로 나간다.
                         else if (_director.CurrentMode == EyeMazeDirector.Mode.Talk && leave) LeaveTalk();
                     }
                     break;
@@ -398,7 +398,7 @@ namespace EyeMaze
                 if (ending != null && !string.IsNullOrEmpty(ending.AfterLine)) _currentNpc.LineAfterResolved = ending.AfterLine;
                 ShowConversation(_currentNpc.DisplayName, _currentNpc.Portrait, new List<string> { _currentNpc.LineAfterResolved }, null);
             }
-            // 스펙 009: 쉬어 주고 돌아오면 상담실에서 내담자의 리액션을 보여 준다.
+            // 스펙 011: 쉬어 주고 돌아오면 상담실에서 내담자의 리액션을 보여 준다.
             else if (_director != null && _director.RestAccepted && _currentNpc != null) _currentNpc.TryTalk(this, TalkScript.Rest, null, null);
             _returnResolved = false;
         }

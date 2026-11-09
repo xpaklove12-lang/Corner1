@@ -20,7 +20,7 @@ namespace EyeMaze
     {
         public enum Mode { Talk, Gaze, Ending }
 
-        // 스펙 008: 기본 후보를 F6 자물쇠 맞춤으로 지정
+        // 스펙 010: 기본 후보를 F6 자물쇠 맞춤으로 지정
         private const int BLINK_DEFAULT_PRESET_INDEX = 1;
 
         [Header("연결")]
@@ -88,13 +88,13 @@ namespace EyeMaze
         [Tooltip("들여다보는 동안 몇 초마다 눈을 깜빡이는지 (0이면 깜빡이지 않음)")]
         // 스펙 001: 깜빡임 주기 기본값을 8초로 조정
         [SerializeField] private float _blinkInterval = 8f;
-        // 스펙 007: 깜빡임 시간과 회전 방식을 비교할 수 있는 연출 후보 목록으로 교체
+        // 스펙 009: 깜빡임 시간과 회전 방식을 비교할 수 있는 연출 후보 목록으로 교체
         [Tooltip("깜빡임 연출 후보 목록. 쓸 후보는 아래 번호로 고른다")]
         [SerializeField] private BlinkTurnPreset[] _blinkPresets = CreateDefaultBlinkPresets();
-        // 스펙 008: 자동 깜빡임 기본값을 F6 후보로 지정
+        // 스펙 010: 자동 깜빡임 기본값을 F6 후보로 지정
         [Tooltip("시간 경과 깜빡임에 쓸 후보 번호 (0부터). 1은 F6 후보")]
         [SerializeField] private int _blinkPresetIndex = BLINK_DEFAULT_PRESET_INDEX;
-        // 스펙 008: 벽 변화 연출 설정 추가
+        // 스펙 010: 벽 변화 연출 설정 추가
         [SerializeField] private MazeWallChangeEffect _wallChange = new MazeWallChangeEffect();
         [SerializeField, FormerlySerializedAs("blinkAmount"), Range(0f, 1f)] private float _blinkAmount;
         // 스펙 006: 회전량을 칸 단위로 바꾸고 누적 각도 제한과 뜬 직후 유예 추가
@@ -122,7 +122,7 @@ namespace EyeMaze
         [SerializeField, Range(0f, 1f)] private float _burdenRelief = 0.25f;
         [Tooltip("가득 찼을 때 엔딩 앞에 보이는 한 줄. '은재'는 지금 손님 이름으로 바뀐다")]
         [SerializeField, TextArea(1, 3)] private string _burdenEndLine = "은재가 시선을 피했다. 더는 마주 보기 힘든 것 같다.";
-        // 스펙 009: 휴식 신호를 보고 쉬어 주었을 때의 감소량, 문구, 눈 연출 추가
+        // 스펙 011: 휴식 신호를 보고 쉬어 주었을 때의 감소량, 문구, 눈 연출 추가
         [Tooltip("휴식 신호를 보고 쉬어 준 뒤 돌아왔을 때 줄어드는 양")]
         [SerializeField, Range(0f, 1f)] private float _burdenRestRelief = 0.4f;
         [Tooltip("쉬어 주고 돌아왔을 때 보이는 문구. '은재'는 지금 손님 이름으로 바뀐다")]
@@ -165,7 +165,7 @@ namespace EyeMaze
         [NonSerialized] private float _mazeTurnDeg;
         [NonSerialized] private float _blinkTurnFrom;
         [NonSerialized] private float _blinkTurnDelta;
-        // 스펙 007: 화면 회전 진행 상태와 재생 중인 후보, 층 목록 추가
+        // 스펙 009: 화면 회전 진행 상태와 재생 중인 후보, 층 목록 추가
         [NonSerialized] private bool _blinkTurning;
         [NonSerialized] private MazeLayer[] _blinkLayers = Array.Empty<MazeLayer>();
         [NonSerialized] private BlinkTurnPreset _activePreset;
@@ -198,7 +198,7 @@ namespace EyeMaze
         [NonSerialized] private readonly List<ChoiceView> _choices = new List<ChoiceView>();
         // 스펙 004: 화면에 보이는 선택지의 CSV 순번 목록 추가
         [NonSerialized] private readonly List<int> _visibleChoiceIndices = new List<int>();
-        // 스펙 009: 휴식 신호, 대사 표시, 승낙 상태 추가
+        // 스펙 011: 휴식 신호, 대사 표시, 승낙 상태 추가
         [NonSerialized] private bool _restRequested;
         [NonSerialized] private bool _restAccepted;
         [NonSerialized] private string _restLine;
@@ -373,7 +373,7 @@ namespace EyeMaze
             if (_blinkPhase >= 0f) AdvanceBlink(dt);
             if (_eye == null && _maze != null) _eye = _maze.GetComponentInParent<EyeVisual>();
             if (_eye != null) _eye.Closed = _blinkAmount;
-            // 스펙 009: 휴식 상태인 동안 동공 떨림과 눈물 신호를 보여 준다.
+            // 스펙 011: 휴식 상태인 동안 동공 떨림과 눈물 신호를 보여 준다.
             if (_eye != null && _pupil == null) _pupil = _eye.GetComponentInChildren<Pupil>(true);
             _tearCue.Tick(dt, _mode != Mode.Ending && (_restRequested || _restAccepted), _maze, _eye, _pupil);
 
@@ -385,7 +385,7 @@ namespace EyeMaze
             if (_mode == Mode.Gaze && !_inAbyss && !_reading)
             {
                 TickBlink(dt);
-                // 스펙 008: 깜빡임 회전과 벽 변화 연출 중에는 부담감을 채우지 않음
+                // 스펙 010: 깜빡임 회전과 벽 변화 연출 중에는 부담감을 채우지 않음
                 if (Application.isPlaying && !_blinkTurning && !_wallChange.IsPlaying) TickBurden(dt);
             }
             if (_reading) _readT += dt;
@@ -702,7 +702,7 @@ namespace EyeMaze
         {
             // 스펙 006: 칸 단위로 돌고 처음 방향에서 제한 각도를 넘으면 반대로 돈다.
             if (_blinkPhase >= 0f || _blinkPresets.Length == 0) return;
-            // 스펙 007: 깜빡임이 끝날 때까지 시작할 때 고른 후보를 유지한다.
+            // 스펙 009: 깜빡임이 끝날 때까지 시작할 때 고른 후보를 유지한다.
             _activePreset = _blinkPresets[Mathf.Clamp(_blinkPresetIndex, 0, _blinkPresets.Length - 1)];
             _blinkOpenFrom = Mathf.Max(0.01f, _activePreset.CloseSeconds) + Mathf.Max(0.01f, _activePreset.HoldSeconds);
             _blinkPhase = 0f;
@@ -745,7 +745,7 @@ namespace EyeMaze
         /// </summary>
         private void TickBlink(float dt)
         {
-            // 스펙 007: 깜빡임이 끝난 뒤부터 다음 깜빡임 시간을 셈
+            // 스펙 009: 깜빡임이 끝난 뒤부터 다음 깜빡임 시간을 셈
             if (_blinkInterval <= 0f || _blinkPhase >= 0f) return;
             _blinkElapsed += dt;
             if (_blinkElapsed < _blinkInterval) return;
@@ -939,7 +939,7 @@ namespace EyeMaze
             if (o.Dilation < -0.05f) sb.Append("\n" + Strings.Get("msg.dilation_down", "(동공이 좁아졌다.)"));
             if (_burden < burdenBefore) sb.Append("\n(부담이 조금 줄었다.)");
             _message = sb.ToString();
-            // 스펙 009: rest 대사가 있는 선택지를 처음 고르면 휴식 신호를 켠다.
+            // 스펙 011: rest 대사가 있는 선택지를 처음 고르면 휴식 신호를 켠다.
             if (!string.IsNullOrEmpty(o.Rest)) { _restRequested = true; _restLine = o.Rest; }
             if (_person != null && _person.Trust <= _leaveTrust && FindEnding("leave") != null)
             {
@@ -1042,7 +1042,7 @@ namespace EyeMaze
         {
             _message = first ? _firstGuide : _againGuide;
             if (!_restAccepted) return;
-            // 스펙 009: 막대가 내려가는 모습이 보이도록 돌아왔을 때 줄인다.
+            // 스펙 011: 막대가 내려가는 모습이 보이도록 돌아왔을 때 줄인다.
             _restAccepted = false;
             _burden = Mathf.Max(0f, _burden - _burdenRestRelief);
             _message = _restReturnMessage;
@@ -1081,11 +1081,11 @@ namespace EyeMaze
             _blinkAmount = 0f;
             _blinkPhase = -1f;
             _blinkElapsed = 0f;
-            // 스펙 007: 진행 중인 화면 회전 각도를 바로 지움
+            // 스펙 009: 진행 중인 화면 회전 각도를 바로 지움
             ClearBlinkVisual();
-            // 스펙 008: 진행 중인 벽 변화 연출을 바로 정리
+            // 스펙 010: 진행 중인 벽 변화 연출을 바로 정리
             _wallChange.Finish();
-            // 스펙 009: 휴식 상태와 눈물 신호를 바로 해제
+            // 스펙 011: 휴식 상태와 눈물 신호를 바로 해제
             _restRequested = false;
             _restAccepted = false;
             _tearCue.Clear(_maze, _eye, _pupil);
@@ -1305,14 +1305,14 @@ namespace EyeMaze
         /// </summary>
         private void AdvanceBlink(float dt)
         {
-            // 스펙 007: 감긴 채 머문 뒤 눈을 뜨면서 재생 중인 후보대로 화면 회전을 진행한다.
+            // 스펙 009: 감긴 채 머문 뒤 눈을 뜨면서 재생 중인 후보대로 화면 회전을 진행한다.
             BlinkTurnPreset preset = _activePreset;
             float close = Mathf.Max(0.01f, preset.CloseSeconds);
             float open = Mathf.Max(0.01f, preset.OpenSeconds);
             float turn = Mathf.Max(0.01f, preset.TurnSeconds);
             float delay = preset.LayerOrder == BlinkLayerOrder.Together ? 0f : Mathf.Max(0f, preset.LayerDelaySeconds);
             float openFrom = _blinkOpenFrom;
-            // 스펙 008: 회전이 아닌 후보는 벽 변화 연출을 재생한다.
+            // 스펙 010: 회전이 아닌 후보는 벽 변화 연출을 재생한다.
             bool changesWalls = preset.ChangeKind != BlinkChangeKind.Rotate;
 
             float prev = _blinkPhase;
@@ -1321,15 +1321,15 @@ namespace EyeMaze
             else if (prev < openFrom) next = Mathf.Min(next, openFrom);
             _blinkPhase = next;
 
-            // 스펙 008: 후보와 상관없이 깜빡임 문구를 하나로 표시
+            // 스펙 010: 후보와 상관없이 깜빡임 문구를 하나로 표시
             if (prev < close && next >= close && _mode == Mode.Gaze) _message = Strings.Get("msg.blink_rotate", "눈이 깜빡였다.");
             if (prev < close && next >= close)
             {
-                // 스펙 008: 후보 종류에 따라 벽 교체 또는 회전을 확정
+                // 스펙 010: 후보 종류에 따라 벽 교체 또는 회전을 확정
                 if (changesWalls) CommitBlinkWallChange();
                 else CommitBlinkRotation();
             }
-            // 스펙 007: 눈을 뜨기 시작한 뒤 후보의 출발 지연만큼 늦게 회전을 시작
+            // 스펙 009: 눈을 뜨기 시작한 뒤 후보의 출발 지연만큼 늦게 회전을 시작
             float startDelay = Mathf.Max(0f, preset.TurnStartDelaySeconds);
             if (_blinkTurning) ApplyBlinkVisual(next - openFrom - startDelay, turn, delay);
             if (_wallChange.IsPlaying) _wallChange.Tick(next - openFrom);
@@ -1338,8 +1338,8 @@ namespace EyeMaze
             else if (next <= openFrom) _blinkAmount = 1f;
             else _blinkAmount = 1f - Mathf.SmoothStep(0f, 1f, (next - openFrom) / open);
 
-            // 스펙 008: 벽 변화 후보는 연출 길이가 끝날 때까지 깜빡임을 이어 간다.
-            // 스펙 007: 회전 후보의 전체 길이에 출발 지연을 포함
+            // 스펙 010: 벽 변화 후보는 연출 길이가 끝날 때까지 깜빡임을 이어 간다.
+            // 스펙 009: 회전 후보의 전체 길이에 출발 지연을 포함
             float effectTotal = changesWalls ? _wallChange.Duration : startDelay + turn + delay * Mathf.Max(0, _blinkLayers.Length - 1);
             if (next < openFrom + Mathf.Max(open, effectTotal)) return;
             _blinkRecoverT = _blinkRecoverSeconds;
@@ -1367,7 +1367,7 @@ namespace EyeMaze
         /// </summary>
         private void CommitBlinkRotation()
         {
-            // 스펙 007: 판정 각도는 눈이 감긴 순간 한 번에 확정한다.
+            // 스펙 009: 판정 각도는 눈이 감긴 순간 한 번에 확정한다.
             SetMazeTurn(_blinkTurnFrom + _blinkTurnDelta);
             _blinkLayers = _maze != null ? _maze.Layers : Array.Empty<MazeLayer>();
             _blinkTurning = true;
@@ -1388,7 +1388,7 @@ namespace EyeMaze
                 float side = _activePreset.AlternateLayers && layer.Index % 2 == 1 ? -1f : 1f;
                 float degrees = -_blinkTurnDelta * side * (1f - progress);
                 layer.BlinkVisualDeg = degrees;
-                // 스펙 007: 층이 도는 동안 벽과 문이 옅어졌다가 멈추면서 선명해짐
+                // 스펙 009: 층이 도는 동안 벽과 문이 옅어졌다가 멈추면서 선명해짐
                 layer.SetWallVisualAlpha(1f - _activePreset.WallFadeAmount * Mathf.Sin(timeRatio * Mathf.PI));
                 if (layer.Index == cursorLayer) _cursor.BlinkVisualDeg = degrees;
             }
@@ -1400,11 +1400,11 @@ namespace EyeMaze
         /// </summary>
         private static BlinkTurnPreset[] CreateDefaultBlinkPresets()
         {
-            // 스펙 008: 남긴 후보를 F5 동공 파문, F6 자물쇠 맞춤으로 구성
+            // 스펙 010: 남긴 후보를 F5 동공 파문, F6 자물쇠 맞춤으로 구성
             return new[]
             {
                 new BlinkTurnPreset("F5 동공 파문", 0.4f, 0.08f, 0.55f, 1f, 0f, BlinkLayerOrder.Together, false, AnimationCurve.EaseInOut(0f, 0f, 1f, 1f), BlinkChangeKind.PupilRipple),
-                // 스펙 007: F6 후보에 회전 출발 지연과 벽 옅어짐 값 추가
+                // 스펙 009: F6 후보에 회전 출발 지연과 벽 옅어짐 값 추가
                 new BlinkTurnPreset("F6 자물쇠 맞춤", 0.4f, 0.08f, 0.55f, 1f, 0.12f, BlinkLayerOrder.OuterFirst, true, AnimationCurve.EaseInOut(0f, 0f, 1f, 1f), turnStartDelaySeconds: 0.2f, wallFadeAmount: 0.9f),            };
         }
 
@@ -1415,7 +1415,7 @@ namespace EyeMaze
         private void ClearBlinkVisual()
         {
             _blinkTurning = false;
-            // 스펙 007: 깜빡임이 끝나거나 초기화될 때 벽과 문의 표시 투명도를 복원
+            // 스펙 009: 깜빡임이 끝나거나 초기화될 때 벽과 문의 표시 투명도를 복원
             foreach (MazeLayer layer in _blinkLayers)
             {
                 layer.BlinkVisualDeg = 0f;

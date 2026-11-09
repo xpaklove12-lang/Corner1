@@ -28,7 +28,7 @@ namespace EyeMaze
         [SerializeField] private float _openSeconds;
 
         [Header("회전")]
-        // 스펙 007: 눈을 뜨기 시작한 뒤 회전이 출발하기까지의 지연 추가
+        // 스펙 009: 눈을 뜨기 시작한 뒤 회전이 출발하기까지의 지연 추가
         [Tooltip("눈을 뜨기 시작한 뒤 회전이 출발하기까지 기다리는 시간(초)")]
         [SerializeField] private float _turnStartDelaySeconds;
         [Tooltip("층 하나가 도는 시간(초)")]
@@ -40,11 +40,11 @@ namespace EyeMaze
         [SerializeField] private bool _alternateLayers;
         [Tooltip("회전 진행 곡선. 가로는 시간(0~1), 세로는 회전 진행도(0~1)")]
         [SerializeField] private AnimationCurve _curve;
-        // 스펙 007: 층이 도는 동안 벽과 문을 옅게 하는 정도 추가
+        // 스펙 009: 층이 도는 동안 벽과 문을 옅게 하는 정도 추가
         [Tooltip("층이 도는 동안 벽과 문을 옅게 하는 정도. 0이면 그대로, 0.6이면 가장 옅을 때 40%까지 보인다")]
         [SerializeField, Range(0f, 1f)] private float _wallFadeAmount;
 
-        // 스펙 008: 후보가 재생할 연출 종류 추가
+        // 스펙 010: 후보가 재생할 연출 종류 추가
         [Header("연출")]
         [Tooltip("Rotate면 미로 회전, 그 외에는 벽 변화 연출을 재생한다")]
         [SerializeField] private BlinkChangeKind _changeKind;

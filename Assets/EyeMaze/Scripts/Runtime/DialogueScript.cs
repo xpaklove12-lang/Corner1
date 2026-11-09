@@ -31,7 +31,7 @@ namespace EyeMaze
             public int Spring;
             public string Goto;
             public string Ending;
-            // 스펙 009: 내담자가 쉬자고 할 때의 대사 추가
+            // 스펙 011: 내담자가 쉬자고 할 때의 대사 추가
             public string Rest;
             public int Line;
         }

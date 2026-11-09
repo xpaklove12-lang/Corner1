@@ -53,7 +53,7 @@ flowchart TD
     D -- 예 --> E[깜빡임 문구 표시 - FR-007]
     D -- 아니오 --> F[완전히 감긴 순간 미로와 시선 회전 확정 - FR-001]
     E --> F
-    F --> G[눈꺼풀이 열리며 스펙 007의 화면 회전 진행 - FR-008]
+    F --> G[눈꺼풀이 열리며 스펙 009의 화면 회전 진행 - FR-008]
     G --> H[벽 구성과 층 배치 유지 - FR-003, FR-005]
     H --> H2[유예 뒤 입력 재개 - FR-011]
     I[이동 입력] --> J[미로 회전 기준으로 입력 변환 - FR-004]
@@ -63,7 +63,7 @@ flowchart TD
 
 ## 6. 요구사항
 
-- FR-001: 눈이 완전히 감길 때 `EyeMazeDirector`는 미로 오브젝트를 시선과 함께 최종 각도로 회전시킨다. 화면에 보이는 회전은 스펙 007을 따른다.
+- FR-001: 눈이 완전히 감길 때 `EyeMazeDirector`는 미로 오브젝트를 시선과 함께 최종 각도로 회전시킨다. 화면에 보이는 회전은 스펙 009을 따른다.
 - FR-002: 깜빡임이 시작될 때 `EyeMazeDirector`는 `_blinkTurnMinSectors`와 `_blinkTurnMaxSectors` 사이의 칸 수와 회전 방향을 무작위로 정한다.
 - FR-003: 깜빡임이 일어날 때 `EyeMazeDirector`는 벽, 문, 파편의 구성을 바꾸지 않는다.
 - FR-004: 맵이 돌아간 상태에서 이동 입력을 받을 때 `EyeMazeDirector`는 시선을 화면 기준 입력 방향으로 움직인다.
@@ -73,7 +73,7 @@ flowchart TD
 - FR-008: 깜빡임이 진행될 때 `EyeVisual`은 위아래 눈꺼풀로 눈 영역을 덮으며 닫았다가 다시 연다.
 - FR-009: 깜빡임이 진행될 때 `EyeMazeUI`는 화면 전체를 어둡게 하지 않는다.
 - FR-010: 이번 회전으로 누적 각도가 `_blinkTurnLimitDeg`를 넘게 될 때 `EyeMazeDirector`는 회전 방향을 반대로 바꾼다.
-- FR-011: 깜빡임이 진행 중일 때(스펙 007의 화면 회전 포함)와 깜빡임이 끝난 뒤 `_blinkRecoverSeconds` 동안 `EyeMazeDirector`는 이동 입력을 받지 않는다.
+- FR-011: 깜빡임이 진행 중일 때(스펙 009의 화면 회전 포함)와 깜빡임이 끝난 뒤 `_blinkRecoverSeconds` 동안 `EyeMazeDirector`는 이동 입력을 받지 않는다.
 - FR-012: 깜빡임이 진행될 때 `EyeMazeUI`는 `_burdenGraphics`의 투명도를 눈꺼풀이 닫힌 정도만큼 낮춘다.
 
 ### 상태와 데이터
@@ -107,7 +107,7 @@ flowchart TD
 | `_burdenGraphics` | Graphic[] | 막대 칸, 속지, 채움, 부담감 글 | 깜빡일 때 함께 가려지는 부담감 표시 |
 | `_lidCoverColor` | Color | 검정 | 눈을 감을 때 눈 안쪽을 덮는 색 |
 
-깜빡임 시간과 회전 곡선은 스펙 007의 연출 후보 값을 따른다.
+깜빡임 시간과 회전 곡선은 스펙 009의 연출 후보 값을 따른다.
 
 ## 8. 인수 조건
 

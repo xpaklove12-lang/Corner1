@@ -59,7 +59,7 @@ namespace EyeMaze
         [NonSerialized] private float _trustShown = float.NaN;
         [NonSerialized] private float _burdenAlpha = -1f;
 
-        // 스펙 010: 기억 목록 줄 강조 시간과 현재 강조 상태 추가
+        // 스펙 012: 기억 목록 줄 강조 시간과 현재 강조 상태 추가
         [Header("기억 목록 강조")]
         [Tooltip("새로 얻은 파편 줄이 원래 색으로 돌아오는 시간(초)")]
         [SerializeField] private float _highlightSeconds = 0.6f;
@@ -70,7 +70,7 @@ namespace EyeMaze
 
         // 스펙 006: 깜빡임 전체 화면 페이드 필드 제거
 
-        // 스펙 010: 파편 획득과 연출 정리 이벤트 구독
+        // 스펙 012: 파편 획득과 연출 정리 이벤트 구독
         void OnEnable()
         {
             MemoryFragment.PickedUp += OnFragmentPickedUp;
@@ -109,18 +109,18 @@ namespace EyeMaze
             {
                 MazeLayer layer = d.CursorLayer;
                 sit = Strings.Get("ui.gaze_situation", "{name}의 눈 속 — {layer}", ("name", p != null ? p.DisplayName : ""), ("layer", layer != null ? layer.DisplayName : ""));
-                // 스펙 009: 신호 중 들여다보면 대화로 돌아오라는 온보딩 문구를 추가
+                // 스펙 011: 신호 중 들여다보면 대화로 돌아오라는 온보딩 문구를 추가
                 if (d.RestRequested) sit += "\n" + Strings.Get("ui.rest_hint_gaze", "{name}가 하고 싶은 말이 있는 거 같다. 잠시 관찰을 멈춰보자.", ("name", p != null ? p.DisplayName : ""));
             }
-            // 스펙 009: 신호 중에는 장면 설명 자리에 쉬자는 대사를 표시
-            // 스펙 009: 쉬게 해 줄 때임을 알리는 온보딩 문구를 대사 아래에 추가
+            // 스펙 011: 신호 중에는 장면 설명 자리에 쉬자는 대사를 표시
+            // 스펙 011: 쉬게 해 줄 때임을 알리는 온보딩 문구를 대사 아래에 추가
             else if (d.RestRequested) sit = d.RestLine + "\n" + Strings.Get("ui.rest_hint_talk", "(잠시 쉴 시간이 필요한 거 같다.)");
             else sit = node != null ? node.Situation : d.IdleSituation;
             // 공용 문구 속 이름과 대명사를 지금 손님에 맞춘다.
             sit = d.Personalize(sit);
             Set(_situation, string.IsNullOrEmpty(sit) ? "" : _situationPrefix + sit);
             Set(_message, Prefixed(d.Personalize(d.Message), _messagePrefix));
-            // 스펙 010: 새로 얻은 파편 줄을 강조해 표시
+            // 스펙 012: 새로 얻은 파편 줄을 강조해 표시
             Set(_memories, HighlightedSummary(d.CollectedSummary()));
 
             IReadOnlyList<EyeMazeDirector.ChoiceView> choices = d.CurrentMode == EyeMazeDirector.Mode.Talk
@@ -203,7 +203,7 @@ namespace EyeMaze
         {
             if (_highlightT <= 0f) return summary;
             _highlightT = Mathf.Max(0f, _highlightT - Time.deltaTime);
-            // 스펙 010: 줄 색이 원래 색에서 파편 색으로 갔다가 원래 색으로 돌아오도록 계산
+            // 스펙 012: 줄 색이 원래 색에서 파편 색으로 갔다가 원래 색으로 돌아오도록 계산
             float progress = 1f - _highlightT / Mathf.Max(0.01f, _highlightSeconds);
             Color color = Color.Lerp(_memories.color, _highlightColor, Mathf.Sin(progress * Mathf.PI));
             string hex = ColorUtility.ToHtmlStringRGBA(color);

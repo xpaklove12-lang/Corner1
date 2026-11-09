@@ -27,7 +27,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("openColor")] private Color _openColor = new Color(0.6f, 1f, 0.7f, 0.45f);
 
         [NonSerialized] private int _drawnKey = int.MinValue;
-        // 스펙 008: 연출 중 문 색에 곱할 투명도 추가
+        // 스펙 010: 연출 중 문 색에 곱할 투명도 추가
         [NonSerialized] private float _visualAlpha = 1f;
         private IrisMaze _maze;
 
@@ -76,7 +76,7 @@ namespace EyeMaze
             if (_maze == null) _maze = GetComponentInParent<IrisMaze>();
             if (_maze == null || _line == null) return;
             bool open = CanPass(_maze.Person);
-            // 스펙 008: 표시 투명도가 바뀌어도 다시 칠하도록 키에 포함
+            // 스펙 010: 표시 투명도가 바뀌어도 다시 칠하도록 키에 포함
             int key = HashCode.Combine(_ring, _sector, _maze.GeometryKey, open, _maze.WallAlpha, _maze.Focus, HashCode.Combine(_lockedColor, _openColor), _visualAlpha);
             if (key == _drawnKey) return;
             _drawnKey = key;
@@ -85,7 +85,7 @@ namespace EyeMaze
             Shapes.SetArc(_line, _maze.RingInner(_ring), _sector * d + d * 0.12f, (_sector + 1) * d - d * 0.12f, 6);
             _line.widthMultiplier = _maze.WallWidthNow * (open ? 1.2f : 2.4f);
             Color c = open ? _openColor : _lockedColor;
-            // 스펙 008: 문 색에 표시 투명도를 곱함
+            // 스펙 010: 문 색에 표시 투명도를 곱함
             c.a *= Mathf.Lerp(0.5f, 1f, _maze.WallAlpha) * _maze.FocusAlpha * _visualAlpha;
             Shapes.SetColor(_line, c);
             _line.sortingOrder = 6;
