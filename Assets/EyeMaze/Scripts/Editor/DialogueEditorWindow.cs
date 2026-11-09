@@ -614,10 +614,10 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// Flags.csv 끝에 id만 채운 플래그 줄을 넣고 실행 취소 기록에 더한다.
-        /// id를 사용하며, 성공 여부와 오류를 반환하고 Flags.csv와 기록을 바꾼다.
+        /// Flags.csv 끝에 플래그 줄을 넣고 실행 취소 기록에 더한다. title·text·memo 칸은 비운다.
+        /// id, description, source, condition을 사용하며, 성공 여부와 오류를 반환하고 Flags.csv와 기록을 바꾼다.
         /// </summary>
-        private (bool ok, string error) AddFlag(string id)
+        private (bool ok, string error) AddFlag(string id, string description, string source, string condition)
         {
             string before = ReadFlagsSource();
             if (before == null) return (false, "Flags.csv를 UTF-8로 읽지 못했다.");
@@ -626,7 +626,7 @@ namespace EyeMaze.EditorTools
             foreach (List<CellRange> row in ReadCellRanges(before, out _))
                 if (row.Count > 0 && row[0].Value.Trim() == id) return (false, $"'{id}'는 Flags.csv에 이미 있다.");
             string newline = before.Contains("\r\n") ? "\r\n" : "\n";
-            string after = before + (before.Length == 0 || before.EndsWith("\n") ? "" : newline) + $"{id},,,,,,{newline}";
+            string after = before + (before.Length == 0 || before.EndsWith("\n") ? "" : newline) + $"{id},{description},{source},{condition},,,{newline}";
             if (!WriteFlagsSource(after, out string error)) return (false, error);
             if (_historyIndex + 1 < _history.Count) _history.RemoveRange(_historyIndex + 1, _history.Count - _historyIndex - 1);
             _history.Add(new Snapshot { Doc = _doc.Clone(), Csv = DialogueEditorFormat.WriteCsv(_doc, new List<int>()), FlagsCsv = after });

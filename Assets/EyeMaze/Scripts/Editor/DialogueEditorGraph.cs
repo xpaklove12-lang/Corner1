@@ -63,6 +63,8 @@ namespace EyeMaze.EditorTools
             Badge,
             /// <summary>직접 엔딩 조건에 더할 새 조건 변수(Flag ID)</summary>
             NewFlag,
+            /// <summary>직접 엔딩 조건에 든 수치 계산 플래그의 비교와 수치</summary>
+            Compare,
         }
 
         /// <summary>트리에서 눌러 고칠 수 있는 조건·수치 항목</summary>
@@ -158,6 +160,8 @@ namespace EyeMaze.EditorTools
         private string _createdKey;
         // 고치는 중인 엔딩 기준값 (InlineKind.Value일 때)
         private EditTarget _inlineTarget;
+        // 비교·수치를 고치는 중인 원래 계산 플래그 (InlineKind.Compare일 때)
+        private string _inlineFlag;
         // 이번 그리기의 엔딩 진입선 조건 조각. 입력 판정과 그리기에 함께 쓴다.
         private List<Segment> _segments = new List<Segment>();
         private string _inlineError = "";
@@ -204,7 +208,7 @@ namespace EyeMaze.EditorTools
         /// <summary>손님과 층 파편 묶음을 받아 새 기억 파편을 만드는 창의 함수. 결과로 성공 여부, 오류, 새 파편을 돌려준다.</summary>
         public System.Func<ClientCase, GameObject, (bool ok, string error, MemoryFragment fragment)> FragmentCreator { get; set; }
         /// <summary>Flag ID를 받아 Flags.csv에 새 플래그 줄을 넣는 창의 함수. 결과로 성공 여부와 오류를 돌려준다.</summary>
-        public System.Func<string, (bool ok, string error)> FlagCreator { get; set; }
+        public System.Func<string, string, string, string, (bool ok, string error)> FlagCreator { get; set; }
 
         /// <summary>마지막으로 확정한 ID 변경의 이전·새 그룹 키 (없으면 null). 창이 크기 설정 키를 옮길 때 쓴다.</summary>
         public string RenamedFrom { get; private set; }
@@ -1729,6 +1733,7 @@ namespace EyeMaze.EditorTools
             if (_inline == InlineKind.Value) return ConfirmValue(doc, idx);
             if (_inlineRow < 0 || _inlineRow >= g.Items.Count) { CancelInline(); return null; }
             if (_inline == InlineKind.NewFlag) return ConfirmNewFlag(doc, idx, text);
+            if (_inline == InlineKind.Compare) return ConfirmCompare(doc, idx, text);
             if (_inline == InlineKind.Badge)
             {
                 bool valid = _inlineColumn == "dilation"
@@ -1813,6 +1818,12 @@ namespace EyeMaze.EditorTools
                 if (response == null) return Rect.zero;
                 Rect line = ResponseLineRect(response, _inlineLine);
                 return new Rect(line.x + Z(4f), line.y + Z(2f), line.width - Z(8f), Z(20f));
+            }
+            if (_inline == InlineKind.Compare)
+            {
+                int idx = GroupIndex(doc, _inlineKey);
+                Segment s = _segments.Find(seg => seg.Target == EditTarget.Need && seg.Group == idx && seg.Item == _inlineRow && seg.Text == _inlineFlag);
+                return s == null ? Rect.zero : new Rect(s.Rect.x, s.Rect.y - Z(2f), Mathf.Max(s.Rect.width, Z(90f)), s.Rect.height + Z(4f));
             }
             if (_inline == InlineKind.NewFlag)
             {
@@ -2016,7 +2027,18 @@ namespace EyeMaze.EditorTools
                     if (e < 0 || !byGroup.TryGetValue(e, out Box endBox)) continue;
                     string need = g.Items[k].Get("need");
                     Vector2 mid = CurvePoint(ChoiceLineStart(boxes, b, k), TopCenter(endBox.Rect), true, 0.55f);
-                    if (need.Length > 0) AddLabel(mid, ("조건 ", EditTarget.None, -1, -1), (need.Replace("|", ", "), EditTarget.Need, b.Group, k));
+                    if (need.Length > 0)
+                    {
+                        // 플래그마다 따로 클릭할 수 있게 조각을 나눈다.
+                        var parts = new List<(string, EditTarget, int, int)> { ("조건 ", EditTarget.None, -1, -1) };
+                        foreach (string flag in need.Split('|'))
+                        {
+                            if (flag.Trim().Length == 0) continue;
+                            if (parts.Count > 1) parts.Add((", ", EditTarget.None, -1, -1));
+                            parts.Add((flag.Trim(), EditTarget.Need, b.Group, k));
+                        }
+                        AddLabel(mid, parts.ToArray());
+                    }
                     else AddLabel(mid, ("선택 시 즉시", EditTarget.Need, b.Group, k));
                 }
             }
@@ -2099,7 +2121,9 @@ namespace EyeMaze.EditorTools
                     KeyFlagMenu(doc, hit.Group).DropDown(new Rect(windowMouse, Vector2.zero));
                     break;
                 case EditTarget.Need:
-                    NeedMenu(doc, hit.Group, hit.Item).DropDown(new Rect(windowMouse, Vector2.zero));
+                    // 수치 계산 플래그면 비교·수치를 고치고, 아니면 조건 켜고 끄기 메뉴를 띄운다.
+                    if (TryCompare(ConditionOf(hit.Text), out _, out _, out _)) StartCompareEdit(doc, hit.Group, hit.Item, hit.Text);
+                    else NeedMenu(doc, hit.Group, hit.Item).DropDown(new Rect(windowMouse, Vector2.zero));
                     break;
                 default:
                     StartValueEdit(doc, hit.Target, hit.Group);
@@ -2280,10 +2304,149 @@ namespace EyeMaze.EditorTools
                     _pending = WithNeed(doc, group, item, next);
                 });
             }
+            // 수치 계산 플래그는 수치를 그대로 두고 비교만 바꿀 수 있다.
+            foreach (string flag in current)
+            {
+                if (!TryCompare(ConditionOf(flag), out string variable, out string op, out string value) || FlagCreator == null) continue;
+                foreach (string o in COMPARE_OPS)
+                {
+                    string old = flag, nextOp = o;
+                    menu.AddItem(new GUIContent($"{flag} 비교/{nextOp} ({OpWord(nextOp)})"), o == op, () =>
+                    {
+                        DialogueEditorDocument changed = ReplaceCompare(doc, group, item, old, variable, nextOp, value, out string error);
+                        if (changed == null) { if (error.Length > 0) Notify(error); return; }
+                        _pending = changed;
+                    });
+                }
+            }
             menu.AddSeparator("");
             if (FlagCreator == null) menu.AddDisabledItem(new GUIContent("새 조건 변수 만들기…"));
             else menu.AddItem(new GUIContent("새 조건 변수 만들기…"), false, () => StartNewFlagEdit(doc, group, item));
             return menu;
+        }
+
+        private static readonly string[] COMPARE_OPS = { ">=", "<=", ">", "<", "==", "!=" };
+
+        /// <summary>
+        /// 계산 플래그의 condition을 Flags.csv에서 찾는다.
+        /// flag를 사용하며, condition(없거나 일반 플래그면 빈 글)을 반환한다.
+        /// </summary>
+        private static string ConditionOf(string flag)
+        {
+            foreach (DialogueData.FlagDef d in DialogueData.LoadFlags(new List<string>()))
+                if (d.Id == flag) return d.Condition ?? "";
+            return "";
+        }
+
+        /// <summary>
+        /// condition이 수치 하나와 숫자의 비교 하나인지 본다 (예: trust>=3).
+        /// condition을 사용하며, 맞으면 true를 반환하고 변수·비교·수치(InvariantCulture 글)를 내보낸다.
+        /// </summary>
+        private static bool TryCompare(string condition, out string variable, out string op, out string value)
+        {
+            variable = op = value = "";
+            System.Text.RegularExpressions.Match m = System.Text.RegularExpressions.Regex.Match(condition ?? "",
+                @"^\s*(trust|dilation|spring)\s*(>=|<=|==|!=|>|<)\s*(-?\d+(?:\.\d+)?)\s*$");
+            if (!m.Success) return false;
+            variable = m.Groups[1].Value;
+            op = m.Groups[2].Value;
+            value = float.Parse(m.Groups[3].Value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
+            return true;
+        }
+
+        /// <summary>
+        /// 비교를 설명 글로 바꾼다.
+        /// op를 사용하며, 이상·이하 같은 말을 반환한다.
+        /// </summary>
+        private static string OpWord(string op)
+        {
+            switch (op)
+            {
+                case ">=": return "이상";
+                case "<=": return "이하";
+                case ">": return "초과";
+                case "<": return "미만";
+                case "==": return "와 같음";
+                default: return "이 아님";
+            }
+        }
+
+        /// <summary>
+        /// 직접 엔딩 조건에 든 수치 계산 플래그의 비교·수치 입력을 시작한다. 입력창에는 '>=3'처럼 비교와 수치를 함께 보인다.
+        /// doc, group, item, flag를 사용하며, 인라인 상태를 바꾼다.
+        /// </summary>
+        private void StartCompareEdit(DialogueEditorDocument doc, int group, int item, string flag)
+        {
+            if (FlagCreator == null || !TryCompare(ConditionOf(flag), out _, out string op, out string value)) return;
+            _inline = InlineKind.Compare;
+            _inlineKey = KeyOf(doc.Groups[group]);
+            _inlineRow = item;
+            _inlineFlag = flag;
+            _inlineText = op + value;
+            _inlineError = "";
+            _inlineFocus = true;
+            _focused = true;
+        }
+
+        /// <summary>
+        /// 비교·수치 입력을 확정한다. 수치만 쓰면 원래 비교를 유지하고, '=', '≥', '≤', '≠'도 받는다.
+        /// doc, idx(그룹), text(입력)를 사용하며, 조건을 바꾼 복사본 또는 (입력창을 유지할 때) null을 반환한다.
+        /// </summary>
+        private DialogueEditorDocument ConfirmCompare(DialogueEditorDocument doc, int idx, string text)
+        {
+            if (!TryCompare(ConditionOf(_inlineFlag), out string variable, out string oldOp, out _)) { CancelInline(); return null; }
+            System.Text.RegularExpressions.Match m = System.Text.RegularExpressions.Regex.Match(text,
+                @"^(>=|<=|==|!=|>|<|=|≥|≤|≠)?\s*(-?\d+(?:\.\d+)?)$");
+            if (!m.Success) { _inlineError = "'>=5', '<=2', '==0'처럼 비교와 수치를 쓴다. 수치만 쓰면 비교를 유지한다."; return null; }
+            string op = m.Groups[1].Value;
+            op = op.Length == 0 ? oldOp : op == "=" ? "==" : op == "≥" ? ">=" : op == "≤" ? "<=" : op == "≠" ? "!=" : op;
+            string value = float.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
+            DialogueEditorDocument changed = ReplaceCompare(doc, idx, _inlineRow, _inlineFlag, variable, op, value, out string error);
+            if (changed == null)
+            {
+                if (error.Length > 0) { _inlineError = error; return null; }
+                CancelInline();
+                return null;
+            }
+            RenamedFrom = RenamedTo = null;
+            _inlineAwait = true;
+            return changed;
+        }
+
+        /// <summary>
+        /// 선택지 조건의 수치 계산 플래그 하나를 같은 변수·비교·수치의 계산 플래그로 바꾼다.
+        /// Flags.csv에 같은 조건의 플래그가 있으면 그걸 쓰고, 없으면 규칙에 맞는 ID로 새 줄을 넣는다.
+        /// doc, group, item, oldFlag, variable, op, value를 사용하며, 새 문서(바뀌지 않거나 실패하면 null)를 반환하고 실패 이유를 error에 쓴다.
+        /// </summary>
+        private DialogueEditorDocument ReplaceCompare(DialogueEditorDocument doc, int group, int item, string oldFlag, string variable, string op, string value, out string error)
+        {
+            error = "";
+            string target = null;
+            var ids = new HashSet<string>();
+            foreach (DialogueData.FlagDef d in DialogueData.LoadFlags(new List<string>()))
+            {
+                ids.Add(d.Id);
+                if (target == null && TryCompare(d.Condition, out string v, out string o, out string n) && v == variable && o == op && n == value) target = d.Id;
+            }
+            if (target == oldFlag) return null;
+            if (target == null)
+            {
+                string opName = op == ">=" ? "" : op == "<=" ? "le_" : op == "<" ? "lt_" : op == ">" ? "gt_" : op == "==" ? "eq_" : "ne_";
+                target = $"{variable}_{opName}{value.Replace("-", "m").Replace(".", "_")}";
+                if (ids.Contains(target)) { error = $"'{target}'가 Flags.csv에 다른 조건으로 이미 있다. Flags.csv에서 조건을 확인한다."; return null; }
+                string name = variable == "trust" ? "신뢰" : variable == "dilation" ? "동공" : "태엽";
+                (bool ok, string createError) = FlagCreator(target, $"{name} {value} {OpWord(op)}", "계산", $"{variable}{op}{value}");
+                if (!ok) { error = createError; return null; }
+            }
+            var flags = new List<string>();
+            foreach (string part in doc.Groups[group].Items[item].Get("need").Split('|'))
+            {
+                string f = part.Trim();
+                if (f.Length == 0) continue;
+                string next = f == oldFlag ? target : f;
+                if (!flags.Contains(next)) flags.Add(next);
+            }
+            return WithNeed(doc, group, item, flags);
         }
 
         /// <summary>
@@ -2310,7 +2473,7 @@ namespace EyeMaze.EditorTools
             if (!System.Text.RegularExpressions.Regex.IsMatch(text, "^[a-z0-9_]+$")) { _inlineError = "ID는 영문 소문자, 숫자, _만 쓴다."; return null; }
             foreach (DialogueData.FlagDef d in DialogueData.LoadFlags(new List<string>()))
                 if (d.Id == text) { _inlineError = $"'{text}'는 Flags.csv에 이미 있다. 조건 추가 메뉴에서 고른다."; return null; }
-            (bool ok, string error) = FlagCreator(text);
+            (bool ok, string error) = FlagCreator(text, "", "", "");
             if (!ok) { _inlineError = error; return null; }
             var flags = new List<string>();
             foreach (string part in doc.Groups[idx].Items[_inlineRow].Get("need").Split('|'))
