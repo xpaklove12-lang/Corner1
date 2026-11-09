@@ -252,6 +252,210 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private static string Body(string v) => v.Replace("\r", "").Replace("\n", "\\n");
 
+        // ---------------------------------------------------------------- 텍스트 → 모델
+
+        /// <summary>
+        /// SUDS식 텍스트를 공통 모델로 읽는다. 문법 문제는 줄 번호와 함께 issues에 남긴다.
+        /// text, kind, path를 사용하며, 읽은 문서를 반환한다. issues에 오류가 있으면 그 문서는 쓰지 않는다.
+        /// </summary>
+        public static DialogueEditorDocument ParseText(string text, DialogueEditorKind kind, string path, List<Issue> issues)
+        {
+            var doc = new DialogueEditorDocument { Kind = kind, AssetPath = path };
+            Schema s = SchemaOf(kind);
+            bool dialogue = kind == DialogueEditorKind.Dialogue;
+            DialogueEditorDocument.Group g = null;
+            DialogueEditorDocument.Item choice = null;
+            Dictionary<string, string> pending = null;
+            int pendingLine = 0;
+            void Err(int line, string msg) => issues.Add(new Issue { Line = line, Message = msg });
+            void FlushPending()
+            {
+                if (pending != null) Err(pendingLine, "[eye ...] 다음에 Line: 줄이 와야 한다.");
+                pending = null;
+            }
+
+            string[] lines = (text ?? "").Replace("\r", "").Split('\n');
+            for (int n = 0; n < lines.Length; n++)
+            {
+                string t = lines[n].Trim();
+                int ln = n + 1;
+                if (t.Length == 0) continue;
+
+                if (t.StartsWith(":"))
+                {
+                    FlushPending();
+                    string id = t.Substring(1).Trim();
+                    choice = null;
+                    if (id.Length == 0) { Err(ln, "라벨 이름이 비어 있다."); g = null; continue; }
+                    if (id.IndexOfAny(new[] { ' ', '\t', ',', '"' }) >= 0) Err(ln, $"라벨 '{id}'에 공백, 쉼표, 큰따옴표를 쓸 수 없다.");
+                    if (doc.Find(id) != null) Err(ln, $"라벨 '{id}'가 이미 있다.");
+                    g = new DialogueEditorDocument.Group { Id = id, TextLine = ln };
+                    doc.Groups.Add(g);
+                    continue;
+                }
+                if (g == null) { Err(ln, "첫 내용 줄은 :라벨이어야 한다."); continue; }
+
+                if (dialogue && t.StartsWith("*"))
+                {
+                    string body = t.Substring(1).Trim();
+                    if (body.Length == 0) Err(ln, "선택지 글이 비어 있다.");
+                    choice = new DialogueEditorDocument.Item { TextLine = ln };
+                    choice.Fields[s.BodyColumn] = body;
+                    g.Items.Add(choice);
+                    continue;
+                }
+                if (!dialogue && t.StartsWith("Line:"))
+                {
+                    string body = t.Substring(5).Trim();
+                    if (body.Length == 0 && kind != DialogueEditorKind.Strings) Err(ln, "Line: 뒤 대사가 비어 있다.");
+                    var item = new DialogueEditorDocument.Item { TextLine = pending != null ? pendingLine : ln };
+                    if (pending != null) foreach (KeyValuePair<string, string> kv in pending) item.Fields[kv.Key] = kv.Value;
+                    pending = null;
+                    item.Fields[s.BodyColumn] = body;
+                    g.Items.Add(item);
+                    continue;
+                }
+                if (!t.StartsWith("["))
+                {
+                    Err(ln, dialogue ? "알 수 없는 줄이다. :라벨, * 선택지, [eye ...], [goto 대상] 중 하나로 쓴다." : "알 수 없는 줄이다. :라벨, [eye ...], Line: 대사 중 하나로 쓴다.");
+                    continue;
+                }
+
+                if (!TryParseCommand(t, out string name, out List<KeyValuePair<string, string>> attrs, out string arg, out string why))
+                {
+                    Err(ln, why);
+                    continue;
+                }
+                if (name == "goto")
+                {
+                    if (!dialogue) { Err(ln, "[goto]는 Dialogue 파일에서만 쓴다."); continue; }
+                    if (choice == null) { Err(ln, "[goto]는 * 선택지 아래에 쓴다."); continue; }
+                    if (arg.Length == 0 || arg.IndexOf(' ') >= 0) { Err(ln, "[goto 대상]에 노드 이름 하나를 쓴다."); continue; }
+                    if (choice.Get(GOTO).Length > 0) { Err(ln, "한 선택지에 [goto]를 두 번 쓸 수 없다."); continue; }
+                    choice.Fields[GOTO] = arg;
+                    continue;
+                }
+                if (name != "eye") { Err(ln, $"지원하지 않는 명령 [{name}]이다. [eye ...]{(dialogue ? "와 [goto 대상]" : "")}만 쓸 수 있다."); continue; }
+
+                if (dialogue)
+                {
+                    bool forGroup = choice == null;
+                    string[] allowed = forGroup ? s.GroupColumns : s.ItemColumns;
+                    Dictionary<string, string> target = forGroup ? g.Fields : choice.Fields;
+                    foreach (KeyValuePair<string, string> kv in attrs)
+                    {
+                        if (System.Array.IndexOf(allowed, kv.Key) < 0)
+                        {
+                            Err(ln, forGroup ? $"노드 칸에는 situation, back만 쓴다 ('{kv.Key}'). 선택지 칸은 * 줄 아래에 쓴다." : $"선택지에 쓸 수 없는 속성 '{kv.Key}'이다.");
+                            continue;
+                        }
+                        if (target.ContainsKey(kv.Key)) { Err(ln, $"'{kv.Key}' 값을 두 번 적었다."); continue; }
+                        if (!CheckNumber(s, kv, ln, issues)) continue;
+                        target[kv.Key] = kv.Value;
+                    }
+                    continue;
+                }
+
+                bool anyGroup = false, anyItem = false;
+                foreach (KeyValuePair<string, string> kv in attrs)
+                {
+                    if (System.Array.IndexOf(s.GroupColumns, kv.Key) >= 0) anyGroup = true;
+                    else if (System.Array.IndexOf(s.ItemColumns, kv.Key) >= 0) anyItem = true;
+                    else Err(ln, $"이 파일에 쓸 수 없는 속성 '{kv.Key}'이다.");
+                }
+                if (anyGroup && anyItem) { Err(ln, "그룹 칸과 줄 칸을 한 [eye ...]에 섞어 쓸 수 없다."); continue; }
+                if (anyGroup)
+                {
+                    if (g.Items.Count > 0 || pending != null) { Err(ln, "그룹 칸 [eye ...]은 라벨 바로 아래, 첫 Line: 앞에 쓴다."); continue; }
+                    foreach (KeyValuePair<string, string> kv in attrs)
+                    {
+                        if (g.Fields.ContainsKey(kv.Key)) { Err(ln, $"'{kv.Key}' 값을 두 번 적었다."); continue; }
+                        g.Fields[kv.Key] = kv.Value;
+                    }
+                    continue;
+                }
+                if (!anyItem) continue;
+                if (pending != null) { Err(pendingLine, "[eye ...] 다음에 Line: 줄이 와야 한다."); }
+                pending = new Dictionary<string, string>();
+                pendingLine = ln;
+                foreach (KeyValuePair<string, string> kv in attrs) pending[kv.Key] = kv.Value;
+            }
+            FlushPending();
+            return doc;
+        }
+
+        /// <summary>
+        /// 수치 칸이면 값이 수인지 검사한다.
+        /// s, kv, ln을 사용하며, 쓸 수 있으면 true를 반환하고 아니면 issues에 남긴다.
+        /// </summary>
+        private static bool CheckNumber(Schema s, KeyValuePair<string, string> kv, int ln, List<Issue> issues)
+        {
+            if (System.Array.IndexOf(s.NumberColumns, kv.Key) < 0 || kv.Value.Length == 0 || IsNumber(kv.Key, kv.Value)) return true;
+            issues.Add(new Issue { Line = ln, Message = $"'{kv.Key}' 값 '{kv.Value}'이 수가 아니다{(kv.Key == "dilation" ? " (소수점은 .으로 쓴다)" : " (정수)")}." });
+            return false;
+        }
+
+        /// <summary>
+        /// [이름 ...] 한 줄을 읽는다. [goto 대상]은 arg에, [eye 이름="값" ...]은 attrs에 담는다.
+        /// t를 사용하며, 읽었으면 true를 반환하고 못 읽으면 why에 이유를 쓴다.
+        /// </summary>
+        private static bool TryParseCommand(string t, out string name, out List<KeyValuePair<string, string>> attrs, out string arg, out string why)
+        {
+            name = ""; arg = ""; why = "";
+            attrs = new List<KeyValuePair<string, string>>();
+            if (!t.EndsWith("]")) { why = "명령 줄은 ]로 끝나야 한다."; return false; }
+            string inner = t.Substring(1, t.Length - 2).Trim();
+            int sp = inner.IndexOf(' ');
+            name = sp < 0 ? inner : inner.Substring(0, sp);
+            string rest = sp < 0 ? "" : inner.Substring(sp + 1).Trim();
+            if (name.Length == 0) { why = "명령 이름이 비어 있다."; return false; }
+            if (name != "eye") { arg = rest; return true; }
+
+            int k = 0;
+            while (k < rest.Length)
+            {
+                if (rest[k] == ' ' || rest[k] == '\t') { k++; continue; }
+                int keyStart = k;
+                while (k < rest.Length && (char.IsLetterOrDigit(rest[k]) || rest[k] == '_')) k++;
+                string key = rest.Substring(keyStart, k - keyStart);
+                if (key.Length == 0 || k >= rest.Length || rest[k] != '=') { why = $"[eye ...] 안은 이름=\"값\" 꼴로 쓴다 ({k + 1}번째 글자 부근)."; return false; }
+                k++;
+                var sb = new StringBuilder();
+                if (k < rest.Length && rest[k] == '"')
+                {
+                    k++;
+                    bool closed = false;
+                    while (k < rest.Length)
+                    {
+                        char c = rest[k];
+                        if (c == '\\')
+                        {
+                            if (k + 1 >= rest.Length) break;
+                            char e = rest[k + 1];
+                            if (e == '"') sb.Append('"');
+                            else if (e == '\\') sb.Append('\\');
+                            else if (e == 'n') sb.Append("\\n");
+                            else { why = $"'{key}' 값에 지원하지 않는 이스케이프 \\{e}가 있다 (\\\", \\\\, \\n만 쓴다)."; return false; }
+                            k += 2;
+                            continue;
+                        }
+                        if (c == '"') { closed = true; k++; break; }
+                        sb.Append(c);
+                        k++;
+                    }
+                    if (!closed) { why = $"'{key}' 값의 큰따옴표가 닫히지 않았다."; return false; }
+                }
+                else
+                {
+                    while (k < rest.Length && rest[k] != ' ' && rest[k] != '\t') sb.Append(rest[k++]);
+                }
+                foreach (KeyValuePair<string, string> kv in attrs)
+                    if (kv.Key == key) { why = $"'{key}'를 한 줄에 두 번 적었다."; return false; }
+                attrs.Add(new KeyValuePair<string, string>(key, sb.ToString().Trim()));
+            }
+            return true;
+        }
+
         /// <summary>
         /// 수치 칸 글을 불변 문화권 수로 읽을 수 있는지 본다.
         /// column과 v를 사용하며, 읽을 수 있으면 true를 반환한다.

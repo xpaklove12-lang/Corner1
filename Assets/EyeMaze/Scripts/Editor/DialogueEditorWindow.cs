@@ -13,6 +13,8 @@ namespace EyeMaze.EditorTools
     public class DialogueEditorWindow : EditorWindow
     {
         private const float TEXT_WIDTH_RATIO = 0.42f;
+        // 입력이 이만큼(초) 멈추면 텍스트를 검사한다.
+        private const double TEXT_APPLY_DELAY = 0.75;
 
         // 스크립트가 다시 컴파일돼도 열던 파일을 다시 열려고 경로만 저장한다.
         [SerializeField] private string _openPath = "";
@@ -24,6 +26,9 @@ namespace EyeMaze.EditorTools
         private Vector2 _textScroll;
         private Vector2 _issueScroll;
         private readonly List<DialogueEditorFormat.Issue> _issues = new List<DialogueEditorFormat.Issue>();
+        private bool _textPending;
+        private double _editedAt;
+        private bool _draftHasErrors;
 
         [MenuItem("EyeMaze/대사 편집기")]
         private static void Open()
@@ -38,6 +43,15 @@ namespace EyeMaze.EditorTools
         {
             RefreshPaths();
             if (!string.IsNullOrEmpty(_openPath)) OpenPath(_openPath);
+        }
+
+        void Update()
+        {
+            if (_textPending && EditorApplication.timeSinceStartup - _editedAt >= TEXT_APPLY_DELAY)
+            {
+                _textPending = false;
+                ApplyDraft();
+            }
         }
 
         void OnGUI()
@@ -98,9 +112,13 @@ namespace EyeMaze.EditorTools
             GUILayout.BeginArea(textRect);
             _textScroll = EditorGUILayout.BeginScrollView(_textScroll);
             var style = new GUIStyle(EditorStyles.textArea) { wordWrap = true, richText = false };
-            GUI.enabled = false;
-            EditorGUILayout.TextArea(_draft, style, GUILayout.ExpandHeight(true));
-            GUI.enabled = true;
+            string next = EditorGUILayout.TextArea(_draft, style, GUILayout.ExpandHeight(true));
+            if (next != _draft)
+            {
+                _draft = next;
+                _textPending = true;
+                _editedAt = EditorApplication.timeSinceStartup;
+            }
             EditorGUILayout.EndScrollView();
             GUILayout.EndArea();
 
@@ -125,6 +143,31 @@ namespace EyeMaze.EditorTools
         private void DrawGraphView(Rect rect)
         {
             EditorGUI.DrawRect(rect, new Color(0.16f, 0.16f, 0.17f));
+        }
+
+        /// <summary>
+        /// 텍스트 초안을 해석해 문제가 없으면 공통 모델을 바꾼다. 문제가 있으면 마지막 정상 모델을 그대로 둔다.
+        /// _draft를 사용하며, _doc, _issues, _draftHasErrors를 바꾼다.
+        /// </summary>
+        private void ApplyDraft()
+        {
+            var issues = new List<DialogueEditorFormat.Issue>();
+            DialogueEditorDocument parsed = DialogueEditorFormat.ParseText(_draft, _doc.Kind, _doc.AssetPath, issues);
+            _issues.Clear();
+            _issues.AddRange(issues);
+            _draftHasErrors = HasError(issues);
+            if (!_draftHasErrors) _doc = parsed;
+            Repaint();
+        }
+
+        /// <summary>
+        /// 검사 결과에 오류가 하나라도 있는지 본다.
+        /// issues를 사용하며, 오류가 있으면 true를 반환한다.
+        /// </summary>
+        private static bool HasError(List<DialogueEditorFormat.Issue> issues)
+        {
+            foreach (DialogueEditorFormat.Issue i in issues) if (i.Error) return true;
+            return false;
         }
 
         /// <summary>
@@ -164,6 +207,8 @@ namespace EyeMaze.EditorTools
             _doc = DialogueEditorFormat.ReadCsv(asset, kind, path, errors);
             _draft = DialogueEditorFormat.WriteText(_doc);
             _issues.Clear();
+            _textPending = false;
+            _draftHasErrors = false;
             foreach (string e in errors) _issues.Add(new DialogueEditorFormat.Issue { Message = e });
             _openPath = path;
             _selected = System.Array.IndexOf(_paths, path);
