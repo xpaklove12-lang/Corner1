@@ -21,7 +21,7 @@ namespace EyeMaze.EditorTools
             {
                 f, f.Cam != null ? f.Cam.transform : null,
                 f.Director != null ? f.Director.gameObject : null,
-                f.Intro, npc,
+                npc,
             };
 
             using (new EditorGUILayout.HorizontalScope())

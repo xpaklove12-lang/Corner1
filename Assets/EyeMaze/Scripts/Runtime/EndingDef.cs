@@ -23,6 +23,19 @@ namespace EyeMaze
         [Tooltip("필드로 돌아온 뒤 이 사람에게 말을 걸면 나오는 말")]
         [SerializeField, FormerlySerializedAs("afterLine"), TextArea(1, 3)] private string _afterLine;
 
+        public EndingDef() { }
+
+        /// <summary>
+        /// 엔딩 CSV에서 읽은 값으로 엔딩을 만든다. 대사는 Lines에 더한다.
+        /// </summary>
+        public EndingDef(string id, string title, string situation, string afterLine)
+        {
+            _id = id;
+            _title = title;
+            _situation = situation;
+            _afterLine = afterLine;
+        }
+
         public string Id => _id;
         public string Title => _title;
         public string Situation => _situation;

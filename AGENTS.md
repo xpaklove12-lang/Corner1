@@ -3,7 +3,8 @@
 ## 0. Git
 
 - 커밋 메세지 제안만 가능
-- git cli 수행 금지
+- 저장소를 바꾸는 git 명령(add, commit, push, checkout, stash 등) 수행 금지. status, diff, log, show 같은 읽기 명령만 사용한다
+- 커밋 메세지에 Co-Authored-By 등 AI 공동 작성자 줄을 넣지 않는다
 
 ## 1. Comment
 
@@ -41,6 +42,13 @@ private void ProcessMovement(Vector2 moveInput)
 - Inspector에 노출해야 하는 값만 `[SerializeField]`를 사용한다.
 - `[SerializeField] public`은 사용하지 않는다.
 - `[SerializeField]`가 필요하지 않은 필드는 `private`으로 선언한다.
+### UI 생성 규칙
+- UI는 uGUI(com.unity.ugui)와 TextMeshPro로 구성한다. UI Toolkit은 사용하지 않는다.
+- UI GameObject는 코드(new GameObject, AddComponent, Instantiate 등)로 생성하지 않는다.
+- UI GameObject는 Unity 에디터의 GameObject 생성 메뉴(Hierarchy 우클릭 > UI)로 생성하고, 씬 또는 프리팹에 저장한다.
+  - 예: GameObject > UI > Canvas, GameObject > UI > Image, GameObject > UI > Text - TextMeshPro
+- 스크립트는 생성된 UI 요소를 [SerializeField]로 참조만 한다.
+
 
 ### 외부 공개 상태
 
@@ -155,5 +163,12 @@ using Game.System;
 ## 10. Spec-Driven Development (SDD)
 
 - 기능 구현 전에 `docs/README.md`를 먼저 읽고, 그 안의 규칙과 절차를 따른다.
-- 스펙 없이 기능 구현을 시작하지 않는다.
-- 커밋 메세지 제안 시 스펙 번호를 포함한다. (예: `feat(001): 이동 가속도 처리 추가`)
+- 스펙 없이 기능 구현을 시작하지 않는다. 기능 스펙은 `docs/specs/NNN-*.md`이며 작성 규칙·절차·목록은 `docs/README.md`, 양식은 `docs/spec-template.md`를 따른다.
+- 구현은 승인된 스펙의 `FR-xxx` 단위로 하고, 끝나면 FR별 충족 코드를 보고한다.
+- 커밋 메세지 제안 시 스펙 작업은 스펙 번호를 범위로 쓰고(예: `feat(001): 플레이어 이동 가속도 적용`), 스펙 없는 정리 작업은 범위 없이 쓴다(예: `chore: 사용하지 않는 에셋 정리`).
+
+## 11. 이 프로젝트
+
+- 게임 이름: (미정)
+- 한 줄 설명: (미정)
+- 코드 위치: (미정)

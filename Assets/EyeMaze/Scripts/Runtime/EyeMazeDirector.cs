@@ -11,7 +11,8 @@ namespace EyeMaze
 {
     /// <summary>
     /// 만남 화면의 흐름: 대화 → 눈 들여다보기(미로 탐색, 기억 파편 모으기) → 알게 된 것으로 대화 → 신뢰와 동공이 커짐 → 더 깊은 층 → 심연.
-    /// Play 모드에서는 WASD / 방향키 / 왼쪽 스틱으로 이동하고, Space(패드 A)로 시선을 거두며, 1 / 2 / 3으로 대화를 고르고, R로 처음부터 한다.
+    /// Play 모드에서는 WASD / 방향키 / 왼쪽 스틱으로 이동하고, Space(패드 A)로 시선을 거두며, 1~4로 대화를 고르고, R로 처음부터 한다.
+    /// 대화는 지금 손님의 대화 CSV(ClientCase.DialogueCsv)에서 읽는다.
     /// 에디트 모드에서는 디렉터 인스펙터의 버튼으로 같은 조작을 한다.
     /// </summary>
     [ExecuteAlways]
@@ -23,23 +24,32 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("maze")] private IrisMaze _maze;
         [SerializeField, FormerlySerializedAs("cursor")] private GazeCursor _cursor;
         [SerializeField, FormerlySerializedAs("person")] private Person _person;
-        [Tooltip("자식 DialogueNode들이 순서대로 진행된다")]
-        [SerializeField, FormerlySerializedAs("dialogue")] private Transform _dialogue;
-        [Tooltip("태엽 (없어도 된다)")]
-        [SerializeField, FormerlySerializedAs("intro")] private WindingIntro _intro;
         [Tooltip("동공 한가운데의 가장 반짝이는 파편")]
         [SerializeField, FormerlySerializedAs("core")] private CoreFragment _core;
         [Tooltip("키 입력을 받을지. 필드 화면에 있을 땐 GameFlow가 끈다")]
         [SerializeField, FormerlySerializedAs("acceptInput")] private bool _acceptInput = true;
+        [Tooltip("플래그 목록 (Data/Flags.csv). condition이 있는 계산 플래그를 여기서 읽는다")]
+        [SerializeField] private TextAsset _flagsCsv;
+        [Tooltip("공용 문구 표 (Data/Strings.csv). 안내/시스템 문구를 여기서 읽는다")]
+        [SerializeField] private TextAsset _stringsCsv;
 
         [Header("상태")]
         [SerializeField, FormerlySerializedAs("mode")] private Mode _mode = Mode.Talk;
-        [SerializeField, FormerlySerializedAs("currentNode")] private int _currentNode;
+        [Tooltip("지금 대화 장면 id (대화 CSV의 node)")]
+        [SerializeField] private string _currentNodeId;
+        [Tooltip("지나온 장면 id들. '다른 질문을 해볼까요?'를 고르면 하나씩 되돌아간다")]
+        [SerializeField] private List<string> _nodeHistory = new List<string>();
         [SerializeField, FormerlySerializedAs("message"), TextArea(2, 5)] private string _message;
         [SerializeField, FormerlySerializedAs("inAbyss")] private bool _inAbyss;
 
         [Header("이야기")]
+        [Tooltip("첫 노드가 아닐 때 맨 마지막에 보이는 공통 선택지. 고르면 첫 노드로 돌아간다")]
+        [SerializeField, TextArea(1, 2)] private string _returnText = "다른 이야기를 해볼까요?";
+        [Tooltip("공통 선택지를 고른 뒤 보이는 문구")]
+        [SerializeField, TextArea(1, 2)] private string _returnMessage = "화제를 돌렸다.";
         [SerializeField, FormerlySerializedAs("introMessage"), TextArea(2, 4)] private string _introMessage = "은재는 석 달째 말을 하지 않았다. 눈을 들여다보면 마음속으로 들어갈 수 있다.";
+        [SerializeField, TextArea(2, 4)] private string _firstGuide = "Space를 누르면 은재의 눈을 들여다본다.";
+        [SerializeField, TextArea(2, 4)] private string _againGuide = "다시 마주 앉았다. Space를 누르면 눈을 들여다본다.";
         [SerializeField, FormerlySerializedAs("idleSituation"), TextArea(2, 4)] private string _idleSituation = "은재가 조용히 나를 바라보고 있다.";
         [SerializeField, FormerlySerializedAs("endingText"), TextArea(3, 6)] private string _endingText;
         [Tooltip("미로를 지나 동공(심연)에 들어섰을 때")]
@@ -71,18 +81,46 @@ namespace EyeMaze
         [Tooltip("에디트 모드에서 버튼 한 번에 움직이는 거리")]
         [SerializeField, FormerlySerializedAs("editNudge")] private float _editNudge = 0.2f;
 
-        [Header("눈 깜빡임 (태엽이 풀릴 때 일어남)")]
-        [SerializeField, FormerlySerializedAs("blinkDuration")] private float _blinkDuration = 0.45f;
+        [Header("눈 깜빡임")]
+        [Tooltip("들여다보는 동안 몇 초마다 눈을 깜빡이는지 (0이면 깜빡이지 않음)")]
+        // 스펙 001: 깜빡임 주기 기본값을 8초로 조정
+        [SerializeField] private float _blinkInterval = 8f;
+        // 스펙 006: 깜빡임 길이를 감기, 회전, 뜨기 구간으로 분리
+        [Tooltip("눈이 감기는 시간(초)")]
+        [SerializeField] private float _blinkCloseSeconds = 0.35f;
+        [Tooltip("완전히 감긴 채 미로가 도는 시간(초)")]
+        [SerializeField] private float _blinkTurnSeconds = 0.1f;
+        [Tooltip("눈이 떠지는 시간(초)")]
+        [SerializeField] private float _blinkOpenSeconds = 0.35f;
         [SerializeField, FormerlySerializedAs("blinkAmount"), Range(0f, 1f)] private float _blinkAmount;
+        // 스펙 006: 회전량을 칸 단위로 바꾸고 누적 각도 제한과 뜬 직후 유예 추가
+        [Tooltip("깜빡임 한 번에 미로가 도는 최소 칸 수")]
+        [SerializeField] private int _blinkTurnMinSectors = 1;
+        [Tooltip("깜빡임 한 번에 미로가 도는 최대 칸 수")]
+        [SerializeField] private int _blinkTurnMaxSectors = 2;
+        [Tooltip("처음 방향에서 벗어날 수 있는 최대 각도(도). 넘게 되면 반대로 돈다")]
+        [SerializeField] private float _blinkTurnLimitDeg = 45f;
+        [Tooltip("눈을 뜬 직후 이동 입력을 받지 않는 시간(초)")]
+        [SerializeField] private float _blinkRecoverSeconds = 0.2f;
 
         [Header("파편 읽은 뒤")]
         [Tooltip("파편을 다 읽고 나면 지금 층을 뺀 나머지 층의 벽을 무작위로 다시 만든다 (멈춰 있는 동안 길을 외우지 못하게)")]
         [SerializeField, FormerlySerializedAs("respawnMazeAfterReading")] private bool _respawnMazeAfterReading = true;
 
+        [Header("부담감")]
+        [Tooltip("지금 부담감 (0~1). 들여다보는 동안 차오르고, 가득 차면 leave 엔딩이 된다")]
+        [SerializeField, Range(0f, 1f)] private float _burden;
+        [Tooltip("신뢰 0일 때 0에서 가득까지 걸리는 들여다보기 시간(초)")]
+        [SerializeField] private float _burdenFillSeconds = 42.9f;
+        [Tooltip("신뢰 1당 늘어나는 시간(초)")]
+        [SerializeField] private float _burdenSecondsPerTrust = 8.6f;
+        [Tooltip("좋은 말을 처음 했을 때 줄어드는 양")]
+        [SerializeField, Range(0f, 1f)] private float _burdenRelief = 0.25f;
+        [Tooltip("가득 찼을 때 엔딩 앞에 보이는 한 줄. '은재'는 지금 손님 이름으로 바뀐다")]
+        [SerializeField, TextArea(1, 3)] private string _burdenEndLine = "은재가 시선을 피했다. 더는 마주 보기 힘든 것 같다.";
+
         [Header("연출")]
         [SerializeField, FormerlySerializedAs("talkWallAlpha"), Range(0f, 1f)] private float _talkWallAlpha = 0.22f;
-        [Tooltip("에디트 모드에서 이동 한 번마다 풀리는 태엽 칸 수")]
-        [SerializeField, FormerlySerializedAs("editStepUnwind")] private float _editStepUnwind = 0.5f;
         [SerializeField, FormerlySerializedAs("startRing")] private int _startRing;
         [SerializeField, FormerlySerializedAs("startSector")] private int _startSector = 4;
         [SerializeField, FormerlySerializedAs("bumpFlash")] private float _bumpFlash;
@@ -93,6 +131,15 @@ namespace EyeMaze
 
         [NonSerialized] private Vector2 _velocity;
         [NonSerialized] private float _blinkPhase = -1f;
+        [NonSerialized] private float _blinkElapsed;
+        // 스펙 006: 미로 누적 회전각과 이번 깜빡임의 회전량 추가
+        [NonSerialized] private float _mazeTurnDeg;
+        [NonSerialized] private float _blinkTurnFrom;
+        [NonSerialized] private float _blinkTurnDelta;
+        // 스펙 006: 눈을 뜬 직후 입력 유예 시간 추가
+        [NonSerialized] private float _blinkRecoverT;
+        // 스펙 006: 눈꺼풀 값을 전달할 눈 그림 참조 추가
+        [NonSerialized] private EyeVisual _eye;
         [NonSerialized] private int _lastLayer = -1;
         [NonSerialized] private int _heartIndex;
         [NonSerialized] private List<string> _endingLines;
@@ -100,45 +147,85 @@ namespace EyeMaze
         [NonSerialized] private bool _reading;
         [NonSerialized] private float _readT;
         [NonSerialized] private bool _typingPrev;
+        [NonSerialized] private bool _acceptedLastFrame;
+        [NonSerialized] private readonly List<ChoiceView> _choices = new List<ChoiceView>();
+
+        /// <summary>화면에 보여줄 선택지 하나 (뒤로가기 포함)</summary>
+        public struct ChoiceView
+        {
+            public string Text;
+            public bool Available;
+            public bool IsBack;
+            /// <summary>아직 켜지지 않은 need 플래그들</summary>
+            public string Missing;
+        }
 
         public IrisMaze Maze => _maze;
         public GazeCursor Cursor => _cursor;
         public Person Person => _person;
-        public Transform Dialogue => _dialogue;
-        public WindingIntro Intro => _intro;
         public Mode CurrentMode => _mode;
         public bool AcceptInput { get => _acceptInput; set => _acceptInput = value; }
         public string Message { get => _message; set => _message = value; }
-        public string IdleSituation => _idleSituation;
-        public List<EndingDef> Endings => _endings;
+        public string IdleSituation => _activeCase != null && !string.IsNullOrEmpty(_activeCase.IdleSituation) ? _activeCase.IdleSituation : _idleSituation;
+        /// <summary>지금 손님의 결말 목록 (엔딩 CSV가 바뀌면 바로 반영된다)</summary>
+        public List<EndingDef> Endings => _activeCase != null ? _activeCase.Endings : _endings;
+        private string IntroText => _activeCase != null && !string.IsNullOrEmpty(_activeCase.IntroMessage) ? _activeCase.IntroMessage : _introMessage;
+        private string AbyssText => _activeCase != null && !string.IsNullOrEmpty(_activeCase.AbyssMessage) ? _activeCase.AbyssMessage : _abyssMessage;
         public ClientCase ActiveCase => _activeCase;
+        // 스펙 006: 부담감 막대를 가리는 데 쓰는 눈꺼풀 닫힘 정도 공개
         public float BlinkAmount => _blinkAmount;
+        public string ReturnText => _returnText;
+        public float Burden => _burden;
+
+        /// <summary>대화 중이고 시작 장면이 아니며 4번 칸이 비어 있으면 처음 이야기로 돌아가는 공통 선택지를 고를 수 있다.</summary>
+        public bool CanReturnToStart
+        {
+            get
+            {
+                // 스펙 004: CSV 장면 기준으로 판단하고 뒤로가기가 4번 칸을 차지하면 숨긴다.
+                DialogueScript.Node node = CurrentNode;
+                return _mode == Mode.Talk && node != null && node != Script.Root && node.Choices.Count + (CanGoBack ? 1 : 0) <= 3;
+            }
+        }
 
         /// <summary>미로를 지나 동공 안(심연)에 들어와 있는지</summary>
         public bool InAbyss => _mode == Mode.Gaze && _inAbyss;
 
-        /// <summary>파편을 읽는 중이면 시선이 멈추고 태엽도 풀리지 않는다.</summary>
+        /// <summary>파편을 읽는 중이면 시선이 멈춘다.</summary>
         public bool IsReading => _mode == Mode.Gaze && _reading;
 
         /// <summary>엔딩 대사를 끝까지 봤는지 (그 다음 입력부터 필드로 돌아갈 수 있음)</summary>
         public bool HeartFinished => _mode == Mode.Ending && _heartIndex >= EndingLines.Count - 1;
 
         public EndingDef CurrentEnding => FindEnding(_currentEnding);
-        public DialogueNode[] Nodes => _dialogue != null ? _dialogue.GetComponentsInChildren<DialogueNode>(false) : new DialogueNode[0];
+        /// <summary>지금 손님의 대화 (CSV를 읽은 것)</summary>
+        public DialogueScript Script => _activeCase != null ? _activeCase.Script : null;
 
-        public DialogueNode CurrentNode
+        /// <summary>지금 대화 장면. id가 비었거나 CSV에 없으면 시작 장면</summary>
+        public DialogueScript.Node CurrentNode
         {
             get
             {
-                DialogueNode[] n = Nodes;
-                return _currentNode >= 0 && _currentNode < n.Length ? n[_currentNode] : null;
+                DialogueScript s = Script;
+                if (s == null) return null;
+                return s.Find(_currentNodeId) ?? s.Root;
+            }
+        }
+
+        /// <summary>지금 장면에서 뒤로가기('다른 질문을 해볼까요?')를 보여줄지</summary>
+        public bool CanGoBack
+        {
+            get
+            {
+                DialogueScript.Node n = CurrentNode;
+                return n != null && n != Script.Root && n.BackLabel != DialogueScript.NoBack;
             }
         }
 
         /// <summary>지금 케이스의 파편만 (다른 손님의 파편 묶음은 꺼져 있음)</summary>
         public MemoryFragment[] Fragments => _maze != null ? _maze.GetComponentsInChildren<MemoryFragment>(false) : new MemoryFragment[0];
 
-        public bool CanGaze => _mode == Mode.Talk && (_intro == null || _intro.CanGaze);
+        public bool CanGaze => _mode == Mode.Talk;
         public MazeLayer CursorLayer => _maze != null && _cursor != null ? _maze.GetLayer(_maze.LayerOfRing(_cursor.Ring)) : null;
 
         private string Name => _person != null ? _person.DisplayName : "그 사람";
@@ -152,7 +239,35 @@ namespace EyeMaze
             }
         }
 
-        void OnValidate() => EyeHooks.Repaint();
+        void OnValidate()
+        {
+            Strings.Load(_stringsCsv);
+            Flags.LoadDefinitions(_flagsCsv);
+            EyeHooks.Repaint();
+        }
+
+        void Awake() => Strings.Load(_stringsCsv);
+
+        void OnEnable()
+        {
+            Strings.Load(_stringsCsv);
+            Flags.Values = FlagValue;
+            Flags.LoadDefinitions(_flagsCsv);
+        }
+
+        /// <summary>
+        /// 계산 플래그의 condition에서 쓰는 수치를 알려준다.
+        /// name(trust / dilation / spring)을 사용하며, 지금 상대의 값 또는 null을 반환한다.
+        /// </summary>
+        private float? FlagValue(string name)
+        {
+            switch (name)
+            {
+                case "trust": return _person != null ? _person.Trust : (float?)null;
+                case "dilation": return _person != null ? _person.Dilation : (float?)null;
+                default: return null;
+            }
+        }
 
         void Update()
         {
@@ -177,18 +292,18 @@ namespace EyeMaze
             float dt = Time.deltaTime;
             _bumpFlash = Mathf.MoveTowards(_bumpFlash, 0f, dt * 3f);
 
-            // 깜빡임은 0에서 0.5(완전히 감김, 이때 회전)를 거쳐 1로 진행한다.
-            if (_blinkPhase >= 0f)
-            {
-                float prev = _blinkPhase;
-                _blinkPhase += dt / Mathf.Max(0.05f, _blinkDuration);
-                if (prev < 0.5f && _blinkPhase >= 0.5f) ApplyBlinkRotation();
-                if (_blinkPhase >= 1f) _blinkPhase = -1f;
-            }
-            _blinkAmount = _blinkPhase >= 0f ? Mathf.Sin(_blinkPhase * Mathf.PI) : 0f;
+            // 스펙 006: 감기, 완전히 감김, 뜨기 순서로 진행하고 눈꺼풀 값을 눈 그림에 전달한다.
+            if (_blinkRecoverT > 0f) _blinkRecoverT -= dt;
+            if (_blinkPhase >= 0f) AdvanceBlink(dt);
+            if (_eye == null && _maze != null) _eye = _maze.GetComponentInParent<EyeVisual>();
+            if (_eye != null) _eye.Closed = _blinkAmount;
 
-            // 들여다보는 동안 태엽이 풀린다. 깜빡임과 시간 제한은 태엽이 처리한다.
-            if (_mode == Mode.Gaze && !_inAbyss && !_reading && _intro != null) _intro.Unwind(_intro.UnwindPerSecond * dt);
+            // 들여다보는 동안 정해진 시간마다 눈을 깜빡이고, 부담감이 차오른다.
+            if (_mode == Mode.Gaze && !_inAbyss && !_reading)
+            {
+                TickBlink(dt);
+                if (Application.isPlaying) TickBurden(dt);
+            }
             if (_reading) _readT += dt;
 
             if (!_acceptInput)
@@ -196,10 +311,12 @@ namespace EyeMaze
                 // 필드 화면에서는 입력을 받지 않는다.
                 _velocity = Vector2.zero;
                 _typingPrev = Typewriter.AnyTyping;
+                _acceptedLastFrame = false;
                 return;
             }
             HandleInput(dt);
             _typingPrev = Typewriter.AnyTyping;
+            _acceptedLastFrame = true;
         }
 
         // 케이스
@@ -213,7 +330,6 @@ namespace EyeMaze
             if (c == null) return;
             _activeCase = c;
             if (_person != null) _person.DisplayName = c.PersonName;
-            _dialogue = c.Dialogue;
             _endings = c.Endings;
             _keyFragment = c.KeyFragment;
             _truthTrust = c.TruthTrust;
@@ -226,9 +342,6 @@ namespace EyeMaze
             foreach (ClientCase other in all)
                 foreach (GameObject g in other.FragmentGroups)
                     if (g != null && g.activeSelf != (other == c)) g.SetActive(other == c);
-            foreach (ClientCase other in all)
-                if (other.Dialogue != null && other.Dialogue.gameObject.activeSelf != (other == c))
-                    other.Dialogue.gameObject.SetActive(other == c);
 
             if (_maze != null && _maze.Seed != c.MazeSeed) _maze.Generate(c.MazeSeed);
             ResetAll();
@@ -252,8 +365,9 @@ namespace EyeMaze
         /// </summary>
         public EndingDef FindEnding(string id)
         {
-            if (_endings == null || string.IsNullOrEmpty(id)) return null;
-            foreach (EndingDef e in _endings) if (e != null && e.Id == id) return e;
+            List<EndingDef> list = Endings;
+            if (list == null || string.IsNullOrEmpty(id)) return null;
+            foreach (EndingDef e in list) if (e != null && e.Id == id) return e;
             return null;
         }
 
@@ -261,19 +375,19 @@ namespace EyeMaze
 
         /// <summary>
         /// 눈을 들여다보기 시작하거나 시선을 거둔다. 심연과 엔딩 중에는 거둘 수 없다.
-        /// 지금 모드와 태엽을 사용하며, 모드와 시선 표시, 문구를 바꾼다.
+        /// 지금 모드를 사용하며, 모드와 시선 표시, 문구를 바꾼다.
         /// </summary>
         public void ToggleGaze()
         {
             if (_mode == Mode.Ending) return;
-            if (_mode == Mode.Gaze && _inAbyss) { _message = _abyssMessage; return; }
-            if (_mode == Mode.Gaze) { ExitGaze("시선을 거뒀다. 남은 태엽은 그대로다."); return; }
-            if (!CanGaze) { _message = _intro != null ? _intro.NeedWindMessage : ""; return; }
+            if (_mode == Mode.Gaze && _inAbyss) { _message = AbyssText; return; }
+            if (_mode == Mode.Gaze) { ExitGaze(Strings.Get("msg.gaze_off", "시선을 거뒀다.")); return; }
+            if (!CanGaze) return;
             _mode = Mode.Gaze;
             _velocity = Vector2.zero;
             if (_cursor != null) _cursor.Visible = true;
             _lastLayer = _maze != null && _cursor != null ? _maze.LayerOfRing(_cursor.Ring) : -1;
-            _message = $"{Name}의 눈을 들여다본다. 태엽이 풀리는 동안만 볼 수 있다.";
+            _message = Strings.Get("msg.gaze_on", "{name}의 눈을 들여다본다.", ("name", Name));
         }
 
         /// <summary>
@@ -295,21 +409,23 @@ namespace EyeMaze
         /// </summary>
         public void Steer(Vector2 input, float dt)
         {
-            if (_mode != Mode.Gaze || _reading) { _velocity = Vector2.zero; return; }
+            // 스펙 006: 깜빡임 중과 뜬 직후에는 이동 입력을 받지 않음
+            if (_mode != Mode.Gaze || _reading || _blinkPhase >= 0f || _blinkRecoverT > 0f) { _velocity = Vector2.zero; return; }
             Vector2 target = Vector2.ClampMagnitude(input, 1f) * _moveSpeed;
             _velocity = Vector2.MoveTowards(_velocity, target, _acceleration * _moveSpeed * dt);
-            if (_velocity.sqrMagnitude > 1e-8f) MoveBy(_velocity * dt);
+            // 스펙 006: 화면 기준 이동량을 미로 기준으로 변환
+            if (_velocity.sqrMagnitude > 1e-8f) MoveBy(ScreenToMaze(_velocity * dt));
         }
 
         /// <summary>
         /// 에디트 모드 버튼용으로 화면 방향으로 editNudge만큼 움직인다.
-        /// dir을 사용하며, 시선 위치를 바꾸고 에디트 모드에서는 태엽을 조금 푼다.
+        /// dir을 사용하며, 시선 위치를 바꾼다.
         /// </summary>
         public void Nudge(Vector2 dir)
         {
             if (_mode != Mode.Gaze) return;
-            MoveBy(dir.normalized * _editNudge);
-            if (!Application.isPlaying && !_inAbyss && _intro != null) _intro.Unwind(_editStepUnwind);
+            // 스펙 006: 화면 기준 이동량을 미로 기준으로 변환
+            MoveBy(ScreenToMaze(dir.normalized * _editNudge));
         }
 
         /// <summary>
@@ -343,7 +459,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 다음 파편을 읽은 뒤처럼 눈을 한 번 깜빡이며, 지금 시선이 있는 층을 뺀 나머지 층의 벽을 무작위로 새로 만든다.
+        /// 파편을 읽은 뒤 지금 시선이 있는 층을 뺀 나머지 층의 벽을 무작위로 새로 만든다.
         /// 지금 시선의 층을 사용하며, 미로의 벽과 문구를 바꾼다.
         /// </summary>
         public void RespawnMaze()
@@ -351,21 +467,53 @@ namespace EyeMaze
             if (!_respawnMazeAfterReading || _maze == null) return;
             int keep = _cursor != null ? _maze.LayerOfRing(_cursor.Ring) : -1;
             _maze.Generate(UnityEngine.Random.Range(1, 999999), keep);
-            if (Application.isPlaying && _blinkPhase < 0f) _blinkPhase = 0f;
-            _message = "눈을 깜빡이자, 다른 층의 길이 바뀌었다.";
+            _message = Strings.Get("msg.respawn", "다른 층의 길이 바뀌었다.");
         }
 
         /// <summary>
-        /// 눈을 깜빡인다. Play 모드에서는 감겼다 뜨는 중간에 층이 돌고, 에디트 모드에서는 바로 돈다.
-        /// 입력값은 없으며, 깜빡임 단계 또는 층 회전량을 바꾼다.
+        /// 눈을 깜빡인다. 이미 깜빡이는 중이면 무시하고, 이번에 미로가 돌 칸 수와 방향을 무작위로 정한다.
+        /// 칸 수 범위와 _blinkTurnLimitDeg를 사용하며, 깜빡임 단계와 이번 회전량을 바꾼다.
         /// </summary>
         public void Blink()
         {
-            if (Application.isPlaying)
-            {
-                if (_blinkPhase < 0f) _blinkPhase = 0f;
-            }
-            else ApplyBlinkRotation();
+            // 스펙 006: 칸 단위로 돌고 처음 방향에서 제한 각도를 넘으면 반대로 돈다.
+            if (_blinkPhase >= 0f) return;
+            _blinkPhase = 0f;
+            _blinkTurnFrom = _mazeTurnDeg;
+            float sectorDeg = _maze != null ? _maze.SectorDeg : 0f;
+            int sectors = UnityEngine.Random.Range(_blinkTurnMinSectors, _blinkTurnMaxSectors + 1);
+            float direction = UnityEngine.Random.value < 0.5f ? -1f : 1f;
+            _blinkTurnDelta = direction * sectors * sectorDeg;
+            if (Mathf.Abs(_mazeTurnDeg + _blinkTurnDelta) > _blinkTurnLimitDeg + 0.01f) _blinkTurnDelta = -_blinkTurnDelta;
+        }
+
+        /// <summary>
+        /// 들여다보는 동안 부담감을 채운다. 신뢰가 높을수록 느리게 차고, 가득 차면 leave 엔딩을 시작한다.
+        /// dt와 상대의 신뢰를 사용하며, _burden과 모드를 바꾼다.
+        /// </summary>
+        private void TickBurden(float dt)
+        {
+            int trust = _person != null ? Mathf.Max(0, _person.Trust) : 0;
+            float seconds = Mathf.Max(0.1f, _burdenFillSeconds + _burdenSecondsPerTrust * trust);
+            _burden = Mathf.Min(1f, _burden + dt / seconds);
+            if (_burden < 1f) return;
+
+            // 가득 차면 상담이 끝난다. leave 엔딩이 없는 손님이면 시선만 거둔다.
+            if (FindEnding("leave") != null) StartEnding("leave", _burdenEndLine);
+            else ExitGaze(_burdenEndLine);
+        }
+
+        /// <summary>
+        /// 들여다본 시간을 쌓아 _blinkInterval초마다 눈을 깜빡인다.
+        /// dt를 사용하며, _blinkElapsed와 깜빡임 단계를 바꾼다.
+        /// </summary>
+        private void TickBlink(float dt)
+        {
+            if (_blinkInterval <= 0f) return;
+            _blinkElapsed += dt;
+            if (_blinkElapsed < _blinkInterval) return;
+            _blinkElapsed -= _blinkInterval;
+            Blink();
         }
 
         // 심연과 결말
@@ -413,28 +561,66 @@ namespace EyeMaze
 
         /// <summary>
         /// 선택지를 고를 수 있는지 판단한다.
-        /// o의 필요 파편과 필요 단서를 사용하며, 고를 수 있으면 true를 반환한다.
+        /// o의 need 플래그들을 사용하며, 모두 켜져 있으면 true를 반환한다.
         /// </summary>
-        public bool IsAvailable(DialogueOption o) =>
-            o != null && (o.Requires == null || o.Requires.Collected) && (o.RequiresClue == null || o.RequiresClue.Examined);
+        public bool IsAvailable(DialogueScript.Choice o) => o != null && Flags.AllSet(o.Need);
+
+        /// <summary>
+        /// 지금 장면에서 보여줄 선택지 목록을 만든다. 시작 장면이 아니면 맨 끝에 뒤로가기가 붙는다.
+        /// 지금 장면과 플래그를 사용하며, 선택지 목록을 반환한다 (매번 같은 리스트를 다시 채운다).
+        /// </summary>
+        public IReadOnlyList<ChoiceView> CurrentChoices()
+        {
+            _choices.Clear();
+            DialogueScript.Node node = CurrentNode;
+            if (node == null) return _choices;
+            foreach (DialogueScript.Choice c in node.Choices)
+            {
+                bool ok = IsAvailable(c);
+                _choices.Add(new ChoiceView
+                {
+                    Text = c.Text,
+                    Available = ok,
+                    Missing = ok ? "" : string.Join(", ", c.Need.Where(f => !Flags.IsOn(f))),
+                });
+            }
+            if (CanGoBack)
+                _choices.Add(new ChoiceView
+                {
+                    Text = string.IsNullOrEmpty(node.BackLabel) ? Strings.Get("dialogue.back", DialogueScript.DefaultBackLabel) : node.BackLabel,
+                    Available = true,
+                    IsBack = true,
+                    Missing = "",
+                });
+            return _choices;
+        }
 
         /// <summary>
         /// 대화 선택지를 고른다. 좋은 말은 한 번만 통하며, 신뢰가 바닥나면 leave 엔딩이 된다.
-        /// index를 사용하며, 상대의 신뢰와 동공, 태엽, 문구, 대화 진행 또는 엔딩을 바꾼다.
+        /// 마지막 번호가 뒤로가기면 이전 장면으로 돌아간다.
+        /// index를 사용하며, 상대의 신뢰와 동공, 부담감, 플래그, 문구, 대화 장면 또는 엔딩을 바꾼다.
         /// </summary>
         public void ChooseOption(int index)
         {
             if (_mode == Mode.Ending) return;
-            if (_mode == Mode.Gaze) { _message = "들여다보는 중에는 말할 수 없다. (Space로 시선 거두기)"; return; }
-            DialogueNode node = CurrentNode;
-            if (node == null || index < 0 || index >= node.Options.Count) return;
-            DialogueOption o = node.Options[index];
-            if (!IsAvailable(o)) { _message = "아직 모르는 이야기다. 눈 속에서 단서를 찾아야 한다."; return; }
+            if (_mode == Mode.Gaze) { _message = Strings.Get("msg.no_talk_in_gaze", "들여다보는 중에는 말할 수 없다. (Space로 시선 거두기)"); return; }
+            DialogueScript.Node node = CurrentNode;
+            if (node == null || index < 0) return;
+            if (index == node.Choices.Count && CanGoBack) { GoBack(); return; }
+            if (index >= node.Choices.Count) return;
+            DialogueScript.Choice o = node.Choices[index];
+            if (!IsAvailable(o)) { _message = Strings.Get("msg.locked_choice", "아직 모르는 이야기다. 눈 속에서 단서를 찾아야 한다."); return; }
 
             // 같은 말을 반복해서 신뢰를 올릴 수 없게 좋은 말은 한 번만 통한다.
-            string key = _currentNode + ":" + index;
-            bool helpful = o.Trust > 0 || o.Dilation > 0f || o.Spring > 0;
-            if (helpful && _usedOptions.Contains(key)) { _message = $"이미 한 이야기다. {Name}는 다음 말을 기다리고 있다."; return; }
+            // 다른 장면으로 넘어가는 말이면 수치는 다시 주지 않고 그 장면으로만 간다 (뒤로 갔다가 다시 들어올 때).
+            string key = node.Id + ":" + index;
+            bool helpful = o.Trust > 0 || o.Dilation > 0f;
+            if (helpful && _usedOptions.Contains(key))
+            {
+                if (!string.IsNullOrEmpty(o.Goto) && string.IsNullOrEmpty(o.Ending)) { _message = o.Response; GoTo(o.Goto); }
+                else _message = Strings.Get("msg.already", "이미 한 이야기다. {name}는 다음 말을 기다리고 있다.", ("name", Name));
+                return;
+            }
             _usedOptions.Add(key);
 
             if (_person != null)
@@ -442,21 +628,57 @@ namespace EyeMaze
                 _person.Trust += o.Trust;
                 _person.Dilation = Mathf.Clamp01(_person.Dilation + o.Dilation);
             }
-            if (_intro != null && o.Spring != 0) _intro.AddFree(o.Spring);
+            float burdenBefore = _burden;
+            if (helpful) _burden = Mathf.Max(0f, _burden - _burdenRelief);
+            foreach (string f in o.Set) Flags.Set(f);
             if (!string.IsNullOrEmpty(o.Ending)) { StartEnding(o.Ending, o.Response); return; }
             var sb = new StringBuilder(o.Response);
-            if (o.Trust > 0) sb.Append("\n(신뢰가 깊어졌다. 눈 속 어딘가의 문이 열렸다.)");
-            if (o.Dilation > 0.05f) sb.Append("\n(동공이 조금 커졌다.)");
-            if (o.Dilation < -0.05f) sb.Append("\n(동공이 좁아졌다.)");
-            if (o.Spring > 0) sb.Append($"\n(태엽이 {o.Spring}칸 감겼다.)");
-            if (o.Spring < 0) sb.Append($"\n(태엽이 {-o.Spring}칸 풀렸다.)");
+            if (o.Trust > 0) sb.Append("\n" + Strings.Get("msg.trust_up", "(신뢰가 깊어졌다. 눈 속 어딘가의 문이 열렸다.)"));
+            if (o.Trust < 0) sb.Append(Strings.Get("msg.trust_down", "") is string td && td.Length > 0 ? "\n" + td : "");
+            if (o.Dilation > 0.05f) sb.Append("\n" + Strings.Get("msg.dilation_up", "(동공이 조금 커졌다.)"));
+            if (o.Dilation < -0.05f) sb.Append("\n" + Strings.Get("msg.dilation_down", "(동공이 좁아졌다.)"));
+            if (_burden < burdenBefore) sb.Append("\n(부담이 조금 줄었다.)");
             _message = sb.ToString();
             if (_person != null && _person.Trust <= _leaveTrust && FindEnding("leave") != null)
             {
                 StartEnding("leave", o.Response);
                 return;
             }
-            if (o.Advance) _currentNode++;
+            if (!string.IsNullOrEmpty(o.Goto)) GoTo(o.Goto);
+        }
+
+        /// <summary>
+        /// 다른 장면으로 간다. 이미 지나온 장면이면 그곳까지 되감는다 (뒤로가기가 꼬이지 않게).
+        /// id를 사용하며, 지금 장면과 지나온 장면 목록을 바꾼다.
+        /// </summary>
+        public void GoTo(string id)
+        {
+            DialogueScript s = Script;
+            if (s == null || s.Find(id) == null) return;
+            DialogueScript.Node cur = CurrentNode;
+            if (cur != null && cur.Id == id) return;
+            int seen = _nodeHistory.LastIndexOf(id);
+            if (seen >= 0) _nodeHistory.RemoveRange(seen, _nodeHistory.Count - seen);
+            else if (cur != null) _nodeHistory.Add(cur.Id);
+            _currentNodeId = id;
+        }
+
+        /// <summary>
+        /// 바로 전 장면으로 돌아간다 ('다른 질문을 해볼까요?').
+        /// 지나온 장면 목록을 사용하며, 지금 장면과 문구를 바꾼다.
+        /// </summary>
+        public void GoBack()
+        {
+            DialogueScript s = Script;
+            DialogueScript.Node node = CurrentNode;
+            if (s == null || node == null) return;
+            _message = string.IsNullOrEmpty(node.BackLabel) ? Strings.Get("dialogue.back", DialogueScript.DefaultBackLabel) : node.BackLabel;
+            if (_nodeHistory.Count > 0)
+            {
+                _currentNodeId = _nodeHistory[_nodeHistory.Count - 1];
+                _nodeHistory.RemoveAt(_nodeHistory.Count - 1);
+            }
+            else _currentNodeId = s.Root != null ? s.Root.Id : "";
         }
 
         /// <summary>
@@ -478,6 +700,25 @@ namespace EyeMaze
         public void ChooseOption2() => ChooseOption(2);
 
         /// <summary>
+        /// 네 번째 선택지(보통 뒤로가기)를 고른다. UI 버튼에서 쓴다.
+        /// 입력값은 없으며, ChooseOption(3)과 같은 상태를 바꾼다.
+        /// </summary>
+        public void ChooseOption3() => ChooseOption(3);
+
+        /// <summary>
+        /// 공통 선택지를 고르고 대화를 시작 장면으로 되돌린다. 신뢰, 동공, 파편, 이야기 기록은 그대로 둔다.
+        /// 입력값은 없으며, 지금 장면과 지나온 장면 목록, 문구를 바꾼다.
+        /// </summary>
+        public void ReturnToStart()
+        {
+            if (!CanReturnToStart) return;
+            // 스펙 004: CSV 대화의 시작 장면으로 돌아가고 지나온 장면 목록을 비운다.
+            _currentNodeId = Script.Root.Id;
+            _nodeHistory.Clear();
+            _message = _returnMessage;
+        }
+
+        /// <summary>
         /// 지금 케이스에서 모은 파편 목록을 글로 만든다.
         /// 활성화된 파편들을 사용하며, 화면에 보일 요약 글을 반환한다.
         /// </summary>
@@ -485,12 +726,22 @@ namespace EyeMaze
         {
             MemoryFragment[] all = Fragments;
             string[] got = all.Where(f => f.Collected).Select(f => "· " + f.Title).ToArray();
-            return $"파편들 ({got.Length}/{all.Length})\n" + (got.Length > 0 ? string.Join("\n", got) : "· 아직 없음");
+            return Strings.Get("ui.fragments", "파편들 ({got}/{all})", ("got", got.Length), ("all", all.Length)) + "\n"
+                + (got.Length > 0 ? string.Join("\n", got) : Strings.Get("ui.fragments_none", "· 아직 없음"));
+        }
+
+        /// <summary>
+        /// 만남을 시작할 때 안내 문구를 보여준다.
+        /// first(처음 만나는지)를 사용하며, 문구를 바꾼다.
+        /// </summary>
+        public void ShowEncounterGuide(bool first)
+        {
+            _message = first ? _firstGuide : _againGuide;
         }
 
         /// <summary>
         /// 만남을 처음 상태로 되돌린다.
-        /// 입력값은 없으며, 모드와 대화 진행, 상대 상태, 태엽, 파편, 층 회전, 시선 위치를 초기화한다.
+        /// 입력값은 없으며, 모드와 대화 진행, 상대 상태, 안내 문구, 파편, 층 회전, 시선 위치를 초기화한다.
         /// </summary>
         public void ResetAll()
         {
@@ -502,13 +753,22 @@ namespace EyeMaze
             _endingLines = null;
             _usedOptions.Clear();
             if (_core != null) _core.ResetState();
-            _currentNode = 0;
-            _message = _introMessage;
+            DialogueScript script = Script;
+            _currentNodeId = script != null && script.Root != null ? script.Root.Id : "";
+            _nodeHistory.Clear();
+            // 이 대화의 선택지가 켜는 플래그는 만남을 다시 시작하면 끈다 (단서처럼 필드에서 켠 플래그는 유지).
+            if (script != null) foreach (string f in script.FlagsSet()) Flags.Set(f, false);
+            _message = IntroText;
             _blinkAmount = 0f;
             _blinkPhase = -1f;
+            _blinkElapsed = 0f;
+            // 스펙 006: 깜빡임으로 돌아간 미로를 원래 각도로 복원
+            SetMazeTurn(0f);
+            _blinkRecoverT = 0f;
+            _burden = 0f;
             _velocity = Vector2.zero;
             if (_person != null) { _person.Trust = 0; _person.Dilation = 0.2f; }
-            if (_intro != null) _intro.ResetForEncounter(true);
+            ShowEncounterGuide(true);
             foreach (MemoryFragment f in Fragments) f.Collected = false;
             if (_maze != null) foreach (MazeLayer l in _maze.Layers) l.Offset = 0;
             if (_cursor != null) { _cursor.SnapTo(_startRing, _startSector); _cursor.Visible = false; }
@@ -541,21 +801,23 @@ namespace EyeMaze
                 if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) move.x += 1f;
                 if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) move.x -= 1f;
 
-                // 대화 중 Space는 태엽이 처리하고, 들여다보는 중에 누르면 시선을 거둔다.
-                if (kb.spaceKey.wasPressedThisFrame && (_mode == Mode.Gaze || _intro == null)) ToggleGaze();
+                // Space를 누르면 들여다보거나 시선을 거둔다. 만남 화면에 막 들어온 프레임의 누름은 무시한다.
+                if (kb.spaceKey.wasPressedThisFrame && _acceptedLastFrame) ToggleGaze();
                 if (kb.rKey.wasPressedThisFrame) ResetAll();
                 if (_mode == Mode.Talk)
                 {
                     if (kb.digit1Key.wasPressedThisFrame) ChooseOption(0);
                     else if (kb.digit2Key.wasPressedThisFrame) ChooseOption(1);
                     else if (kb.digit3Key.wasPressedThisFrame) ChooseOption(2);
+                    // 스펙 004: 4번 칸이 비어 있으면 처음 이야기로 돌아가고, 차 있으면 그 선택지를 고른다.
+                    else if (kb.digit4Key.wasPressedThisFrame) { if (CanReturnToStart) ReturnToStart(); else ChooseOption(3); }
                 }
             }
             if (pad != null)
             {
                 Vector2 stick = pad.leftStick.ReadValue();
                 if (stick.sqrMagnitude > 0.04f) move += stick;
-                if (pad.buttonSouth.wasPressedThisFrame && (_mode == Mode.Gaze || _intro == null)) ToggleGaze();
+                if (pad.buttonSouth.wasPressedThisFrame && _acceptedLastFrame) ToggleGaze();
             }
             Steer(move, dt);
         }
@@ -674,7 +936,7 @@ namespace EyeMaze
             if (layer != _lastLayer)
             {
                 MazeLayer l = _maze.GetLayer(layer);
-                if (layer > _lastLayer && l != null) _message = $"더 깊은 곳으로 들어왔다 — {l.DisplayName}";
+                if (layer > _lastLayer && l != null) _message = Strings.Get("msg.deeper", "더 깊은 곳으로 들어왔다 — {layer}", ("layer", l.DisplayName));
                 _lastLayer = layer;
             }
             CheckFragment();
@@ -692,38 +954,80 @@ namespace EyeMaze
                 if (f.Collected || f.Ring != _cursor.Ring || f.WorldSector != _cursor.Sector) continue;
                 if (Vector3.Distance(pos, _maze.CellLocal(f.Ring, f.WorldSector)) > _maze.RingWidth * 0.55f) continue;
                 f.Collected = true;
-                _message = $"파편 — {f.Title}\n{f.Text}";
+                _message = Strings.Get("msg.fragment", "파편 — {title}\n{text}", ("title", f.Title), ("text", f.Text));
                 if (Application.isPlaying) { _reading = true; _readT = 0f; _velocity = Vector2.zero; }
             }
         }
 
         /// <summary>
-        /// 깜빡일 때 도는 층들을 돌린다. 시선이 그 층에 있으면 함께 돈다.
-        /// 각 층의 rotateOnBlink를 사용하며, 층 회전량과 시선 각도, 문구를 바꾼다.
+        /// 깜빡임을 한 프레임 진행한다. 구간 경계에서 시간을 멈춰 회전이 감기기나 뜨기 구간에 섞이지 않게 한다.
+        /// dt와 세 구간 길이를 사용하며, _blinkPhase(경과 초), _blinkAmount, 문구, 미로 회전각을 바꾼다.
         /// </summary>
-        private void ApplyBlinkRotation()
+        private void AdvanceBlink(float dt)
         {
-            if (_maze == null) return;
-            bool rotated = false;
-            foreach (MazeLayer layer in _maze.Layers)
-            {
-                if (layer.RotateOnBlink == 0) continue;
-                bool riding = _cursor != null && _maze.LayerOfRing(_cursor.Ring) == layer.Index;
-                layer.Offset += layer.RotateOnBlink;
-                rotated = true;
-                if (riding) _cursor.Angle = Mathf.Repeat(_cursor.Angle + layer.RotateOnBlink * _maze.SectorDeg, 360f);
-            }
-            if (rotated && _mode == Mode.Gaze) _message = "눈을 깜빡였다. 무언가가 돌아갔다.";
+            float close = Mathf.Max(0.01f, _blinkCloseSeconds);
+            float turn = Mathf.Max(0.01f, _blinkTurnSeconds);
+            float open = Mathf.Max(0.01f, _blinkOpenSeconds);
+            float openFrom = close + turn;
+
+            float prev = _blinkPhase;
+            float next = prev + dt;
+            if (prev < close) next = Mathf.Min(next, close);
+            else if (prev < openFrom) next = Mathf.Min(next, openFrom);
+            _blinkPhase = next;
+
+            if (prev < close && next >= close && _mode == Mode.Gaze) _message = Strings.Get("msg.blink_rotate", "눈을 깜빡였다. 무언가가 돌아갔다.");
+            if (prev >= close && prev < openFrom) ApplyBlinkRotation((next - close) / turn);
+
+            if (next < close) _blinkAmount = Mathf.SmoothStep(0f, 1f, next / close);
+            else if (next <= openFrom) _blinkAmount = 1f;
+            else _blinkAmount = 1f - Mathf.SmoothStep(0f, 1f, (next - openFrom) / open);
+
+            if (next < openFrom + open) return;
+            _blinkRecoverT = _blinkRecoverSeconds;
+            _blinkPhase = -1f;
+            _blinkAmount = 0f;
         }
 
         /// <summary>
-        /// 미로의 가장 안쪽을 지나 동공(심연)으로 들어선다. 여기서부턴 벽이 없고 태엽도 풀리지 않는다.
+        /// 완전히 감겨 있는 구간의 진행도만큼 미로를 시선과 함께 돌린다.
+        /// phase(0~1)와 이번 회전량을 사용하며, 미로의 회전각을 바꾼다.
+        /// </summary>
+        private void ApplyBlinkRotation(float phase)
+        {
+            // 스펙 006: 층별 회전을 미로 전체 회전으로 교체
+            SetMazeTurn(_blinkTurnFrom + _blinkTurnDelta * Mathf.SmoothStep(0f, 1f, phase));
+        }
+
+        /// <summary>
+        /// 미로의 깜빡임 회전각을 지정한 값으로 맞춘다. 씬에 저장된 기본 각도는 그대로 두고 차이만큼만 돌린다.
+        /// degrees를 사용하며, 미로 Transform의 회전과 _mazeTurnDeg를 바꾼다.
+        /// </summary>
+        private void SetMazeTurn(float degrees)
+        {
+            if (_maze == null || Mathf.Approximately(degrees, _mazeTurnDeg)) return;
+            _maze.transform.Rotate(0f, 0f, degrees - _mazeTurnDeg, Space.Self);
+            _mazeTurnDeg = degrees;
+        }
+
+        /// <summary>
+        /// 화면 기준 벡터를 지금 미로 회전을 뺀 미로 기준 벡터로 바꾼다.
+        /// screen과 미로 Transform의 회전을 사용하며, 변환된 벡터를 반환한다.
+        /// </summary>
+        private Vector2 ScreenToMaze(Vector2 screen)
+        {
+            // 스펙 006: 씬 기본 회전까지 반영하도록 Transform 기준으로 변환
+            return _maze != null ? _maze.transform.InverseTransformDirection(screen) : screen;
+        }
+
+        /// <summary>
+        /// 미로의 가장 안쪽을 지나 동공(심연)으로 들어선다. 여기서부턴 벽이 없다.
         /// 입력값은 없으며, _inAbyss와 문구를 바꾼다.
         /// </summary>
         private void EnterAbyss()
         {
             _inAbyss = true;
-            _message = _abyssMessage;
+            _message = AbyssText;
         }
 
         /// <summary>

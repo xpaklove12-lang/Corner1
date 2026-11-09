@@ -15,7 +15,7 @@ namespace EyeMaze
         [Header("크기")]
         [SerializeField, FormerlySerializedAs("minRadius")] private float _minRadius = 0.3f;
         [SerializeField, FormerlySerializedAs("maxRadius")] private float _maxRadius = 0.82f;
-        [Tooltip("1을 넣으면 한 번 움찔 수축했다가 돌아온다 (태엽이 다 감겼을 때)")]
+        [Tooltip("1을 넣으면 한 번 움찔 수축했다가 돌아온다")]
         [SerializeField, FormerlySerializedAs("pulse"), Range(0f, 1f)] private float _pulse;
 
         [Header("그림")]

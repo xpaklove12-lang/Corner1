@@ -66,7 +66,7 @@ namespace EyeMaze
                 {
                     // 문을 열어 주기를 기다리는 동안에는 조작 안내 대신 문 안내를 띄운다.
                     string guide = FieldCutscene.DoorGuide;
-                    string h = _flow.ShowingText ? "Z  다음" : guide != null ? guide : FieldCutscene.IsPlaying ? "" : "A D / ← →  이동   ·   Z  말 걸기 / 살펴보기";
+                    string h = _flow.ShowingText ? Strings.Get("hint.text_next", "Z  다음") : guide != null ? guide : FieldCutscene.IsPlaying ? "" :Strings.Get("hint.field", "A D / ← →  이동   ·   Z  말 걸기 / 살펴보기");
                     if (_fieldHint.text != h) _fieldHint.text = h;
                 }
             }

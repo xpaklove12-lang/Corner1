@@ -41,9 +41,11 @@ namespace EyeMaze
         [SerializeField] private float _firstCallDelay = 2f;
         [Tooltip("첫 혼잣말을 넘긴 뒤 띵-동이 다시 뜨고, 넘김 입력(Z·Enter·Space)을 받기 시작하기까지 (초). 입력이 있어야 두 번째 혼잣말이 열린다")]
         [SerializeField] private float _secondCallDelay = 0.5f;
+        [Tooltip("첫 혼잣말. Strings.csv의 field.call_first가 있으면 그걸 쓴다")]
         [SerializeField, TextArea(1, 3)] private string _firstCallLine = "뭐야? 한창 분위기 잡고있는데.";
+        [Tooltip("두 번째 혼잣말. Strings.csv의 field.call_second가 있으면 그걸 쓴다")]
         [SerializeField, TextArea(1, 3)] private string _secondCallLine = "아직 첫 상담까지는 시간이 남았을 텐데...";
-        [Tooltip("문을 열어 줄 때까지 필드 조작 안내 자리에 띄우는 문구")]
+        [Tooltip("문을 열어 줄 때까지 필드 조작 안내 자리에 띄우는 문구. Strings.csv의 hint.door가 있으면 그걸 쓴다")]
         [SerializeField] private string _doorGuide = "문을 열어서 손님을 맞이하세요.";
 
         [Header("첫 손님 맞이")]
@@ -85,7 +87,7 @@ namespace EyeMaze
 
         /// <summary>문을 열어 주기를 기다리는 동안의 안내 문구. 그 밖에는 null.</summary>
         public static string DoorGuide => _current != null && _current.isActiveAndEnabled && Application.isPlaying
-                                          && _current._step == Step.WaitDoor ? _current._doorGuide : null;
+                                          && _current._step == Step.WaitDoor ? Strings.Get("hint.door", _current._doorGuide) : null;
 
         void OnEnable() => _current = this;
 
@@ -116,13 +118,13 @@ namespace EyeMaze
 
                 case Step.CallFirst:
                     _timer -= Time.deltaTime;
-                    if (_timer <= 0f) ShowCallLine(_firstCallLine, () => { _step = Step.CallSecond; _timer = _secondCallDelay; _door.ShowBell(true); });
+                    if (_timer <= 0f) ShowCallLine(Strings.Get("field.call_first", _firstCallLine), () => { _step = Step.CallSecond; _timer = _secondCallDelay; _door.ShowBell(true); });
                     break;
 
                 case Step.CallSecond:
                     // 대기 시간이 지나도 플레이어가 넘겨야 두 번째 혼잣말이 열린다. 대기는 A를 닫은 입력이 바로 B를 여는 것도 막는다.
                     _timer -= Time.deltaTime;
-                    if (_timer <= 0f && AdvancePressed()) ShowCallLine(_secondCallLine, () => { _step = Step.WaitDoor; _door.Ring(); });
+                    if (_timer <= 0f && AdvancePressed()) ShowCallLine(Strings.Get("field.call_second", _secondCallLine), () => { _step = Step.WaitDoor; _door.Ring(); });
                     break;
 
                 case Step.WaitDoor:
@@ -149,11 +151,14 @@ namespace EyeMaze
                 case Step.Talk:
                     // 대화가 끝나면 콜백에서 다음 단계로 넘어간다.
                     _step = Step.Talking;
-                    _flow.ShowConversation(_mother.DisplayName, _mother.Portrait, _mother.TalkLines, () =>
+                    Action motherDone = () =>
                     {
                         _step = Step.MotherOut;
                         _mother.WalkTo(_doorX, () => { _mother.Present = false; _step = Step.Between; _timer = _betweenDelay; });
-                    }, _mother.UnknownName, _mother.UnknownNameLines);
+                    };
+                    // 필드 대화 CSV의 enter 대화가 있으면 그걸, 없으면 인스펙터의 talkLines를 쓴다.
+                    if (!_mother.TryTalk(_flow, TalkScript.Enter, null, motherDone))
+                        _flow.ShowConversation(_mother.DisplayName, _mother.Portrait, _mother.TalkLines, motherDone);
                     break;
 
                 case Step.Between:
@@ -169,8 +174,9 @@ namespace EyeMaze
                             _daughter.SitDown(() =>
                             {
                                 _step = Step.Reveal;
-                                if (_mother.RevealLines.Count > 0)
-                                    _flow.ShowConversation(null, _daughter.Portrait, _mother.RevealLines, () => { _seated = _daughter; _step = Step.WaitResolved; });
+                                if (_mother.TryTalk(_flow, TalkScript.Reveal, _daughter.Portrait, () => { _seated = _daughter; _step = Step.WaitResolved; })) { }
+                                else if (!string.IsNullOrEmpty(_mother.RevealLine))
+                                    _flow.ShowConversation(null, _daughter.Portrait, new List<string> { _mother.RevealLine }, () => { _seated = _daughter; _step = Step.WaitResolved; });
                                 else { _seated = _daughter; _step = Step.WaitResolved; }
                             });
                         });
@@ -202,7 +208,8 @@ namespace EyeMaze
                             npc.SitDown(() =>
                             {
                                 _seated = npc;
-                                if (!string.IsNullOrEmpty(_nextCase.EntryLine))
+                                if (npc.TryTalk(_flow, TalkScript.Enter, null, () => _step = Step.WaitResolved)) _step = Step.ClientGreet;
+                                else if (!string.IsNullOrEmpty(_nextCase.EntryLine))
                                 {
                                     _step = Step.ClientGreet;
                                     _flow.ShowConversation(_nextCase.PersonName, npc.Portrait, new List<string> { _nextCase.EntryLine }, () => _step = Step.WaitResolved);

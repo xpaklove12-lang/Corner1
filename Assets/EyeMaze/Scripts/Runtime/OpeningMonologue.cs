@@ -152,6 +152,9 @@ namespace EyeMaze
         private void SyncLines()
         {
             if (!_useScriptLines) return;
+            // Strings.csv에 opening 줄들이 있으면 그걸 쓴다 (Play 중에만, 씬은 바꾸지 않음).
+            List<string> csv = Application.isPlaying ? Strings.Lines("opening") : null;
+            if (csv != null) { _lines = csv; return; }
             List<string> d = DefaultLines();
             if (_lines != null && _lines.Count == d.Count && _lines.SequenceEqual(d)) return;
             _lines = d;

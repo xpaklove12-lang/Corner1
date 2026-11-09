@@ -24,7 +24,6 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("room")] private FieldRoom _room;
         [SerializeField, FormerlySerializedAs("player")] private FieldPlayer _player;
         [SerializeField, FormerlySerializedAs("director")] private EyeMazeDirector _director;
-        [SerializeField, FormerlySerializedAs("intro")] private WindingIntro _intro;
         [Tooltip("눈 화면의 기준 (눈 오브젝트)")]
         [SerializeField, FormerlySerializedAs("eyeAnchor")] private Transform _eyeAnchor;
 
@@ -60,14 +59,13 @@ namespace EyeMaze
         [NonSerialized] private bool _returnResolved;
         [NonSerialized] private List<string> _convLines;
         [NonSerialized] private string _convSpeaker;
-        [NonSerialized] private string _convHiddenSpeaker;
-        [NonSerialized] private int _convHiddenLines;
+        [NonSerialized] private List<string> _convSpeakers;
+        [NonSerialized] private List<Sprite> _convPortraits;
         [NonSerialized] private int _convIndex;
         [NonSerialized] private Action _convDone;
 
         public State CurrentState { get => _state; set => _state = value; }
         public Camera Cam => _cam;
-        public WindingIntro Intro => _intro;
         public FieldPlayer Player => _player;
         public EyeMazeDirector Director => _director;
         public FieldNPC CurrentNpc => _currentNpc;
@@ -210,20 +208,32 @@ namespace EyeMaze
         /// <summary>
         /// 여러 줄 대화를 연다. Z로 한 줄씩 넘기고, 마지막 줄 다음 Z에서 닫히며 done이 불린다.
         /// speaker, portrait, lines, done을 사용하며, 글 상자 상태와 초상화를 바꾸고 플레이어를 멈춘다.
-        /// hiddenSpeaker와 hiddenLines를 주면 앞쪽 hiddenLines줄 동안은 speaker 대신 hiddenSpeaker를 이름으로 보인다.
         /// </summary>
-        public void ShowConversation(string speaker, Sprite portrait, List<string> lines, Action done, string hiddenSpeaker = null, int hiddenLines = 0)
+        public void ShowConversation(string speaker, Sprite portrait, List<string> lines, Action done)
         {
             _convLines = lines != null && lines.Count > 0 ? lines : new List<string> { "…" };
             _convSpeaker = speaker;
-            _convHiddenSpeaker = hiddenSpeaker;
-            _convHiddenLines = hiddenLines;
+            _convSpeakers = null;
+            _convPortraits = null;
             _convIndex = 0;
             _convDone = done;
             _fieldPortrait = portrait;
             _showingText = true;
             ShowConvLine();
             if (_player != null) _player.Stop();
+        }
+
+        /// <summary>
+        /// 줄마다 말하는 사람과 초상화가 다른 대화를 연다 (필드 대화 CSV용).
+        /// speakers, portraits, lines(같은 길이), done을 사용하며, 글 상자 상태를 바꾸고 플레이어를 멈춘다.
+        /// </summary>
+        public void ShowConversationLines(List<string> speakers, List<Sprite> portraits, List<string> lines, Action done)
+        {
+            ShowConversation(speakers != null && speakers.Count > 0 ? speakers[0] : null,
+                portraits != null && portraits.Count > 0 ? portraits[0] : null, lines, done);
+            _convSpeakers = speakers;
+            _convPortraits = portraits;
+            ShowConvLine();
         }
 
         /// <summary>
@@ -253,6 +263,8 @@ namespace EyeMaze
             _fieldText = "";
             _fieldPortrait = null;
             _convLines = null;
+            _convSpeakers = null;
+            _convPortraits = null;
             _convDone = null;
         }
 
@@ -300,7 +312,7 @@ namespace EyeMaze
 
         /// <summary>
         /// 바로 만남 화면으로 바꾼다. 에디트 모드 버튼과 줌인 끝에서 쓴다.
-        /// 현재 상대를 사용하며, 카메라와 디렉터, 상담 케이스, 태엽 상태를 바꾼다.
+        /// 현재 상대를 사용하며, 카메라와 디렉터, 상담 케이스, 안내 문구를 바꾼다.
         /// </summary>
         public void EnterEncounterNow()
         {
@@ -320,12 +332,7 @@ namespace EyeMaze
             }
             bool first = _currentNpc == null || !_currentNpc.Met;
             if (_currentNpc != null && Application.isPlaying) _currentNpc.Met = true;
-            if (_intro != null)
-            {
-                // Play에서는 풀린 태엽(흐릿한 눈)에서 시작하고, 에디트 모드에서는 보기 편하게 가득 감는다.
-                if (Application.isPlaying) _intro.ResetForEncounter(first);
-                else _intro.FillUp();
-            }
+            if (_director != null && Application.isPlaying) _director.ShowEncounterGuide(first);
             _fadeTarget = 0f;
         }
 
@@ -382,14 +389,15 @@ namespace EyeMaze
 
         /// <summary>
         /// 지금 대화 줄을 글 상자 문자열로 만든다.
-        /// _convLines, _convIndex, _convSpeaker, 가려진 이름 설정을 사용하며, _fieldText를 바꾼다.
+        /// _convLines, _convIndex, _convSpeaker를 사용하며, _fieldText를 바꾼다.
         /// </summary>
         private void ShowConvLine()
         {
-            string line = _convLines[Mathf.Clamp(_convIndex, 0, _convLines.Count - 1)];
-            // 이름이 밝혀지기 전의 줄에서는 가려진 이름을 쓴다.
-            string speaker = _convIndex < _convHiddenLines && !string.IsNullOrEmpty(_convHiddenSpeaker) ? _convHiddenSpeaker : _convSpeaker;
-            _fieldText = string.IsNullOrEmpty(speaker) ? line : $"{speaker}\n{line}";
+            int i = Mathf.Clamp(_convIndex, 0, _convLines.Count - 1);
+            string line = _convLines[i];
+            if (_convSpeakers != null && i < _convSpeakers.Count) _convSpeaker = _convSpeakers[i];
+            if (_convPortraits != null && i < _convPortraits.Count) _fieldPortrait = _convPortraits[i];
+            _fieldText = string.IsNullOrEmpty(_convSpeaker) ? line : $"{_convSpeaker}\n{line}";
         }
 
         /// <summary>
