@@ -15,7 +15,11 @@ namespace EyeMaze.EditorTools
     /// </summary>
     public class DialogueEditorWindow : EditorWindow
     {
-        private const float TEXT_WIDTH_RATIO = 0.42f;
+        private const float DEFAULT_SPLIT = 0.42f;
+        private const float MIN_VIEW_WIDTH = 250f;
+        private const float SPLIT_HANDLE = 6f;
+        private const string SPLIT_PREF = "EyeMaze.DialogueEditor.SplitRatio";
+        private const string SIZE_PREF = "EyeMaze.DialogueEditor.Size.";
         // 입력이 이만큼(초) 멈추면 텍스트를 검사한다.
         private const double TEXT_APPLY_DELAY = 0.75;
         private const string TEXT_CONTROL = "DialogueEditorText";
@@ -44,11 +48,20 @@ namespace EyeMaze.EditorTools
         {
             public DialogueEditorDocument Doc;
             public string Csv;
+            /// <summary>이 상태로 오게 한 편집이 그룹 ID 변경이면 그 이전·새 그룹 키. 실행 취소·다시 실행 때 크기 설정 키를 옮긴다.</summary>
+            public string RenamedFrom;
+            public string RenamedTo;
         }
 
         // 이 파일의 유효한 편집 순서. _historyIndex가 지금 상태를 가리킨다.
         private readonly List<Snapshot> _history = new List<Snapshot>();
         private int _historyIndex = -1;
+
+        private float _split = DEFAULT_SPLIT;
+        private bool _splitDragging;
+        // 노드 선택과 맞춰 텍스트 뷰에서 강조할 줄과, 다음 그리기에서 그 줄로 스크롤할지
+        private int _highlightLine = -1;
+        private bool _scrollToHighlight;
 
         [MenuItem("EyeMaze/대사 편집기")]
         private static void Open()
@@ -61,6 +74,9 @@ namespace EyeMaze.EditorTools
 
         void OnEnable()
         {
+            _split = EditorPrefs.GetFloat(SPLIT_PREF, DEFAULT_SPLIT);
+            _graph.SizeLoader = LoadNodeSize;
+            _graph.SizeSaver = SaveNodeSize;
             RefreshPaths();
             if (!string.IsNullOrEmpty(_openPath)) OpenPath(_openPath);
         }
@@ -84,12 +100,103 @@ namespace EyeMaze.EditorTools
                 return;
             }
             Rect body = GUILayoutUtility.GetRect(0f, 100000f, 0f, 100000f);
-            var textRect = new Rect(body.x, body.y, Mathf.Floor(body.width * TEXT_WIDTH_RATIO), body.height);
+            float textWidth = TextWidth(body.width);
+            var handle = new Rect(body.x + textWidth - 1f, body.y, SPLIT_HANDLE, body.height);
+            HandleSplit(handle, body);
+            textWidth = TextWidth(body.width);
+            var textRect = new Rect(body.x, body.y, textWidth, body.height);
             var graphRect = new Rect(textRect.xMax + 4f, body.y, body.width - textRect.width - 4f, body.height);
             // 노드 뷰가 먼저 입력을 받아야 텍스트 뷰 위에서 놓은 끌기도 노드 뷰가 끝낼 수 있다. 두 영역은 겹치지 않는다.
             DrawGraphView(graphRect);
             DrawTextView(textRect);
-            EditorGUI.DrawRect(new Rect(textRect.xMax + 1f, body.y, 2f, body.height), new Color(0f, 0f, 0f, 0.3f));
+            EditorGUI.DrawRect(new Rect(textRect.xMax + 1f, body.y, 2f, body.height), _splitDragging ? new Color(0.35f, 0.6f, 1f, 0.8f) : new Color(0f, 0f, 0f, 0.3f));
+        }
+
+        /// <summary>
+        /// 텍스트 뷰 너비를 정한다. 창이 500px 이상이면 두 뷰가 각각 250px 이상인 범위에서 저장된 비율을 따르고, 더 좁으면 반씩 나눈다.
+        /// width를 사용하며, 텍스트 뷰 너비를 반환한다.
+        /// </summary>
+        private float TextWidth(float width)
+        {
+            if (width < MIN_VIEW_WIDTH * 2f) return Mathf.Floor(width * 0.5f);
+            return Mathf.Floor(Mathf.Clamp(width * _split, MIN_VIEW_WIDTH, width - MIN_VIEW_WIDTH - 4f));
+        }
+
+        /// <summary>
+        /// 두 뷰 사이 분할선을 끌어 너비 비율을 바꾸고, 놓을 때 에디터 설정에 저장한다.
+        /// handle과 body를 사용하며, _split을 바꾼다.
+        /// </summary>
+        private void HandleSplit(Rect handle, Rect body)
+        {
+            EditorGUIUtility.AddCursorRect(handle, MouseCursor.ResizeHorizontal);
+            int id = GUIUtility.GetControlID(FocusType.Passive);
+            Event e = Event.current;
+            switch (e.GetTypeForControl(id))
+            {
+                case EventType.MouseDown:
+                    if (e.button != 0 || !handle.Contains(e.mousePosition)) return;
+                    GUIUtility.hotControl = id;
+                    _splitDragging = true;
+                    e.Use();
+                    break;
+                case EventType.MouseDrag:
+                    if (GUIUtility.hotControl != id) return;
+                    if (body.width >= MIN_VIEW_WIDTH * 2f) _split = Mathf.Clamp01((e.mousePosition.x - body.x) / body.width);
+                    e.Use();
+                    Repaint();
+                    break;
+                case EventType.MouseUp:
+                    if (GUIUtility.hotControl != id) return;
+                    GUIUtility.hotControl = 0;
+                    _splitDragging = false;
+                    // 저장할 때는 실제로 보이는 너비의 비율로 맞춘다.
+                    if (body.width >= MIN_VIEW_WIDTH * 2f) _split = TextWidth(body.width) / body.width;
+                    EditorPrefs.SetFloat(SPLIT_PREF, _split);
+                    e.Use();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 노드 크기 설정 키를 만든다. 파일 GUID와 그룹 키(section/actor/id)로 나눈다.
+        /// groupKey를 사용하며, EditorPrefs 키를 반환한다.
+        /// </summary>
+        private string SizeKey(string groupKey) => SIZE_PREF + AssetDatabase.AssetPathToGUID(_doc != null ? _doc.AssetPath : "") + "." + groupKey;
+
+        /// <summary>
+        /// 저장된 노드 크기를 읽는다.
+        /// groupKey를 사용하며, 크기 또는 (없으면) null을 반환한다.
+        /// </summary>
+        private Vector2? LoadNodeSize(string groupKey)
+        {
+            string v = EditorPrefs.GetString(SizeKey(groupKey), "");
+            string[] p = v.Split(',');
+            if (p.Length != 2) return null;
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            if (!float.TryParse(p[0], System.Globalization.NumberStyles.Float, inv, out float w) || !float.TryParse(p[1], System.Globalization.NumberStyles.Float, inv, out float h)) return null;
+            return new Vector2(w, h);
+        }
+
+        /// <summary>
+        /// 노드 크기를 저장한다.
+        /// groupKey와 size를 사용하며, EditorPrefs에 쓴다.
+        /// </summary>
+        private void SaveNodeSize(string groupKey, Vector2 size)
+        {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            EditorPrefs.SetString(SizeKey(groupKey), size.x.ToString("0.##", inv) + "," + size.y.ToString("0.##", inv));
+        }
+
+        /// <summary>
+        /// ID를 바꾼 그룹의 크기 설정을 새 키로 옮긴다.
+        /// from과 to(그룹 키)를 사용하며, EditorPrefs를 바꾼다.
+        /// </summary>
+        private void MoveNodeSize(string from, string to)
+        {
+            string old = SizeKey(from);
+            if (!EditorPrefs.HasKey(old)) return;
+            EditorPrefs.SetString(SizeKey(to), EditorPrefs.GetString(old));
+            EditorPrefs.DeleteKey(old);
         }
 
         /// <summary>
@@ -138,10 +245,22 @@ namespace EyeMaze.EditorTools
             GUIStyle style = InputStyle();
             float width = textRect.width - 16f;
             float height = Mathf.Max(textRect.height, style.CalcHeight(new GUIContent(_draft), width));
+            if (_scrollToHighlight && _highlightLine > 0)
+            {
+                _textScroll.y = Mathf.Max(0f, LineTop(style, width, _highlightLine) - textRect.height * 0.3f);
+                _scrollToHighlight = false;
+            }
             _textScroll = GUI.BeginScrollView(textRect, _textScroll, new Rect(0f, 0f, width, height), false, true);
             var area = new Rect(0f, 0f, width, height);
             GUI.SetNextControlName(TEXT_CONTROL);
             string next = EditorGUI.TextArea(area, _draft, style);
+            if (Event.current.type == EventType.Repaint && _highlightLine > 0)
+            {
+                float top = LineTop(style, width, _highlightLine);
+                float lineHeight = style.CalcHeight(new GUIContent(LineText(_highlightLine)), width) - style.padding.vertical;
+                EditorGUI.DrawRect(new Rect(0f, top, width, lineHeight), new Color(1f, 0.82f, 0.25f, 0.35f));
+                EditorGUI.DrawRect(new Rect(0f, top, 3f, lineHeight), new Color(1f, 0.82f, 0.25f, 1f));
+            }
             if (Event.current.type == EventType.Repaint) HighlightStyle(style).Draw(area, new GUIContent(Highlight(next)), false, false, false, false);
             GUI.EndScrollView();
             SetDraftFromInput(next);
@@ -173,6 +292,45 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
+        /// 텍스트 초안의 한 줄을 꺼낸다.
+        /// line(1부터)을 사용하며, 그 줄 글 또는 빈 글을 반환한다.
+        /// </summary>
+        private string LineText(int line)
+        {
+            string[] lines = _draft.Split('\n');
+            return line >= 1 && line <= lines.Length ? lines[line - 1] : "";
+        }
+
+        /// <summary>
+        /// 텍스트 상자 안에서 한 줄이 시작하는 세로 위치를 구한다. 줄바꿈되는 긴 줄도 같은 스타일로 높이를 잰다.
+        /// style, width, line을 사용하며, 위치를 반환한다.
+        /// </summary>
+        private float LineTop(GUIStyle style, float width, int line)
+        {
+            if (line <= 1) return style.padding.top;
+            string[] lines = _draft.Split('\n');
+            string prefix = string.Join("\n", lines, 0, Mathf.Min(line - 1, lines.Length));
+            return style.CalcHeight(new GUIContent(prefix), width) - style.padding.bottom;
+        }
+
+        /// <summary>
+        /// 노드 뷰에서 고른 항목의 텍스트 줄을 강조하고 그 줄로 스크롤한다. 대사 행이면 [eye ...] 다음의 Line: 줄을 고른다.
+        /// line을 사용하며, _highlightLine과 _scrollToHighlight를 바꾼다.
+        /// </summary>
+        private void ShowTextLine(int line)
+        {
+            string[] lines = _draft.Split('\n');
+            if (_graph.SelectedRow >= 0)
+                while (line < lines.Length && lines[line - 1].TrimStart().StartsWith("[eye")) line++;
+            _highlightLine = line;
+            _scrollToHighlight = true;
+            // 노드 뷰에서 누른 F2·Enter가 텍스트 상자로 가지 않도록 텍스트 입력을 끝낸다.
+            GUI.FocusControl(null);
+            EditorGUIUtility.editingTextField = false;
+            Repaint();
+        }
+
+        /// <summary>
         /// 텍스트 입력 상자 스타일을 만든다. 글자는 투명하게 두고 커서와 선택 영역만 보이게 한다.
         /// 입력값은 없으며, 새 스타일을 반환한다.
         /// </summary>
@@ -191,8 +349,19 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private static GUIStyle HighlightStyle(GUIStyle input)
         {
-            var style = new GUIStyle(input) { richText = true };
-            style.normal.background = style.focused.background = style.hover.background = style.active.background = null;
+            // 입력 상자 스타일을 복사하면 배경 이미지까지 따라와 아래의 줄 강조를 덮으므로, 글자 배치에 쓰는 값만 옮긴 빈 스타일을 만든다.
+            var style = new GUIStyle
+            {
+                font = input.font,
+                fontSize = input.fontSize,
+                fontStyle = input.fontStyle,
+                alignment = input.alignment,
+                padding = new RectOffset(input.padding.left, input.padding.right, input.padding.top, input.padding.bottom),
+                contentOffset = input.contentOffset,
+                clipping = input.clipping,
+                wordWrap = true,
+                richText = true,
+            };
             style.normal.textColor = EditorStyles.textArea.normal.textColor;
             return style;
         }
@@ -308,7 +477,14 @@ namespace EyeMaze.EditorTools
             string notice = _draftHasErrors ? "텍스트에 오류가 있어 마지막 정상 상태를 보여줍니다. 오류를 고치기 전에는 노드를 편집할 수 없습니다." : null;
             DialogueEditorDocument changed = _graph.Draw(rect, _doc, !_draftHasErrors && !_textPending, notice);
             if (Event.current.type == EventType.Used) Repaint();
-            if (changed != null) ApplyGraphEdit(changed);
+            if (_graph.TakeSelectionLine(out int line))
+            {
+                if (line > 0) ShowTextLine(line);
+                else _highlightLine = -1;
+            }
+            if (changed == null) return;
+            bool ok = ApplyGraphEdit(changed, out string error);
+            _graph.CompleteInline(ok, error);
         }
 
         /// <summary>
@@ -332,13 +508,13 @@ namespace EyeMaze.EditorTools
         /// 검사를 통과한 모델을 현재 모델로 삼고 CSV로 저장한다. 내용이 바뀌었으면 실행 취소 기록에 한 칸 더하고 그 뒤의 다시 실행 기록을 지운다.
         /// doc과 csv를 사용하며, _doc, _savedAt, _history를 바꾼다.
         /// </summary>
-        private void Commit(DialogueEditorDocument doc, string csv)
+        private void Commit(DialogueEditorDocument doc, string csv, string renamedFrom = null, string renamedTo = null)
         {
             _doc = doc;
             if (DialogueEditorFormat.Save(doc.AssetPath, csv)) _savedAt = System.DateTime.Now.ToString("HH:mm:ss");
             if (_historyIndex >= 0 && _history[_historyIndex].Csv == csv) return;
             if (_historyIndex + 1 < _history.Count) _history.RemoveRange(_historyIndex + 1, _history.Count - _historyIndex - 1);
-            _history.Add(new Snapshot { Doc = doc.Clone(), Csv = csv });
+            _history.Add(new Snapshot { Doc = doc.Clone(), Csv = csv, RenamedFrom = renamedFrom, RenamedTo = renamedTo });
             _historyIndex = _history.Count - 1;
         }
 
@@ -361,7 +537,7 @@ namespace EyeMaze.EditorTools
         private void HandleHistoryKeys()
         {
             Event e = Event.current;
-            if (e.type != EventType.KeyDown || !(e.control || e.command) || _doc == null) return;
+            if (e.type != EventType.KeyDown || !(e.control || e.command) || _doc == null || _graph.IsInlineEditing) return;
             if (e.keyCode == KeyCode.Z && !e.shift) { UndoEdit(); e.Use(); }
             else if (e.keyCode == KeyCode.Y) { RedoEdit(); e.Use(); }
         }
@@ -409,6 +585,13 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private void RestoreSnapshot(int index)
         {
+            // 되돌리거나 다시 하는 편집이 ID 변경이면 노드 크기 설정 키도 따라 옮긴다.
+            Snapshot moving = index < _historyIndex ? _history[_historyIndex] : _history[index];
+            if (moving.RenamedFrom != null && moving.RenamedTo != null)
+            {
+                if (index < _historyIndex) MoveNodeSize(moving.RenamedTo, moving.RenamedFrom);
+                else MoveNodeSize(moving.RenamedFrom, moving.RenamedTo);
+            }
             _historyIndex = index;
             DialogueEditorDocument doc = _history[index].Doc.Clone();
             SetDraftText(DialogueEditorFormat.WriteText(doc));
@@ -435,10 +618,11 @@ namespace EyeMaze.EditorTools
         /// <summary>
         /// 노드 뷰에서 바뀐 모델을 검사해 통과하면 텍스트로 다시 써서 두 뷰를 함께 바꾸고 CSV에 저장한다.
         /// 통과하지 못하면 모델, 텍스트, CSV를 그대로 두고 이유만 보여준다.
-        /// changed를 사용하며, _doc, _draft, _issues를 바꾼다.
+        /// changed를 사용하며, _doc, _draft, _issues를 바꾸고, 반영했으면 true를, 아니면 false와 첫 오류 이유를 반환한다.
         /// </summary>
-        private void ApplyGraphEdit(DialogueEditorDocument changed)
+        private bool ApplyGraphEdit(DialogueEditorDocument changed, out string error)
         {
+            error = "";
             string text = DialogueEditorFormat.WriteText(changed);
             var issues = new List<DialogueEditorFormat.Issue>();
             DialogueEditorDocument parsed = DialogueEditorFormat.ParseText(text, changed.Kind, changed.AssetPath, issues);
@@ -448,14 +632,20 @@ namespace EyeMaze.EditorTools
             {
                 // 거절된 편집의 줄 번호는 화면에 없는 글을 가리키므로 빼고 보여준다.
                 foreach (DialogueEditorFormat.Issue i in issues)
-                    if (i.Error) _issues.Add(new DialogueEditorFormat.Issue { Message = "노드 편집을 되돌렸다: " + i.Message });
+                {
+                    if (!i.Error) continue;
+                    if (error.Length == 0) error = i.Message;
+                    _issues.Add(new DialogueEditorFormat.Issue { Message = "노드 편집을 되돌렸다: " + i.Message });
+                }
                 Repaint();
-                return;
+                return false;
             }
             SetDraftText(text);
             _issues.AddRange(issues);
-            Commit(parsed, csv);
+            Commit(parsed, csv, _graph.RenamedFrom, _graph.RenamedTo);
+            if (_graph.RenamedFrom != null && _graph.RenamedTo != null) MoveNodeSize(_graph.RenamedFrom, _graph.RenamedTo);
             Repaint();
+            return true;
         }
 
         /// <summary>
@@ -503,6 +693,8 @@ namespace EyeMaze.EditorTools
             if (asset == null) return;
             var errors = new List<string>();
             if (_doc == null || _doc.AssetPath != path) _graph.Reset();
+            _graph.ClearSelection();
+            _highlightLine = -1;
             _doc = DialogueEditorFormat.ReadCsv(asset, kind, path, errors);
             _draft = DialogueEditorFormat.WriteText(_doc);
             _issues.Clear();
