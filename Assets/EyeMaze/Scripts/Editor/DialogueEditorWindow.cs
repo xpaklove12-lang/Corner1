@@ -144,9 +144,10 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private void DrawGraphView(Rect rect)
         {
-            string notice = _draftHasErrors ? "텍스트에 오류가 있어 마지막 정상 상태를 보여줍니다." : null;
-            _graph.Draw(rect, _doc, notice);
+            string notice = _draftHasErrors ? "텍스트에 오류가 있어 마지막 정상 상태를 보여줍니다. 오류를 고치기 전에는 노드를 편집할 수 없습니다." : null;
+            DialogueEditorDocument changed = _graph.Draw(rect, _doc, !_draftHasErrors && !_textPending, notice);
             if (Event.current.type == EventType.Used) Repaint();
+            if (changed != null) ApplyGraphEdit(changed);
         }
 
         /// <summary>
@@ -161,6 +162,26 @@ namespace EyeMaze.EditorTools
             _issues.AddRange(issues);
             _draftHasErrors = HasError(issues);
             if (!_draftHasErrors) _doc = parsed;
+            Repaint();
+        }
+
+        /// <summary>
+        /// 노드 뷰에서 바뀐 모델을 텍스트로 다시 써서 두 뷰를 함께 바꾼다.
+        /// changed를 사용하며, _doc과 _draft를 바꾼다.
+        /// </summary>
+        private void ApplyGraphEdit(DialogueEditorDocument changed)
+        {
+            string text = DialogueEditorFormat.WriteText(changed);
+            var issues = new List<DialogueEditorFormat.Issue>();
+            DialogueEditorDocument parsed = DialogueEditorFormat.ParseText(text, changed.Kind, changed.AssetPath, issues);
+            if (HasError(issues)) return;
+            _doc = parsed;
+            _draft = text;
+            _issues.Clear();
+            _issues.AddRange(issues);
+            // 입력 중인 텍스트 상자가 새 글을 보이도록 포커스를 푼다.
+            GUI.FocusControl(null);
+            EditorGUIUtility.editingTextField = false;
             Repaint();
         }
 

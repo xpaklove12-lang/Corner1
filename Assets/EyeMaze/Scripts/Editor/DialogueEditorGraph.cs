@@ -10,6 +10,7 @@ namespace EyeMaze.EditorTools
     /// 대사 편집기의 노드 뷰. 공통 모델을 매번 자동 배치해 그린다.
     /// Dialogue는 시작 노드부터 goto를 따라 위에서 아래로 층을 나눠 놓고, 다른 파일은 그룹 순서대로 격자에 놓는다.
     /// 화면에서 노드를 끌어 옮긴 위치와 화면 이동은 이 창에서만 쓰고 저장하지 않는다.
+    /// 연결점을 끌어 다른 노드에 놓으면 goto가, 행 카드를 끌어 다른 자리에 놓으면 소속과 순서가 바뀐 새 문서를 돌려준다.
     /// </summary>
     public class DialogueEditorGraph
     {
@@ -37,6 +38,12 @@ namespace EyeMaze.EditorTools
         private Vector2 _pan;
         private string _dragNode;
         private bool _panning;
+        // 끌고 있는 연결선 또는 카드 (그룹 번호, 행 번호). 없으면 -1이다.
+        private int _linkGroup = -1;
+        private int _linkItem = -1;
+        private int _cardGroup = -1;
+        private int _cardItem = -1;
+        private Vector2 _mouse;
 
         private static GUIStyle _rowStyle;
         private static GUIStyle _headerStyle;
@@ -52,13 +59,24 @@ namespace EyeMaze.EditorTools
             _nodeOffsets.Clear();
             _dragNode = null;
             _panning = false;
+            ClearDrag();
+        }
+
+        /// <summary>
+        /// 끌던 연결선과 카드를 놓는다.
+        /// 입력값은 없으며, 끌기 상태를 비운다.
+        /// </summary>
+        private void ClearDrag()
+        {
+            _linkGroup = _linkItem = _cardGroup = _cardItem = -1;
         }
 
         /// <summary>
         /// 노드 뷰를 그리고 마우스 입력을 처리한다.
-        /// rect, doc, notice(위에 띄울 안내)를 사용하며, 화면 이동과 노드 위치를 바꾼다.
+        /// rect, doc, editable(연결·카드 편집 허용), notice(위에 띄울 안내)를 사용하며,
+        /// 연결이나 카드를 놓아 모델이 바뀌면 바뀐 복사본을, 아니면 null을 반환한다.
         /// </summary>
-        public void Draw(Rect rect, DialogueEditorDocument doc, string notice)
+        public DialogueEditorDocument Draw(Rect rect, DialogueEditorDocument doc, bool editable, string notice)
         {
             EnsureStyles();
             EditorGUI.DrawRect(rect, new Color(0.15f, 0.15f, 0.16f));
@@ -67,10 +85,13 @@ namespace EyeMaze.EditorTools
             GUI.BeginClip(rect);
             Event e = Event.current;
             bool inside = new Rect(0f, 0f, rect.width, rect.height).Contains(e.mousePosition);
+            DialogueEditorDocument changed = editable ? HandleEditInput(e, doc, boxes, inside) : null;
+            if (!editable) ClearDrag();
             HandleViewInput(e, doc, boxes, inside);
             // 선이 상자에 가리지 않도록 상자를 먼저 그리고 선을 위에 그린다.
             foreach (Box b in boxes) DrawBox(doc, b);
             DrawEdges(doc, boxes);
+            DrawDragFeedback(doc, boxes);
             if (!string.IsNullOrEmpty(notice))
             {
                 var r = new Rect(8f, 6f, rect.width - 16f, 20f);
@@ -78,6 +99,7 @@ namespace EyeMaze.EditorTools
                 GUI.Label(new Rect(r.x + 6f, r.y + 2f, r.width - 12f, r.height), notice, EditorStyles.whiteMiniLabel);
             }
             GUI.EndClip();
+            return changed;
         }
 
         // ---------------------------------------------------------------- 배치
@@ -429,6 +451,152 @@ namespace EyeMaze.EditorTools
             _headerStyle.normal.textColor = Color.white;
             _situationStyle = new GUIStyle(EditorStyles.miniLabel) { wordWrap = true, clipping = TextClipping.Clip };
             _situationStyle.normal.textColor = new Color(0.7f, 0.72f, 0.75f);
+        }
+
+        // ---------------------------------------------------------------- 연결·카드 편집
+
+        /// <summary>
+        /// 연결점이나 행 카드를 끌고 놓는 입력을 처리한다. 놓을 때 바뀐 내용을 복사본에 반영한다.
+        /// e, doc, boxes, inside를 사용하며, 바뀐 복사본 또는 null을 반환한다.
+        /// </summary>
+        private DialogueEditorDocument HandleEditInput(Event e, DialogueEditorDocument doc, List<Box> boxes, bool inside)
+        {
+            if (e.isMouse) _mouse = e.mousePosition;
+            switch (e.type)
+            {
+                case EventType.MouseDown:
+                    if (!inside || e.button != 0) return null;
+                    Box hit = HitBox(boxes, e.mousePosition);
+                    if (hit == null || hit.Group < 0) return null;
+                    int row = RowAt(doc, hit, e.mousePosition.y);
+                    if (row < 0) return null;
+                    if (doc.Kind == DialogueEditorKind.Dialogue && Vector2.Distance(PortPosition(hit, row), e.mousePosition) <= 9f)
+                    {
+                        _linkGroup = hit.Group;
+                        _linkItem = row;
+                    }
+                    else
+                    {
+                        _cardGroup = hit.Group;
+                        _cardItem = row;
+                    }
+                    e.Use();
+                    return null;
+                case EventType.MouseDrag:
+                    if (_linkGroup >= 0 || _cardGroup >= 0) e.Use();
+                    return null;
+                case EventType.MouseUp:
+                    if (_linkGroup < 0 && _cardGroup < 0) return null;
+                    DialogueEditorDocument result = _linkGroup >= 0 ? DropLink(doc, boxes, e.mousePosition) : DropCard(doc, boxes, e.mousePosition);
+                    ClearDrag();
+                    e.Use();
+                    return result;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 끌던 연결선을 놓는다. 다른 Dialogue 노드 위면 그 노드로 goto를 바꾸고, 함께 적힌 ending은 지운다.
+        /// doc, boxes, p를 사용하며, 바뀐 복사본 또는 (바뀌지 않으면) null을 반환한다.
+        /// </summary>
+        private DialogueEditorDocument DropLink(DialogueEditorDocument doc, List<Box> boxes, Vector2 p)
+        {
+            Box target = HitBox(boxes, p);
+            if (target == null || target.Group < 0 || target.Group == _linkGroup) return null;
+            if (_linkItem >= doc.Groups[_linkGroup].Items.Count) return null;
+            string id = doc.Groups[target.Group].Id;
+            DialogueEditorDocument.Item src = doc.Groups[_linkGroup].Items[_linkItem];
+            if (src.Get(DialogueEditorFormat.GOTO) == id && src.Get(DialogueEditorFormat.ENDING).Length == 0) return null;
+            DialogueEditorDocument copy = doc.Clone();
+            DialogueEditorDocument.Item item = copy.Groups[_linkGroup].Items[_linkItem];
+            item.Fields[DialogueEditorFormat.GOTO] = id;
+            item.Fields.Remove(DialogueEditorFormat.ENDING);
+            return copy;
+        }
+
+        /// <summary>
+        /// 끌던 행 카드를 놓는다. 놓은 그룹과 순서 위치로 그 행을 옮긴다.
+        /// doc, boxes, p를 사용하며, 바뀐 복사본 또는 (바뀌지 않으면) null을 반환한다.
+        /// </summary>
+        private DialogueEditorDocument DropCard(DialogueEditorDocument doc, List<Box> boxes, Vector2 p)
+        {
+            Box target = HitBox(boxes, p);
+            if (target == null || target.Group < 0 || _cardItem >= doc.Groups[_cardGroup].Items.Count) return null;
+            int index = InsertIndex(doc, target, p.y);
+            if (target.Group == _cardGroup)
+            {
+                if (index > _cardItem) index--;
+                if (index == _cardItem) return null;
+            }
+            DialogueEditorDocument copy = doc.Clone();
+            DialogueEditorDocument.Item item = copy.Groups[_cardGroup].Items[_cardItem];
+            copy.Groups[_cardGroup].Items.RemoveAt(_cardItem);
+            List<DialogueEditorDocument.Item> to = copy.Groups[target.Group].Items;
+            to.Insert(Mathf.Clamp(index, 0, to.Count), item);
+            return copy;
+        }
+
+        /// <summary>
+        /// 상자 안 y 위치에 있는 행 번호를 찾는다.
+        /// doc, b, y를 사용하며, 행 번호 또는 -1을 반환한다.
+        /// </summary>
+        private static int RowAt(DialogueEditorDocument doc, Box b, float y)
+        {
+            int row = Mathf.FloorToInt((y - b.RowsTop) / ROW_HEIGHT);
+            return row >= 0 && row < doc.Groups[b.Group].Items.Count ? row : -1;
+        }
+
+        /// <summary>
+        /// 카드를 놓을 순서 위치를 구한다. 행 경계 중 가장 가까운 곳이다.
+        /// doc, b, y를 사용하며, 0부터 행 수까지의 위치를 반환한다.
+        /// </summary>
+        private static int InsertIndex(DialogueEditorDocument doc, Box b, float y)
+        {
+            int count = doc.Groups[b.Group].Items.Count;
+            return Mathf.Clamp(Mathf.RoundToInt((y - b.RowsTop) / ROW_HEIGHT), 0, count);
+        }
+
+        /// <summary>
+        /// 끌고 있는 연결선이나 카드, 놓일 위치 표시를 그린다.
+        /// doc과 boxes를 사용한다.
+        /// </summary>
+        private void DrawDragFeedback(DialogueEditorDocument doc, List<Box> boxes)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            Box hover = HitBox(boxes, _mouse);
+            if (_linkGroup >= 0)
+            {
+                foreach (Box b in boxes)
+                    if (b.Group == _linkGroup)
+                    {
+                        Vector3 a = PortPosition(b, _linkItem);
+                        Handles.DrawBezier(a, _mouse, a + new Vector3(60f, 0f), (Vector3)_mouse + new Vector3(-30f, 0f), Color.white, null, 2f);
+                    }
+                if (hover != null && hover.Group >= 0 && hover.Group != _linkGroup) DrawOutline(hover.Rect, new Color(0.45f, 0.75f, 1f));
+            }
+            else if (_cardGroup >= 0 && _cardItem < doc.Groups[_cardGroup].Items.Count)
+            {
+                if (hover != null && hover.Group >= 0)
+                {
+                    float y = hover.RowsTop + InsertIndex(doc, hover, _mouse.y) * ROW_HEIGHT;
+                    EditorGUI.DrawRect(new Rect(hover.Rect.x + 2f, y - 1.5f, hover.Rect.width - 4f, 3f), new Color(1f, 0.85f, 0.3f));
+                }
+                var ghost = new Rect(_mouse.x - 10f, _mouse.y - ROW_HEIGHT * 0.5f, NODE_WIDTH - 8f, ROW_HEIGHT - 2f);
+                EditorGUI.DrawRect(ghost, new Color(0.4f, 0.4f, 0.48f, 0.9f));
+                GUI.Label(new Rect(ghost.x + 4f, ghost.y, ghost.width - 8f, ghost.height), RowText(doc, doc.Groups[_cardGroup].Items[_cardItem], _cardItem), _rowStyle);
+            }
+        }
+
+        /// <summary>
+        /// 사각형 테두리를 그린다.
+        /// r과 color를 사용한다.
+        /// </summary>
+        private static void DrawOutline(Rect r, Color color)
+        {
+            EditorGUI.DrawRect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, 2f), color);
+            EditorGUI.DrawRect(new Rect(r.x - 2f, r.yMax, r.width + 4f, 2f), color);
+            EditorGUI.DrawRect(new Rect(r.x - 2f, r.y, 2f, r.height), color);
+            EditorGUI.DrawRect(new Rect(r.xMax, r.y, 2f, r.height), color);
         }
 
         // ---------------------------------------------------------------- 화면 조작
