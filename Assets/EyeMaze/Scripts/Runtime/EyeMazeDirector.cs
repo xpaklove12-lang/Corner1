@@ -131,6 +131,8 @@ namespace EyeMaze
 
         // 스펙 007: 벽 부딪힘 밀려남 설정
         [Header("벽 부딪힘")]
+        [Tooltip("켜면 벽이나 잠긴 문에 세게 부딪혔을 때 밀려남, 지지직 연출, 번쩍임, 부담감 증가가 일어난다. 끄면 기존처럼 멈추거나 미끄러지기만 한다")]
+        [SerializeField] private bool _bumpEnabled;
         [Tooltip("반응하는 최소 벽 쪽 속도 (초당 거리). 이보다 느리게 닿거나 벽을 따라 미끄러지면 반응하지 않는다")]
         [SerializeField] private float _bumpMinSpeed = 0.8f;
         [Tooltip("벽에서 밀려나는 거리. 통로 폭(약 0.21)의 절반 이하를 권장한다")]
@@ -516,10 +518,11 @@ namespace EyeMaze
         /// <summary>
         /// 이번 이동에서 막힌 축의 벽 쪽 속도가 충분하면 부딪힘을 시작한다. 막힌 축의 반대 방향을 밀려나는 방향으로 정한다.
         /// mazeVelocity(미로 기준 속도), _hitRadial, _hitTangent를 사용하며, _knockbackDir, _knockbackT, _bumpCooldownT, _velocity를 바꾼다.
-        /// 부딪히면 _bumpFlash와 _burden도 올리고, 부담감이 가득 차면 상담을 끝낸다.
+        /// 부딪히면 _bumpFlash와 _burden도 올리고, 부담감이 가득 차면 상담을 끝낸다. _bumpEnabled가 꺼져 있으면 아무것도 하지 않는다.
         /// </summary>
         private void TryStartBump(Vector2 mazeVelocity)
         {
+            if (!_bumpEnabled) return;
             // 스펙 007: 파편을 읽기 시작한 프레임에는 밀려남을 시작하지 않는다.
             if (_mode != Mode.Gaze || _inAbyss || _reading || _bumpCooldownT > 0f) return;
             if (_hitRadial == 0 && _hitTangent == 0) return;
