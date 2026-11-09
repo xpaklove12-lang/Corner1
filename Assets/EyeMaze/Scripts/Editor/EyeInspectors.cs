@@ -64,7 +64,8 @@ namespace EyeMaze.EditorTools
                     if (GUILayout.Button(label)) EyeEditorOps.Run("대화 선택", () => d.ChooseOption(idx), roots);
                 }
             }
-            if (d.CanReturnToStart && GUILayout.Button($"4. {d.ReturnText}"))
+            // 스펙 004: 공통 선택지를 보이는 선택지 다음 번호로 표시
+            if (d.CanReturnToStart && GUILayout.Button($"{d.CurrentChoices().Count + 1}. {d.ReturnText}"))
                 EyeEditorOps.Run("처음 이야기로", d.ReturnToStart, roots);
 
             EditorGUILayout.Space(4);

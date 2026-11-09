@@ -21,11 +21,15 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("line")] private LineRenderer _line;
 
         [NonSerialized] private int _drawnKey = int.MinValue;
+        // 스펙 010: 연출 중 벽 색에 곱할 투명도 추가
+        [NonSerialized] private float _visualAlpha = 1f;
         private IrisMaze _maze;
 
         public Kind WallKind => _kind;
         public int Ring => _ring;
         public int Sector => _sector;
+        /// <summary>연출 중 벽 색에 곱하는 투명도. 벽 판정에는 쓰지 않는다.</summary>
+        public float VisualAlpha { get => _visualAlpha; set => _visualAlpha = value; }
 
         /// <summary>
         /// 새로 만든 벽의 위치와 그림을 한 번에 설정한다.
@@ -47,7 +51,8 @@ namespace EyeMaze
         {
             if (_maze == null) _maze = GetComponentInParent<IrisMaze>();
             if (_maze == null || _line == null) return;
-            int key = HashCode.Combine(_kind, _ring, _sector, _maze.GeometryKey, _maze.WallColor, _maze.WallWidthNow);
+            // 스펙 010: 표시 투명도가 바뀌어도 다시 칠하도록 키에 포함
+            int key = HashCode.Combine(_kind, _ring, _sector, _maze.GeometryKey, _maze.WallColor, _maze.WallWidthNow, _visualAlpha);
             if (key == _drawnKey) return;
             _drawnKey = key;
 
@@ -60,7 +65,10 @@ namespace EyeMaze
                 Shapes.SetPoints(_line, new[] { Shapes.Polar(_maze.RingOuter(_ring), a), Shapes.Polar(_maze.RingInner(_ring), a) }, false);
             }
             _line.widthMultiplier = _maze.WallWidthNow;
-            Shapes.SetColor(_line, _maze.WallColor);
+            // 스펙 010: 벽 색에 표시 투명도를 곱함
+            Color color = _maze.WallColor;
+            color.a *= _visualAlpha;
+            Shapes.SetColor(_line, color);
             _line.sortingOrder = 5;
         }
     }

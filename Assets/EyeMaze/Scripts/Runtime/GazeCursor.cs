@@ -26,12 +26,16 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("applied"), HideInInspector] private bool _applied;
 
         [NonSerialized] private int _drawnKey = int.MinValue;
+        // 스펙 009: 깜빡임 회전 때 화면에만 더하는 각도 추가
+        [NonSerialized] private float _blinkVisualDeg;
         private IrisMaze _maze;
 
         public float Radius { get => _radius; set => _radius = value; }
         public float Angle { get => _angle; set => _angle = value; }
         public bool Visible { get => _visible; set => _visible = value; }
         public Color Color { get => _color; set => _color = value; }
+        /// <summary>깜빡임 회전 때 화면에만 더하는 각도(도). 벽 판정에는 쓰지 않는다.</summary>
+        public float BlinkVisualDeg { get => _blinkVisualDeg; set => _blinkVisualDeg = value; }
 
         /// <summary>현재 고리 (0 = 가장 바깥)</summary>
         public int Ring => Maze != null ? Maze.RingAt(_radius) : 0;
@@ -87,7 +91,8 @@ namespace EyeMaze
             if (Maze == null) return;
             _radius = Mathf.Clamp(_radius, 0f, Maze.OuterRadius); // 0은 동공 한가운데(심연)다.
             _angle = Mathf.Repeat(_angle, 360f);
-            Vector3 pos = LocalPos;
+            // 스펙 009: 표시 위치에만 깜빡임 회전 각도를 더함
+            Vector3 pos = Shapes.Polar(_radius, _angle + _blinkVisualDeg);
             if (transform.localPosition != pos) transform.localPosition = pos;
             _appliedPos = pos;
             _applied = true;
