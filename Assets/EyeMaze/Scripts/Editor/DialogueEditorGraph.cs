@@ -26,6 +26,7 @@ namespace EyeMaze.EditorTools
         // Dialogue 선택지는 본문과 조건·수치 배지를 표시하고 결과는 별도 자식 노드에 둔다.
         private const float CHOICE_ROW_HEIGHT = 50f;
         private const float RESPONSE_HEIGHT = 70f;
+        private const float RESPONSE_LINE_HEIGHT = 34f;
         private const float FRAGMENT_HEIGHT = 82f;
         private const float NODE_PADDING = 6f;
         private const float JUDGE_WIDTH = 170f;
@@ -136,6 +137,10 @@ namespace EyeMaze.EditorTools
         private string _selKey;
         private int _selRow = -1;
         private bool _selResponse;
+        // 결과 카드에서 고른 결과 줄 (_selResponse일 때)
+        private int _selLine;
+        // 고치는 중인 결과 줄 (InlineKind.Response일 때)
+        private int _inlineLine;
         private bool _selAfter;
         private MemoryFragment _selFragment;
         private int _selectionLine = -1;
@@ -558,7 +563,7 @@ namespace EyeMaze.EditorTools
                         h = Mathf.Max(h, b.Canvas.height);
                     }
                     if (first) { firstRowRight = x - GAP_X; firstRowY = y; first = false; }
-                    bool hasResponses = false;
+                    float responseH = 0f;
                     foreach (Box parent in placed)
                     {
                         DialogueEditorDocument.Group group = doc.Groups[parent.Group];
@@ -566,17 +571,18 @@ namespace EyeMaze.EditorTools
                         for (int item = 0; item < group.Items.Count; item++)
                             if (group.Items[item].Get("response").Length > 0) responseItems.Add(item);
                         if (responseItems.Count == 0) continue;
-                        hasResponses = true;
                         float childrenWidth = responseItems.Count * NODE_WIDTH + (responseItems.Count - 1) * GAP_X;
                         float childX = parent.Canvas.center.x - childrenWidth * 0.5f;
                         foreach (int item in responseItems)
                         {
+                            float cardH = ResponseHeight(group.Items[item]);
                             boxes.Add(new Box { Kind = BoxKind.Response, Group = parent.Group, Item = item,
-                                Canvas = new Rect(childX, y + h + GAP_Y * 0.5f, NODE_WIDTH, RESPONSE_HEIGHT) });
+                                Canvas = new Rect(childX, y + h + GAP_Y * 0.5f, NODE_WIDTH, cardH) });
+                            responseH = Mathf.Max(responseH, cardH);
                             childX += NODE_WIDTH + GAP_X;
                         }
                     }
-                    y += h + (hasResponses ? GAP_Y * 0.5f + RESPONSE_HEIGHT : 0f) + GAP_Y;
+                    y += h + (responseH > 0f ? GAP_Y * 0.5f + responseH : 0f) + GAP_Y;
                 }
             }
 
@@ -929,11 +935,16 @@ namespace EyeMaze.EditorTools
                 EditorGUI.DrawRect(b.Rect, new Color(0.19f, 0.29f, 0.34f));
                 Rect title = new Rect(b.Rect.x, b.Rect.y, b.Rect.width, Z(HEADER_HEIGHT));
                 EditorGUI.DrawRect(title, new Color(0.22f, 0.40f, 0.48f));
+                List<string> lines = DialogueEditorFormat.ResponseLines(g.Items[b.Item].Get("response"));
                 GUI.Label(new Rect(title.x + Z(6f), title.y + Z(3f), title.width - Z(12f), title.height),
-                    $"결과 · 선택지 {b.Item + 1}", _headerStyle);
-                string response = Flat(g.Items[b.Item].Get("response"));
-                GUI.Label(new Rect(b.Rect.x + Z(6f), title.yMax + Z(4f), b.Rect.width - Z(12f), b.Rect.height - Z(HEADER_HEIGHT + 8f)),
-                    new GUIContent(response, response), _responseStyle);
+                    lines.Count > 1 ? $"결과 · 선택지 {b.Item + 1} · {lines.Count}줄" : $"결과 · 선택지 {b.Item + 1}", _headerStyle);
+                for (int line = 0; line < lines.Count; line++)
+                {
+                    Rect r = ResponseLineRect(b, line);
+                    // 줄 사이에 구분선을 그어 게임에서 한 번에 한 줄씩 나온다는 것을 보인다.
+                    if (line > 0) EditorGUI.DrawRect(new Rect(r.x + Z(4f), r.y, r.width - Z(8f), 1f), new Color(1f, 1f, 1f, 0.12f));
+                    GUI.Label(new Rect(r.x + Z(6f), r.y + Z(2f), r.width - Z(12f), r.height - Z(2f)), new GUIContent(lines[line], lines[line]), _responseStyle);
+                }
                 return;
             }
             if (b.Kind == BoxKind.After)
@@ -1427,6 +1438,7 @@ namespace EyeMaze.EditorTools
             _selKey = KeyOf(g);
             _selRow = row;
             _selResponse = hit.Kind == BoxKind.Response;
+            _selLine = _selResponse ? ResponseLineAt(doc, hit, e.mousePosition.y) : -1;
             _selAfter = hit.Kind == BoxKind.After;
             _selectionLine = row >= 0 ? g.Items[row].TextLine : g.TextLine;
             if (e.clickCount == 2 && (row >= 0 || _selAfter))
@@ -1540,17 +1552,21 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// 선택한 결과 노드의 response 필드를 인라인으로 고친다.
+        /// 선택한 결과 카드의 결과 줄 하나를 인라인으로 고친다.
+        /// doc, editable, _selRow, _selLine을 사용하며, 인라인 상태를 바꾼다.
         /// </summary>
         private void StartResponseEdit(DialogueEditorDocument doc, bool editable)
         {
             int idx = GroupIndex(doc, _selKey);
             if (idx < 0 || _selRow < 0 || _selRow >= doc.Groups[idx].Items.Count) return;
             if (!editable) { Notify("텍스트 오류를 고치거나 검사가 끝난 뒤 고칠 수 있다."); return; }
+            List<string> lines = DialogueEditorFormat.ResponseLines(doc.Groups[idx].Items[_selRow].Get("response"));
+            if (lines.Count == 0) return;
             _inline = InlineKind.Response;
             _inlineKey = _selKey;
             _inlineRow = _selRow;
-            _inlineText = DialogueEditorFormat.Body(doc.Groups[idx].Items[_selRow].Get("response"));
+            _inlineLine = Mathf.Clamp(_selLine, 0, lines.Count - 1);
+            _inlineText = lines[_inlineLine];
             _inlineError = "";
             _inlineFocus = true;
         }
@@ -1656,9 +1672,13 @@ namespace EyeMaze.EditorTools
             }
             if (_inline == InlineKind.Response)
             {
-                if (text == g.Items[_inlineRow].Get("response")) { CancelInline(); return null; }
-                DialogueEditorDocument responseCopy = doc.Clone();
-                responseCopy.Groups[idx].Items[_inlineRow].Fields["response"] = text;
+                // 고친 줄만 바꾸고 다른 결과 줄은 그대로 둔다.
+                if (text.Length == 0) { _inlineError = "빈 결과 줄은 저장할 수 없다. 우클릭으로 줄을 삭제한다."; return null; }
+                List<string> lines = DialogueEditorFormat.ResponseLines(g.Items[_inlineRow].Get("response"));
+                if (_inlineLine < 0 || _inlineLine >= lines.Count) { CancelInline(); return null; }
+                if (text == lines[_inlineLine]) { CancelInline(); return null; }
+                lines[_inlineLine] = text;
+                DialogueEditorDocument responseCopy = WithResponse(doc, idx, _inlineRow, lines);
                 RenamedFrom = RenamedTo = null;
                 _inlineAwait = true;
                 return responseCopy;
@@ -1718,7 +1738,9 @@ namespace EyeMaze.EditorTools
             {
                 int idx = GroupIndex(doc, _inlineKey);
                 Box response = boxes.Find(box => box.Kind == BoxKind.Response && box.Group == idx && box.Item == _inlineRow);
-                return response == null ? Rect.zero : new Rect(response.Rect.x + Z(4f), response.Rect.y + Z(HEADER_HEIGHT + 3f), response.Rect.width - Z(8f), Z(20f));
+                if (response == null) return Rect.zero;
+                Rect line = ResponseLineRect(response, _inlineLine);
+                return new Rect(line.x + Z(4f), line.y + Z(2f), line.width - Z(8f), Z(20f));
             }
             if (_inline == InlineKind.Value)
             {
@@ -1758,7 +1780,14 @@ namespace EyeMaze.EditorTools
             {
                 int idx = GroupIndex(doc, _selKey);
                 Box response = boxes.Find(box => box.Kind == BoxKind.Response && box.Group == idx && box.Item == _selRow);
-                if (response != null) DrawOutline(response.Rect, _focused ? new Color(1f, 0.82f, 0.25f) : new Color(1f, 0.82f, 0.25f, 0.45f));
+                if (response == null) return;
+                Color rc = _focused ? new Color(1f, 0.82f, 0.25f) : new Color(1f, 0.82f, 0.25f, 0.45f);
+                DrawOutline(response.Rect, rc);
+                if (_selLine >= 0)
+                {
+                    Rect r = ResponseLineRect(response, _selLine);
+                    EditorGUI.DrawRect(new Rect(r.x, r.y, Z(3f), r.height), rc);
+                }
                 return;
             }
             Box b = BoxOf(boxes, GroupIndex(doc, _selKey));
@@ -2152,9 +2181,110 @@ namespace EyeMaze.EditorTools
                 e.Use();
                 return;
             }
+            if (hit.Kind == BoxKind.Response)
+            {
+                BuildResponseMenu(doc, hit.Group, hit.Item, ResponseLineAt(doc, hit, e.mousePosition.y), editable).DropDown(new Rect(windowMouse, Vector2.zero));
+                e.Use();
+                return;
+            }
             if (hit.Kind != BoxKind.Group) return;
             BuildAddMenu(doc, hit.Group, RowAt(doc, hit, e.mousePosition.y), editable).DropDown(new Rect(windowMouse, Vector2.zero));
             e.Use();
+        }
+
+        /// <summary>
+        /// 결과 카드의 우클릭 메뉴를 만든다. 고른 줄 뒤에 결과 줄을 넣거나 그 줄을 지운다. 마지막 한 줄을 지우면 결과 카드가 사라진다.
+        /// doc, group, item(선택지 행), line(우클릭한 결과 줄), editable을 사용하며, 메뉴를 반환한다. 항목을 고르면 결과를 _pending에 둔다.
+        /// </summary>
+        private GenericMenu BuildResponseMenu(DialogueEditorDocument doc, int group, int item, int line, bool editable)
+        {
+            var menu = new GenericMenu();
+            List<string> lines = DialogueEditorFormat.ResponseLines(doc.Groups[group].Items[item].Get("response"));
+            string addLabel = $"{line + 1}번 줄 뒤에 결과 줄 추가";
+            string removeLabel = lines.Count > 1 ? $"{line + 1}번 결과 줄 삭제" : "결과 삭제";
+            if (!editable)
+            {
+                menu.AddDisabledItem(new GUIContent(addLabel + " (텍스트 오류 또는 검사 대기 중)"));
+                menu.AddDisabledItem(new GUIContent(removeLabel + " (텍스트 오류 또는 검사 대기 중)"));
+                return menu;
+            }
+            string key = KeyOf(doc.Groups[group]);
+            menu.AddItem(new GUIContent(addLabel), false, () =>
+            {
+                var added = new List<string>(lines);
+                added.Insert(line + 1, "새 결과 줄");
+                _pending = WithResponse(doc, group, item, added);
+                SelectResponse(key, item, line + 1);
+            });
+            menu.AddItem(new GUIContent(removeLabel), false, () =>
+            {
+                var removed = new List<string>(lines);
+                removed.RemoveAt(line);
+                _pending = WithResponse(doc, group, item, removed);
+                if (removed.Count > 0) SelectResponse(key, item, Mathf.Min(line, removed.Count - 1));
+                else { _selResponse = false; _selRow = item; }
+            });
+            return menu;
+        }
+
+        /// <summary>
+        /// 선택지 결과를 결과 줄 목록으로 바꾼 복사본을 만든다. 목록이 비면 response 칸을 비운다.
+        /// doc, group, item, lines를 사용하며, 새 문서를 반환한다.
+        /// </summary>
+        private static DialogueEditorDocument WithResponse(DialogueEditorDocument doc, int group, int item, List<string> lines)
+        {
+            DialogueEditorDocument copy = doc.Clone();
+            Dictionary<string, string> fields = copy.Groups[group].Items[item].Fields;
+            if (lines.Count == 0) fields.Remove("response");
+            else fields["response"] = DialogueEditorFormat.JoinResponse(lines);
+            return copy;
+        }
+
+        /// <summary>
+        /// 결과 카드의 한 줄을 선택한다. 메뉴로 줄을 넣거나 지운 뒤 그 줄을 바로 Enter로 고칠 수 있게 한다.
+        /// key(그룹 키), item, line을 사용하며, 선택 상태를 바꾼다.
+        /// </summary>
+        private void SelectResponse(string key, int item, int line)
+        {
+            _selKey = key;
+            _selRow = item;
+            _selResponse = true;
+            _selAfter = false;
+            _selFragment = null;
+            _selLine = line;
+            _focused = true;
+        }
+
+        /// <summary>
+        /// 결과 카드 높이를 구한다. 머리와 결과 줄 수만큼의 줄 칸이며, 한 줄일 때는 기존 카드 높이를 쓴다.
+        /// item(선택지 행)을 사용하며, 배치 좌표계 높이를 반환한다.
+        /// </summary>
+        private static float ResponseHeight(DialogueEditorDocument.Item item)
+        {
+            int count = DialogueEditorFormat.ResponseLines(item.Get("response")).Count;
+            return Mathf.Max(RESPONSE_HEIGHT, HEADER_HEIGHT + 8f + count * RESPONSE_LINE_HEIGHT);
+        }
+
+        /// <summary>
+        /// 결과 카드 안 결과 줄의 화면 사각형을 구한다.
+        /// b(결과 카드)와 line을 사용하며, 사각형을 반환한다.
+        /// </summary>
+        private Rect ResponseLineRect(Box b, int line)
+        {
+            float top = b.Rect.y + Z(HEADER_HEIGHT + 4f);
+            return new Rect(b.Rect.x, top + Z(RESPONSE_LINE_HEIGHT) * line, b.Rect.width, Z(RESPONSE_LINE_HEIGHT));
+        }
+
+        /// <summary>
+        /// 화면 y 위치에 있는 결과 줄 번호를 구한다. 머리 위는 첫 줄, 마지막 줄 아래는 마지막 줄로 본다.
+        /// doc, b(결과 카드), y를 사용하며, 줄 번호(결과가 없으면 -1)를 반환한다.
+        /// </summary>
+        private int ResponseLineAt(DialogueEditorDocument doc, Box b, float y)
+        {
+            int count = DialogueEditorFormat.ResponseLines(doc.Groups[b.Group].Items[b.Item].Get("response")).Count;
+            if (count == 0) return -1;
+            int line = Mathf.FloorToInt((y - (b.Rect.y + Z(HEADER_HEIGHT + 4f))) / Z(RESPONSE_LINE_HEIGHT));
+            return Mathf.Clamp(line, 0, count - 1);
         }
 
         /// <summary>
@@ -2199,6 +2329,22 @@ namespace EyeMaze.EditorTools
                         string selected = speaker;
                         menu.AddItem(new GUIContent(changeLabel + "/" + selected), current == selected, () => _pending = WithSpeaker(doc, group, row, selected));
                     }
+                }
+            }
+            // 결과가 없는 선택지 행이면 결과 카드를 만드는 항목을 보인다.
+            if (g.Section == Csv.SECTION_DIALOGUE && row >= 0 && row < g.Items.Count && g.Items[row].Get("response").Length == 0)
+            {
+                menu.AddSeparator("");
+                string responseLabel = $"{row + 1}번 선택지에 결과 추가";
+                if (!editable) menu.AddDisabledItem(new GUIContent(responseLabel + " (텍스트 오류 또는 검사 대기 중)"));
+                else
+                {
+                    string key = KeyOf(g);
+                    menu.AddItem(new GUIContent(responseLabel), false, () =>
+                    {
+                        _pending = WithResponse(doc, group, row, new List<string> { "새 결과" });
+                        SelectResponse(key, row, 0);
+                    });
                 }
             }
             if (g.Section == Csv.SECTION_ENDING && !g.Id.StartsWith("@") && g.Get("after").Length == 0)

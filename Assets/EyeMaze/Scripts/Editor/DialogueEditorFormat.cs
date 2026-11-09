@@ -312,6 +312,22 @@ namespace EyeMaze.EditorTools
         /// </summary>
         public static string Body(string v) => v.Replace("\r", "").Replace("\n", "\\n");
 
+        /// <summary>
+        /// 선택지 결과를 결과 줄로 나눈다. 줄바꿈 표기(\n)와 칸 안의 실제 줄바꿈을 모두 줄 경계로 본다.
+        /// response를 사용하며, 결과 줄 목록(빈 칸이면 빈 목록)을 반환한다.
+        /// </summary>
+        public static List<string> ResponseLines(string response)
+        {
+            if (string.IsNullOrEmpty(response)) return new List<string>();
+            return new List<string>(Body(response).Split(new[] { "\\n" }, System.StringSplitOptions.None));
+        }
+
+        /// <summary>
+        /// 결과 줄을 response 한 칸에 넣을 글로 잇는다. 줄 사이에 줄바꿈 표기(\n)를 둔다.
+        /// lines를 사용하며, 이은 글을 반환한다.
+        /// </summary>
+        public static string JoinResponse(List<string> lines) => string.Join("\\n", lines);
+
         // ---------------------------------------------------------------- 텍스트 → 모델
 
         /// <summary>
@@ -669,6 +685,10 @@ namespace EyeMaze.EditorTools
                     string end = i.Get(ENDING);
                     if (end.Length > 0 && (end.StartsWith("@") || doc.Find(Csv.SECTION_ENDING, g.Actor, end) == null))
                         Err(i.TextLine, $"ending '{end}'이 '{g.Actor}'의 엔딩 목록에 없다.");
+                    // 결과 줄은 게임에서 한 줄씩 넘기므로 빈 줄이 있으면 빈 메시지가 뜬다.
+                    string response = i.Get("response");
+                    if (response.Length > 0 && ResponseLines(response).Exists(l => l.Trim().Length == 0))
+                        Err(i.TextLine, "결과에 빈 줄이 있다. 줄바꿈(\\n) 앞뒤에 글을 쓰거나 빈 줄을 지운다.");
                 }
             }
 
