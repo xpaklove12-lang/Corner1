@@ -111,13 +111,32 @@ namespace EyeMaze
         [Tooltip("지금 부담감 (0~1). 들여다보는 동안 차오르고, 가득 차면 leave 엔딩이 된다")]
         [SerializeField, Range(0f, 1f)] private float _burden;
         [Tooltip("신뢰 0일 때 0에서 가득까지 걸리는 들여다보기 시간(초)")]
-        [SerializeField] private float _burdenFillSeconds = 42.9f;
+        [SerializeField] private float _burdenFillSeconds = 85.8f;
         [Tooltip("신뢰 1당 늘어나는 시간(초)")]
-        [SerializeField] private float _burdenSecondsPerTrust = 8.6f;
+        [SerializeField] private float _burdenSecondsPerTrust = 17.2f;
         [Tooltip("좋은 말을 처음 했을 때 줄어드는 양")]
         [SerializeField, Range(0f, 1f)] private float _burdenRelief = 0.25f;
         [Tooltip("가득 찼을 때 엔딩 앞에 보이는 한 줄. '은재'는 지금 손님 이름으로 바뀐다")]
         [SerializeField, TextArea(1, 3)] private string _burdenEndLine = "은재가 시선을 피했다. 더는 마주 보기 힘든 것 같다.";
+
+        // 스펙 007: 벽 부딪힘 밀려남 설정
+        [Header("벽 부딪힘")]
+        [Tooltip("반응하는 최소 벽 쪽 속도 (초당 거리). 이보다 느리게 닿거나 벽을 따라 미끄러지면 반응하지 않는다")]
+        [SerializeField] private float _bumpMinSpeed = 0.8f;
+        [Tooltip("벽에서 밀려나는 거리. 통로 폭(약 0.21)의 절반 이하를 권장한다")]
+        [SerializeField] private float _knockbackDistance = 0.09f;
+        [Tooltip("밀려나는 데 걸리는 시간(초). 이 동안 이동 입력을 받지 않는다")]
+        [SerializeField] private float _knockbackSeconds = 0.18f;
+        [Tooltip("한 번 부딪힌 뒤 다시 부딪힘으로 치기까지 기다리는 시간(초)")]
+        [SerializeField] private float _bumpCooldown = 0.45f;
+        [Tooltip("부딪힐 때마다 오르는 부담감 (0~1)")]
+        [SerializeField, Range(0f, 1f)] private float _bumpBurden = 0.02f;
+        [Tooltip("부딪혔을 때 미로가 지지직 흐려지는 시간(초)")]
+        [SerializeField] private float _glitchSeconds = 0.3f;
+        [Tooltip("미로 초점이 가장 크게 떨어지는 양. 0이면 지지직 연출이 없다")]
+        [SerializeField, Range(0f, 1f)] private float _glitchStrength = 0.6f;
+        [Tooltip("초당 초점이 튀는 횟수")]
+        [SerializeField] private float _glitchRate = 20f;
 
         [Header("연출")]
         [SerializeField, FormerlySerializedAs("talkWallAlpha"), Range(0f, 1f)] private float _talkWallAlpha = 0.22f;
@@ -140,6 +159,19 @@ namespace EyeMaze
         [NonSerialized] private float _blinkRecoverT;
         // 스펙 006: 눈꺼풀 값을 전달할 눈 그림 참조 추가
         [NonSerialized] private EyeVisual _eye;
+        // 스펙 007: 이번 이동에서 막힌 축과 방향(+1 바깥쪽/반시계, -1 안쪽/시계, 0 막히지 않음)
+        [NonSerialized] private int _hitRadial;
+        [NonSerialized] private int _hitTangent;
+        // 스펙 007: 밀려나는 방향(x 바깥쪽, y 반시계), 경과 시간(음수면 밀려나지 않는 중), 남은 대기 시간
+        [NonSerialized] private Vector2 _knockbackDir;
+        [NonSerialized] private float _knockbackT = -1f;
+        [NonSerialized] private float _bumpCooldownT;
+        // 스펙 007: 초점 요동 중인지, 남은 시간, 요동 전 초점, 다음 무작위 값까지 남은 시간, 지금 무작위 값
+        [NonSerialized] private bool _glitching;
+        [NonSerialized] private float _glitchT;
+        [NonSerialized] private float _glitchBaseFocus = 1f;
+        [NonSerialized] private float _glitchSampleT;
+        [NonSerialized] private float _glitchNoise;
         [NonSerialized] private int _lastLayer = -1;
         [NonSerialized] private int _heartIndex;
         [NonSerialized] private List<string> _endingLines;
@@ -302,6 +334,10 @@ namespace EyeMaze
             if (_eye == null && _maze != null) _eye = _maze.GetComponentInParent<EyeVisual>();
             if (_eye != null) _eye.Closed = _blinkAmount;
 
+            // 스펙 007: 벽에 부딪힌 뒤 밀려남, 대기 시간, 초점 요동을 진행한다.
+            TickKnockback(dt);
+            TickGlitch(dt);
+
             // 들여다보는 동안 정해진 시간마다 눈을 깜빡이고, 부담감이 차오른다.
             if (_mode == Mode.Gaze && !_inAbyss && !_reading)
             {
@@ -405,6 +441,8 @@ namespace EyeMaze
             _velocity = Vector2.zero;
             if (_cursor != null) _cursor.Visible = false;
             _message = why;
+            // 스펙 007: 밀려남과 초점 요동을 멈춘다.
+            StopBump();
         }
 
         /// <summary>
@@ -415,10 +453,146 @@ namespace EyeMaze
         {
             // 스펙 006: 깜빡임 중과 뜬 직후에는 이동 입력을 받지 않음
             if (_mode != Mode.Gaze || _reading || _blinkPhase >= 0f || _blinkRecoverT > 0f) { _velocity = Vector2.zero; return; }
+            // 스펙 007: 밀려나는 동안에는 이동 입력을 받지 않는다.
+            if (_knockbackT >= 0f) { _velocity = Vector2.zero; return; }
             Vector2 target = Vector2.ClampMagnitude(input, 1f) * _moveSpeed;
             _velocity = Vector2.MoveTowards(_velocity, target, _acceleration * _moveSpeed * dt);
+            if (_velocity.sqrMagnitude <= 1e-8f) return;
+
             // 스펙 006: 화면 기준 이동량을 미로 기준으로 변환
-            if (_velocity.sqrMagnitude > 1e-8f) MoveBy(ScreenToMaze(_velocity * dt));
+            Vector2 mazeVelocity = ScreenToMaze(_velocity);
+            _hitRadial = 0;
+            _hitTangent = 0;
+            MoveBy(mazeVelocity * dt);
+            TryStartBump(mazeVelocity);
+        }
+
+        /// <summary>
+        /// 이번 이동에서 막힌 축의 벽 쪽 속도가 충분하면 부딪힘을 시작한다. 막힌 축의 반대 방향을 밀려나는 방향으로 정한다.
+        /// mazeVelocity(미로 기준 속도), _hitRadial, _hitTangent를 사용하며, _knockbackDir, _knockbackT, _bumpCooldownT, _velocity를 바꾼다.
+        /// 부딪히면 _bumpFlash와 _burden도 올리고, 부담감이 가득 차면 상담을 끝낸다.
+        /// </summary>
+        private void TryStartBump(Vector2 mazeVelocity)
+        {
+            if (_mode != Mode.Gaze || _inAbyss || _bumpCooldownT > 0f) return;
+            if (_hitRadial == 0 && _hitTangent == 0) return;
+
+            float rad = _cursor.Angle * Mathf.Deg2Rad;
+            var radialU = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+            var tangentU = new Vector2(-Mathf.Sin(rad), Mathf.Cos(rad));
+            Vector2 dir = Vector2.zero;
+
+            // 벽을 따라 미끄러지거나 살짝 닿은 축은 거르고, 세게 막힌 축만 반대로 밀어낸다.
+            if (_hitRadial != 0 && Mathf.Abs(Vector2.Dot(mazeVelocity, radialU)) >= _bumpMinSpeed) dir.x = -_hitRadial;
+            if (_hitTangent != 0 && Mathf.Abs(Vector2.Dot(mazeVelocity, tangentU)) >= _bumpMinSpeed) dir.y = -_hitTangent;
+            if (dir == Vector2.zero) return;
+
+            _knockbackDir = dir.normalized;
+            _knockbackT = 0f;
+            _bumpCooldownT = _bumpCooldown;
+            _velocity = Vector2.zero;
+
+            // 일반 벽도 잠긴 문과 같이 시선을 번쩍이게 한다. 잠긴 문 문구는 GateBlocked가 이미 띄웠다.
+            _bumpFlash = Mathf.Max(_bumpFlash, 0.6f);
+            StartGlitch();
+
+            // 부딪힐 때마다 부담감이 조금 오르고, 가득 차면 상담이 끝난다.
+            _burden = Mathf.Min(1f, _burden + _bumpBurden);
+            if (_burden >= 1f) EndByBurden();
+        }
+
+        /// <summary>
+        /// 미로 초점 요동을 시작한다. 이미 요동 중이면 남은 시간만 다시 채우고 처음 기준값을 유지한다.
+        /// _glitchSeconds와 지금 미로 초점을 사용하며, _glitching, _glitchT, _glitchBaseFocus, _glitchSampleT를 바꾼다.
+        /// </summary>
+        private void StartGlitch()
+        {
+            if (_maze == null || _glitchSeconds <= 0f) return;
+            if (!_glitching) _glitchBaseFocus = _maze.Focus;
+            _glitching = true;
+            _glitchT = _glitchSeconds;
+            _glitchSampleT = 0f;
+        }
+
+        /// <summary>
+        /// 요동 중이면 남은 비율과 무작위 값으로 미로 초점을 낮추고, 시간이 끝나면 기준값으로 되돌린다.
+        /// dt, _glitchStrength, _glitchRate, _glitchBaseFocus를 사용하며, 미로 초점과 요동 상태를 바꾼다.
+        /// </summary>
+        private void TickGlitch(float dt)
+        {
+            if (!_glitching) return;
+            _glitchT -= dt;
+            if (_glitchT <= 0f) { StopGlitch(); return; }
+
+            // 정해진 간격마다 새 무작위 값을 뽑아 초점이 불규칙하게 튀게 한다.
+            _glitchSampleT -= dt;
+            if (_glitchSampleT <= 0f)
+            {
+                _glitchNoise = UnityEngine.Random.value;
+                _glitchSampleT = 1f / Mathf.Max(1f, _glitchRate);
+            }
+            float remain = _glitchT / Mathf.Max(0.01f, _glitchSeconds);
+            _maze.Focus = Mathf.Clamp01(_glitchBaseFocus - _glitchStrength * remain * _glitchNoise);
+        }
+
+        /// <summary>
+        /// 초점 요동을 끝내고 미로 초점을 요동 전 기준값으로 되돌린다.
+        /// _glitchBaseFocus를 사용하며, 미로 초점과 _glitching, _glitchT를 바꾼다.
+        /// </summary>
+        private void StopGlitch()
+        {
+            if (!_glitching) return;
+            _glitching = false;
+            _glitchT = 0f;
+            if (_maze != null) _maze.Focus = _glitchBaseFocus;
+        }
+
+        /// <summary>
+        /// 밀려남을 즉시 멈추고 초점 요동을 끝낸다. 시선 거두기, 엔딩, 리셋, 깜빡임, 파편 읽기가 시작될 때 부른다.
+        /// 입력값은 없으며, _knockbackT와 미로 초점을 바꾼다.
+        /// </summary>
+        private void StopBump()
+        {
+            _knockbackT = -1f;
+            StopGlitch();
+        }
+
+        /// <summary>
+        /// 대기 시간을 줄이고, 밀려나는 중이면 감속 곡선으로 이번 프레임 몫만큼 시선을 옮긴다.
+        /// dt, _knockbackDistance, _knockbackSeconds를 사용하며, _bumpCooldownT, _knockbackT와 시선 위치를 바꾼다.
+        /// </summary>
+        private void TickKnockback(float dt)
+        {
+            if (_bumpCooldownT > 0f) _bumpCooldownT -= dt;
+            if (_knockbackT < 0f) return;
+            if (_mode != Mode.Gaze || _inAbyss || _maze == null || _cursor == null) { _knockbackT = -1f; return; }
+
+            // 처음엔 빠르고 끝은 느리게 밀리도록 ease-out 곡선의 증가분만큼 옮긴다.
+            float duration = Mathf.Max(0.01f, _knockbackSeconds);
+            float prev = 1f - (1f - _knockbackT / duration) * (1f - _knockbackT / duration);
+            _knockbackT = Mathf.Min(_knockbackT + dt, duration);
+            float next = 1f - (1f - _knockbackT / duration) * (1f - _knockbackT / duration);
+            MoveKnockback(_knockbackDir * (_knockbackDistance * (next - prev)));
+            if (_knockbackT >= duration) _knockbackT = -1f;
+        }
+
+        /// <summary>
+        /// 밀려나는 이동량을 적용한다. 안쪽/바깥쪽은 지금 고리 띠 안으로 제한하고, 둘레 방향은 칸막이 벽 판정을 거친다.
+        /// delta(x 바깥쪽, y 반시계 거리)를 사용하며, 시선의 반지름과 각도를 바꾼다.
+        /// </summary>
+        private void MoveKnockback(Vector2 delta)
+        {
+            float r = _cursor.Radius;
+            float a = _cursor.Angle;
+
+            // 고리 띠를 벗어나지 않으므로 원호를 넘거나 심연에 들어가지 않는다.
+            int ring = _maze.RingAt(r);
+            r = Mathf.Clamp(r + delta.x, _maze.RingInner(ring) + _wallMargin, _maze.RingOuter(ring) - _wallMargin);
+            if (Mathf.Abs(delta.y) > 1e-6f) ResolveAngular(ref r, ref a, delta.y);
+
+            _cursor.Radius = r;
+            _cursor.Angle = Mathf.Repeat(a, 360f);
+            OnMoved();
         }
 
         /// <summary>
@@ -483,6 +657,8 @@ namespace EyeMaze
             // 스펙 006: 칸 단위로 돌고 처음 방향에서 제한 각도를 넘으면 반대로 돈다.
             if (_blinkPhase >= 0f) return;
             _blinkPhase = 0f;
+            // 스펙 007: 밀려남과 초점 요동을 멈춘다.
+            StopBump();
             _blinkTurnFrom = _mazeTurnDeg;
             float sectorDeg = _maze != null ? _maze.SectorDeg : 0f;
             int sectors = UnityEngine.Random.Range(_blinkTurnMinSectors, _blinkTurnMaxSectors + 1);
@@ -501,8 +677,15 @@ namespace EyeMaze
             float seconds = Mathf.Max(0.1f, _burdenFillSeconds + _burdenSecondsPerTrust * trust);
             _burden = Mathf.Min(1f, _burden + dt / seconds);
             if (_burden < 1f) return;
+            EndByBurden();
+        }
 
-            // 가득 차면 상담이 끝난다. leave 엔딩이 없는 손님이면 시선만 거둔다.
+        /// <summary>
+        /// 부담감이 가득 차서 상담을 끝낸다. leave 엔딩이 없는 손님이면 시선만 거둔다.
+        /// _burdenEndLine과 지금 손님의 엔딩 목록을 사용하며, 모드를 엔딩 또는 대화로 바꾼다.
+        /// </summary>
+        private void EndByBurden()
+        {
             if (FindEnding("leave") != null) StartEnding("leave", _burdenEndLine);
             else ExitGaze(_burdenEndLine);
         }
@@ -543,6 +726,8 @@ namespace EyeMaze
             _mode = Mode.Ending;
             _inAbyss = false;
             _velocity = Vector2.zero;
+            // 스펙 007: 밀려남과 초점 요동을 멈춘다.
+            StopBump();
             if (_cursor != null) _cursor.Visible = false;
             _currentEnding = id;
             _endingLines = BuildEndingLines(FindEnding(id), prefix);
@@ -771,6 +956,8 @@ namespace EyeMaze
             _blinkRecoverT = 0f;
             _burden = 0f;
             _velocity = Vector2.zero;
+            // 스펙 007: 밀려남과 초점 요동을 멈춘다.
+            StopBump();
             if (_person != null) { _person.Trust = 0; _person.Dilation = 0.2f; }
             ShowEncounterGuide(true);
             foreach (MemoryFragment f in Fragments) f.Collected = false;
@@ -829,6 +1016,7 @@ namespace EyeMaze
         /// <summary>
         /// 안쪽/바깥쪽 이동을 벽과 문에 맞춰 보정한다.
         /// r, a(참조), dr을 사용하며, 보정된 반지름과 각도를 r, a에 쓴다. 가장 안쪽을 지나면 심연에 들어간다.
+        /// 벽이나 잠긴 문에 막히면 막힌 방향을 _hitRadial에 기록한다.
         /// </summary>
         private void ResolveRadial(ref float r, ref float a, float dr)
         {
@@ -845,6 +1033,8 @@ namespace EyeMaze
                 if (target <= outerB - m) { r = target; return; }
                 if (ring > 0 && CanCrossArc(ring - 1, s, r, ref a)) { r = target; return; }
                 r = Mathf.Min(r, outerB - m);
+                // 스펙 007: 바깥쪽으로 가다 막혔음을 기록한다.
+                _hitRadial = 1;
             }
             else
             {
@@ -857,12 +1047,15 @@ namespace EyeMaze
                     return;
                 }
                 r = Mathf.Max(r, innerB + m);
+                // 스펙 007: 안쪽으로 가다 막혔음을 기록한다.
+                _hitRadial = -1;
             }
         }
 
         /// <summary>
         /// 둘레 방향 이동을 칸막이 벽에 맞춰 보정한다.
         /// r, a(참조), dTan을 사용하며, 보정된 반지름과 각도를 r, a에 쓴다.
+        /// 칸막이 벽에 막히면 막힌 방향을 _hitTangent에 기록한다.
         /// </summary>
         private void ResolveAngular(ref float r, ref float a, float dTan)
         {
@@ -882,6 +1075,8 @@ namespace EyeMaze
                 if (target <= d - mDeg) { a += dDeg; return; }
                 if (_maze.IsRadialOpen(ring, s)) { KeepInBand(ref r, ring); a += dDeg; return; }
                 a = s * d + Mathf.Max(local, d - mDeg);
+                // 스펙 007: 반시계 방향으로 가다 막혔음을 기록한다.
+                _hitTangent = 1;
             }
             else
             {
@@ -889,6 +1084,8 @@ namespace EyeMaze
                 if (target >= mDeg) { a += dDeg; return; }
                 if (_maze.IsRadialOpen(ring, s - 1)) { KeepInBand(ref r, ring); a += dDeg; return; }
                 a = s * d + Mathf.Min(local, mDeg);
+                // 스펙 007: 시계 방향으로 가다 막혔음을 기록한다.
+                _hitTangent = -1;
             }
         }
 
@@ -959,7 +1156,7 @@ namespace EyeMaze
                 if (Vector3.Distance(pos, _maze.CellLocal(f.Ring, f.WorldSector)) > _maze.RingWidth * 0.55f) continue;
                 f.Collected = true;
                 _message = Strings.Get("msg.fragment", "파편 — {title}\n{text}", ("title", f.Title), ("text", f.Text));
-                if (Application.isPlaying) { _reading = true; _readT = 0f; _velocity = Vector2.zero; }
+                if (Application.isPlaying) { _reading = true; _readT = 0f; _velocity = Vector2.zero; StopBump(); }
             }
         }
 
