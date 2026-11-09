@@ -11,7 +11,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 필드 ↔ 만남(눈동자 미로) 흐름.
-    /// 필드에서는 이동하고 Z / Enter / Space로 말을 걸거나 살펴본다.
+    /// 필드에서는 이동하고 Space / Enter로 말을 걸거나 살펴본다.
     /// 말을 걸면 그 사람에게 줌인한 뒤 암전되고 눈 화면으로 들어간다. 만남에서 Q는 자리 떠나기(진행 유지)다.
     /// 에디트 모드에서는 GameFlow 인스펙터의 버튼으로 필드 화면과 만남 화면을 오갈 수 있다.
     /// </summary>
@@ -113,12 +113,14 @@ namespace EyeMaze
             Gamepad pad = DialogueLog.BlocksInput ? null : Gamepad.current;
             if (kb != null)
             {
-                // Space도 Z처럼 쓴다. 필드와 엔딩(마음의 소리) 대사 넘기기에서만 해당한다.
+                // 상호작용과 대사 넘기기는 Space로 한다. 만남 화면의 Space는 시선 조작이라 엔딩 대사와 파편 읽기에서만 넘기기로 쓴다.
                 bool endingLines = _state == State.Encounter && _director != null && _director.CurrentMode == EyeMazeDirector.Mode.Ending;
+                bool readingLines = _state == State.Encounter && _director != null && _director.IsReading;
                 bool spaceAdvance = kb.spaceKey.wasPressedThisFrame && (_state == State.Field || endingLines);
-                interact = kb.zKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || spaceAdvance;
+                interact = kb.enterKey.wasPressedThisFrame || spaceAdvance;
                 leave = kb.qKey.wasPressedThisFrame;
-                bool skip = kb.zKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || spaceAdvance;
+                bool skip = kb.xKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || spaceAdvance
+                            || (readingLines && kb.spaceKey.wasPressedThisFrame);
                 if (skip && Typewriter.AnyTyping) { Typewriter.SkipAll(); interact = false; }
                 if (kb.wKey.isPressed || kb.upArrowKey.isPressed) move.y += 1f;
                 if (kb.sKey.isPressed || kb.downArrowKey.isPressed) move.y -= 1f;
@@ -207,7 +209,7 @@ namespace EyeMaze
         public void ShowText(string text) => ShowConversation(null, null, new List<string> { text }, null);
 
         /// <summary>
-        /// 여러 줄 대화를 연다. Z로 한 줄씩 넘기고, 마지막 줄 다음 Z에서 닫히며 done이 불린다.
+        /// 여러 줄 대화를 연다. Space로 한 줄씩 넘기고, 마지막 줄 다음 Space에서 닫히며 done이 불린다.
         /// speaker, portrait, lines, done을 사용하며, 글 상자 상태와 초상화를 바꾸고 플레이어를 멈춘다.
         /// </summary>
         public void ShowConversation(string speaker, Sprite portrait, List<string> lines, Action done)
