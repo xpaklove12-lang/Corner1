@@ -14,6 +14,8 @@
   - 두 뷰의 동기화, 유효한 변경의 즉시 CSV 저장, 오류 표시
   - 텍스트 문법 강조와 Tab 입력, 노드 우클릭 대사 추가, 실행 취소·다시 실행, 노드 뷰 확대·축소
   - 텍스트·트리 뷰의 분할 너비와 트리 노드 크기 조절·유지, 노드 선택과 F2 ID 변경, 대사 행 선택과 Enter 본문 편집
+  - 상담 선택지별 신뢰도·동공 변화량의 트리 전용 표시
+  - 모든 엔딩 진입 경로의 조건 표시와 트리 안의 조건·수치 편집
 - 제외:
   - SUDS 엔진 도입과 `.sud` 파일 저장·내보내기
   - 게임 실행 시 대사 처리 방식 변경
@@ -25,20 +27,22 @@
 ## 3. 기술 방향
 
 - 사용 기술/API: Unity 6000.3 EditorWindow, IMGUI, `Handles`, `AssetDatabase`, 기존 `Csv`, `DialogueScript`, `TalkScript`, `EndingScript`, `Strings`, `DialogueData`. 에디터 창은 프로젝트 `AGENTS.md`의 uGUI 규칙에서 사용자가 허용한 IMGUI 예외로 처리한다.
-- 핵심 방식: 인물·회차당 하나의 CSV를 유일한 저장 원본으로 삼는다. `section` 열로 Talk·Dialogue·Ending 행을 구분하고 `actor`로 Talk를 말하는 FieldNPC를 구분한다. 편집기는 한 파일의 공통 모델에서 텍스트와 전체 흐름 트리를 그린다. 유효한 편집은 같은 CSV에 저장·재임포트한다.
+- 핵심 방식: 인물·회차당 하나의 CSV를 유일한 저장 원본으로 삼는다. `section` 열로 Talk·Dialogue·Ending 행을 구분하고 `actor`로 Talk를 말하는 FieldNPC를 구분한다. 편집기는 한 파일의 공통 모델에서 텍스트와 전체 흐름 트리를 그린다. 엔딩의 기준값·열쇠 파편 대상과 선택지의 수치·조건도 이 모델에서 편집해 같은 CSV에 저장·재임포트한다.
 - 선택하지 않은 방식: SUDS의 Unreal 런타임·임포터 도입, `.sud`를 두 번째 원본으로 저장, Graph Toolkit/UI Toolkit 사용, 노드 화면 좌표 저장.
 - 외부 의존성: 새 패키지 없음. SUDS의 `:Label`, `* Choice`, `Speaker: text`, `[goto Label]` 표기만 참고하고 `[eye ...]`는 이 프로젝트 전용 명령으로 둔다. 실제 SUDS 파서 호환은 요구하지 않는다. 런타임 `ClientCase`, `FieldNPC`, `DialogueScript`, `TalkScript`, `EndingScript`와 에디터 `DialogueData`의 CSV 참조·검사를 새 형식에 맞춘다.
 - 텍스트 시각화: 입력 가능한 텍스트 영역에서 마크다운 편집기처럼 문법 요소별 색을 입힌다. 라벨은 청록, 선택지는 노랑, `Line:` 대사는 기본 글자색, `[eye ...]`는 보라, `[goto ...]`는 파랑, 오류 줄은 빨강으로 구분한다. 커서·선택 영역·스크롤과 실제 입력 글자의 위치가 일치해야 하며 밝은/어두운 Unity 테마에서 읽을 수 있어야 한다.
 - 편집 기록: 유효한 텍스트 변경 한 번과 노드 조작 한 번을 각각 기록 항목으로 삼는다. 기록에는 CSV의 모든 알려진 값과 순서를 담고, 실행 취소·다시 실행 시 같은 저장·재임포트 경로를 사용한다.
 - 화면 설정: 분할 너비는 에디터 전체에, 노드 크기는 파일 GUID와 section·actor·id별로 `EditorPrefs`에 저장한다. CSV에는 화면 크기나 위치를 적지 않는다. ID를 바꾸면 해당 노드의 크기 설정 키도 함께 옮긴다.
-- 구현 순서: FR-001~FR-005는 기존 편집기의 기준 동작이다. 신규 작업은 FR-011~FR-014(통합 CSV·런타임·트리)로 데이터 이전을 끝낸 뒤 FR-006~FR-008(표시·입력·추가), FR-009~FR-010(기록·확대), FR-015~FR-019(크기·선택·인라인 편집) 순서로 구현한다. `docs/README.md`에 따라 묶음별 승인 범위를 확인한다.
+- 선택지 수치 표시: 트리의 Dialogue 선택지 행 오른쪽에 CSV의 `trust`와 `dilation` 변화량을 배지로 표시한다. 동공은 0~1 값을 백분율 포인트로 바꿔 `+15%p`처럼 쓴다. 0인 항목은 생략하고 둘 다 0이면 `수치 변화 없음`을 쓴다. 런타임에서 적용하지 않는 `spring`은 표시하지 않는다.
+- 엔딩 조건: 심연 핵심 접촉 시 `truth`는 `trust >= truth_trust`와 지정한 `key_flag` 파편의 획득, `half`는 그 반대다. `leave`는 선택 후 `trust <= leave_trust` 또는 들여다보는 동안 `burden >= burden_limit`이다. 선택지에서 바로 향하는 엔딩은 그 선택지의 `need` 플래그가 충족되고 선택됐을 때 실행된다. 트리에서 각각의 진입선을 구분해 표시한다.
+- 구현 순서: FR-001~FR-005는 기존 편집기의 기준 동작이다. 신규 작업은 FR-011~FR-014(통합 CSV·런타임·트리)로 데이터 이전을 끝낸 뒤 FR-006~FR-008(표시·입력·추가), FR-009~FR-010(기록·확대), FR-015~FR-020(크기·선택·인라인 편집·수치 표시), FR-021~FR-024(엔딩 규칙 이전·표시·기준 편집), FR-025~FR-026(직접 엔딩 조건·선택지 수치 편집) 순서로 구현한다. `docs/README.md`에 따라 묶음별 승인 범위를 확인한다.
 
 ### 인물·회차 CSV
 
-- 경로는 `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`, `Jisu_Day1.csv`처럼 정한다. 공통 머리글은 `section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo`다.
+- 경로는 `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`, `Jisu_Day1.csv`처럼 정한다. 공통 머리글은 `section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit`다.
 - `section=talk`: `actor`는 대사를 실행하는 FieldNPC의 안정적인 ID(`EunjaeMom`, `Eunjae`, `Jisu`), `id`는 기존 `group`, `text`는 기존 대사다. `speaker`, `need`, `set`, `memo`는 기존 의미를 유지한다. 같은 actor 안에서 그룹의 첫 등장 순서가 `TalkScript.Pick()` 우선순위다.
 - `section=dialogue`: `actor`는 상담 인물 ID, `id`는 기존 `node`, `text`는 선택지다. `situation`, `response`, `need`, `set`, 수치, `goto`, `ending`, `back`, `memo`는 기존 의미를 유지한다. 첫 dialogue 노드가 상담 시작 노드다.
-- `section=ending`: `actor`는 상담 인물 ID, `id`는 기존 엔딩 id 또는 `@intro`·`@idle`·`@abyss`, `text`는 기존 `line`이다. `title`, `situation`, `after`, `memo`는 기존 의미를 유지한다.
+- `section=ending`: `actor`는 상담 인물 ID, `id`는 기존 엔딩 id 또는 `@intro`·`@idle`·`@abyss`, `text`는 기존 `line`이다. `title`, `situation`, `after`, `memo`는 기존 의미를 유지한다. `truth` 첫 행에는 정수 `truth_trust`와 파편의 Flag ID `key_flag`, `leave` 첫 행에는 정수 `leave_trust`와 0 초과 1 이하의 실수 `burden_limit`을 기록한다. `half` 조건은 `truth`의 반대로 계산하므로 별도 열을 갖지 않는다. 빈 `key_flag`는 파편 조건이 없다는 뜻이다.
 - 행은 section별로 Talk, Dialogue, Ending 순서로 모아 기록한다. 한 section 안의 그룹·행 순서는 유지한다. `Talk`의 `again`처럼 재상호작용용 그룹은 원래 우선순위를 보존한다. `Strings.csv`는 그대로 별도 파일로 둔다.
 - 기존 `Dialogue/Eunjae.csv`와 `Dialogue/Jisu.csv`의 파일·`.meta`를 각각 `Eunjae_Day1.csv`, `Jisu_Day1.csv`로 이름을 바꿔 GUID를 유지한 뒤 Talk·Ending 행을 넣는다. 은재 Day1에는 `Talk/EunjaeMom.csv`의 실사용 행을 `actor=EunjaeMom`으로 포함한다. `Talk/Eunjae.csv`처럼 주석만 있는 파일에는 이관할 대사 행이 없다. 지수 Day1에는 `Talk/Jisu.csv`의 실사용 행을 포함한다.
 - 씬의 `ClientCase` 두 개는 각 Day1 CSV 하나만 참조하고, 은재 어머니·은재·지수 `FieldNPC`는 해당 회차 CSV와 각각 `EunjaeMom`·`Eunjae`·`Jisu` actor ID를 참조한다. 이전 데이터와 씬 연결을 검증한 뒤 중복된 옛 Talk·Ending CSV 및 `.meta`를 제거한다. `Assets/EyeMaze/Data/README.md`를 새 머리글과 회차 파일 작성 절차에 맞춰 갱신한다.
@@ -48,7 +52,7 @@
 - 파일마다 하나의 문서를 표시한다. `[eye section="talk|dialogue|ending" actor="..."]`가 각 단계의 시작을 알리고, 그 아래 `:id`가 Talk의 `group`, Dialogue의 `node`, Ending의 `id`를 시작한다. 라벨 순서가 해당 section·actor 안의 CSV 그룹 순서이며, 대사 순서가 그룹 안의 행 순서다. 같은 id는 section·actor가 다르면 별개다.
 - `Dialogue`: `:node` 뒤 `[eye situation="..." back="..."]`를 표시한다. 각 선택지는 `* 선택지 글`, 이어서 **Tab 한 개** 들여쓴 `[eye response="..." need="..." set="..." trust=0 dilation=0 spring=0 memo="..."]`, 마지막으로 필요할 때 같은 깊이의 `[goto 대상]` 또는 `[eye ending="..."]`를 둔다. 둘 다 없으면 현재 노드에 머문다. `back`은 노드의 첫 CSV 행에 기록한다.
 - `Talk`: `[eye section="talk" actor="EunjaeMom"]` 같은 단계 명령 아래 `:group` 뒤 `[eye need="..." set="..."]`를 표시한다. 각 행은 `[eye speaker="..." memo="..."]`와 `Line: 대사`의 쌍이다. 빈 speaker, `-`, `???`는 CSV 값을 그대로 기록한다. 같은 actor의 그룹 순서는 `TalkScript.Pick()`의 우선순위이므로 유지한다.
-- `Ending`: `[eye section="ending" actor="Eunjae"]` 같은 단계 명령 아래 `:id` 뒤 `[eye title="..." situation="..." after="..."]`를 표시한다. 각 행은 `[eye memo="..."]`와 `Line: 대사`의 쌍이다. `@intro`, `@idle`, `@abyss`는 title·situation·after가 없는 라벨로 표시한다.
+- `Ending`: `[eye section="ending" actor="Eunjae"]` 같은 단계 명령 아래 `:id` 뒤 `[eye title="..." situation="..." after="..."]`를 표시한다. `:truth`에는 `truth_trust`, `key_flag`, `:leave`에는 `leave_trust`, `burden_limit`을 같은 `[eye ...]` 명령에 적는다. 각 행은 `[eye memo="..."]`와 `Line: 대사`의 쌍이다. `@intro`, `@idle`, `@abyss`는 title·situation·after가 없는 라벨로 표시한다.
 - `Strings.csv`는 기존처럼 별도 파일에서 편집한다. 인물·회차 트리에는 넣지 않는다.
 - `[eye ...]`의 문자열은 큰따옴표로 감싸고 `\"`, `\\`, `\n`을 이스케이프한다. `need`·`set`의 여러 값은 기존 CSV처럼 `|`로 구분하고 수치는 불변 문화권 표기로 쓴다. `*`와 `Line:` 뒤 본문도 실제 줄바꿈을 `\n`으로 표시한다. 지원하지 않는 명령·속성은 오류로 처리한다.
 - Tab은 분기 아래 명령을 들여쓰는 한 단계다. 선택지 `*`는 줄 맨 앞, 그 선택지에 속한 명령은 Tab 정확히 한 개 뒤에 둔다. 텍스트 뷰에서 Tab은 실제 탭 문자를 넣고 Shift+Tab은 현재 줄의 탭 한 개를 뺀다. 기존 공백 들여쓰기 텍스트도 읽되, 편집기에서 다시 표시할 때 Tab으로 정규화한다. Tab을 여러 번 넣어 중첩 선택지를 만드는 기능은 포함하지 않으며, 두 번째 Tab으로 시작하는 명령은 오류로 표시한다.
@@ -61,13 +65,13 @@
 | 클래스 | DialogueEditorDocument | 한 회차의 section·actor·그룹·행·연결·메모를 보존하는 공통 모델 |
 | 클래스 | DialogueEditorFormat | 통합 CSV·공통 모델·SUDS식 텍스트의 읽기·쓰기·검사를 맡음 |
 | 클래스 | DialogueEditorGraph | Talk부터 Ending까지 단계와 분기를 자동 배치하고 선택·크기 조절·F2 ID 변경·Enter 대사 편집을 처리 |
-| 클래스 | ClientCase | 통합 회차 CSV 한 개에서 상담·엔딩 데이터를 읽음 |
+| 클래스 | ClientCase | 통합 회차 CSV에서 상담·엔딩·엔딩 기준값과 열쇠 파편 Flag ID를 읽음 |
 | 클래스 | FieldNPC | 통합 회차 CSV와 actor ID로 자신의 Talk 그룹을 읽음 |
 
 - 오브젝트 구성: 해당 없음. 에디터 전용 창이며 씬·프리팹과 런타임 GameObject를 만들지 않는다.
 - 클래스 간 관계: `DialogueEditorWindow`가 인물·회차 파일을 선택해 `DialogueEditorFormat`으로 한 `DialogueEditorDocument`를 만든다. 텍스트 뷰와 `DialogueEditorGraph`는 이를 공유한다. `ClientCase`는 같은 파일에서 Dialogue·Ending을, 해당 `FieldNPC`들은 actor ID로 Talk를 읽는다.
 - 실행 순서 의존성: 해당 없음.
-- 기존 코드와의 접점: `DialogueScript`, `TalkScript`, `EndingScript`가 `section`과 `actor`로 통합 CSV의 행을 골라 읽도록 바꾼다. `ClientCase._dialogueCsv`의 기존 참조는 새 회차 파일로 이전하고 별도 `_endingCsv` 참조를 없앤다. `FieldNPC._talkCsv`는 같은 회차 파일을 가리키며 새 `_dialogueActorId`로 Talk 행을 고른다. 씬의 은재 어머니·은재·지수 필드를 함께 이전한다. `DialogueDataPostprocessor`의 캐시 무효화와 검사는 통합 파일 경로에 맞춘다.
+- 기존 코드와의 접점: `DialogueScript`, `TalkScript`, `EndingScript`가 `section`과 `actor`로 통합 CSV의 행을 골라 읽도록 바꾼다. `ClientCase._dialogueCsv`의 기존 참조는 새 회차 파일로 이전하고 별도 `_endingCsv` 참조를 없앤다. `FieldNPC._talkCsv`는 같은 회차 파일을 가리키며 새 `_dialogueActorId`로 Talk 행을 고른다. `ClientCase`와 `EyeMazeDirector`는 엔딩 기준값·열쇠 파편 Flag ID를 CSV에서 읽고, `DialogueData`는 파편 대상과 수치를 검사한다. 씬의 은재 어머니·은재·지수 필드를 함께 이전한다.
 
 ## 5. 동작 플로우차트
 
@@ -95,7 +99,14 @@ flowchart TD
     C --> T[노드 모서리로 크기 조절 - FR-016]
     C --> U[노드 클릭해 선택 - FR-017]
     U --> V[F2로 ID 변경·참조 갱신 - FR-018]
-    U --> W[대사 행 선택 후 Enter로 본문 편집 - FR-019]
+    U --> W[대사 행 선택 후 Enter 또는 더블 클릭으로 본문 편집 - FR-019]
+    C --> X[선택지별 신뢰·동공 변화 배지 - FR-020]
+    Q --> Y[엔딩 진입선에 조건 표시 - FR-022]
+    Y --> Z[조건·수치 인라인 편집 - FR-023, FR-024, FR-025, FR-026]
+    O --> AA[엔딩 기준값·파편 대상 CSV로 이전 - FR-021]
+    C --> AB[빈 곳 우클릭으로 장면·대화·엔딩 추가 - FR-031]
+    C --> AC[결과 카드 추가·여러 줄 편집 - FR-032]
+    AC --> AD[게임에서 결과 줄을 한 줄씩 넘김 - FR-033]
 ```
 
 ## 6. 요구사항
@@ -118,7 +129,21 @@ flowchart TD
 - FR-016: 트리의 그룹 노드나 엔딩 카드를 오른쪽 아래 모서리에서 끌 때 해당 상자의 너비·높이를 바꾸고, 같은 파일을 다시 열어도 그 크기를 유지한다.
 - FR-017: 트리의 노드 또는 엔딩 카드를 클릭할 때 그 항목을 선택하고 선택 테두리와 대응하는 텍스트 위치를 표시한다.
 - FR-018: 선택한 그룹 노드에서 F2를 누를 때 `:again`과 같은 ID를 인라인으로 편집하고, 유효한 새 ID를 확정하면 해당 section·actor의 CSV ID와 연결 참조를 함께 바꾼다.
-- FR-019: 트리에서 대사 행을 선택하고 Enter를 누를 때 해당 행의 본문을 인라인으로 편집하며, 유효한 값을 확정하면 공통 모델·텍스트 뷰·CSV에 함께 반영한다.
+- FR-019: 트리에서 대사 행을 선택하고 Enter를 누르거나 대사 행을 더블 클릭할 때 해당 행의 본문을 인라인으로 편집하며, 유효한 값을 확정하면 공통 모델·텍스트 뷰·CSV에 함께 반영한다.
+- FR-020: 회차 CSV의 Dialogue 선택지 아래에 0이 아닌 `trust`·`dilation` 변화량을 표시한다. 두 값이 0이면 `수치 변화 없음`을 표시한다. `spring` 값이 0이 아니면 현재 실행에 적용되지 않는 데이터임을 함께 표시한다.
+- FR-021: 회차 CSV의 `truth`·`leave` 엔딩 첫 행에 기준값과 열쇠 파편 Flag ID가 있을 때 게임은 그 값을 엔딩 판정에 사용한다.
+- FR-022: 엔딩으로 들어가는 경로를 트리에 그릴 때 각 진입선에 현재 실행 조건을 표시한다.
+- FR-023: 트리의 `truth`·`half`·`leave` 조건 수치를 편집할 때 해당 회차 CSV의 공유 기준값을 바꾼다.
+- FR-024: 트리의 `truth` 조건에서 열쇠 파편 대상을 선택할 때 해당 회차 CSV의 `key_flag`를 바꾼다.
+- FR-025: 선택지에서 바로 이어지는 엔딩 선의 조건을 편집할 때 그 선택지의 `need` 플래그 목록을 바꾼다.
+- FR-026: 트리의 선택지 수치 줄을 클릭해 `trust`·`dilation`·`spring` 중 하나를 고쳐 해당 회차 CSV에 저장한다. 정수 열과 소수 열의 형식을 검사한다. 현재 실행에 적용되는 선택지 변화량은 `trust`·`dilation`이다.
+- FR-027: 열린 씬에서 회차 CSV를 사용하는 `ClientCase`를 찾으면 그 케이스의 기억 파편을 트리 왼쪽에 노드로 표시한다. 파편의 Flag ID가 선택지의 `need`나 `truth`의 `key_flag`에 있으면 해당 행·엔딩으로 의존선을 그린다. 파편 노드는 씬의 실제 `MemoryFragment`를 읽으며, 회차 CSV에 새 행을 만들지 않는다.
+- FR-028: 트리의 Talk 그룹에서 대사 행을 추가할 때 기본 화자, 서술, `???`, 열린 씬의 인물 이름과 기존 Talk 화자 중 하나를 선택한다. 기본 화자 외의 선택은 새 행의 `speaker` 열에 기록한다. 그룹의 `actor`는 대화를 시작하는 인물로 유지한다. 이미 있는 Talk 대사 행을 우클릭하면 같은 목록에서 그 행의 화자를 바꿀 수 있고, 현재 화자에 체크 표시를 한다. 기본 화자를 고르면 `speaker`를 비운다.
+- FR-029: 엔딩의 `after` 카드를 선택해 Enter를 누르거나 더블 클릭하면 그 엔딩의 `after` 문구를 인라인으로 편집한다. 빈 값으로 확정하면 `after`를 제거한다. `after`가 없는 엔딩은 우클릭 메뉴에서 추가할 수 있다.
+- FR-030: 기억 파편 노드를 선택해 Enter를 누르거나 더블 클릭하면 획득 문구를 인라인으로 편집한다. 수정은 해당 파편 Flag ID의 `Flags.csv` `text` 칸에 저장하며, 같은 창의 Ctrl+Z/Ctrl+Y로 대화 편집과 순서대로 되돌리거나 다시 적용한다.
+- FR-031: 트리의 빈 곳을 우클릭해 상담 장면, Talk 대화(actor 선택), 엔딩 중 하나를 고르면 그 단계의 끝에 기본 내용이 든 새 그룹을 추가하고, 추가한 그룹을 선택해 ID 인라인 편집을 시작한다.
+- FR-032: 선택지 행을 우클릭해 결과를 추가하고, 결과 카드에서 결과 줄을 추가·삭제하며, 결과 줄을 Enter 또는 더블 클릭으로 인라인 편집한다. 결과 줄은 선택지의 `response` 한 칸에 줄바꿈 표기 `\n`으로 이어 저장한다.
+- FR-033: 게임에서 `response`가 여러 줄인 선택지를 고르면 메시지 줄에 결과를 한 줄씩 보여 주고, 마지막 줄을 넘긴 뒤 `goto` 이동이나 낮은 신뢰 `leave` 판정을 한다.
 
 ### 상태와 데이터
 
@@ -135,6 +160,7 @@ flowchart TD
 | 노드 크기 | GUID·section·actor·id → Vector2 (EditorPrefs) | 파일별 노드 화면 크기 | 자동 배치 크기 |
 | 선택 노드 | section·actor·id | F2와 텍스트 위치 동기화 대상 | 없음 |
 | 선택 대사 행 | section·actor·id·행 번호 | Enter 인라인 편집과 텍스트 위치 동기화 대상 | 없음 |
+| 엔딩 판정 | 정수·실수·Flag ID | truth 신뢰 기준·파편, leave 신뢰·부담 기준 | 기존 씬 값에서 CSV로 이전 |
 
 ### 예외 및 경계 조건
 
@@ -160,8 +186,16 @@ flowchart TD
 - 노드 클릭은 기존 연결선·대사 카드 드래그와 함께 동작한다. 빈 곳을 클릭하면 선택을 풀고, 선택 상태는 파일을 바꾸거나 다시 열 때 지운다. 선택한 노드의 텍스트 위치는 해당 `:id` 줄이며, 인라인 이름 편집 중에는 드래그를 시작하지 않는다.
 - F2는 Talk·Dialogue·Ending 그룹 노드의 ID 편집에 쓴다. 같은 section·actor의 중복 ID, 빈 ID, 공백·쉼표·따옴표가 있는 ID는 확정하지 않고 오류를 표시한다. Dialogue ID 변경은 같은 actor의 모든 `goto`를, Ending ID 변경은 같은 actor의 모든 `ending`을 함께 갱신한다. Talk의 `enter`·`reveal`, Ending의 `truth`·`half`·`leave`와 `@intro`·`@idle`·`@abyss`는 런타임 예약 ID여서 이름 변경을 막는다. 공용 Strings의 key도 코드가 참조하므로 F2 변경을 막는다.
 - F2 편집은 Enter로 확정하고 Escape로 취소한다. 유효한 이름 변경은 한 번의 실행 취소 기록으로 남으며 CSV에 즉시 저장한다. 문법 오류나 검사 대기 중에는 F2 변경을 막는다.
-- 대사 행을 한 번 클릭하면 그 행을 선택하고 대응하는 `* 선택지` 또는 `Line: 대사` 위치를 텍스트 뷰에서 보여준다. Enter는 선택 행의 본문만 인라인 편집한다. Dialogue는 선택지의 `text`, Talk·Ending은 `text`, 공용 Strings는 해당 `text`를 바꾸며, `response`·조건·수치·연결과 노드 ID는 바꾸지 않는다. 엔딩 카드처럼 대사 행이 아닌 항목에는 Enter 편집을 제공하지 않는다.
-- 인라인 본문 편집은 Enter로 확정하고 Escape로 취소한다. 입력 중에는 CSV에 쓰지 않고, 확정 시 기존 검사를 통과한 경우에만 두 뷰와 CSV를 갱신한다. 빈 대사처럼 유효하지 않은 값은 입력창을 유지하고 이유를 보여준다. 확정한 본문 변경은 Ctrl+Z 한 번으로 되돌린다. 인라인 편집 중에는 카드 드래그·F2·우클릭 추가를 시작하지 않고, 문법 오류나 텍스트 검사 대기 중에는 Enter 편집을 막는다.
+- 대사 행을 한 번 클릭하면 그 행을 선택하고 대응하는 `* 선택지` 또는 `Line: 대사` 위치를 텍스트 뷰에서 보여준다. Enter는 선택 행의 본문만 인라인 편집한다. Dialogue는 선택지의 `text`, Talk·Ending은 `text`, 공용 Strings는 해당 `text`를 바꾸며, `response`·조건·수치·연결과 노드 ID는 바꾸지 않는다. 대사 행을 더블 클릭해도 Enter와 같은 편집을 시작한다. 편집을 시작하면 입력창에 바로 키보드 포커스가 가고 커서는 글 끝에 놓여 곧바로 입력할 수 있다. 엔딩 카드처럼 대사 행이 아닌 항목에는 Enter·더블 클릭 편집을 제공하지 않는다.
+- 인라인 본문 편집은 Enter로 확정하고 Escape로 취소한다. 입력 중에는 CSV에 쓰지 않고, 확정 시 기존 검사를 통과한 경우에만 두 뷰와 CSV를 갱신한다. 빈 대사처럼 유효하지 않은 값은 입력창을 유지하고 이유를 보여준다. 인라인 입력창과 텍스트 뷰는 서로의 입력 글을 받지 않으며, 텍스트 뷰를 클릭해 포커스를 줄 때 전체 선택하지 않고 클릭한 위치에 커서를 둔다. 확정한 본문 변경은 Ctrl+Z 한 번으로 되돌린다. 인라인 편집 중에는 카드 드래그·F2·우클릭 추가를 시작하지 않고, 문법 오류나 텍스트 검사 대기 중에는 Enter 편집을 막는다.
+- 수치 배지는 Dialogue 선택지의 대사·단서 조건 표시와 함께 행 안에 둔다. 긴 대사나 작은 노드에서도 배지가 가려지지 않도록 행 높이와 배치를 조절하고, 연결점·클릭·드래그 영역을 같은 행 크기로 계산한다. 배지는 CSV에 설정된 변화량을 나타내며 현재 플레이 상태에 따른 동공 제한이나 반복 선택의 실제 적용량을 계산하지 않는다. Talk·Ending·Strings의 행과 게임 UI에는 표시하지 않는다.
+- `truth`와 `half`는 심연 핵심 접촉에서 갈라지는 한 판정이다. 트리는 `truth: 신뢰 ≥ 기준값 · 지정 파편 획득`, `half: 위 조건 미충족`을 각각 표시하고 두 카드의 조건 편집은 같은 `truth` 행을 갱신한다. `leave`에는 `신뢰 ≤ 기준값`과 `부담 ≥ 기준값`을 별도 진입선으로 표시한다. 직접 지정된 엔딩에는 연결된 각 선택지의 `need` 플래그를 표시하고, 비어 있으면 `선택 시 즉시`로 표시한다. 선택지의 직접 엔딩은 낮은 신뢰도 판정보다 먼저 실행되는 기존 순서를 유지한다.
+- `truth_trust`·`leave_trust`는 정수, `burden_limit`은 0 초과 1 이하의 불변 문화권 실수다. 기존 씬의 신뢰 기준값과 `burden_limit=1`을 각 Day1 CSV로 이전한다. `key_flag`는 해당 `ClientCase.FragmentGroups` 안에서 고유한 `MemoryFragment.Flag` 중 하나 또는 빈 값이어야 한다. 기존 `ClientCase._keyFragment`가 가리킨 파편의 Flag ID를 이전하고 런타임은 해당 Flag ID로 실제 파편을 찾아 `Collected`를 확인한다. 잘못된 값·중복·파편 부재는 저장 오류로 처리하며 조용히 다른 엔딩을 선택하지 않는다.
+- 엔딩 조건·선택지 수치 배지를 클릭하면 해당 값의 인라인 편집을 연다. Enter는 검증 후 CSV·텍스트·트리를 함께 갱신하고 Escape는 취소한다. 파편 대상은 현재 케이스 파편 목록에서 고르며 `없음`을 선택하면 `key_flag`를 비운다. 직접 엔딩의 조건은 연결선에서 `Flags.csv`의 플래그를 여러 개 선택해 기존 `need` 열에 저장한다. 변경 하나마다 실행 취소 기록을 하나 만든다. 텍스트 초안 오류 또는 검사 대기 중에는 편집을 막는다.
+- 트리의 부담 기준은 백분율(예: `100%`), 동공 변화량은 백분율 포인트(예: `+15%p`)로 표시·입력하고 CSV에는 각각 0~1 실수로 저장한다. 신뢰도는 정수로 표시·입력한다.
+- 빈 곳 우클릭으로 만드는 새 그룹의 기본 내용: 상담 장면은 상황 `새 상황`과 선택지 `새 선택지`(수치 0) 한 줄, Talk 대화는 대사 `새 대사` 한 줄, 엔딩은 title `새 엔딩`과 대사 `새 대사` 한 줄이다. ID는 `new_scene`·`new_talk`·`new_ending`이며 같은 section·actor에 있으면 `_2`, `_3`을 붙인다. 새 그룹은 그 section·actor의 마지막 그룹 뒤에 넣어 상담 시작 노드와 Talk 우선순위를 바꾸지 않는다. Talk actor 후보는 파일의 talk actor와 열린 씬에서 이 파일을 쓰는 FieldNPC의 actor ID다. 텍스트 초안 오류나 검사 대기 중에는 메뉴를 비활성화한다. 추가는 실행 취소 기록 하나다.
+- 결과 줄: 선택지 `response`의 `\n`으로 나눈 각 줄이 결과 한 줄이다. 결과 카드는 줄 수만큼 높아진다. 빈 결과 줄(앞뒤·중간)은 저장 오류다. 마지막 결과 줄을 삭제하면 `response`를 비우고 결과 카드를 없앤다. 결과 줄 편집은 그 줄만 바꾸며 다른 줄과 선택지 칸은 유지한다.
+- 결과 줄 넘기기(게임): 첫 줄을 메시지 줄에 보이고 Z·Enter·Space로 다음 줄로 넘긴다. 신뢰·동공·부담 안내 문구는 마지막 줄 뒤에 붙인다. 줄을 넘기는 동안 선택지 버튼을 숨기고 Space 들여다보기 전환과 숫자 선택을 받지 않는다. 마지막 줄 다음 입력에서 낮은 신뢰 `leave` 판정을 먼저 하고, 아니면 `goto` 장면으로 이동한다. `response`가 한 줄이면 기존 동작과 같다. 직접 엔딩 선택지는 결과 줄을 엔딩 앞줄로 한 줄씩 보인 뒤 엔딩 대사를 잇는다.
 
 ## 7. Inspector 노출값
 
@@ -170,6 +204,7 @@ flowchart TD
 | `ClientCase._dialogueCsv` | TextAsset | 기존 씬의 Dialogue 파일 참조 | 해당 인물·회차의 통합 CSV. 엔딩도 여기서 읽음 |
 | `FieldNPC._talkCsv` | TextAsset | 기존 씬의 Talk 파일 참조 | 해당 인물·회차의 통합 CSV |
 | `FieldNPC._dialogueActorId` | string | 빈 값 | 같은 CSV에서 이 NPC의 Talk 행을 고르는 ID. 씬에서는 `EunjaeMom`, `Eunjae`, `Jisu` 지정 |
+| `ClientCase._keyFragment`, `_truthTrust`, `_leaveTrust` | 기존 직렬화 필드 | 기존 씬 값 | CSV 이전 뒤 엔딩 판정의 원본으로 쓰지 않고 제거 |
 
 ## 8. 인수 조건
 
@@ -191,7 +226,21 @@ flowchart TD
 - FR-016: 은재 Day1의 `:again` 노드를 가로·세로로 늘린 뒤 파일과 창을 다시 열면 크기가 유지된다. 확대 상태에서도 모서리·연결점·카드 판정이 표시 위치와 일치한다.
 - FR-017: 노드를 클릭하면 선택 테두리가 생기고 텍스트 뷰가 해당 `:id` 줄로 이동한다. 다른 노드를 클릭하거나 빈 곳을 클릭하면 선택이 바뀌거나 해제되고, 기존 카드·연결선 드래그는 계속 동작한다.
 - FR-018: `:again` 노드를 선택해 F2로 `:again_later`로 바꾸면 텍스트·CSV의 ID가 함께 바뀐다. Dialogue 노드와 일반 Ending ID를 바꾸면 각각 `goto`와 `ending` 참조도 갱신되고 Ctrl+Z로 한 번에 되돌아간다. 중복·빈 ID와 예약 ID는 변경되지 않는다.
-- FR-019: 은재 Day1의 선택지 행을 클릭해 Enter로 글을 바꾸면 그 행의 `text`와 텍스트 뷰의 `*` 줄, CSV가 함께 바뀌고 `response`·`goto`는 유지된다. Talk·Ending·Strings 행도 `Line:` 본문만 바뀐다. Escape는 취소하고 빈 Dialogue 선택지는 오류를 보여주며 저장하지 않는다. 확정 후 Ctrl+Z 한 번으로 원래 글이 복구된다.
+- FR-019: 은재 Day1의 선택지 행을 클릭해 Enter로, 또는 더블 클릭으로 편집을 시작하면 곧바로 입력할 수 있고, 글을 바꾸면 그 행의 `text`와 텍스트 뷰의 `*` 줄, CSV가 함께 바뀌고 `response`·`goto`는 유지된다. Talk·Ending·Strings 행도 `Line:` 본문만 바뀐다. Escape는 취소하고 빈 Dialogue 선택지는 오류를 보여주며 저장하지 않는다. 확정 후 Ctrl+Z 한 번으로 원래 글이 복구된다.
+- FR-020: 은재 Day1의 `trust=-1, dilation=0` 선택지는 `신뢰 -1`, `trust=1, dilation=0.15` 선택지는 `신뢰 +1 · 동공 +0.15`, 둘 다 0이면 `수치 변화 없음`으로 보인다. 0이 아닌 `spring`은 별도 줄에 실행 미적용으로 보인다. 텍스트 뷰에서 값을 바꾸면 표시가 갱신된다.
+- FR-021: 은재·지수 Day1 CSV의 `truth`·`leave` 행에 기존 씬의 신뢰 기준과 열쇠 파편 Flag ID, `burden_limit=1`이 기록된다. Play Mode에서 신뢰·파편·부담 조건을 바꿔 보면 새 CSV 값대로 `truth`·`half`·`leave`가 선택된다.
+- FR-022: 트리의 핵심 접촉에서 `truth`·`half`로 가는 선, 낮은 신뢰·부담에서 `leave`로 가는 선, 선택지에서 `delete`·`expose` 같은 직접 엔딩으로 가는 선에 각각 현재 조건이 보인다.
+- FR-023: 트리에서 `truth` 또는 `half`의 신뢰 기준과 `leave`의 신뢰·부담 기준을 바꾸면 텍스트와 CSV의 해당 열이 바뀌고, Play Mode 엔딩 판정도 바뀐다. 범위를 벗어난 부담 값은 저장되지 않는다.
+- FR-024: 은재 Day1 트리에서 열쇠 파편을 다른 은재 파편으로 바꾸면 `key_flag`가 바뀌고, Play Mode에서 새 대상의 획득 여부로 엔딩이 갈린다. 없는 Flag ID와 다른 케이스 파편은 저장되지 않는다.
+- FR-025: `delete` 또는 `expose`로 향하는 선택지 선에서 `need` 플래그를 추가·제거하면 텍스트·CSV가 함께 바뀌고, Play Mode에서 그 플래그 충족 여부에 따라 선택 가능 상태가 달라진다.
+- FR-026: 선택지 아래 수치 줄을 클릭해 신뢰·동공·`spring` 중 하나를 고치면 텍스트·CSV·표시가 일치한다. Play Mode에서는 신뢰·동공 변경이 적용된다. 잘못된 수치는 저장되지 않고 Ctrl+Z로 유효한 변경 하나가 되돌아간다.
+- FR-027: 은재 회차를 사용하는 `ClientCase`가 열린 씬에 있으면 은재 기억 파편 노드가 모두 보인다. `eunjae_piano_hands`에서 해당 선택지로, `eunjae_empty_seat`에서 `truth` 엔딩으로 의존선이 보인다. 씬에 해당 `ClientCase`가 없으면 파편 노드는 표시되지 않아도 대화 CSV와 트리는 정상 표시된다.
+- FR-028: 은재 어머니의 Talk 노드에서 대사를 추가할 때 `은재`를 고르면 새 CSV 행의 `actor`는 `EunjaeMom`, `speaker`는 `은재`가 된다. 기본 화자를 고르면 `speaker`가 비고, 서술과 `???`도 각 예약값으로 저장된다. 기존 대사 행을 우클릭해 화자를 `은재`로 바꾸면 그 행의 `speaker`만 `은재`로 바뀌고, 기본 화자로 되돌리면 비며, Ctrl+Z로 되돌아간다.
+- FR-029: 은재 `truth` 엔딩의 `after` 카드를 수정하면 텍스트 뷰와 회차 CSV의 첫 `truth` 행 `after`가 함께 바뀐다. Escape는 취소하고 Ctrl+Z는 변경을 되돌린다. 빈 값으로 확정하면 카드가 사라지고, 엔딩 노드 우클릭의 `after 추가`로 다시 만들 수 있다.
+- FR-030: 은재 기억 파편 카드의 문구를 바꾸면 해당 Flag ID의 `Flags.csv` `text`만 바뀌고, 같은 파편을 획득할 때 새 문구가 표시된다. 다른 플래그 행과 회차 CSV는 유지된다. 빈 문구나 없는·중복 Flag ID는 저장되지 않으며, Ctrl+Z/Ctrl+Y는 파편 문구 변경을 되돌리고 다시 적용한다.
+- FR-031: 은재 Day1 트리의 빈 곳을 우클릭해 상담 장면·어머니 Talk 대화·엔딩을 각각 추가하면 텍스트와 CSV의 해당 단계 끝에 새 그룹이 생기고 ID 입력이 열린다. 새 장면에 연결선을 이으면 `goto`가 걸리고, Ctrl+Z 한 번으로 추가가 취소된다.
+- FR-032: 결과가 없는 선택지에 결과를 추가하고 줄을 두 번 더 추가해 둘째 줄을 고치면 `response`가 `첫 줄\n둘째 줄\n셋째 줄` 꼴로 저장된다. 빈 줄은 저장되지 않고, 줄을 모두 삭제하면 결과 카드가 사라진다.
+- FR-033: Play Mode에서 결과가 세 줄인 선택지를 고르면 첫 줄만 보이고 선택지 버튼이 숨으며, 넘김 입력 세 번 뒤 다음 장면으로 이동한다. 줄을 넘기는 동안 Space가 들여다보기를 켜지 않는다. 한 줄짜리 선택지는 기존과 같다.
 
 ## 9. 미결 사항
 
