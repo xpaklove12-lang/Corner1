@@ -13,6 +13,7 @@ namespace EyeMaze.EditorTools
     /// 화면에서 노드를 끌어 옮긴 위치와 화면 이동은 이 창에서만 쓰고 저장하지 않는다.
     /// 연결점을 끌어 같은 상담 actor의 다른 노드에 놓으면 goto가, 행 카드를 끌어 같은 단계의 다른 자리에 놓으면 소속과 순서가 바뀐 새 문서를 돌려준다.
     /// 그룹이나 행을 우클릭해 추가를 고르면 새 행을 넣은 새 문서를 돌려준다.
+    /// Ctrl+휠로 포인터 아래를 기준으로 확대·축소한다. 배치는 확대 전 좌표계에서 하고, 그리기와 입력 판정은 화면 좌표(배치 × 확대율 + 화면 이동)로 한다.
     /// </summary>
     public class DialogueEditorGraph
     {
@@ -27,6 +28,9 @@ namespace EyeMaze.EditorTools
         private const float AFTER_HEIGHT = 46f;
         private const float MARGIN = 20f;
         private const float TOP = 44f;
+        private const float MIN_ZOOM = 0.5f;
+        private const float MAX_ZOOM = 2f;
+        private const float ZOOM_STEP = 0.1f;
 
         private static readonly Color GOTO_COLOR = new Color(0.45f, 0.75f, 1f);
         private static readonly Color ENDING_COLOR = new Color(1f, 0.6f, 0.3f);
@@ -56,6 +60,8 @@ namespace EyeMaze.EditorTools
 
         private readonly Dictionary<string, Vector2> _nodeOffsets = new Dictionary<string, Vector2>();
         private Vector2 _pan;
+        private float _zoom = 1f;
+        private int _control;
         private string _dragNode;
         private bool _panning;
         // 끌고 있는 연결선 또는 카드 (그룹 번호, 행 번호). 없으면 -1이다.
@@ -67,9 +73,13 @@ namespace EyeMaze.EditorTools
         // 우클릭 메뉴처럼 나중에 확정되는 편집. 다음 Draw에서 돌려준다.
         private DialogueEditorDocument _pending;
 
-        private static GUIStyle _rowStyle;
-        private static GUIStyle _headerStyle;
-        private static GUIStyle _situationStyle;
+        private GUIStyle _rowStyle;
+        private GUIStyle _headerStyle;
+        private GUIStyle _situationStyle;
+        private float _styleZoom = -1f;
+
+        /// <summary>노드 뷰 확대율 (0.5~2.0, 파일에 저장하지 않음)</summary>
+        public float Zoom => _zoom;
 
         /// <summary>
         /// 새 파일을 열 때 화면 이동과 노드 위치 옮김을 지운다.
@@ -78,6 +88,7 @@ namespace EyeMaze.EditorTools
         public void Reset()
         {
             _pan = Vector2.zero;
+            _zoom = 1f;
             _nodeOffsets.Clear();
             _dragNode = null;
             _panning = false;
@@ -104,18 +115,30 @@ namespace EyeMaze.EditorTools
             EditorGUI.DrawRect(rect, new Color(0.15f, 0.15f, 0.16f));
             List<Box> boxes = Layout(doc, rect.width);
 
-            GUI.BeginClip(rect);
+            // 입력은 클립 밖에서 노드 뷰 좌표로 바꿔 처리한다. 클립 안에서는 뷰 밖에서 놓은 마우스 이벤트를 받지 못한다.
             Event e = Event.current;
+            Vector2 windowMouse = e.mousePosition;
+            e.mousePosition = windowMouse - rect.position;
+            _control = GUIUtility.GetControlID(FocusType.Passive);
             bool inside = new Rect(0f, 0f, rect.width, rect.height).Contains(e.mousePosition);
             DialogueEditorDocument changed = editable ? HandleEditInput(e, doc, boxes, inside) : null;
             if (!editable) ClearDrag();
-            HandleContextMenu(e, doc, boxes, inside, editable);
+            HandleContextMenu(e, doc, boxes, inside, editable, windowMouse);
             if (changed == null && _pending != null)
             {
                 changed = editable ? _pending : null;
                 _pending = null;
             }
             HandleViewInput(e, doc, boxes, inside);
+            HandleZoom(e, inside);
+            // 끄는 동안 마우스를 이 뷰가 붙잡아, 뷰 밖에서 버튼을 놓아도 놓기 이벤트를 받아 끌기를 끝낸다.
+            bool dragging = _linkGroup >= 0 || _cardGroup >= 0 || _panning || _dragNode != null;
+            if (dragging) GUIUtility.hotControl = _control;
+            else if (GUIUtility.hotControl == _control) GUIUtility.hotControl = 0;
+            e.mousePosition = windowMouse;
+            if (_styleZoom != _zoom) EnsureStyles();
+
+            GUI.BeginClip(rect);
             // 선이 상자에 가리지 않도록 상자를 먼저 그리고 선을 위에 그린다.
             foreach (Box b in boxes) DrawBox(doc, b);
             DrawEdges(doc, boxes);
@@ -126,6 +149,8 @@ namespace EyeMaze.EditorTools
                 EditorGUI.DrawRect(r, new Color(0.45f, 0.18f, 0.15f, 0.9f));
                 GUI.Label(new Rect(r.x + 6f, r.y + 2f, r.width - 12f, r.height), notice, EditorStyles.whiteMiniLabel);
             }
+            if (!Mathf.Approximately(_zoom, 1f))
+                GUI.Label(new Rect(rect.width - 70f, rect.height - 20f, 64f, 18f), $"{Mathf.RoundToInt(_zoom * 100f)}%", EditorStyles.miniLabel);
             GUI.EndClip();
             return changed;
         }
@@ -139,6 +164,12 @@ namespace EyeMaze.EditorTools
         public static string KeyOf(DialogueEditorDocument.Group g) => g.Section + "/" + g.Actor + "/" + g.Id;
 
         /// <summary>
+        /// 배치 좌표계의 길이를 화면 길이로 바꾼다.
+        /// v를 사용하며, 확대율을 곱한 값을 반환한다.
+        /// </summary>
+        private float Z(float v) => v * _zoom;
+
+        /// <summary>
         /// 모델의 그룹과 after 카드를 자동 배치하고 화면 좌표를 정한다.
         /// doc과 viewWidth를 사용하며, 상자 목록을 반환한다.
         /// </summary>
@@ -149,8 +180,8 @@ namespace EyeMaze.EditorTools
             {
                 Vector2 offset = Vector2.zero;
                 if (b.Group >= 0) _nodeOffsets.TryGetValue(KeyOf(doc.Groups[b.Group]) + (b.Kind == BoxKind.After ? "#after" : ""), out offset);
-                b.Rect = new Rect(b.Canvas.position + _pan + offset, b.Canvas.size);
-                b.RowsTop = b.Rect.y + (b.Kind == BoxKind.Group ? HEADER_HEIGHT + SubHeight(doc.Groups[b.Group]) : 0f);
+                b.Rect = new Rect((b.Canvas.position + offset) * _zoom + _pan, b.Canvas.size * _zoom);
+                b.RowsTop = b.Rect.y + (b.Kind == BoxKind.Group ? Z(HEADER_HEIGHT + SubHeight(doc.Groups[b.Group])) : 0f);
             }
             return boxes;
         }
@@ -378,7 +409,7 @@ namespace EyeMaze.EditorTools
                 {
                     // 보조 카드는 옆 단계에 속한다는 것만 점선으로 잇는다.
                     Box owner = SideOwner(doc, boxes, b);
-                    if (owner != null) DrawGuide(new Vector2(owner.Rect.xMax, owner.Rect.y + HEADER_HEIGHT * 0.5f), new Vector2(b.Rect.x, b.Rect.y + HEADER_HEIGHT * 0.5f));
+                    if (owner != null) DrawGuide(new Vector2(owner.Rect.xMax, owner.Rect.y + Z(HEADER_HEIGHT) * 0.5f), new Vector2(b.Rect.x, b.Rect.y + Z(HEADER_HEIGHT) * 0.5f));
                     continue;
                 }
                 if (g.Section != Csv.SECTION_DIALOGUE) continue;
@@ -417,23 +448,23 @@ namespace EyeMaze.EditorTools
         /// 선택지 행 오른쪽 끝의 연결점 위치를 구한다.
         /// b와 행 번호 row를 사용하며, 위치를 반환한다.
         /// </summary>
-        private static Vector2 PortPosition(Box b, int row)
+        private Vector2 PortPosition(Box b, int row)
         {
-            return new Vector2(b.Rect.xMax - 9f, b.RowsTop + row * ROW_HEIGHT + ROW_HEIGHT * 0.5f);
+            return new Vector2(b.Rect.xMax - Z(9f), b.RowsTop + Z(row * ROW_HEIGHT + ROW_HEIGHT * 0.5f));
         }
 
         /// <summary>
         /// 연결점에서 대상 위쪽까지 곡선 화살표를 그린다.
         /// from, to, color, sideways(오른쪽으로 나가는 선인지)를 사용한다.
         /// </summary>
-        private static void DrawArrow(Vector2 from, Vector2 to, Color color, bool sideways)
+        private void DrawArrow(Vector2 from, Vector2 to, Color color, bool sideways)
         {
             Vector3 a = from, b = to;
-            Vector3 startTangent = a + (sideways ? new Vector3(80f, 0f) : new Vector3(0f, 40f));
-            Handles.DrawBezier(a, b, startTangent, b + new Vector3(0f, -60f), color, null, 2.5f);
+            Vector3 startTangent = a + (sideways ? new Vector3(Z(80f), 0f) : new Vector3(0f, Z(40f)));
+            Handles.DrawBezier(a, b, startTangent, b + new Vector3(0f, -Z(60f)), color, null, Mathf.Max(1.5f, Z(2.5f)));
             Color old = Handles.color;
             Handles.color = color;
-            Handles.DrawAAConvexPolygon(b, b + new Vector3(-6f, -10f), b + new Vector3(6f, -10f));
+            Handles.DrawAAConvexPolygon(b, b + new Vector3(-Z(6f), -Z(10f)), b + new Vector3(Z(6f), -Z(10f)));
             Handles.color = old;
         }
 
@@ -441,17 +472,17 @@ namespace EyeMaze.EditorTools
         /// 실제 연결이 아닌 단계 흐름을 점선 곡선으로 그린다.
         /// from과 to를 사용한다.
         /// </summary>
-        private static void DrawGuide(Vector2 from, Vector2 to)
+        private void DrawGuide(Vector2 from, Vector2 to)
         {
             bool vertical = Mathf.Abs(to.y - from.y) > Mathf.Abs(to.x - from.x);
             Vector3 a = from, b = to;
-            Vector3 t1 = a + (vertical ? new Vector3(0f, 40f) : new Vector3(30f, 0f));
-            Vector3 t2 = b + (vertical ? new Vector3(0f, -40f) : new Vector3(-30f, 0f));
+            Vector3 t1 = a + (vertical ? new Vector3(0f, Z(40f)) : new Vector3(Z(30f), 0f));
+            Vector3 t2 = b + (vertical ? new Vector3(0f, -Z(40f)) : new Vector3(-Z(30f), 0f));
             Vector3[] points = Handles.MakeBezierPoints(a, b, t1, t2, 24);
             Color old = Handles.color;
             Handles.color = GUIDE_COLOR;
             Handles.DrawDottedLines(SegmentPairs(points), 4f);
-            if (vertical) Handles.DrawAAConvexPolygon(b, b + new Vector3(-5f, -9f), b + new Vector3(5f, -9f));
+            if (vertical) Handles.DrawAAConvexPolygon(b, b + new Vector3(-Z(5f), -Z(9f)), b + new Vector3(Z(5f), -Z(9f)));
             Handles.color = old;
         }
 
@@ -476,27 +507,36 @@ namespace EyeMaze.EditorTools
             if (b.Kind == BoxKind.After)
             {
                 EditorGUI.DrawRect(b.Rect, new Color(0.32f, 0.24f, 0.18f));
-                GUI.Label(new Rect(b.Rect.x + 6f, b.Rect.y + 3f, b.Rect.width - 12f, b.Rect.height - 6f), "after · " + Flat(g.Get("after")), _situationStyle);
+                GUI.Label(new Rect(b.Rect.x + Z(6f), b.Rect.y + Z(3f), b.Rect.width - Z(12f), b.Rect.height - Z(6f)), "after · " + Flat(g.Get("after")), _situationStyle);
                 return;
             }
             EditorGUI.DrawRect(b.Rect, b.Side ? new Color(0.21f, 0.21f, 0.23f) : new Color(0.24f, 0.24f, 0.26f));
-            var header = new Rect(b.Rect.x, b.Rect.y, b.Rect.width, HEADER_HEIGHT);
+            var header = new Rect(b.Rect.x, b.Rect.y, b.Rect.width, Z(HEADER_HEIGHT));
             EditorGUI.DrawRect(header, HeaderColor(doc, g, b));
-            GUI.Label(new Rect(header.x + 6f, header.y + 3f, header.width - 12f, header.height), Title(doc, g, b), _headerStyle);
+            GUI.Label(new Rect(header.x + Z(6f), header.y + Z(3f), header.width - Z(12f), header.height), Title(doc, g, b), _headerStyle);
 
             string summary = GroupSummary(g);
             if (summary.Length > 0)
-                GUI.Label(new Rect(b.Rect.x + 6f, header.yMax + 1f, b.Rect.width - 12f, SITUATION_HEIGHT - 2f), summary, _situationStyle);
+                GUI.Label(new Rect(b.Rect.x + Z(6f), header.yMax + Z(1f), b.Rect.width - Z(12f), Z(SITUATION_HEIGHT - 2f)), summary, _situationStyle);
 
             if (g.Items.Count == 0)
-                GUI.Label(new Rect(b.Rect.x + 6f, b.RowsTop, b.Rect.width - 12f, ROW_HEIGHT), "(행 없음)", _rowStyle);
+                GUI.Label(new Rect(b.Rect.x + Z(6f), b.RowsTop, b.Rect.width - Z(12f), Z(ROW_HEIGHT)), "(행 없음)", _rowStyle);
             for (int k = 0; k < g.Items.Count; k++)
             {
-                var row = new Rect(b.Rect.x + 4f, b.RowsTop + k * ROW_HEIGHT + 1f, b.Rect.width - 8f, ROW_HEIGHT - 2f);
+                Rect row = RowRect(b, k);
                 EditorGUI.DrawRect(row, new Color(0.3f, 0.3f, 0.32f));
-                GUI.Label(new Rect(row.x + 4f, row.y, row.width - 26f, row.height), RowText(g, g.Items[k], k), _rowStyle);
+                GUI.Label(new Rect(row.x + Z(4f), row.y, row.width - Z(26f), row.height), RowText(g, g.Items[k], k), _rowStyle);
                 if (g.Section == Csv.SECTION_DIALOGUE) DrawPort(b, k, g.Items[k]);
             }
+        }
+
+        /// <summary>
+        /// 행 카드 하나의 화면 사각형을 구한다.
+        /// b와 행 번호 k를 사용하며, 사각형을 반환한다.
+        /// </summary>
+        private Rect RowRect(Box b, int k)
+        {
+            return new Rect(b.Rect.x + Z(4f), b.RowsTop + Z(k * ROW_HEIGHT + 1f), b.Rect.width - Z(8f), Z(ROW_HEIGHT - 2f));
         }
 
         /// <summary>
@@ -544,17 +584,17 @@ namespace EyeMaze.EditorTools
         /// 선택지 행 오른쪽에 연결 상태 표시를 그린다. goto는 파란 점, ending은 주황 점, 둘 다 없으면 머묾 표시다.
         /// b, row, item을 사용한다.
         /// </summary>
-        private static void DrawPort(Box b, int row, DialogueEditorDocument.Item item)
+        private void DrawPort(Box b, int row, DialogueEditorDocument.Item item)
         {
             Vector2 p = PortPosition(b, row);
             bool hasGoto = item.Get(DialogueEditorFormat.GOTO).Length > 0;
             bool hasEnding = item.Get(DialogueEditorFormat.ENDING).Length > 0;
             if (!hasGoto && !hasEnding)
             {
-                GUI.Label(new Rect(p.x - 9f, p.y - 9f, 18f, 18f), "↻", _rowStyle);
+                GUI.Label(new Rect(p.x - Z(9f), p.y - Z(9f), Z(18f), Z(18f)), "↻", _rowStyle);
                 return;
             }
-            EditorGUI.DrawRect(new Rect(p.x - 4f, p.y - 4f, 8f, 8f), hasEnding ? ENDING_COLOR : GOTO_COLOR);
+            EditorGUI.DrawRect(new Rect(p.x - Z(4f), p.y - Z(4f), Z(8f), Z(8f)), hasEnding ? ENDING_COLOR : GOTO_COLOR);
         }
 
         /// <summary>
@@ -604,17 +644,19 @@ namespace EyeMaze.EditorTools
         private static string Flat(string s) => s.Replace("\\n", " ").Replace("\n", " ");
 
         /// <summary>
-        /// 노드 뷰 글자 모양을 한 번 만든다.
-        /// 입력값은 없으며, 정적 스타일 필드를 채운다.
+        /// 노드 뷰 글자 모양을 지금 확대율에 맞춰 만든다. 확대율이 바뀔 때만 다시 만든다.
+        /// _zoom을 사용하며, 스타일 필드를 채운다.
         /// </summary>
-        private static void EnsureStyles()
+        private void EnsureStyles()
         {
-            if (_rowStyle != null) return;
-            _rowStyle = new GUIStyle(EditorStyles.miniLabel) { clipping = TextClipping.Clip, wordWrap = false };
+            if (_rowStyle != null && Mathf.Approximately(_styleZoom, _zoom)) return;
+            _styleZoom = _zoom;
+            int mini = Mathf.Max(5, Mathf.RoundToInt(10f * _zoom));
+            _rowStyle = new GUIStyle(EditorStyles.miniLabel) { clipping = TextClipping.Clip, wordWrap = false, fontSize = mini };
             _rowStyle.normal.textColor = new Color(0.88f, 0.88f, 0.88f);
-            _headerStyle = new GUIStyle(EditorStyles.boldLabel) { clipping = TextClipping.Clip, fontSize = 11 };
+            _headerStyle = new GUIStyle(EditorStyles.boldLabel) { clipping = TextClipping.Clip, fontSize = Mathf.Max(5, Mathf.RoundToInt(11f * _zoom)) };
             _headerStyle.normal.textColor = Color.white;
-            _situationStyle = new GUIStyle(EditorStyles.miniLabel) { wordWrap = true, clipping = TextClipping.Clip };
+            _situationStyle = new GUIStyle(EditorStyles.miniLabel) { wordWrap = true, clipping = TextClipping.Clip, fontSize = mini };
             _situationStyle.normal.textColor = new Color(0.7f, 0.72f, 0.75f);
         }
 
@@ -635,7 +677,7 @@ namespace EyeMaze.EditorTools
                     if (hit == null || hit.Kind != BoxKind.Group) return null;
                     int row = RowAt(doc, hit, e.mousePosition.y);
                     if (row < 0) return null;
-                    if (doc.Groups[hit.Group].Section == Csv.SECTION_DIALOGUE && Vector2.Distance(PortPosition(hit, row), e.mousePosition) <= 9f)
+                    if (doc.Groups[hit.Group].Section == Csv.SECTION_DIALOGUE && Vector2.Distance(PortPosition(hit, row), e.mousePosition) <= Z(9f))
                     {
                         _linkGroup = hit.Group;
                         _linkItem = row;
@@ -707,9 +749,9 @@ namespace EyeMaze.EditorTools
         /// 상자 안 y 위치에 있는 행 번호를 찾는다.
         /// doc, b, y를 사용하며, 행 번호 또는 -1을 반환한다.
         /// </summary>
-        private static int RowAt(DialogueEditorDocument doc, Box b, float y)
+        private int RowAt(DialogueEditorDocument doc, Box b, float y)
         {
-            int row = Mathf.FloorToInt((y - b.RowsTop) / ROW_HEIGHT);
+            int row = Mathf.FloorToInt((y - b.RowsTop) / Z(ROW_HEIGHT));
             return row >= 0 && row < doc.Groups[b.Group].Items.Count ? row : -1;
         }
 
@@ -717,10 +759,10 @@ namespace EyeMaze.EditorTools
         /// 카드를 놓을 순서 위치를 구한다. 행 경계 중 가장 가까운 곳이다.
         /// doc, b, y를 사용하며, 0부터 행 수까지의 위치를 반환한다.
         /// </summary>
-        private static int InsertIndex(DialogueEditorDocument doc, Box b, float y)
+        private int InsertIndex(DialogueEditorDocument doc, Box b, float y)
         {
             int count = doc.Groups[b.Group].Items.Count;
-            return Mathf.Clamp(Mathf.RoundToInt((y - b.RowsTop) / ROW_HEIGHT), 0, count);
+            return Mathf.Clamp(Mathf.RoundToInt((y - b.RowsTop) / Z(ROW_HEIGHT)), 0, count);
         }
 
         /// <summary>
@@ -738,7 +780,7 @@ namespace EyeMaze.EditorTools
                     if (b.Kind == BoxKind.Group && b.Group == _linkGroup)
                     {
                         Vector3 a = PortPosition(b, _linkItem);
-                        Handles.DrawBezier(a, _mouse, a + new Vector3(60f, 0f), (Vector3)_mouse + new Vector3(-30f, 0f), Color.white, null, 2f);
+                        Handles.DrawBezier(a, _mouse, a + new Vector3(Z(60f), 0f), (Vector3)_mouse + new Vector3(-Z(30f), 0f), Color.white, null, 2f);
                     }
                 if (hoverGroup && hover.Group != _linkGroup && doc.Groups[_linkGroup].SameStage(doc.Groups[hover.Group])) DrawOutline(hover.Rect, GOTO_COLOR);
             }
@@ -746,13 +788,13 @@ namespace EyeMaze.EditorTools
             {
                 if (hoverGroup && doc.Groups[_cardGroup].SameStage(doc.Groups[hover.Group]))
                 {
-                    float y = hover.RowsTop + InsertIndex(doc, hover, _mouse.y) * ROW_HEIGHT;
+                    float y = hover.RowsTop + Z(InsertIndex(doc, hover, _mouse.y) * ROW_HEIGHT);
                     EditorGUI.DrawRect(new Rect(hover.Rect.x + 2f, y - 1.5f, hover.Rect.width - 4f, 3f), new Color(1f, 0.85f, 0.3f));
                 }
-                var ghost = new Rect(_mouse.x - 10f, _mouse.y - ROW_HEIGHT * 0.5f, NODE_WIDTH - 8f, ROW_HEIGHT - 2f);
+                var ghost = new Rect(_mouse.x - Z(10f), _mouse.y - Z(ROW_HEIGHT) * 0.5f, Z(NODE_WIDTH - 8f), Z(ROW_HEIGHT - 2f));
                 EditorGUI.DrawRect(ghost, new Color(0.4f, 0.4f, 0.48f, 0.9f));
                 DialogueEditorDocument.Group g = doc.Groups[_cardGroup];
-                GUI.Label(new Rect(ghost.x + 4f, ghost.y, ghost.width - 8f, ghost.height), RowText(g, g.Items[_cardItem], _cardItem), _rowStyle);
+                GUI.Label(new Rect(ghost.x + Z(4f), ghost.y, ghost.width - Z(8f), ghost.height), RowText(g, g.Items[_cardItem], _cardItem), _rowStyle);
             }
         }
 
@@ -773,14 +815,14 @@ namespace EyeMaze.EditorTools
         /// <summary>
         /// 그룹 노드나 그 안의 행을 우클릭하면 추가 메뉴를 띄운다. 행 위면 그 행 뒤에, 그 밖이면 그룹 끝에 넣는다.
         /// 편집할 수 없을 때와 선택지가 3개인 Dialogue 노드에서는 메뉴 항목을 비활성화한다.
-        /// e, doc, boxes, inside, editable을 사용하며, 고른 결과를 _pending에 둔다.
+        /// e, doc, boxes, inside, editable, windowMouse(창 좌표의 마우스 위치, 메뉴를 띄울 곳)를 사용하며, 고른 결과를 _pending에 둔다.
         /// </summary>
-        private void HandleContextMenu(Event e, DialogueEditorDocument doc, List<Box> boxes, bool inside, bool editable)
+        private void HandleContextMenu(Event e, DialogueEditorDocument doc, List<Box> boxes, bool inside, bool editable, Vector2 windowMouse)
         {
             if (e.type != EventType.ContextClick || !inside) return;
             Box hit = HitBox(boxes, e.mousePosition);
             if (hit == null || hit.Kind != BoxKind.Group) return;
-            BuildAddMenu(doc, hit.Group, RowAt(doc, hit, e.mousePosition.y), editable).ShowAsContext();
+            BuildAddMenu(doc, hit.Group, RowAt(doc, hit, e.mousePosition.y), editable).DropDown(new Rect(windowMouse, Vector2.zero));
             e.Use();
         }
 
@@ -845,7 +887,7 @@ namespace EyeMaze.EditorTools
                     if (e.button == 2 || (e.button == 0 && HitBox(boxes, e.mousePosition) == null)) { _panning = true; e.Use(); break; }
                     if (e.button != 0) break;
                     Box hit = HitBox(boxes, e.mousePosition);
-                    if (hit != null && (hit.Kind == BoxKind.After || e.mousePosition.y < hit.Rect.y + HEADER_HEIGHT))
+                    if (hit != null && (hit.Kind == BoxKind.After || e.mousePosition.y < hit.Rect.y + Z(HEADER_HEIGHT)))
                     {
                         _dragNode = KeyOf(doc.Groups[hit.Group]) + (hit.Kind == BoxKind.After ? "#after" : "");
                         e.Use();
@@ -855,8 +897,9 @@ namespace EyeMaze.EditorTools
                     if (_panning) { _pan += e.delta; e.Use(); }
                     else if (_dragNode != null)
                     {
+                        // 노드 옮김은 배치 좌표계에 기억하므로 화면에서 움직인 거리를 확대율로 나눈다.
                         _nodeOffsets.TryGetValue(_dragNode, out Vector2 o);
-                        _nodeOffsets[_dragNode] = o + e.delta;
+                        _nodeOffsets[_dragNode] = o + e.delta / _zoom;
                         e.Use();
                     }
                     break;
@@ -866,6 +909,29 @@ namespace EyeMaze.EditorTools
                     _dragNode = null;
                     break;
             }
+        }
+
+        /// <summary>
+        /// Ctrl(또는 Cmd)+휠로 확대율을 0.1씩 바꾸고, 포인터 아래 배치 좌표가 같은 화면 위치에 머물도록 화면 이동을 고친다.
+        /// 일반 휠은 화면을 위아래로 옮긴다. e와 inside를 사용하며, _zoom과 _pan을 바꾼다.
+        /// </summary>
+        private void HandleZoom(Event e, bool inside)
+        {
+            if (e.type != EventType.ScrollWheel || !inside) return;
+            if (!(e.control || e.command))
+            {
+                _pan -= new Vector2(0f, e.delta.y * 20f);
+                e.Use();
+                return;
+            }
+            float next = Mathf.Clamp(Mathf.Round((_zoom + (e.delta.y < 0f ? ZOOM_STEP : -ZOOM_STEP)) * 10f) / 10f, MIN_ZOOM, MAX_ZOOM);
+            if (!Mathf.Approximately(next, _zoom))
+            {
+                Vector2 canvas = (e.mousePosition - _pan) / _zoom;
+                _zoom = next;
+                _pan = e.mousePosition - canvas * _zoom;
+            }
+            e.Use();
         }
 
         /// <summary>

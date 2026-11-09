@@ -5,6 +5,7 @@ using System.Text;
 using UnityEngine;
 
 using UnityEditor;
+using UnityEditor.ShortcutManagement;
 
 namespace EyeMaze.EditorTools
 {
@@ -38,6 +39,17 @@ namespace EyeMaze.EditorTools
         private string _savedAt = "";
         private readonly DialogueEditorGraph _graph = new DialogueEditorGraph();
 
+        /// <summary>실행 취소 기록 한 칸. 유효하게 저장된 모델과 그 CSV 글이다.</summary>
+        private class Snapshot
+        {
+            public DialogueEditorDocument Doc;
+            public string Csv;
+        }
+
+        // 이 파일의 유효한 편집 순서. _historyIndex가 지금 상태를 가리킨다.
+        private readonly List<Snapshot> _history = new List<Snapshot>();
+        private int _historyIndex = -1;
+
         [MenuItem("EyeMaze/대사 편집기")]
         private static void Open()
         {
@@ -64,6 +76,7 @@ namespace EyeMaze.EditorTools
 
         void OnGUI()
         {
+            HandleHistoryKeys();
             DrawToolbar();
             if (_doc == null)
             {
@@ -73,9 +86,10 @@ namespace EyeMaze.EditorTools
             Rect body = GUILayoutUtility.GetRect(0f, 100000f, 0f, 100000f);
             var textRect = new Rect(body.x, body.y, Mathf.Floor(body.width * TEXT_WIDTH_RATIO), body.height);
             var graphRect = new Rect(textRect.xMax + 4f, body.y, body.width - textRect.width - 4f, body.height);
+            // 노드 뷰가 먼저 입력을 받아야 텍스트 뷰 위에서 놓은 끌기도 노드 뷰가 끝낼 수 있다. 두 영역은 겹치지 않는다.
+            DrawGraphView(graphRect);
             DrawTextView(textRect);
             EditorGUI.DrawRect(new Rect(textRect.xMax + 1f, body.y, 2f, body.height), new Color(0f, 0f, 0f, 0.3f));
-            DrawGraphView(graphRect);
         }
 
         /// <summary>
@@ -315,13 +329,107 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// 검사를 통과한 모델을 현재 모델로 삼고 CSV로 저장한다.
-        /// doc과 csv를 사용하며, _doc과 _savedAt을 바꾼다.
+        /// 검사를 통과한 모델을 현재 모델로 삼고 CSV로 저장한다. 내용이 바뀌었으면 실행 취소 기록에 한 칸 더하고 그 뒤의 다시 실행 기록을 지운다.
+        /// doc과 csv를 사용하며, _doc, _savedAt, _history를 바꾼다.
         /// </summary>
         private void Commit(DialogueEditorDocument doc, string csv)
         {
             _doc = doc;
             if (DialogueEditorFormat.Save(doc.AssetPath, csv)) _savedAt = System.DateTime.Now.ToString("HH:mm:ss");
+            if (_historyIndex >= 0 && _history[_historyIndex].Csv == csv) return;
+            if (_historyIndex + 1 < _history.Count) _history.RemoveRange(_historyIndex + 1, _history.Count - _historyIndex - 1);
+            _history.Add(new Snapshot { Doc = doc.Clone(), Csv = csv });
+            _historyIndex = _history.Count - 1;
+        }
+
+        /// <summary>
+        /// 실행 취소 기록을 지금 모델 하나로 새로 시작한다. 파일을 열거나 다시 열 때 부른다.
+        /// _doc을 사용하며, _history와 _historyIndex를 바꾼다.
+        /// </summary>
+        private void ResetHistory()
+        {
+            _history.Clear();
+            var rowLines = new List<int>();
+            _history.Add(new Snapshot { Doc = _doc.Clone(), Csv = DialogueEditorFormat.WriteCsv(_doc, rowLines) });
+            _historyIndex = 0;
+        }
+
+        /// <summary>
+        /// 창 안에서 Ctrl+Z, Ctrl+Y(Mac은 Cmd)를 받아 실행 취소·다시 실행한다. Unity 단축키가 먼저 받으면 아래 단축키 메서드가 같은 일을 한다.
+        /// 이벤트를 사용하며, 처리하면 이벤트를 사용 처리한다.
+        /// </summary>
+        private void HandleHistoryKeys()
+        {
+            Event e = Event.current;
+            if (e.type != EventType.KeyDown || !(e.control || e.command) || _doc == null) return;
+            if (e.keyCode == KeyCode.Z && !e.shift) { UndoEdit(); e.Use(); }
+            else if (e.keyCode == KeyCode.Y) { RedoEdit(); e.Use(); }
+        }
+
+        [Shortcut("EyeMaze/대사 편집기/실행 취소", typeof(DialogueEditorWindow), KeyCode.Z, ShortcutModifiers.Action)]
+        private static void UndoShortcut(ShortcutArguments args) => (args.context as DialogueEditorWindow)?.UndoEdit();
+
+        [Shortcut("EyeMaze/대사 편집기/다시 실행", typeof(DialogueEditorWindow), KeyCode.Y, ShortcutModifiers.Action)]
+        private static void RedoShortcut(ShortcutArguments args) => (args.context as DialogueEditorWindow)?.RedoEdit();
+
+        /// <summary>
+        /// 실행 취소한다. 검사 전이거나 오류가 있는 텍스트 초안이 있으면 먼저 그 초안만 마지막 정상 모델의 글로 되돌리고,
+        /// 아니면 기록의 한 칸 앞 상태로 두 뷰와 CSV를 되돌린다.
+        /// _history와 _draft를 사용하며, 모델·텍스트·CSV를 바꾼다.
+        /// </summary>
+        public void UndoEdit()
+        {
+            if (_doc == null) return;
+            if (_textPending || _draftHasErrors)
+            {
+                SetDraftText(DialogueEditorFormat.WriteText(_doc));
+                _textPending = false;
+                _draftHasErrors = false;
+                _issues.Clear();
+                Repaint();
+                return;
+            }
+            if (_historyIndex <= 0) return;
+            RestoreSnapshot(_historyIndex - 1);
+        }
+
+        /// <summary>
+        /// 다시 실행한다. 기록의 한 칸 뒤 상태가 있으면 두 뷰와 CSV를 그 상태로 바꾼다.
+        /// _history를 사용하며, 모델·텍스트·CSV를 바꾼다.
+        /// </summary>
+        public void RedoEdit()
+        {
+            if (_doc == null || _textPending || _draftHasErrors || _historyIndex + 1 >= _history.Count) return;
+            RestoreSnapshot(_historyIndex + 1);
+        }
+
+        /// <summary>
+        /// 기록의 한 칸으로 모델·텍스트를 바꾸고 같은 저장·재임포트 경로로 CSV를 다시 쓴다.
+        /// index를 사용하며, _historyIndex, _doc, _draft, _issues를 바꾼다.
+        /// </summary>
+        private void RestoreSnapshot(int index)
+        {
+            _historyIndex = index;
+            DialogueEditorDocument doc = _history[index].Doc.Clone();
+            SetDraftText(DialogueEditorFormat.WriteText(doc));
+            var issues = new List<DialogueEditorFormat.Issue>();
+            string csv = DialogueEditorFormat.Validate(doc, issues);
+            _issues.Clear();
+            _issues.AddRange(issues);
+            _doc = doc;
+            if (DialogueEditorFormat.Save(doc.AssetPath, csv)) _savedAt = System.DateTime.Now.ToString("HH:mm:ss");
+            Repaint();
+        }
+
+        /// <summary>
+        /// 텍스트 초안을 코드에서 바꾼다. 입력 중인 텍스트 상자가 새 글을 보이도록 포커스를 푼다.
+        /// text를 사용하며, _draft를 바꾼다.
+        /// </summary>
+        private void SetDraftText(string text)
+        {
+            _draft = text;
+            GUI.FocusControl(null);
+            EditorGUIUtility.editingTextField = false;
         }
 
         /// <summary>
@@ -344,12 +452,9 @@ namespace EyeMaze.EditorTools
                 Repaint();
                 return;
             }
-            _draft = text;
+            SetDraftText(text);
             _issues.AddRange(issues);
             Commit(parsed, csv);
-            // 입력 중인 텍스트 상자가 새 글을 보이도록 포커스를 푼다.
-            GUI.FocusControl(null);
-            EditorGUIUtility.editingTextField = false;
             Repaint();
         }
 
@@ -405,6 +510,7 @@ namespace EyeMaze.EditorTools
             _draftHasErrors = false;
             _savedAt = "";
             foreach (string e in errors) _issues.Add(new DialogueEditorFormat.Issue { Message = e });
+            ResetHistory();
             _openPath = path;
             _selected = System.Array.IndexOf(_paths, path);
             GUI.FocusControl(null);
