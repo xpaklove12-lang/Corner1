@@ -148,6 +148,7 @@ namespace EyeMaze
                     Action motherDone = () =>
                     {
                         _step = Step.MotherOut;
+                        _mother.SetEntryPose(false);
                         _mother.WalkTo(_doorX, () => { _mother.Present = false; _step = Step.Between; _timer = _betweenDelay; });
                     };
                     // 필드 대화 CSV의 enter 대화가 있으면 그걸, 없으면 인스펙터의 talkLines를 쓴다.
@@ -238,6 +239,7 @@ namespace EyeMaze
             _motherArrived = false;
             _motherToX = motherX;
             _motherWaitT = Mathf.Max(0.0001f, _motherWaitSeconds);
+            _mother.SetEntryPose(true, _inwardSign < 0f);
             _mother.StandAt(_doorX);
 
             FieldPlayer player = _flow.Player;

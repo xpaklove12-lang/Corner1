@@ -1,0 +1,488 @@
+fileFormatVersion: 2
+guid: fff3f7079fd0f844484d742fb9555ed3
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -3060982917316317284
+    second: MotherEntryWalkAtlas_0
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 300.12082
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: MotherEntry_Walk_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 2172
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.60903585, y: 0.3689097}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: be6e2a58916ecb44d818a55e5494114a
+      internalID: 235606034
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_01
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 2172
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.612906, y: 0.3689097}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 79d6e6eaa05a9104c8161eea5c1ae849
+      internalID: 1162971240
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_02
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 2172
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.6104434, y: 0.36752847}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 084a2fd00ec56924ba2ef900a3f94d5b
+      internalID: 1915333493
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_03
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 2172
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.61034465, y: 0.36752847}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 43dc82301047b384cbaa34c58eb268ca
+      internalID: -1114553903
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_04
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1448
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.6083046, y: 0.36752847}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eb5a2ce20265a3d43a226adecf4bbabd
+      internalID: -1077335051
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_05
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 1448
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.6097146, y: 0.3702909}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 224f275d6fdf09349aca602bed2264cf
+      internalID: -476445265
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_06
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 1448
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.60896885, y: 0.3689097}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c0cb53f0ca840634982d8128071b6ed2
+      internalID: 615220565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_07
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 1448
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.613023, y: 0.36752847}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3ada3a33a5c3efd4ab601c750c41988c
+      internalID: 1182802087
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_08
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 724
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.61076045, y: 0.36752847}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b841bafe34177e74883e09c3efddc2a4
+      internalID: -685491142
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_09
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 724
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.61282355, y: 0.3633848}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6003e1b1fb89db248ab6b69b544b239b
+      internalID: 798532052
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_10
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 724
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.6117931, y: 0.36752847}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ddece9252364b6944b397c33211d3cbd
+      internalID: 1260964973
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_11
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 724
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.61325586, y: 0.36752847}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c745e1726c65c8f4b9bb55a882a6eeef
+      internalID: 2034796141
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.6110837, y: 0.36752847}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 083fcb805022d7d4faa6afd41c19c1d6
+      internalID: -1917128233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_13
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 0
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.61144304, y: 0.3675928}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2076267281682e647b9de2ea36586af0
+      internalID: -1910136022
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_14
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 0
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.60910547, y: 0.3689097}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 084bf63e9482e6e42b3cf02cf74b2217
+      internalID: -1086586716
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: MotherEntry_Walk_15
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 0
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.60954493, y: 0.3689097}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f2a672c482b7eb948bdccf95f6be4a6c
+      internalID: 184639972
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: e63b8d7661fa393498d08962bcf84874
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      MotherEntry_Walk_00: 235606034
+      MotherEntry_Walk_01: 1162971240
+      MotherEntry_Walk_02: 1915333493
+      MotherEntry_Walk_03: -1114553903
+      MotherEntry_Walk_04: -1077335051
+      MotherEntry_Walk_05: -476445265
+      MotherEntry_Walk_06: 615220565
+      MotherEntry_Walk_07: 1182802087
+      MotherEntry_Walk_08: -685491142
+      MotherEntry_Walk_09: 798532052
+      MotherEntry_Walk_10: 1260964973
+      MotherEntry_Walk_11: 2034796141
+      MotherEntry_Walk_12: -1917128233
+      MotherEntry_Walk_13: -1910136022
+      MotherEntry_Walk_14: -1086586716
+      MotherEntry_Walk_15: 184639972
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

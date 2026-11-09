@@ -1,0 +1,488 @@
+fileFormatVersion: 2
+guid: 95547ec1454484a4c9712bc385d4bc0e
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5174446436420281548
+    second: EunjaeWalkAtlas_0
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 344.76193
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Eunjae_Walk_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 2172
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.4753269, y: 0.4400158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f110a429e4b042748b23f1bdc181a653
+      internalID: 1478724625
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_01
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 2172
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.475259, y: 0.4400158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 75a1df6b5f2a78a4ab628c158c6f9d94
+      internalID: -267772476
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_02
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 2172
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.47556803, y: 0.441397}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fbfc04218202696438e4141e69306d66
+      internalID: -701657286
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_03
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 2172
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.4785635, y: 0.441397}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fcf3f9dfea227954895948df29c401fd
+      internalID: 78674831
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_04
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1448
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.47510615, y: 0.441397}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8b47bf352eaf0204ca1d8cb0a9601051
+      internalID: 1450608860
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_05
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 1448
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.47392994, y: 0.4400158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 979f7c9b923a0194c903b4a5fa7bb87b
+      internalID: -804437713
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_06
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 1448
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.47797692, y: 0.4400158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ef31449cc385f344faac6066f1b3f7b2
+      internalID: -1919476218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_07
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 1448
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.4759179, y: 0.4400158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9795626d5a4bda34c838c7188d4b3de5
+      internalID: 946544836
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_08
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 724
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.4763358, y: 0.4400158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c21b684664d5f6c48813fe1080138a76
+      internalID: 550955386
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_09
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 724
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.4779661, y: 0.4400158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6ccc3ee34db84194792d421ca4bc08e4
+      internalID: 672848139
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_10
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 724
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.47666457, y: 0.4400158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6524dba4cab362b408e434f3b7478b9c
+      internalID: -1834791367
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_11
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 724
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.4762495, y: 0.43863457}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 60b8f60a835185c43b84daf382dfc980
+      internalID: 216063809
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.47584385, y: 0.4400158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d001fb871fd8dec498057b5aed223ab3
+      internalID: 1144464611
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_13
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 0
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.47635424, y: 0.4400158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3c28be20a262d424a912a3ce7ebd75c9
+      internalID: 595128112
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_14
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 0
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.47432098, y: 0.441397}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d0c8141767f938a47b03e025d99586a7
+      internalID: -1359858167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Eunjae_Walk_15
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 0
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.4762675, y: 0.441397}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aa5cb5397b0e3414db78a8217ba332c4
+      internalID: 1356651915
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 82f12efd5c027db42813c3e1d1324a90
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Eunjae_Walk_00: 1478724625
+      Eunjae_Walk_01: -267772476
+      Eunjae_Walk_02: -701657286
+      Eunjae_Walk_03: 78674831
+      Eunjae_Walk_04: 1450608860
+      Eunjae_Walk_05: -804437713
+      Eunjae_Walk_06: -1919476218
+      Eunjae_Walk_07: 946544836
+      Eunjae_Walk_08: 550955386
+      Eunjae_Walk_09: 672848139
+      Eunjae_Walk_10: -1834791367
+      Eunjae_Walk_11: 216063809
+      Eunjae_Walk_12: 1144464611
+      Eunjae_Walk_13: 595128112
+      Eunjae_Walk_14: -1359858167
+      Eunjae_Walk_15: 1356651915
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

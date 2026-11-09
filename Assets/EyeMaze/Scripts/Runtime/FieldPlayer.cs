@@ -33,8 +33,18 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("body")] private LineRenderer _body;
         [SerializeField, FormerlySerializedAs("nose")] private LineRenderer _nose;
 
+        [Header("캐릭터 스프라이트")]
+        [SerializeField] private SpriteRenderer _characterRenderer;
+        [SerializeField] private Sprite _standingSprite;
+        [SerializeField] private Sprite[] _walkingSprites;
+        [Tooltip("걷기 동작 한 주기 동안 이동하는 거리")]
+        [SerializeField, Min(0.01f)] private float _walkCycleDistance = 0.65f;
+
         [NonSerialized] private Vector2 _velocity;
         [NonSerialized] private int _drawnKey = int.MinValue;
+        [NonSerialized] private Vector3 _lastVisualPosition;
+        [NonSerialized] private bool _hasVisualPosition;
+        [NonSerialized] private float _walkDistance;
 
         public Vector2 Position => transform.position;
         public bool SideView => _sideView;
@@ -50,7 +60,7 @@ namespace EyeMaze
             }
         }
 
-        void OnEnable() { _drawnKey = int.MinValue; }
+        void OnEnable() { _drawnKey = int.MinValue; _hasVisualPosition = false; }
         void OnValidate() { _drawnKey = int.MinValue; EyeHooks.Repaint(); }
 
         void Update()
@@ -91,6 +101,28 @@ namespace EyeMaze
                 Shapes.SetColor(_nose, Color.black);
                 _nose.sortingOrder = 4;
             }
+        }
+
+        void LateUpdate()
+        {
+            if (_characterRenderer == null || _standingSprite == null) return;
+            if (_body != null) _body.enabled = false;
+            if (_nose != null) _nose.enabled = false;
+            float distance = _hasVisualPosition ? Mathf.Abs(transform.position.x - _lastVisualPosition.x) : 0f;
+            bool moving = Application.isPlaying && distance > 0.00001f;
+            _lastVisualPosition = transform.position;
+            _hasVisualPosition = true;
+            _characterRenderer.flipX = _facing.x < 0f;
+            if (!moving || _walkingSprites == null || _walkingSprites.Length == 0)
+            {
+                _walkDistance = 0f;
+                _characterRenderer.sprite = _standingSprite;
+                return;
+            }
+            _walkDistance = Mathf.Repeat(_walkDistance + distance, Mathf.Max(0.01f, _walkCycleDistance));
+            float progress = Mathf.Repeat(_walkDistance / Mathf.Max(0.01f, _walkCycleDistance), 1f);
+            int frame = Mathf.Min(_walkingSprites.Length - 1, Mathf.FloorToInt(progress * _walkingSprites.Length));
+            _characterRenderer.sprite = _walkingSprites[frame];
         }
 
         /// <summary>

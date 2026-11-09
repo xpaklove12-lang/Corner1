@@ -10,6 +10,10 @@ namespace EyeMaze
     [ExecuteAlways]
     public class FieldNPC : FieldInteractable
     {
+        private static readonly int _outlineEnabledId = Shader.PropertyToID("_OutlineEnabled");
+        private static readonly int _outlineColorId = Shader.PropertyToID("_OutlineColor");
+        private static readonly int _outlineWidthId = Shader.PropertyToID("_OutlineWidth");
+
         [Header("사람")]
         [Tooltip("키 (0이면 동그라미로 그림, 탑뷰용)")]
         [SerializeField, FormerlySerializedAs("height")] private float _height = 0.95f;
@@ -67,11 +71,21 @@ namespace EyeMaze
         [SerializeField] private Sprite _standingSprite;
         [SerializeField] private Sprite[] _walkingSprites;
         [SerializeField] private Sprite _sittingSprite;
-        [SerializeField] private float _walkFrameSeconds = 0.12f;
+        [Tooltip("첫 입장과 대화 중에 표시할 서 있는 자세")]
+        [SerializeField] private Sprite _entryStandingSprite;
+        [Tooltip("첫 입장 중에 표시할 걷기 자세")]
+        [SerializeField] private Sprite[] _entryWalkingSprites;
+        [Tooltip("걷기 동작 한 주기 동안 이동하는 거리")]
+        [SerializeField, Min(0.01f)] private float _walkCycleDistance = 0.65f;
         [Tooltip("앉을 때 스프라이트를 왼쪽으로 향하게 한다")]
         [SerializeField] private bool _sitFacingLeft;
         [Tooltip("걷는 동안 위로 들리는 높이")]
         [SerializeField] private float _walkBobHeight = 0.01f;
+
+        [Header("상호작용 테두리")]
+        [SerializeField] private GameFlow _outlineFlow;
+        [SerializeField] private Color _outlineColor = new Color(0.3f, 0.95f, 1f, 1f);
+        [SerializeField, Min(0f)] private float _outlineWidth = 2f;
 
         [NonSerialized] private int _drawnKey = int.MinValue;
         [NonSerialized] private bool _present = true;
@@ -89,8 +103,9 @@ namespace EyeMaze
         [NonSerialized] private float _sitFromHeight;
         [NonSerialized] private Action _sitDone;
         [NonSerialized] private bool _sitting = true;
-        [NonSerialized] private float _walkFrameTime;
-        [NonSerialized] private int _walkFrame;
+        [NonSerialized] private float _walkDistance;
+        [NonSerialized] private bool _entryPose;
+        [NonSerialized] private MaterialPropertyBlock _outlineProperties;
 
         public bool Met { get => _met; set => _met = value; }
         public bool Resolved { get => _resolved; set => _resolved = value; }
@@ -100,6 +115,7 @@ namespace EyeMaze
         public List<string> TalkLines => _talkLines;
         public string RevealLine => _revealLine;
         public bool IsMoving => _walking || _sitT >= 0f;
+        public bool IsSeated => _sitting && !_walking;
         public TextAsset TalkCsv => _talkCsv;
         public TalkScript Talk => TalkScript.Get(_talkCsv);
 
@@ -129,7 +145,7 @@ namespace EyeMaze
         void Update()
         {
             if (Application.isPlaying) Animate(Time.deltaTime);
-            UpdateCharacterSprite(Time.deltaTime);
+            UpdateCharacterSprite();
             int key = HashCode.Combine(Radius, _height, _bodyColor, _resolved, Present, _talkOnly);
             if (key == _drawnKey) return;
             _drawnKey = key;
@@ -172,6 +188,20 @@ namespace EyeMaze
                 Shapes.SetColor(_marker, _resolved || _talkOnly ? Color.white : new Color(0.55f, 0.95f, 1f, 1f));
                 _marker.sortingOrder = 2;
             }
+        }
+
+        void LateUpdate()
+        {
+            if (_characterRenderer == null || _outlineFlow == null) return;
+            if (_outlineProperties == null) _outlineProperties = new MaterialPropertyBlock();
+            bool selected = Application.isPlaying && Present && _outlineFlow.CurrentState == GameFlow.State.Field
+                && !_outlineFlow.ShowingText && !OpeningMonologue.IsPlaying && !FieldCutscene.IsPlaying
+                && _outlineFlow.Nearest == this;
+            _characterRenderer.GetPropertyBlock(_outlineProperties);
+            _outlineProperties.SetFloat(_outlineEnabledId, selected ? 1f : 0f);
+            _outlineProperties.SetColor(_outlineColorId, _outlineColor);
+            _outlineProperties.SetFloat(_outlineWidthId, _outlineWidth);
+            _characterRenderer.SetPropertyBlock(_outlineProperties);
         }
 
         /// <summary>
@@ -254,6 +284,16 @@ namespace EyeMaze
         }
 
         /// <summary>
+        /// 첫 입장과 대화에서 사용할 별도 자세를 켜거나 끈다.
+        /// enabled와 faceLeft를 사용하며, 입장용 스프라이트 표시 상태와 바라보는 방향을 변경한다.
+        /// </summary>
+        public void SetEntryPose(bool enabled, bool faceLeft = false)
+        {
+            _entryPose = enabled;
+            if (enabled && _characterRenderer != null) _characterRenderer.flipX = faceLeft;
+        }
+
+        /// <summary>
         /// x까지 걸어가기 시작한다.
         /// x와 도착 콜백 done을 사용하며, 걷기 상태를 켠다.
         /// </summary>
@@ -264,8 +304,7 @@ namespace EyeMaze
             _sitting = false;
             if (_characterRenderer != null && !Mathf.Approximately(x, transform.position.x))
                 _characterRenderer.flipX = x < transform.position.x;
-            _walkFrame = 0;
-            _walkFrameTime = 0f;
+            _walkDistance = 0f;
             _walking = true;
             _walkTargetX = x;
             _walkDone = done;
@@ -329,7 +368,9 @@ namespace EyeMaze
             if (_walking)
             {
                 Vector3 p = transform.position;
+                float previousX = p.x;
                 p.x = Mathf.MoveTowards(p.x, _walkTargetX, _walkSpeedNow * dt);
+                _walkDistance = Mathf.Repeat(_walkDistance + Mathf.Abs(p.x - previousX), Mathf.Max(0.01f, _walkCycleDistance));
                 _bobT += dt * 9f;
                 p.y = _floorY + _height * 0.5f + Mathf.Abs(Mathf.Sin(_bobT)) * _walkBobHeight;
                 transform.position = p;
@@ -362,25 +403,21 @@ namespace EyeMaze
 
         /// <summary>
         /// 등장과 이동 및 착석 상태에 맞는 캐릭터 스프라이트를 표시한다.
-        /// dt와 설정된 프레임을 사용하며 렌더러와 걷기 프레임 상태를 변경한다.
+        /// 이동 거리와 설정된 프레임을 사용하며 렌더러에 현재 자세를 표시한다.
         /// </summary>
-        private void UpdateCharacterSprite(float dt)
+        private void UpdateCharacterSprite()
         {
             if (_characterRenderer == null || _standingSprite == null) return;
             _characterRenderer.enabled = Present;
-            Sprite sprite = _sitting && _sittingSprite != null ? _sittingSprite : _standingSprite;
-            if (_walking && _walkingSprites != null && _walkingSprites.Length > 0)
+            Sprite standing = _entryPose && _entryStandingSprite != null ? _entryStandingSprite : _standingSprite;
+            Sprite[] walking = _entryPose && _entryWalkingSprites != null && _entryWalkingSprites.Length > 0
+                ? _entryWalkingSprites : _walkingSprites;
+            Sprite sprite = _sitting && _sittingSprite != null ? _sittingSprite : standing;
+            if (_walking && walking != null && walking.Length > 0)
             {
-                if (Application.isPlaying)
-                {
-                    _walkFrameTime += dt;
-                    if (_walkFrameTime >= Mathf.Max(0.01f, _walkFrameSeconds))
-                    {
-                        _walkFrameTime = 0f;
-                        _walkFrame = (_walkFrame + 1) % _walkingSprites.Length;
-                    }
-                }
-                sprite = _walkingSprites[_walkFrame];
+                float progress = Mathf.Repeat(_walkDistance / Mathf.Max(0.01f, _walkCycleDistance), 1f);
+                int frame = Mathf.Min(walking.Length - 1, Mathf.FloorToInt(progress * walking.Length));
+                sprite = walking[frame];
             }
             _characterRenderer.sprite = sprite;
         }

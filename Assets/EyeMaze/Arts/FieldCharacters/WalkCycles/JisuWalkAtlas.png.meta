@@ -1,0 +1,488 @@
+fileFormatVersion: 2
+guid: a7dde51aa66e15547a55679821508223
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7067439029039507681
+    second: JisuWalkAtlas_0
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 314.78262
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Jisu_Walk_00
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 2172
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.5163463, y: 0.3564737}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 351b702c2b001b94288ce022b9d73dea
+      internalID: 1579520636
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_01
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 2172
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.52179766, y: 0.3564737}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6b7efda7bf1efb54bb6725f4e960d7c2
+      internalID: 1161340524
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_02
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 2172
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.5167498, y: 0.3564737}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f9c1bbb000158b4d9dd9dbc8874b4c8
+      internalID: -360558103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_03
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 2172
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.5208965, y: 0.3564737}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c8fce41a51369e64f84a7cbe65533fbb
+      internalID: 1803838564
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_04
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1448
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.51588106, y: 0.3550925}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1278eba75802a0b4a889c2e915db1757
+      internalID: -1337663413
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_05
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 1448
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.5197536, y: 0.3550925}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ae08121121f557c489bdc338a7fc4bc1
+      internalID: 903685618
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_06
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 1448
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.51755565, y: 0.3550925}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2979e42235b78414ebf2428a58cb71a8
+      internalID: 177423386
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_07
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 1448
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.5214801, y: 0.35233006}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9384ad4176336b648b6a545bbee7214d
+      internalID: -126813743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_08
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 724
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.5167021, y: 0.3564737}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 811ac41885031b24d9375fec3e096121
+      internalID: 1501956666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_09
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 724
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.51997334, y: 0.3564737}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1494ad06133efb4498b3c2e3a85c6931
+      internalID: 368007051
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_10
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 724
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.5186617, y: 0.3550925}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1fc5207b75c5d0745a7679dafe351aea
+      internalID: 1047269876
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_11
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 724
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.5175241, y: 0.3550925}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: af080a3e07bb0bd4ebfc891813062925
+      internalID: 1387825701
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.5150357, y: 0.3550925}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 20f02007c913de945a68799c1857cb01
+      internalID: 950248558
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_13
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 0
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.52136165, y: 0.3550925}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ceda0643df6590409b07c41eadb66a4
+      internalID: -624003057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_14
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 0
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.518252, y: 0.3550925}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8b7bb9abd5f731345841785fcb0342c4
+      internalID: -1345820728
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Jisu_Walk_15
+      rect:
+        serializedVersion: 2
+        x: 813
+        y: 0
+        width: 271
+        height: 724
+      alignment: 9
+      pivot: {x: 0.52224493, y: 0.3550925}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 22e02345781e25940a8a6710d770a7dd
+      internalID: -1556619752
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: b13be68d7295c2f4d81502619b766d97
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Jisu_Walk_00: 1579520636
+      Jisu_Walk_01: 1161340524
+      Jisu_Walk_02: -360558103
+      Jisu_Walk_03: 1803838564
+      Jisu_Walk_04: -1337663413
+      Jisu_Walk_05: 903685618
+      Jisu_Walk_06: 177423386
+      Jisu_Walk_07: -126813743
+      Jisu_Walk_08: 1501956666
+      Jisu_Walk_09: 368007051
+      Jisu_Walk_10: 1047269876
+      Jisu_Walk_11: 1387825701
+      Jisu_Walk_12: 950248558
+      Jisu_Walk_13: -624003057
+      Jisu_Walk_14: -1345820728
+      Jisu_Walk_15: -1556619752
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
