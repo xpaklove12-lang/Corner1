@@ -147,6 +147,8 @@ namespace EyeMaze.EditorTools
         private int _inlineRow = -1;
         private string _inlineText = "";
         private string _inlineColumn;
+        // 빈 곳 우클릭으로 추가해 저장 결과를 기다리는 그룹 키
+        private string _createdKey;
         // 고치는 중인 엔딩 기준값 (InlineKind.Value일 때)
         private EditTarget _inlineTarget;
         // 이번 그리기의 엔딩 진입선 조건 조각. 입력 판정과 그리기에 함께 쓴다.
@@ -2143,7 +2145,14 @@ namespace EyeMaze.EditorTools
         {
             if (e.type != EventType.ContextClick || !inside) return;
             Box hit = HitBox(boxes, e.mousePosition);
-            if (hit == null || hit.Kind != BoxKind.Group) return;
+            if (hit == null)
+            {
+                // 빈 곳: 새 장면·대화·엔딩을 만드는 메뉴
+                BuildCreateMenu(doc, editable).DropDown(new Rect(windowMouse, Vector2.zero));
+                e.Use();
+                return;
+            }
+            if (hit.Kind != BoxKind.Group) return;
             BuildAddMenu(doc, hit.Group, RowAt(doc, hit, e.mousePosition.y), editable).DropDown(new Rect(windowMouse, Vector2.zero));
             e.Use();
         }
@@ -2199,6 +2208,127 @@ namespace EyeMaze.EditorTools
                 else menu.AddDisabledItem(new GUIContent("after 추가 (텍스트 오류 또는 검사 대기 중)"));
             }
             return menu;
+        }
+
+        /// <summary>
+        /// 빈 곳 우클릭 메뉴를 만든다. 인물·회차 파일이면 상담 장면, actor별 Talk 대화, 엔딩을 추가할 수 있다.
+        /// 텍스트 오류·검사 대기 중에는 항목을 비활성화한다. doc과 editable을 사용하며, 메뉴를 반환한다.
+        /// </summary>
+        private GenericMenu BuildCreateMenu(DialogueEditorDocument doc, bool editable)
+        {
+            var menu = new GenericMenu();
+            if (doc.Kind != DialogueEditorKind.Day)
+            {
+                menu.AddDisabledItem(new GUIContent("새 그룹 추가는 인물·회차 파일에서 쓴다"));
+                return menu;
+            }
+            string disabled = " (텍스트 오류 또는 검사 대기 중)";
+            string dialogueActor = FirstActor(doc, Csv.SECTION_DIALOGUE) ?? FirstActor(doc, Csv.SECTION_ENDING);
+            if (dialogueActor == null) menu.AddDisabledItem(new GUIContent("상담 장면 추가 (상담 actor가 없음)"));
+            else if (!editable) menu.AddDisabledItem(new GUIContent("상담 장면 추가" + disabled));
+            else menu.AddItem(new GUIContent("상담 장면 추가"), false, () => QueueCreate(doc, Csv.SECTION_DIALOGUE, dialogueActor));
+
+            List<string> talkActors = TalkActorCandidates(doc);
+            if (talkActors.Count == 0) menu.AddDisabledItem(new GUIContent("Talk 대화 추가 (actor가 없음)"));
+            foreach (string actor in talkActors)
+            {
+                string a = actor;
+                if (!editable) menu.AddDisabledItem(new GUIContent("Talk 대화 추가/" + a + disabled));
+                else menu.AddItem(new GUIContent("Talk 대화 추가/" + a), false, () => QueueCreate(doc, Csv.SECTION_TALK, a));
+            }
+
+            if (dialogueActor == null) menu.AddDisabledItem(new GUIContent("엔딩 추가 (상담 actor가 없음)"));
+            else if (!editable) menu.AddDisabledItem(new GUIContent("엔딩 추가" + disabled));
+            else menu.AddItem(new GUIContent("엔딩 추가"), false, () => QueueCreate(doc, Csv.SECTION_ENDING, dialogueActor));
+            return menu;
+        }
+
+        /// <summary>
+        /// 한 단계에 처음 나오는 actor를 찾는다.
+        /// doc과 section을 사용하며, actor 또는 (없으면) null을 반환한다.
+        /// </summary>
+        private static string FirstActor(DialogueEditorDocument doc, string section)
+        {
+            foreach (DialogueEditorDocument.Group g in doc.Groups) if (g.Section == section) return g.Actor;
+            return null;
+        }
+
+        /// <summary>
+        /// 새 Talk 대화를 만들 actor 후보를 모은다. 파일에 이미 있는 talk actor와, 열린 씬에서 이 파일을 쓰는 필드 NPC의 actor ID다.
+        /// doc을 사용하며, 겹치지 않는 actor 목록을 반환한다.
+        /// </summary>
+        private static List<string> TalkActorCandidates(DialogueEditorDocument doc)
+        {
+            var list = new List<string>();
+            foreach (DialogueEditorDocument.Group g in doc.Groups)
+                if (g.Section == Csv.SECTION_TALK && !list.Contains(g.Actor)) list.Add(g.Actor);
+            foreach (FieldNPC npc in Object.FindObjectsByType<FieldNPC>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (npc.TalkCsv == null || AssetDatabase.GetAssetPath(npc.TalkCsv) != doc.AssetPath) continue;
+                if (!string.IsNullOrEmpty(npc.DialogueActorId) && !list.Contains(npc.DialogueActorId)) list.Add(npc.DialogueActorId);
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// 새 그룹을 넣은 복사본을 만들어 다음 그리기에서 돌려주도록 둔다. 저장에 성공하면 CompleteCreate가 그 그룹을 선택하고 ID 편집을 연다.
+        /// doc, section, actor를 사용하며, _pending과 _createdKey를 바꾼다.
+        /// </summary>
+        private void QueueCreate(DialogueEditorDocument doc, string section, string actor)
+        {
+            DialogueEditorDocument copy = CreateGroup(doc, section, actor, out string key);
+            _pending = copy;
+            _createdKey = key;
+        }
+
+        /// <summary>
+        /// 새 그룹을 그 section·actor의 마지막 그룹 뒤에 넣은 복사본을 만든다. 기본 내용은 상담 장면이 상황과 선택지 한 줄,
+        /// Talk 대화가 대사 한 줄, 엔딩이 title과 대사 한 줄이다. ID는 겹치지 않게 뒤에 번호를 붙인다.
+        /// doc, section, actor를 사용하며, 새 문서를 반환하고 새 그룹 키를 key에 쓴다.
+        /// </summary>
+        public static DialogueEditorDocument CreateGroup(DialogueEditorDocument doc, string section, string actor, out string key)
+        {
+            string baseId = section == Csv.SECTION_DIALOGUE ? "new_scene" : section == Csv.SECTION_TALK ? "new_talk" : "new_ending";
+            string id = baseId;
+            for (int n = 2; doc.Find(section, actor, id) != null; n++) id = baseId + "_" + n;
+            var g = new DialogueEditorDocument.Group { Section = section, Actor = actor, Id = id };
+            var item = new DialogueEditorDocument.Item();
+            item.Fields[DialogueEditorFormat.TEXT] = section == Csv.SECTION_DIALOGUE ? "새 선택지" : "새 대사";
+            if (section == Csv.SECTION_DIALOGUE)
+            {
+                g.Fields["situation"] = "새 상황";
+                foreach (string c in new[] { "trust", "dilation", "spring" }) item.Fields[c] = "0";
+            }
+            if (section == Csv.SECTION_ENDING) g.Fields["title"] = "새 엔딩";
+            g.Items.Add(item);
+
+            DialogueEditorDocument copy = doc.Clone();
+            int at = copy.Groups.Count;
+            for (int i = copy.Groups.Count - 1; i >= 0; i--)
+                if (copy.Groups[i].Section == section && copy.Groups[i].Actor == actor) { at = i + 1; break; }
+            copy.Groups.Insert(at, g);
+            DialogueEditorFormat.Normalize(copy);
+            key = KeyOf(g);
+            return copy;
+        }
+
+        /// <summary>
+        /// 창이 새 그룹 추가의 저장 결과를 알려준다. 성공하면 그 그룹을 선택하고 ID 인라인 편집을 연다.
+        /// ok와 doc(저장된 현재 문서)을 사용하며, 선택과 인라인 상태를 바꾼다.
+        /// </summary>
+        public void CompleteCreate(bool ok, DialogueEditorDocument doc)
+        {
+            if (_createdKey == null) return;
+            string key = _createdKey;
+            _createdKey = null;
+            if (!ok || doc == null || GroupIndex(doc, key) < 0) return;
+            _selKey = key;
+            _selRow = -1;
+            _selResponse = _selAfter = false;
+            _selFragment = null;
+            _focused = true;
+            _selectionLine = doc.Groups[GroupIndex(doc, key)].TextLine;
+            StartRename(doc, true);
         }
 
         /// <summary>

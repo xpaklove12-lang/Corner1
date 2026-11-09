@@ -495,6 +495,7 @@ namespace EyeMaze.EditorTools
             if (changed == null) return;
             bool ok = ApplyGraphEdit(changed, out string error);
             _graph.CompleteInline(ok, error);
+            _graph.CompleteCreate(ok, _doc);
         }
 
         /// <summary>
