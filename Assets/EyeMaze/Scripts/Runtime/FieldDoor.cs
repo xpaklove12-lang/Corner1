@@ -4,7 +4,8 @@ using UnityEngine.UI;
 namespace EyeMaze
 {
     /// <summary>
-    /// 상담실 문. 손님이 초인종을 누르면 문 위에 호출 글씨가 보이고, 문이 울리는 동안만 Z로 문을 열어 줄 수 있다.
+    /// 상담실 문. 손님이 초인종을 누르면 문이 울리고, 문이 울리는 동안만 Z로 문을 열어 줄 수 있다.
+    /// 문 위의 호출 글씨는 FieldCutscene이 필요할 때만 ShowBell로 띄운다.
     /// 문짝 그림은 건드리지 않으며, 열어 준 사실만 Answered로 알린다 (FieldCutscene이 읽는다).
     /// 호출 글씨는 화면 전체를 덮는 필드 UI 아래의 uGUI Text이며, 보이는 동안 문 위치를 따라간다.
     /// </summary>
@@ -19,7 +20,9 @@ namespace EyeMaze
         [SerializeField] private Vector2 _bellWorldOffset = new Vector2(0f, 1.4f);
 
         [Header("호출 글씨 흔들림")]
-        [Tooltip("글씨가 보이는 동안 울림이 반복되는 간격 (초). 나타나는 순간 첫 울림이 시작된다")]
+        [Tooltip("글씨가 한 번 나타날 때 울리는 횟수 (0이면 보이는 동안 계속 울린다). 다 울리면 제자리에 멈춰 있다")]
+        [SerializeField] private int _ringCount = 1;
+        [Tooltip("울림이 반복되는 간격 (초). 나타나는 순간 첫 울림이 시작된다")]
         [SerializeField] private float _ringInterval = 1f;
         [Tooltip("울림 한 번의 길이 (초)")]
         [SerializeField] private float _ringDuration = 0.45f;
@@ -72,13 +75,16 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 호출 글씨를 초인종이 울리듯 부풀리고 좌우로 흔든다. 울림 사이에는 원래 크기와 각도로 쉰다.
+        /// 호출 글씨를 초인종이 울리듯 부풀리고 좌우로 흔든다. 울림 사이와 _ringCount번을 다 울린 뒤에는 원래 크기와 각도로 쉰다.
         /// rt와 나타난 뒤 지난 시간 elapsed, 흔들림 설정값을 사용하며, rt의 크기와 회전을 바꾼다.
         /// </summary>
         private void AnimateBell(RectTransform rt, float elapsed)
         {
-            float phase = Mathf.Repeat(elapsed, Mathf.Max(0.01f, _ringInterval));
+            float interval = Mathf.Max(0.01f, _ringInterval);
+            float phase = Mathf.Repeat(elapsed, interval);
             float k = phase / Mathf.Max(0.01f, _ringDuration);
+            // 정해진 횟수를 다 울렸으면 더 흔들지 않는다.
+            if (_ringCount > 0 && Mathf.FloorToInt(elapsed / interval) >= _ringCount) k = 1f;
             float scale = 1f;
             float angle = 0f;
             if (k < 1f)
@@ -91,14 +97,13 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 문을 울려 호출 글씨를 보이고 상호작용을 연다.
+        /// 문을 울려 상호작용을 연다. 호출 글씨는 띄우지 않는다.
         /// 입력값은 없으며, _ringing을 켜고 Answered를 끈다.
         /// </summary>
         public void Ring()
         {
             Answered = false;
             _ringing = true;
-            ShowBell(true);
         }
 
         /// <summary>

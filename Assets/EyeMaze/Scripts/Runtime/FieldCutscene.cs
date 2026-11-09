@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
 namespace EyeMaze
@@ -17,7 +16,7 @@ namespace EyeMaze
     {
         public enum Step
         {
-            WaitOpening, CallFirst, CallTalking, CallSecond, WaitDoor, Arrive, Pause, Talk, Talking, MotherOut, Between, DaughterIn, Sitting, Reveal, Done,
+            WaitOpening, CallFirst, CallTalking, WaitDoor, Arrive, Pause, Talk, Talking, MotherOut, Between, DaughterIn, Sitting, Reveal, Done,
             WaitResolved, ClientOut, ClientBetween, ClientIn, ClientSitting, ClientGreet, AllDone
         }
 
@@ -39,8 +38,6 @@ namespace EyeMaze
         [Header("문 앞 호출")]
         [Tooltip("독백이 걷히고 띵-동이 뜬 뒤 첫 혼잣말이 나오기까지 (초)")]
         [SerializeField] private float _firstCallDelay = 2f;
-        [Tooltip("첫 혼잣말을 넘긴 뒤 띵-동이 다시 뜨고, 넘김 입력(Z·Enter·Space)을 받기 시작하기까지 (초). 입력이 있어야 두 번째 혼잣말이 열린다")]
-        [SerializeField] private float _secondCallDelay = 0.5f;
         [Tooltip("첫 혼잣말. Strings.csv의 field.call_first가 있으면 그걸 쓴다")]
         [SerializeField, TextArea(1, 3)] private string _firstCallLine = "뭐야? 한창 분위기 잡고있는데.";
         [Tooltip("두 번째 혼잣말. Strings.csv의 field.call_second가 있으면 그걸 쓴다")]
@@ -118,13 +115,10 @@ namespace EyeMaze
 
                 case Step.CallFirst:
                     _timer -= Time.deltaTime;
-                    if (_timer <= 0f) ShowCallLine(Strings.Get("field.call_first", _firstCallLine), () => { _step = Step.CallSecond; _timer = _secondCallDelay; _door.ShowBell(true); });
-                    break;
-
-                case Step.CallSecond:
-                    // 대기 시간이 지나도 플레이어가 넘겨야 두 번째 혼잣말이 열린다. 대기는 A를 닫은 입력이 바로 B를 여는 것도 막는다.
-                    _timer -= Time.deltaTime;
-                    if (_timer <= 0f && AdvancePressed()) ShowCallLine(Strings.Get("field.call_second", _secondCallLine), () => { _step = Step.WaitDoor; _door.Ring(); });
+                    // 두 혼잣말은 한 대화로 이어서, 대사창을 닫지 않고 넘김 입력으로 다음 줄을 보인다.
+                    if (_timer <= 0f)
+                        ShowCallLines(new List<string> { Strings.Get("field.call_first", _firstCallLine), Strings.Get("field.call_second", _secondCallLine) },
+                            () => { _step = Step.WaitDoor; _door.Ring(); });
                     break;
 
                 case Step.WaitDoor:
@@ -223,26 +217,14 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 문 앞 혼잣말 한 줄을 화자 이름과 초상화 없이 띄운다. 대사창이 열려 있는 동안 호출 글씨는 숨긴다.
-        /// line과 닫힌 뒤 부를 done을 사용하며, _step을 CallTalking으로 바꾸고 글 상자를 연다.
+        /// 문 앞 혼잣말들을 화자 이름과 초상화 없이 한 대화로 띄운다. 대사창이 열리면 호출 글씨는 숨긴다.
+        /// lines와 마지막 줄을 넘긴 뒤 부를 done을 사용하며, _step을 CallTalking으로 바꾸고 글 상자를 연다.
         /// </summary>
-        private void ShowCallLine(string line, Action done)
+        private void ShowCallLines(List<string> lines, Action done)
         {
             _step = Step.CallTalking;
             _door.ShowBell(false);
-            _flow.ShowConversation(null, null, new List<string> { line }, done);
-        }
-
-        /// <summary>
-        /// 이번 프레임에 대사 넘김 입력이 들어왔는지 확인한다.
-        /// 키보드 Z·Enter·Space와 게임패드 아래 버튼을 사용하며, 눌렸으면 true를 반환한다.
-        /// </summary>
-        private static bool AdvancePressed()
-        {
-            Keyboard kb = Keyboard.current;
-            Gamepad pad = Gamepad.current;
-            if (kb != null && (kb.zKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame)) return true;
-            return pad != null && pad.buttonSouth.wasPressedThisFrame;
+            _flow.ShowConversation(null, null, lines, done);
         }
 
         /// <summary>

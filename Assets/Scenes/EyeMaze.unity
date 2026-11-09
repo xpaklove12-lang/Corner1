@@ -6014,7 +6014,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &280656056
 Transform:
   m_ObjectHideFlags: 0
@@ -7382,12 +7382,10 @@ MonoBehaviour:
   _portrait: {fileID: -2730927549540315392, guid: 178b6fb6f2058704eb2fbbc1536bdc04, type: 3}
   _talkOnly: 0
   _talkLines: []
-  _unknownName: 
-  _unknownNameLines: 0
   _lineAfterTalk: "\u2026"
   _leavesAfterTalk: 0
   _revealAfterTalk: {fileID: 0}
-  _revealLines: []
+  _revealLine: 
   _appearsLater: 1
   _walkSpeed: 2.6
   _standHeight: 1.5
@@ -10777,18 +10775,10 @@ MonoBehaviour:
   - "\uAF2D \uC880 \uBD80\uD0C1\uB4DC\uB9B4\uAC8C\uC694. \uBB34\uC2A8 \uB9D0\uC774\uB77C\uB3C4
     \uC88B\uC73C\uB2C8 \uC740\uC7AC\uC640 \uB2E4\uC2DC \uC774\uC57C\uAE30\uD558\uAC8C
     \uD574\uC8FC\uC138\uC694."
-  _unknownName: ???
-  _unknownNameLines: 1
   _lineAfterTalk: "\"\uBC16\uC5D0\uC11C \uAE30\uB2E4\uB9B4\uAC8C\uC694.\""
   _leavesAfterTalk: 1
   _revealAfterTalk: {fileID: 2118138529}
-  _revealLines:
-  - "\uC815\uC740\uC7AC. 17\uC138. \uC544\uC9C1 \uC5BC\uAD74\uC5D0\uC11C \uC573\uB428\uC774
-    \uBB3B\uC5B4\uB098\uC624\uB294 \uC18C\uB140."
-  - "\uD558\uC9C0\uB9CC \uD45C\uC815\uC5D0\uB294 \uADF8 \uB098\uC774\uB2F5\uC9C0
-    \uC54A\uC740 \uC9D9\uC740 \uADF8\uB298\uC774 \uB4DC\uB9AC\uC6CC\uC838\uC788\uB2E4."
-  - "\uC740\uC7AC\uB294 \uB098\uB97C \uC7A0\uAE50 \uBCF4\uB354\uB2C8, \uB9D0\uC5C6\uC774
-    \uCC3D\uBC16\uC73C\uB85C \uC2DC\uC120\uC744 \uB3CC\uB838\uB2E4."
+  _revealLine: 
   _appearsLater: 0
   _walkSpeed: 2.6
   _standHeight: 1.6
@@ -12862,7 +12852,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &523666709
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14734,7 +14724,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!1 &616554188
 GameObject:
   m_ObjectHideFlags: 0
@@ -15174,8 +15164,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1.15
-  m_Text: "Space = \uB208 \uB4E4\uC5EC\uB2E4\uBCF4\uAE30   \xB7   1 2 3 \uB300\uD654  
-    \xB7   Q \uC790\uB9AC \uB5A0\uB098\uAE30"
+  m_Text: "Space = \uB208 \uB4E4\uC5EC\uB2E4\uBCF4\uAE30   \xB7   \uC22B\uC790\uD0A4
+    \uB300\uD654   \xB7   Q \uC790\uB9AC \uB5A0\uB098\uAE30"
 --- !u!222 &630990376
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -25022,9 +25012,9 @@ LineRenderer:
   m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Positions:
-  - {x: 0.20314285, y: -0.032454267, z: -0}
+  - {x: -0.1838124, y: -0.08259063, z: -0}
   - {x: 0, y: 0, z: 0}
-  - {x: -0.20314285, y: 0.032454267, z: 0}
+  - {x: 0.1838124, y: 0.08259063, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.035
@@ -35807,7 +35797,7 @@ LineRenderer:
   - {x: 0, y: 0.001, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.4725446
+    widthMultiplier: 0.46522307
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -35834,8 +35824,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.4862745}
-      key1: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.4862745}
+      key0: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.47058824}
+      key1: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.47058824}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -42759,9 +42749,9 @@ LineRenderer:
   m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Positions:
-  - {x: 0.022717351, y: 0.14220008, z: -0}
+  - {x: 0.05800243, y: -0.1285836, z: -0}
   - {x: 0, y: 0, z: 0}
-  - {x: -0.022717351, y: -0.14220008, z: 0}
+  - {x: -0.05800243, y: 0.1285836, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.035
@@ -47455,12 +47445,10 @@ MonoBehaviour:
   _portrait: {fileID: -223924168, guid: 76af8779ced393f4fb322bcc8c7d0251, type: 3}
   _talkOnly: 0
   _talkLines: []
-  _unknownName: 
-  _unknownNameLines: 0
   _lineAfterTalk: "\u2026"
   _leavesAfterTalk: 0
   _revealAfterTalk: {fileID: 0}
-  _revealLines: []
+  _revealLine: 
   _appearsLater: 1
   _walkSpeed: 2.6
   _standHeight: 1.45
