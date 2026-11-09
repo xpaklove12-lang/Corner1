@@ -29,6 +29,7 @@ namespace EyeMaze.EditorTools
         private bool _textPending;
         private double _editedAt;
         private bool _draftHasErrors;
+        private readonly DialogueEditorGraph _graph = new DialogueEditorGraph();
 
         [MenuItem("EyeMaze/대사 편집기")]
         private static void Open()
@@ -109,18 +110,19 @@ namespace EyeMaze.EditorTools
         {
             float issueHeight = _issues.Count > 0 ? Mathf.Min(120f, 22f + _issues.Count * 18f) : 0f;
             var textRect = new Rect(rect.x, rect.y, rect.width, rect.height - issueHeight);
-            GUILayout.BeginArea(textRect);
-            _textScroll = EditorGUILayout.BeginScrollView(_textScroll);
             var style = new GUIStyle(EditorStyles.textArea) { wordWrap = true, richText = false };
-            string next = EditorGUILayout.TextArea(_draft, style, GUILayout.ExpandHeight(true));
+            // 줄바꿈된 높이를 직접 계산해 가로 스크롤 없이 창 너비에 맞춘다.
+            float width = textRect.width - 16f;
+            float height = Mathf.Max(textRect.height, style.CalcHeight(new GUIContent(_draft), width));
+            _textScroll = GUI.BeginScrollView(textRect, _textScroll, new Rect(0f, 0f, width, height), false, true);
+            string next = EditorGUI.TextArea(new Rect(0f, 0f, width, height), _draft, style);
+            GUI.EndScrollView();
             if (next != _draft)
             {
                 _draft = next;
                 _textPending = true;
                 _editedAt = EditorApplication.timeSinceStartup;
             }
-            EditorGUILayout.EndScrollView();
-            GUILayout.EndArea();
 
             if (issueHeight <= 0f) return;
             GUILayout.BeginArea(new Rect(rect.x, textRect.yMax, rect.width, issueHeight), EditorStyles.helpBox);
@@ -142,7 +144,9 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private void DrawGraphView(Rect rect)
         {
-            EditorGUI.DrawRect(rect, new Color(0.16f, 0.16f, 0.17f));
+            string notice = _draftHasErrors ? "텍스트에 오류가 있어 마지막 정상 상태를 보여줍니다." : null;
+            _graph.Draw(rect, _doc, notice);
+            if (Event.current.type == EventType.Used) Repaint();
         }
 
         /// <summary>
@@ -204,6 +208,7 @@ namespace EyeMaze.EditorTools
             var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
             if (asset == null) return;
             var errors = new List<string>();
+            if (_doc == null || _doc.AssetPath != path) _graph.Reset();
             _doc = DialogueEditorFormat.ReadCsv(asset, kind, path, errors);
             _draft = DialogueEditorFormat.WriteText(_doc);
             _issues.Clear();
