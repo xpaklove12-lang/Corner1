@@ -47,3 +47,7 @@ SDD 작업을 시작할 때 이 파일을 가장 먼저 읽는다.
 | 004 | `specs/004-return-to-start-option.md` | 모든 대화 노드에 처음 이야기로 돌아가는 공통 선택지 추가 | 구현완료 |
 | 005 | `specs/005-burden-gauge.md` | 들여다보는 동안 차오르고 가득 차면 상담이 끝나는 부담감 게이지 | 구현완료 |
 | 006 | `specs/006-blink-illusion-rotation.md` | 깜빡임 때 맵과 시선을 함께 무작위로 돌려 맵이 변한 듯한 착시를 준다 | 구현완료 |
+| 007 | `specs/007-blink-visible-turn.md` | 눈을 뜨며 미로가 층별 시간차로 부드럽게 도는 모습을 보여 준다 | 구현완료 |
+| 008 | `specs/008-blink-wall-change-effects.md` | 깜빡임 뒤 동공에서 퍼지는 파문을 따라 벽이 실제로 바뀐다 | 구현완료 |
+| 009 | `specs/009-client-rest-request.md` | 내담자의 동공이 떨리고 눈물이 차면 쉬어 줄 수 있고, 쉬어 주면 부담감이 줄어든다 | 구현완료 |
+| 010 | `specs/010-fragment-visibility-feedback.md` | 줍지 않은 파편을 맥동과 빛으로 눈에 띄게 하고, 주운 순간 고리와 목록 강조로 알린다 | 구현완료 |
