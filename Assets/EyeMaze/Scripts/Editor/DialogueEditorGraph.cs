@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 
 using UnityEngine;
 
@@ -22,7 +23,14 @@ namespace EyeMaze.EditorTools
         private const float HEADER_HEIGHT = 22f;
         private const float SITUATION_HEIGHT = 34f;
         private const float ROW_HEIGHT = 20f;
+        // Dialogue 선택지는 본문과 조건·수치 배지를 표시하고 결과는 별도 자식 노드에 둔다.
+        private const float CHOICE_ROW_HEIGHT = 50f;
+        private const float RESPONSE_HEIGHT = 70f;
+        private const float FRAGMENT_HEIGHT = 82f;
         private const float NODE_PADDING = 6f;
+        private const float JUDGE_WIDTH = 170f;
+        private const float JUDGE_HEIGHT = 26f;
+        private const float JUDGE_GAP = 90f;
         private const float GAP_X = 40f;
         private const float GAP_Y = 60f;
         private const float SIDE_GAP = 16f;
@@ -45,17 +53,54 @@ namespace EyeMaze.EditorTools
             None,
             Rename,
             Body,
+            Response,
+            After,
+            Fragment,
+            /// <summary>엔딩 조건의 기준값 하나 (신뢰 기준, 부담 기준)</summary>
+            Value,
+            /// <summary>선택지의 신뢰·동공 변화량 배지</summary>
+            Badge,
+        }
+
+        /// <summary>트리에서 눌러 고칠 수 있는 조건·수치 항목</summary>
+        private enum EditTarget
+        {
+            None,
+            TruthTrust,
+            KeyFlag,
+            LeaveTrust,
+            BurdenLimit,
+            Need,
+        }
+
+        /// <summary>진입선 조건이나 수치 배지 글의 한 조각. 고칠 수 있는 조각은 눌러서 편집한다.</summary>
+        private class Segment
+        {
+            public string Text;
+            public EditTarget Target;
+            /// <summary>고칠 그룹 번호 (조건 기준값은 truth·leave 그룹, 선택지 항목은 그 Dialogue 그룹)</summary>
+            public int Group = -1;
+            /// <summary>고칠 선택지 행 번호 (선택지 항목이 아니면 -1)</summary>
+            public int Item = -1;
+            public Rect Rect;
         }
 
         private static readonly Color GOTO_COLOR = new Color(0.45f, 0.75f, 1f);
         private static readonly Color ENDING_COLOR = new Color(1f, 0.6f, 0.3f);
         private static readonly Color GUIDE_COLOR = new Color(0.65f, 0.65f, 0.7f);
+        private static readonly Color FRAGMENT_COLOR = new Color(0.42f, 0.78f, 0.86f);
 
         /// <summary>상자 종류</summary>
         private enum BoxKind
         {
             Group,
             After,
+            Response,
+            Fragment,
+            /// <summary>심연 핵심 접촉 판정 (truth·half로 갈라짐). CSV 그룹이 아닌 표시용 카드다.</summary>
+            Core,
+            /// <summary>상담 중 판정 (낮은 신뢰·부담으로 leave). CSV 그룹이 아닌 표시용 카드다.</summary>
+            Gaze,
         }
 
         /// <summary>화면에 놓인 상자 하나 (그룹 노드 또는 엔딩의 after 카드)</summary>
@@ -63,6 +108,8 @@ namespace EyeMaze.EditorTools
         {
             public BoxKind Kind;
             public int Group = -1;
+            public int Item = -1;
+            public MemoryFragment Fragment;
             /// <summary>자동 배치 좌표계의 사각형 (화면 이동·노드 옮김 반영 전)</summary>
             public Rect Canvas;
             /// <summary>화면 좌표계의 사각형</summary>
@@ -75,6 +122,8 @@ namespace EyeMaze.EditorTools
             public int FirstRow;
             /// <summary>상자 안에 보이는 행 수</summary>
             public int VisibleRows = 1;
+            /// <summary>행 하나의 높이 (배치 좌표계)</summary>
+            public float RowH = ROW_HEIGHT;
         }
 
         private readonly Dictionary<string, Vector2> _nodeOffsets = new Dictionary<string, Vector2>();
@@ -86,13 +135,22 @@ namespace EyeMaze.EditorTools
         // 선택한 그룹(키)과 행 (-1이면 그룹 자체). 파일을 바꾸거나 다시 열면 지운다.
         private string _selKey;
         private int _selRow = -1;
+        private bool _selResponse;
+        private bool _selAfter;
+        private MemoryFragment _selFragment;
         private int _selectionLine = -1;
         // 마지막 클릭이 노드 뷰 안이었는지. F2와 Enter는 이때만 받는다.
         private bool _focused;
         private InlineKind _inline;
         private string _inlineKey;
+        private MemoryFragment _inlineFragment;
         private int _inlineRow = -1;
         private string _inlineText = "";
+        private string _inlineColumn;
+        // 고치는 중인 엔딩 기준값 (InlineKind.Value일 때)
+        private EditTarget _inlineTarget;
+        // 이번 그리기의 엔딩 진입선 조건 조각. 입력 판정과 그리기에 함께 쓴다.
+        private List<Segment> _segments = new List<Segment>();
         private string _inlineError = "";
         private bool _inlineFocus;
         // 인라인 편집을 확정해 창의 검사를 기다리는 중인지
@@ -117,6 +175,8 @@ namespace EyeMaze.EditorTools
         private DialogueEditorDocument _pending;
 
         private GUIStyle _rowStyle;
+        private GUIStyle _responseStyle;
+        private GUIStyle _scoreStyle;
         private GUIStyle _headerStyle;
         private GUIStyle _situationStyle;
         private float _styleZoom = -1f;
@@ -129,6 +189,9 @@ namespace EyeMaze.EditorTools
 
         /// <summary>그룹 키의 노드 크기를 저장한다. 창이 EditorPrefs로 채운다.</summary>
         public System.Action<string, Vector2> SizeSaver { get; set; }
+
+        /// <summary>파편 Flag ID의 획득 문구를 Flags.csv에 저장한다.</summary>
+        public System.Func<string, string, (bool ok, string error)> FragmentTextSaver { get; set; }
 
         /// <summary>마지막으로 확정한 ID 변경의 이전·새 그룹 키 (없으면 null). 창이 크기 설정 키를 옮길 때 쓴다.</summary>
         public string RenamedFrom { get; private set; }
@@ -168,6 +231,9 @@ namespace EyeMaze.EditorTools
         {
             _selKey = null;
             _selRow = -1;
+            _selResponse = false;
+            _selAfter = false;
+            _selFragment = null;
             _selectionLine = -1;
             CancelInline();
         }
@@ -260,6 +326,7 @@ namespace EyeMaze.EditorTools
             List<Box> boxes = Layout(doc, rect.width);
             _lastBoxes = boxes;
             _lastDoc = doc;
+            BuildSegments(doc, boxes);
 
             // 입력은 클립 밖에서 노드 뷰 좌표로 바꿔 처리한다. 클립 안에서는 뷰 밖에서 놓은 마우스 이벤트를 받지 못한다.
             Event e = Event.current;
@@ -268,6 +335,8 @@ namespace EyeMaze.EditorTools
             _control = GUIUtility.GetControlID(FocusType.Passive);
             bool inside = new Rect(0f, 0f, rect.width, rect.height).Contains(e.mousePosition);
             DialogueEditorDocument changed = HandleKeys(e, doc, editable);
+            HandleSegmentInput(e, doc, inside, editable, windowMouse);
+            HandleScoreInput(e, doc, boxes, inside, editable, windowMouse);
             HandleResize(e, doc, boxes, inside);
             HandleSelection(e, doc, boxes, inside, editable);
             bool blocked = !editable || _inline != InlineKind.None;
@@ -292,6 +361,7 @@ namespace EyeMaze.EditorTools
             // 선이 상자에 가리지 않도록 상자를 먼저 그리고 선을 위에 그린다.
             foreach (Box b in boxes) DrawBox(doc, b);
             DrawEdges(doc, boxes);
+            DrawSegments();
             DrawDragFeedback(doc, boxes);
             DrawSelection(doc, boxes);
             DrawInline(doc, boxes);
@@ -322,6 +392,16 @@ namespace EyeMaze.EditorTools
         public static string KeyOf(DialogueEditorDocument.Group g) => g.Section + "/" + g.Actor + "/" + g.Id;
 
         /// <summary>
+        /// 그룹과 보조 카드의 위치를 서로 다른 키로 보관한다.
+        /// </summary>
+        private static string OffsetKey(DialogueEditorDocument doc, Box box)
+        {
+            if (box.Kind == BoxKind.Fragment) return "fragment/" + box.Fragment.GetInstanceID();
+            string key = KeyOf(doc.Groups[box.Group]);
+            return box.Kind == BoxKind.Group ? key : key + "#" + box.Kind.ToString().ToLowerInvariant() + (box.Kind == BoxKind.Response ? "/" + box.Item : "");
+        }
+
+        /// <summary>
         /// 배치 좌표계의 길이를 화면 길이로 바꾼다.
         /// v를 사용하며, 확대율을 곱한 값을 반환한다.
         /// </summary>
@@ -337,13 +417,14 @@ namespace EyeMaze.EditorTools
             foreach (Box b in boxes)
             {
                 Vector2 offset = Vector2.zero;
-                if (b.Group >= 0) _nodeOffsets.TryGetValue(KeyOf(doc.Groups[b.Group]) + (b.Kind == BoxKind.After ? "#after" : ""), out offset);
+                _nodeOffsets.TryGetValue(OffsetKey(doc, b), out offset);
                 b.Rect = new Rect((b.Canvas.position + offset) * _zoom + _pan, b.Canvas.size * _zoom);
                 if (b.Kind != BoxKind.Group) continue;
                 DialogueEditorDocument.Group g = doc.Groups[b.Group];
                 float rowsArea = b.Canvas.height - HEADER_HEIGHT - SubHeight(g) - NODE_PADDING;
                 b.RowsTop = b.Rect.y + Z(HEADER_HEIGHT + SubHeight(g));
-                b.VisibleRows = Mathf.Max(1, Mathf.FloorToInt(rowsArea / ROW_HEIGHT + 0.01f));
+                b.RowH = RowHeightOf(g);
+                b.VisibleRows = Mathf.Max(1, Mathf.FloorToInt(rowsArea / b.RowH + 0.01f));
                 _rowScroll.TryGetValue(KeyOf(g), out int first);
                 b.FirstRow = Mathf.Clamp(first, 0, Mathf.Max(0, g.Items.Count - b.VisibleRows));
             }
@@ -367,7 +448,7 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private static Vector2 ClampSize(DialogueEditorDocument.Group g, Vector2 size)
         {
-            float minHeight = HEADER_HEIGHT + SubHeight(g) + ROW_HEIGHT + NODE_PADDING;
+            float minHeight = HEADER_HEIGHT + SubHeight(g) + RowHeightOf(g) + NODE_PADDING;
             return new Vector2(Mathf.Clamp(size.x, MIN_NODE_WIDTH, MAX_NODE_WIDTH), Mathf.Clamp(size.y, minHeight, MAX_NODE_HEIGHT));
         }
 
@@ -451,17 +532,70 @@ namespace EyeMaze.EditorTools
                 foreach (List<int> list in rows.Values)
                 {
                     float width = (list.Count - 1) * GAP_X;
-                    foreach (int g in list) width += SizeOf(doc.Groups[g]).x;
-                    float x = -width * 0.5f, h = 0f;
                     foreach (int g in list)
                     {
-                        Box b = Add(g, x, y, false);
-                        x += b.Canvas.width + GAP_X;
+                        int responses = 0;
+                        foreach (DialogueEditorDocument.Item item in doc.Groups[g].Items)
+                            if (item.Get("response").Length > 0) responses++;
+                        float childrenWidth = responses > 0 ? responses * NODE_WIDTH + (responses - 1) * GAP_X : 0f;
+                        width += Mathf.Max(SizeOf(doc.Groups[g]).x, childrenWidth);
+                    }
+                    float x = -width * 0.5f, h = 0f;
+                    var placed = new List<Box>();
+                    foreach (int g in list)
+                    {
+                        int responses = 0;
+                        foreach (DialogueEditorDocument.Item item in doc.Groups[g].Items)
+                            if (item.Get("response").Length > 0) responses++;
+                        float childrenWidth = responses > 0 ? responses * NODE_WIDTH + (responses - 1) * GAP_X : 0f;
+                        Vector2 size = SizeOf(doc.Groups[g]);
+                        float span = Mathf.Max(size.x, childrenWidth);
+                        Box b = Add(g, x + (span - size.x) * 0.5f, y, false);
+                        placed.Add(b);
+                        x += span + GAP_X;
                         h = Mathf.Max(h, b.Canvas.height);
                     }
                     if (first) { firstRowRight = x - GAP_X; firstRowY = y; first = false; }
-                    y += h + GAP_Y;
+                    bool hasResponses = false;
+                    foreach (Box parent in placed)
+                    {
+                        DialogueEditorDocument.Group group = doc.Groups[parent.Group];
+                        var responseItems = new List<int>();
+                        for (int item = 0; item < group.Items.Count; item++)
+                            if (group.Items[item].Get("response").Length > 0) responseItems.Add(item);
+                        if (responseItems.Count == 0) continue;
+                        hasResponses = true;
+                        float childrenWidth = responseItems.Count * NODE_WIDTH + (responseItems.Count - 1) * GAP_X;
+                        float childX = parent.Canvas.center.x - childrenWidth * 0.5f;
+                        foreach (int item in responseItems)
+                        {
+                            boxes.Add(new Box { Kind = BoxKind.Response, Group = parent.Group, Item = item,
+                                Canvas = new Rect(childX, y + h + GAP_Y * 0.5f, NODE_WIDTH, RESPONSE_HEIGHT) });
+                            childX += NODE_WIDTH + GAP_X;
+                        }
+                    }
+                    y += h + (hasResponses ? GAP_Y * 0.5f + RESPONSE_HEIGHT : 0f) + GAP_Y;
                 }
+            }
+
+            // 씬의 이 회차 손님이 가진 기억 파편을 상담 트리 왼쪽에 놓는다.
+            ClientCase client = DialogueEditorFormat.CaseOf(doc.AssetPath);
+            if (client != null)
+            {
+                float dialogueLeft = mainX;
+                foreach (Box box in boxes)
+                    if (box.Kind == BoxKind.Response || (box.Kind == BoxKind.Group && doc.Groups[box.Group].Section == Csv.SECTION_DIALOGUE))
+                        dialogueLeft = Mathf.Min(dialogueLeft, box.Canvas.xMin);
+                float fragmentX = dialogueLeft - NODE_WIDTH - GAP_X * 2f;
+                float fragmentY = firstRowY;
+                foreach (MemoryFragment fragment in client.Fragments())
+                {
+                    if (fragment == null) continue;
+                    boxes.Add(new Box { Kind = BoxKind.Fragment, Fragment = fragment,
+                        Canvas = new Rect(fragmentX, fragmentY, NODE_WIDTH, FRAGMENT_HEIGHT) });
+                    fragmentY += FRAGMENT_HEIGHT + SIDE_GAP;
+                }
+                if (fragmentY > firstRowY) y = Mathf.Max(y, fragmentY + GAP_Y - SIDE_GAP);
             }
 
             // 3. 사람별 문구(@intro, @idle, @abyss)는 상담 첫 줄 오른쪽에 보조 카드로 놓는다.
@@ -481,16 +615,31 @@ namespace EyeMaze.EditorTools
                 if (doc.Groups[g].Section == Csv.SECTION_ENDING && !doc.Groups[g].Id.StartsWith("@")) endings.Add(g);
             if (endings.Count > 0)
             {
+                // 판정 카드(심연 핵심 접촉, 상담 중 판정)를 엔딩 줄 위에 두고 그 아래에 엔딩을 놓는다.
+                int truth = doc.IndexOf(Csv.SECTION_ENDING, doc.Groups[endings[0]].Actor, EndingScript.TRUTH);
+                int half = doc.IndexOf(Csv.SECTION_ENDING, doc.Groups[endings[0]].Actor, EndingScript.HALF);
+                int leave = doc.IndexOf(Csv.SECTION_ENDING, doc.Groups[endings[0]].Actor, EndingScript.LEAVE);
+                bool judge = truth >= 0 || half >= 0 || leave >= 0;
+                float endY = judge ? y + JUDGE_HEIGHT + JUDGE_GAP : y;
                 float width = (endings.Count - 1) * GAP_X;
                 foreach (int g in endings) width += SizeOf(doc.Groups[g]).x;
                 float x = -width * 0.5f;
+                var centers = new Dictionary<int, float>();
                 foreach (int g in endings)
                 {
-                    Box b = Add(g, x, y, false);
+                    Box b = Add(g, x, endY, false);
+                    centers[g] = b.Canvas.center.x;
                     if (doc.Groups[g].Get("after").Length > 0)
                         boxes.Add(new Box { Kind = BoxKind.After, Group = g, Canvas = new Rect(x, b.Canvas.yMax + 30f, b.Canvas.width, AFTER_HEIGHT) });
                     x += b.Canvas.width + GAP_X;
                 }
+                if (truth >= 0 || half >= 0)
+                {
+                    float cx = truth >= 0 && half >= 0 ? (centers[truth] + centers[half]) * 0.5f : centers[truth >= 0 ? truth : half];
+                    boxes.Add(new Box { Kind = BoxKind.Core, Group = truth >= 0 ? truth : half, Canvas = new Rect(cx - JUDGE_WIDTH * 0.5f, y, JUDGE_WIDTH, JUDGE_HEIGHT) });
+                }
+                if (leave >= 0)
+                    boxes.Add(new Box { Kind = BoxKind.Gaze, Group = leave, Canvas = new Rect(centers[leave] - JUDGE_WIDTH * 0.5f, y, JUDGE_WIDTH, JUDGE_HEIGHT) });
             }
 
             // 가장 왼쪽 위 상자가 여백 안쪽에 오도록 옮긴다.
@@ -550,7 +699,7 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private static float NodeHeight(DialogueEditorDocument.Group g)
         {
-            return HEADER_HEIGHT + SubHeight(g) + Mathf.Max(1, g.Items.Count) * ROW_HEIGHT + NODE_PADDING;
+            return HEADER_HEIGHT + SubHeight(g) + Mathf.Max(1, g.Items.Count) * RowHeightOf(g) + NODE_PADDING;
         }
 
         /// <summary>
@@ -590,6 +739,21 @@ namespace EyeMaze.EditorTools
 
             foreach (Box b in boxes)
             {
+                if (b.Kind == BoxKind.Response || b.Kind == BoxKind.Fragment) continue;
+                if (b.Kind == BoxKind.Core || b.Kind == BoxKind.Gaze)
+                {
+                    // 판정 카드에서 엔딩으로 가는 진입선. 조건 글은 DrawSegments가 선 위에 그린다.
+                    string actor = doc.Groups[b.Group].Actor;
+                    string[] targets = b.Kind == BoxKind.Core ? new[] { EndingScript.TRUTH, EndingScript.HALF } : new[] { EndingScript.LEAVE, EndingScript.LEAVE };
+                    for (int lane = 0; lane < targets.Length; lane++)
+                    {
+                        int t = doc.IndexOf(Csv.SECTION_ENDING, actor, targets[lane]);
+                        if (t < 0 || !byGroup.TryGetValue(t, out Box target)) continue;
+                        (Vector2 from, Vector2 to) = JudgeLane(b, target, lane);
+                        DrawArrow(from, to, ENDING_COLOR, false);
+                    }
+                    continue;
+                }
                 DialogueEditorDocument.Group g = doc.Groups[b.Group];
                 if (b.Kind == BoxKind.After)
                 {
@@ -607,12 +771,52 @@ namespace EyeMaze.EditorTools
                 for (int k = 0; k < g.Items.Count; k++)
                 {
                     Vector2 from = PortPosition(b, k);
+                    Box response = boxes.Find(candidate => candidate.Kind == BoxKind.Response && candidate.Group == b.Group && candidate.Item == k);
+                    if (response != null)
+                    {
+                        DrawArrow(from, TopCenter(response.Rect), GUIDE_COLOR, true);
+                        from = BottomCenter(response.Rect);
+                    }
                     int t = doc.IndexOf(Csv.SECTION_DIALOGUE, g.Actor, g.Items[k].Get(DialogueEditorFormat.GOTO));
                     if (t >= 0 && byGroup.TryGetValue(t, out Box target)) DrawArrow(from, TopCenter(target.Rect), GOTO_COLOR, true);
                     int e = doc.IndexOf(Csv.SECTION_ENDING, g.Actor, g.Items[k].Get(DialogueEditorFormat.ENDING));
                     if (e >= 0 && byGroup.TryGetValue(e, out Box endBox)) DrawArrow(from, TopCenter(endBox.Rect), ENDING_COLOR, true);
                 }
             }
+
+            // 파편의 Flag가 선택지 need 또는 truth의 key_flag에 쓰일 때 의존선을 그린다.
+            foreach (Box fragment in boxes)
+            {
+                if (fragment.Kind != BoxKind.Fragment || fragment.Fragment == null || string.IsNullOrEmpty(fragment.Fragment.Flag)) continue;
+                string flag = fragment.Fragment.Flag;
+                Vector2 from = new Vector2(fragment.Rect.xMax, fragment.Rect.center.y);
+                foreach (Box target in boxes)
+                {
+                    if (target.Kind != BoxKind.Group) continue;
+                    DialogueEditorDocument.Group group = doc.Groups[target.Group];
+                    if (group.Section == Csv.SECTION_DIALOGUE)
+                    {
+                        for (int item = 0; item < group.Items.Count; item++)
+                        {
+                            if (!HasFlag(group.Items[item].Get("need"), flag)) continue;
+                            Vector2 to = new Vector2(target.Rect.xMin, PortPosition(target, item).y);
+                            DrawArrow(from, to, FRAGMENT_COLOR, true);
+                        }
+                    }
+                    else if (group.Section == Csv.SECTION_ENDING && group.Id == EndingScript.TRUTH && group.Get("key_flag") == flag)
+                        DrawArrow(from, new Vector2(target.Rect.xMin, target.Rect.center.y), FRAGMENT_COLOR, true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 파이프로 구분한 플래그 목록에 지정한 ID가 있는지 확인한다.
+        /// </summary>
+        private static bool HasFlag(string list, string flag)
+        {
+            foreach (string part in (list ?? "").Split('|'))
+                if (part.Trim() == flag) return true;
+            return false;
         }
 
         /// <summary>
@@ -643,7 +847,7 @@ namespace EyeMaze.EditorTools
         {
             // 상자 안에서 스크롤되어 보이지 않는 행의 선은 보이는 행 영역의 위나 아래 끝에서 나간다.
             float shown = Mathf.Clamp(row - b.FirstRow, 0, b.VisibleRows - 1);
-            return new Vector2(b.Rect.xMax - Z(9f), b.RowsTop + Z(shown * ROW_HEIGHT + ROW_HEIGHT * 0.5f));
+            return new Vector2(b.Rect.xMax - Z(9f), b.RowsTop + Z(shown * b.RowH + b.RowH * 0.5f));
         }
 
         /// <summary>
@@ -696,11 +900,46 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private void DrawBox(DialogueEditorDocument doc, Box b)
         {
+            if (b.Kind == BoxKind.Fragment)
+            {
+                MemoryFragment fragment = b.Fragment;
+                EditorGUI.DrawRect(b.Rect, new Color(0.16f, 0.27f, 0.30f));
+                Rect title = new Rect(b.Rect.x, b.Rect.y, b.Rect.width, Z(HEADER_HEIGHT));
+                EditorGUI.DrawRect(title, new Color(0.20f, 0.43f, 0.47f));
+                GUI.Label(new Rect(title.x + Z(6f), title.y + Z(3f), title.width - Z(12f), title.height),
+                    "기억 파편 · " + fragment.Title, _headerStyle);
+                GUI.Label(new Rect(b.Rect.x + Z(6f), title.yMax + Z(3f), b.Rect.width - Z(12f), Z(16f)), fragment.Flag, _responseStyle);
+                GUI.Label(new Rect(b.Rect.x + Z(6f), title.yMax + Z(21f), b.Rect.width - Z(12f), b.Rect.height - Z(HEADER_HEIGHT + 25f)),
+                    new GUIContent(Flat(fragment.Text), fragment.Text), _responseStyle);
+                return;
+            }
+            if (b.Kind == BoxKind.Core || b.Kind == BoxKind.Gaze)
+            {
+                // 판정 카드는 CSV 그룹이 아니라 엔딩으로 갈라지는 지점을 보여주는 표시용 카드다.
+                EditorGUI.DrawRect(b.Rect, new Color(0.36f, 0.20f, 0.30f));
+                string judgeTitle = b.Kind == BoxKind.Core ? "심연 핵심 접촉 · 판정" : "상담 중 판정";
+                GUI.Label(new Rect(b.Rect.x + Z(6f), b.Rect.y + Z(5f), b.Rect.width - Z(12f), b.Rect.height - Z(6f)), judgeTitle, _headerStyle);
+                return;
+            }
             DialogueEditorDocument.Group g = doc.Groups[b.Group];
+            if (b.Kind == BoxKind.Response)
+            {
+                EditorGUI.DrawRect(b.Rect, new Color(0.19f, 0.29f, 0.34f));
+                Rect title = new Rect(b.Rect.x, b.Rect.y, b.Rect.width, Z(HEADER_HEIGHT));
+                EditorGUI.DrawRect(title, new Color(0.22f, 0.40f, 0.48f));
+                GUI.Label(new Rect(title.x + Z(6f), title.y + Z(3f), title.width - Z(12f), title.height),
+                    $"결과 · 선택지 {b.Item + 1}", _headerStyle);
+                string response = Flat(g.Items[b.Item].Get("response"));
+                GUI.Label(new Rect(b.Rect.x + Z(6f), title.yMax + Z(4f), b.Rect.width - Z(12f), b.Rect.height - Z(HEADER_HEIGHT + 8f)),
+                    new GUIContent(response, response), _responseStyle);
+                return;
+            }
             if (b.Kind == BoxKind.After)
             {
                 EditorGUI.DrawRect(b.Rect, new Color(0.32f, 0.24f, 0.18f));
-                GUI.Label(new Rect(b.Rect.x + Z(6f), b.Rect.y + Z(3f), b.Rect.width - Z(12f), b.Rect.height - Z(6f)), "after · " + Flat(g.Get("after")), _situationStyle);
+                string after = Flat(g.Get("after"));
+                GUI.Label(new Rect(b.Rect.x + Z(6f), b.Rect.y + Z(3f), b.Rect.width - Z(12f), b.Rect.height - Z(6f)),
+                    new GUIContent("after · " + after, after), _situationStyle);
                 return;
             }
             EditorGUI.DrawRect(b.Rect, b.Side ? new Color(0.21f, 0.21f, 0.23f) : new Color(0.24f, 0.24f, 0.26f));
@@ -719,7 +958,15 @@ namespace EyeMaze.EditorTools
             {
                 Rect row = RowRect(b, k);
                 EditorGUI.DrawRect(row, new Color(0.3f, 0.3f, 0.32f));
-                GUI.Label(new Rect(row.x + Z(4f), row.y, row.width - Z(26f), row.height), RowText(g, g.Items[k], k), _rowStyle);
+                if (g.Section == Csv.SECTION_DIALOGUE)
+                {
+                    float textWidth = row.width - Z(26f);
+                    GUI.Label(new Rect(row.x + Z(4f), row.y, textWidth, Z(17f)), RowText(g, g.Items[k], k), _rowStyle);
+                    string score = ScoreText(g.Items[k]);
+                    GUI.Label(ScoreRect(row), new GUIContent(score, score.Replace("\n", " · ")), _scoreStyle);
+                }
+                else
+                    GUI.Label(new Rect(row.x + Z(4f), row.y, row.width - Z(26f), row.height), RowText(g, g.Items[k], k), _rowStyle);
                 if (g.Section == Csv.SECTION_DIALOGUE) DrawPort(b, k, g.Items[k]);
             }
             if (g.Items.Count > b.VisibleRows)
@@ -743,7 +990,46 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private Rect RowRect(Box b, int k)
         {
-            return new Rect(b.Rect.x + Z(4f), b.RowsTop + Z((k - b.FirstRow) * ROW_HEIGHT + 1f), b.Rect.width - Z(8f), Z(ROW_HEIGHT - 2f));
+            return new Rect(b.Rect.x + Z(4f), b.RowsTop + Z((k - b.FirstRow) * b.RowH + 1f), b.Rect.width - Z(8f), Z(b.RowH - 2f));
+        }
+
+        /// <summary>
+        /// 선택지 행 아래쪽의 수치 표시 및 클릭 영역을 구한다.
+        /// </summary>
+        private Rect ScoreRect(Rect row)
+        {
+            return new Rect(row.x + Z(4f), row.y + Z(16f), row.width - Z(26f), Z(32f));
+        }
+
+        /// <summary>
+        /// 선택지의 0이 아닌 수치 변화량을 한 줄로 만든다. 모두 0이면 편집 안내를 표시한다.
+        /// </summary>
+        private static string ScoreText(DialogueEditorDocument.Item item)
+        {
+            var parts = new List<string>();
+            string trust = item.Get("trust");
+            string dilation = item.Get("dilation");
+            string spring = item.Get("spring");
+            if (trust.Length > 0 && trust != "0") parts.Add("신뢰 " + Signed(trust));
+            if (dilation.Length > 0 && float.TryParse(dilation, NumberStyles.Float, CultureInfo.InvariantCulture, out float d) && d != 0f)
+                parts.Add("동공 " + Signed(dilation));
+            string springText = spring.Length > 0 && spring != "0" ? "spring " + Signed(spring) + " (미적용)" : "";
+            if (parts.Count == 0 && springText.Length == 0) return "수치 변화 없음 · 클릭해서 편집";
+            string primary = string.Join(" · ", parts);
+            return primary.Length == 0 ? springText + "  ✎" : springText.Length == 0 ? primary + "  ✎" : primary + "\n" + springText + "  ✎";
+        }
+
+        /// <summary>
+        /// 양수 변화량 앞에 더하기 기호를 붙인다.
+        /// </summary>
+        private static string Signed(string value) => value.StartsWith("-") || value.StartsWith("+") ? value : "+" + value;
+
+        /// <summary>
+        /// 그룹 종류에 따라 한 행의 높이를 반환한다.
+        /// </summary>
+        private static float RowHeightOf(DialogueEditorDocument.Group group)
+        {
+            return group.Section == Csv.SECTION_DIALOGUE ? CHOICE_ROW_HEIGHT : ROW_HEIGHT;
         }
 
         /// <summary>
@@ -861,10 +1147,56 @@ namespace EyeMaze.EditorTools
             int mini = Mathf.Max(5, Mathf.RoundToInt(10f * _zoom));
             _rowStyle = new GUIStyle(EditorStyles.miniLabel) { clipping = TextClipping.Clip, wordWrap = false, fontSize = mini };
             _rowStyle.normal.textColor = new Color(0.88f, 0.88f, 0.88f);
+            _responseStyle = new GUIStyle(_rowStyle) { wordWrap = true };
+            _responseStyle.normal.textColor = new Color(0.7f, 0.78f, 0.85f);
+            _scoreStyle = new GUIStyle(_rowStyle) { wordWrap = true };
+            _scoreStyle.normal.textColor = new Color(0.98f, 0.79f, 0.40f);
             _headerStyle = new GUIStyle(EditorStyles.boldLabel) { clipping = TextClipping.Clip, fontSize = Mathf.Max(5, Mathf.RoundToInt(11f * _zoom)) };
             _headerStyle.normal.textColor = Color.white;
             _situationStyle = new GUIStyle(EditorStyles.miniLabel) { wordWrap = true, clipping = TextClipping.Clip, fontSize = mini };
             _situationStyle.normal.textColor = new Color(0.7f, 0.72f, 0.75f);
+        }
+
+        /// <summary>
+        /// 선택지 아래 수치 줄을 누르면 편집할 수치를 고르는 메뉴를 연다.
+        /// </summary>
+        private void HandleScoreInput(Event e, DialogueEditorDocument doc, List<Box> boxes, bool inside, bool editable, Vector2 windowMouse)
+        {
+            if (!inside || e.type != EventType.MouseDown || e.button != 0 || _inline != InlineKind.None) return;
+            Box hit = HitBox(boxes, e.mousePosition);
+            if (hit == null || hit.Kind != BoxKind.Group || doc.Groups[hit.Group].Section != Csv.SECTION_DIALOGUE) return;
+            int row = RowAt(doc, hit, e.mousePosition.y);
+            if (row < 0 || !ScoreRect(RowRect(hit, row)).Contains(e.mousePosition)) return;
+            _focused = true;
+            _selKey = KeyOf(doc.Groups[hit.Group]);
+            _selRow = row;
+            _selResponse = false;
+            _selAfter = false;
+            _selFragment = null;
+            _selectionLine = doc.Groups[hit.Group].Items[row].TextLine;
+            if (!editable) { Notify("텍스트 오류를 고치거나 검사가 끝난 뒤 수치를 바꿀 수 있다."); e.Use(); return; }
+            var menu = new GenericMenu();
+            menu.AddItem(new GUIContent("신뢰 (trust)"), false, () => StartScoreEdit(doc, hit.Group, row, "trust"));
+            menu.AddItem(new GUIContent("동공 (dilation)"), false, () => StartScoreEdit(doc, hit.Group, row, "dilation"));
+            menu.AddItem(new GUIContent("spring (현재 실행 미적용)"), false, () => StartScoreEdit(doc, hit.Group, row, "spring"));
+            menu.DropDown(new Rect(windowMouse, Vector2.zero));
+            e.Use();
+        }
+
+        /// <summary>
+        /// 선택한 수치 열의 현재 값을 선택지 아래에서 인라인으로 고친다.
+        /// </summary>
+        private void StartScoreEdit(DialogueEditorDocument doc, int group, int row, string column)
+        {
+            if (group < 0 || group >= doc.Groups.Count || row < 0 || row >= doc.Groups[group].Items.Count) return;
+            _inline = InlineKind.Badge;
+            _inlineKey = KeyOf(doc.Groups[group]);
+            _inlineRow = row;
+            _inlineColumn = column;
+            _inlineText = doc.Groups[group].Items[row].Get(column);
+            if (_inlineText.Length == 0) _inlineText = "0";
+            _inlineError = "";
+            _inlineFocus = true;
         }
 
         // ---------------------------------------------------------------- 연결·카드 편집
@@ -958,7 +1290,7 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private int RowAt(DialogueEditorDocument doc, Box b, float y)
         {
-            int shown = Mathf.FloorToInt((y - b.RowsTop) / Z(ROW_HEIGHT));
+            int shown = Mathf.FloorToInt((y - b.RowsTop) / Z(b.RowH));
             if (shown < 0 || shown >= b.VisibleRows) return -1;
             int row = shown + b.FirstRow;
             return row < doc.Groups[b.Group].Items.Count ? row : -1;
@@ -971,7 +1303,7 @@ namespace EyeMaze.EditorTools
         private int InsertIndex(DialogueEditorDocument doc, Box b, float y)
         {
             int count = doc.Groups[b.Group].Items.Count;
-            int shown = Mathf.Clamp(Mathf.RoundToInt((y - b.RowsTop) / Z(ROW_HEIGHT)), 0, b.VisibleRows);
+            int shown = Mathf.Clamp(Mathf.RoundToInt((y - b.RowsTop) / Z(b.RowH)), 0, b.VisibleRows);
             return Mathf.Clamp(shown + b.FirstRow, 0, count);
         }
 
@@ -998,7 +1330,7 @@ namespace EyeMaze.EditorTools
             {
                 if (hoverGroup && doc.Groups[_cardGroup].SameStage(doc.Groups[hover.Group]))
                 {
-                    float y = hover.RowsTop + Z((InsertIndex(doc, hover, _mouse.y) - hover.FirstRow) * ROW_HEIGHT);
+                    float y = hover.RowsTop + Z((InsertIndex(doc, hover, _mouse.y) - hover.FirstRow) * hover.RowH);
                     EditorGUI.DrawRect(new Rect(hover.Rect.x + 2f, y - 1.5f, hover.Rect.width - 4f, 3f), new Color(1f, 0.85f, 0.3f));
                 }
                 var ghost = new Rect(_mouse.x - Z(10f), _mouse.y - Z(ROW_HEIGHT) * 0.5f, Z(NODE_WIDTH - 8f), Z(ROW_HEIGHT - 2f));
@@ -1071,16 +1403,35 @@ namespace EyeMaze.EditorTools
                 if (_selKey != null) _selectionLine = 0;
                 _selKey = null;
                 _selRow = -1;
+                _selResponse = false;
+                _selAfter = false;
+                _selFragment = null;
                 return;
             }
+            if (hit.Kind == BoxKind.Fragment)
+            {
+                _selKey = null;
+                _selRow = -1;
+                _selResponse = false;
+                _selAfter = false;
+                _selFragment = hit.Fragment;
+                _selectionLine = 0;
+                if (e.clickCount == 2) { StartFragmentEdit(editable); e.Use(); }
+                return;
+            }
+            _selFragment = null;
             DialogueEditorDocument.Group g = doc.Groups[hit.Group];
-            int row = hit.Kind == BoxKind.Group ? RowAt(doc, hit, e.mousePosition.y) : -1;
+            int row = hit.Kind == BoxKind.Response ? hit.Item : hit.Kind == BoxKind.Group ? RowAt(doc, hit, e.mousePosition.y) : -1;
             _selKey = KeyOf(g);
             _selRow = row;
+            _selResponse = hit.Kind == BoxKind.Response;
+            _selAfter = hit.Kind == BoxKind.After;
             _selectionLine = row >= 0 ? g.Items[row].TextLine : g.TextLine;
-            if (e.clickCount == 2 && row >= 0)
+            if (e.clickCount == 2 && (row >= 0 || _selAfter))
             {
-                StartBodyEdit(doc, editable);
+                if (_selAfter) StartAfterEdit(doc, editable);
+                else if (_selResponse) StartResponseEdit(doc, editable);
+                else StartBodyEdit(doc, editable);
                 // 두 번째 클릭으로 카드 끌기나 화면 이동이 시작되지 않게 한다.
                 e.Use();
             }
@@ -1133,9 +1484,15 @@ namespace EyeMaze.EditorTools
                 if (enter) { e.Use(); return ConfirmInline(doc); }
                 return null;
             }
-            if (!_focused || _selKey == null) return null;
-            if (e.keyCode == KeyCode.F2) { e.Use(); StartRename(doc, editable); }
-            else if (enter) { e.Use(); StartBodyEdit(doc, editable); }
+            if (!_focused) return null;
+            if (_selFragment != null)
+            {
+                if (enter) { e.Use(); StartFragmentEdit(editable); }
+                return null;
+            }
+            if (_selKey == null) return null;
+            if (e.keyCode == KeyCode.F2 && !_selResponse) { e.Use(); StartRename(doc, editable); }
+            else if (enter) { e.Use(); if (_selAfter) StartAfterEdit(doc, editable); else if (_selResponse) StartResponseEdit(doc, editable); else StartBodyEdit(doc, editable); }
             return null;
         }
 
@@ -1181,6 +1538,52 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
+        /// 선택한 결과 노드의 response 필드를 인라인으로 고친다.
+        /// </summary>
+        private void StartResponseEdit(DialogueEditorDocument doc, bool editable)
+        {
+            int idx = GroupIndex(doc, _selKey);
+            if (idx < 0 || _selRow < 0 || _selRow >= doc.Groups[idx].Items.Count) return;
+            if (!editable) { Notify("텍스트 오류를 고치거나 검사가 끝난 뒤 고칠 수 있다."); return; }
+            _inline = InlineKind.Response;
+            _inlineKey = _selKey;
+            _inlineRow = _selRow;
+            _inlineText = DialogueEditorFormat.Body(doc.Groups[idx].Items[_selRow].Get("response"));
+            _inlineError = "";
+            _inlineFocus = true;
+        }
+
+        /// <summary>
+        /// 선택한 엔딩의 after 문구를 카드 위에서 편집한다.
+        /// </summary>
+        private void StartAfterEdit(DialogueEditorDocument doc, bool editable)
+        {
+            int idx = GroupIndex(doc, _selKey);
+            if (idx < 0 || doc.Groups[idx].Section != Csv.SECTION_ENDING) return;
+            if (!editable) { Notify("텍스트 오류를 고치거나 검사가 끝난 뒤 고칠 수 있다."); return; }
+            _inline = InlineKind.After;
+            _inlineKey = _selKey;
+            _inlineRow = -1;
+            _inlineText = DialogueEditorFormat.Body(doc.Groups[idx].Get("after"));
+            _inlineError = "";
+            _inlineFocus = true;
+        }
+
+        /// <summary>
+        /// 선택한 파편의 획득 문구를 카드에서 편집한다. 문구의 원본은 Flags.csv다.
+        /// </summary>
+        private void StartFragmentEdit(bool editable)
+        {
+            if (_selFragment == null || string.IsNullOrEmpty(_selFragment.Flag)) { Notify("파편에 Flag ID를 먼저 설정한다."); return; }
+            if (!editable || FragmentTextSaver == null) { Notify("텍스트 오류를 고치거나 검사가 끝난 뒤 고칠 수 있다."); return; }
+            _inline = InlineKind.Fragment;
+            _inlineFragment = _selFragment;
+            _inlineText = DialogueEditorFormat.Body(_selFragment.Text);
+            _inlineError = "";
+            _inlineFocus = true;
+        }
+
+        /// <summary>
         /// 게임 코드가 이름으로 부르는 예약 그룹인지 본다. Talk의 enter·reveal, Ending의 truth·half·leave와 @로 시작하는 문구다.
         /// g를 사용하며, 예약 ID면 true를 반환한다.
         /// </summary>
@@ -1197,6 +1600,17 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private DialogueEditorDocument ConfirmInline(DialogueEditorDocument doc)
         {
+            if (_inline == InlineKind.Fragment)
+            {
+                if (_inlineFragment == null) { CancelInline(); return null; }
+                string fragmentText = _inlineText.Trim();
+                if (fragmentText.Length == 0) { _inlineError = "파편 문구를 입력한다."; return null; }
+                if (fragmentText == DialogueEditorFormat.Body(_inlineFragment.Text)) { CancelInline(); return null; }
+                (bool ok, string error) = FragmentTextSaver(_inlineFragment.Flag, fragmentText);
+                if (ok) CancelInline();
+                else { _inlineError = error; _inlineFocus = true; }
+                return null;
+            }
             int idx = GroupIndex(doc, _inlineKey);
             if (idx < 0) { CancelInline(); return null; }
             DialogueEditorDocument.Group g = doc.Groups[idx];
@@ -1213,7 +1627,40 @@ namespace EyeMaze.EditorTools
                 _inlineAwait = true;
                 return renamed;
             }
+            if (_inline == InlineKind.After)
+            {
+                if (text == g.Get("after")) { CancelInline(); return null; }
+                DialogueEditorDocument afterCopy = doc.Clone();
+                if (text.Length == 0) afterCopy.Groups[idx].Fields.Remove("after");
+                else afterCopy.Groups[idx].Fields["after"] = text;
+                RenamedFrom = RenamedTo = null;
+                _inlineAwait = true;
+                return afterCopy;
+            }
+            if (_inline == InlineKind.Value) return ConfirmValue(doc, idx);
             if (_inlineRow < 0 || _inlineRow >= g.Items.Count) { CancelInline(); return null; }
+            if (_inline == InlineKind.Badge)
+            {
+                bool valid = _inlineColumn == "dilation"
+                    ? float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out float d) && !float.IsNaN(d) && !float.IsInfinity(d)
+                    : int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out _);
+                if (!valid) { _inlineError = _inlineColumn == "dilation" ? "동공은 0.15처럼 소수점으로 입력한다." : "정수를 입력한다."; return null; }
+                if (text == g.Items[_inlineRow].Get(_inlineColumn)) { CancelInline(); return null; }
+                DialogueEditorDocument scoreCopy = doc.Clone();
+                scoreCopy.Groups[idx].Items[_inlineRow].Fields[_inlineColumn] = text;
+                RenamedFrom = RenamedTo = null;
+                _inlineAwait = true;
+                return scoreCopy;
+            }
+            if (_inline == InlineKind.Response)
+            {
+                if (text == g.Items[_inlineRow].Get("response")) { CancelInline(); return null; }
+                DialogueEditorDocument responseCopy = doc.Clone();
+                responseCopy.Groups[idx].Items[_inlineRow].Fields["response"] = text;
+                RenamedFrom = RenamedTo = null;
+                _inlineAwait = true;
+                return responseCopy;
+            }
             if (text.Length == 0 && doc.Kind != DialogueEditorKind.Strings)
             {
                 _inlineError = g.Section == Csv.SECTION_DIALOGUE ? "빈 선택지는 저장할 수 없다." : "빈 대사는 저장할 수 없다.";
@@ -1254,9 +1701,33 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private Rect InlineRect(DialogueEditorDocument doc, List<Box> boxes)
         {
+            if (_inline == InlineKind.Fragment)
+            {
+                Box fragment = boxes.Find(box => box.Kind == BoxKind.Fragment && box.Fragment == _inlineFragment);
+                return fragment == null ? Rect.zero : new Rect(fragment.Rect.x + Z(4f), fragment.Rect.y + Z(HEADER_HEIGHT + 20f), fragment.Rect.width - Z(8f), Z(20f));
+            }
+            if (_inline == InlineKind.After)
+            {
+                int idx = GroupIndex(doc, _inlineKey);
+                Box after = boxes.Find(box => box.Kind == BoxKind.After && box.Group == idx);
+                return after == null ? Rect.zero : new Rect(after.Rect.x + Z(4f), after.Rect.y + Z(4f), after.Rect.width - Z(8f), Z(20f));
+            }
+            if (_inline == InlineKind.Response)
+            {
+                int idx = GroupIndex(doc, _inlineKey);
+                Box response = boxes.Find(box => box.Kind == BoxKind.Response && box.Group == idx && box.Item == _inlineRow);
+                return response == null ? Rect.zero : new Rect(response.Rect.x + Z(4f), response.Rect.y + Z(HEADER_HEIGHT + 3f), response.Rect.width - Z(8f), Z(20f));
+            }
+            if (_inline == InlineKind.Value)
+            {
+                int idx = GroupIndex(doc, _inlineKey);
+                Segment s = _segments.Find(seg => seg.Target == _inlineTarget && seg.Group == idx);
+                return s == null ? Rect.zero : new Rect(s.Rect.x, s.Rect.y - Z(2f), Mathf.Max(s.Rect.width, Z(70f)), s.Rect.height + Z(4f));
+            }
             Box b = BoxOf(boxes, GroupIndex(doc, _inlineKey));
             if (b == null) return Rect.zero;
             if (_inline == InlineKind.Rename) return new Rect(b.Rect.x + Z(2f), b.Rect.y + Z(2f), b.Rect.width - Z(4f), Z(HEADER_HEIGHT - 4f));
+            if (_inline == InlineKind.Badge) return ScoreRect(RowRect(b, _inlineRow));
             return RowRect(b, _inlineRow);
         }
 
@@ -1266,7 +1737,28 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private void DrawSelection(DialogueEditorDocument doc, List<Box> boxes)
         {
-            if (Event.current.type != EventType.Repaint || _selKey == null) return;
+            if (Event.current.type != EventType.Repaint) return;
+            if (_selFragment != null)
+            {
+                Box fragment = boxes.Find(box => box.Kind == BoxKind.Fragment && box.Fragment == _selFragment);
+                if (fragment != null) DrawOutline(fragment.Rect, _focused ? new Color(1f, 0.82f, 0.25f) : new Color(1f, 0.82f, 0.25f, 0.45f));
+                return;
+            }
+            if (_selKey == null) return;
+            if (_selAfter)
+            {
+                int idx = GroupIndex(doc, _selKey);
+                Box after = boxes.Find(box => box.Kind == BoxKind.After && box.Group == idx);
+                if (after != null) DrawOutline(after.Rect, _focused ? new Color(1f, 0.82f, 0.25f) : new Color(1f, 0.82f, 0.25f, 0.45f));
+                return;
+            }
+            if (_selResponse)
+            {
+                int idx = GroupIndex(doc, _selKey);
+                Box response = boxes.Find(box => box.Kind == BoxKind.Response && box.Group == idx && box.Item == _selRow);
+                if (response != null) DrawOutline(response.Rect, _focused ? new Color(1f, 0.82f, 0.25f) : new Color(1f, 0.82f, 0.25f, 0.45f));
+                return;
+            }
             Box b = BoxOf(boxes, GroupIndex(doc, _selKey));
             if (b == null) return;
             Color c = _focused ? new Color(1f, 0.82f, 0.25f) : new Color(1f, 0.82f, 0.25f, 0.45f);
@@ -1314,6 +1806,332 @@ namespace EyeMaze.EditorTools
             GUI.Label(new Rect(hr.x + 4f, hr.y + 1f, hr.width - 8f, hr.height), hint, EditorStyles.whiteMiniLabel);
         }
 
+        // ---------------------------------------------------------------- 엔딩 진입 조건
+
+        /// <summary>
+        /// 판정 카드에서 엔딩으로 가는 진입선의 시작·끝 위치를 구한다. 심연 핵심 접촉은 왼쪽 선이 truth, 오른쪽 선이 half이고,
+        /// 상담 중 판정은 같은 leave로 두 선(낮은 신뢰, 부담)을 나란히 긋는다.
+        /// judge, target, lane(선 번호 0·1)을 사용하며, (시작, 끝)을 반환한다.
+        /// </summary>
+        private (Vector2 from, Vector2 to) JudgeLane(Box judge, Box target, int lane)
+        {
+            if (judge.Kind == BoxKind.Core)
+                return (new Vector2(judge.Rect.center.x + (lane == 0 ? -Z(30f) : Z(30f)), judge.Rect.yMax), TopCenter(target.Rect));
+            float f = (lane + 1) / 3f;
+            return (new Vector2(judge.Rect.x + judge.Rect.width * f, judge.Rect.yMax), new Vector2(target.Rect.x + target.Rect.width * f, target.Rect.yMin));
+        }
+
+        /// <summary>
+        /// 화살표 곡선 위의 한 점을 구한다. DrawArrow와 같은 접선을 쓴다.
+        /// from, to, sideways, t(0~1)를 사용하며, 점을 반환한다.
+        /// </summary>
+        private Vector2 CurvePoint(Vector2 from, Vector2 to, bool sideways, float t)
+        {
+            Vector2 t1 = from + (sideways ? new Vector2(Z(80f), 0f) : new Vector2(0f, Z(40f)));
+            Vector2 t2 = to + new Vector2(0f, -Z(60f));
+            float u = 1f - t;
+            return u * u * u * from + 3f * u * u * t * t1 + 3f * u * t * t * t2 + t * t * t * to;
+        }
+
+        /// <summary>
+        /// 선택지 행에서 엔딩·goto 선이 출발하는 위치를 구한다. 결과 카드가 있으면 그 아래에서 출발한다.
+        /// boxes, b, k를 사용하며, 위치를 반환한다.
+        /// </summary>
+        private Vector2 ChoiceLineStart(List<Box> boxes, Box b, int k)
+        {
+            Box response = boxes.Find(candidate => candidate.Kind == BoxKind.Response && candidate.Group == b.Group && candidate.Item == k);
+            return response != null ? BottomCenter(response.Rect) : PortPosition(b, k);
+        }
+
+        /// <summary>
+        /// 엔딩 진입선에 붙일 조건 글을 조각으로 만든다. truth·half는 신뢰 기준과 열쇠 파편, leave는 낮은 신뢰와 부담 기준,
+        /// 선택지에서 바로 가는 엔딩은 그 선택지의 need 플래그(없으면 '선택 시 즉시')다. 고칠 수 있는 조각에는 편집 대상을 붙인다.
+        /// doc과 boxes를 사용하며, _segments를 새로 채운다.
+        /// </summary>
+        private void BuildSegments(DialogueEditorDocument doc, List<Box> boxes)
+        {
+            _segments.Clear();
+            if (doc.Kind != DialogueEditorKind.Day) return;
+            var byGroup = new Dictionary<int, Box>();
+            foreach (Box b in boxes) if (b.Kind == BoxKind.Group) byGroup[b.Group] = b;
+
+            foreach (Box judge in boxes)
+            {
+                if (judge.Kind != BoxKind.Core && judge.Kind != BoxKind.Gaze) continue;
+                string actor = doc.Groups[judge.Group].Actor;
+                if (judge.Kind == BoxKind.Core)
+                {
+                    int truth = doc.IndexOf(Csv.SECTION_ENDING, actor, EndingScript.TRUTH);
+                    int half = doc.IndexOf(Csv.SECTION_ENDING, actor, EndingScript.HALF);
+                    string trust = truth >= 0 ? doc.Groups[truth].Get(EndingScript.TRUTH_TRUST) : "";
+                    string key = truth >= 0 ? doc.Groups[truth].Get(EndingScript.KEY_FLAG) : "";
+                    EditTarget trustTarget = truth >= 0 ? EditTarget.TruthTrust : EditTarget.None;
+                    EditTarget keyTarget = truth >= 0 ? EditTarget.KeyFlag : EditTarget.None;
+                    string keyText = key.Length > 0 ? key : "없음";
+                    if (truth >= 0 && byGroup.TryGetValue(truth, out Box tb))
+                    {
+                        (Vector2 from, Vector2 to) = JudgeLane(judge, tb, 0);
+                        AddLabel(CurvePoint(from, to, false, 0.35f), ("신뢰 ≥ ", EditTarget.None, -1, -1), (Value(trust), trustTarget, truth, -1),
+                            (" · 파편 ", EditTarget.None, -1, -1), (keyText, keyTarget, truth, -1), (key.Length > 0 ? " 획득" : " (조건 없음)", EditTarget.None, -1, -1));
+                    }
+                    if (half >= 0 && byGroup.TryGetValue(half, out Box hb))
+                    {
+                        (Vector2 from, Vector2 to) = JudgeLane(judge, hb, 1);
+                        if (key.Length > 0)
+                            AddLabel(CurvePoint(from, to, false, 0.7f), ("신뢰 < ", EditTarget.None, -1, -1), (Value(trust), trustTarget, truth, -1),
+                                (" 또는 파편 ", EditTarget.None, -1, -1), (keyText, keyTarget, truth, -1), (" 미획득", EditTarget.None, -1, -1));
+                        else
+                            AddLabel(CurvePoint(from, to, false, 0.7f), ("신뢰 < ", EditTarget.None, -1, -1), (Value(trust), trustTarget, truth, -1),
+                                (" · 파편 ", EditTarget.None, -1, -1), (keyText, keyTarget, truth, -1), (" (조건 없음)", EditTarget.None, -1, -1));
+                    }
+                }
+                else if (byGroup.TryGetValue(judge.Group, out Box lb))
+                {
+                    DialogueEditorDocument.Group leave = doc.Groups[judge.Group];
+                    (Vector2 f0, Vector2 t0) = JudgeLane(judge, lb, 0);
+                    AddLabel(CurvePoint(f0, t0, false, 0.35f), ("선택 후 신뢰 ≤ ", EditTarget.None, -1, -1), (Value(leave.Get(EndingScript.LEAVE_TRUST)), EditTarget.LeaveTrust, judge.Group, -1));
+                    (Vector2 f1, Vector2 t1) = JudgeLane(judge, lb, 1);
+                    AddLabel(CurvePoint(f1, t1, false, 0.7f), ("들여다보는 중 부담 ≥ ", EditTarget.None, -1, -1), (Percent(leave.Get(EndingScript.BURDEN_LIMIT)), EditTarget.BurdenLimit, judge.Group, -1));
+                }
+            }
+
+            // 선택지에서 바로 가는 엔딩: 그 선택지의 need가 조건이다.
+            foreach (Box b in boxes)
+            {
+                if (b.Kind != BoxKind.Group || b.Side) continue;
+                DialogueEditorDocument.Group g = doc.Groups[b.Group];
+                if (g.Section != Csv.SECTION_DIALOGUE) continue;
+                for (int k = 0; k < g.Items.Count; k++)
+                {
+                    int e = doc.IndexOf(Csv.SECTION_ENDING, g.Actor, g.Items[k].Get(DialogueEditorFormat.ENDING));
+                    if (e < 0 || !byGroup.TryGetValue(e, out Box endBox)) continue;
+                    string need = g.Items[k].Get("need");
+                    Vector2 mid = CurvePoint(ChoiceLineStart(boxes, b, k), TopCenter(endBox.Rect), true, 0.55f);
+                    if (need.Length > 0) AddLabel(mid, ("조건 ", EditTarget.None, -1, -1), (need.Replace("|", ", "), EditTarget.Need, b.Group, k));
+                    else AddLabel(mid, ("선택 시 즉시", EditTarget.Need, b.Group, k));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 기준값을 화면에 보일 글로 바꾼다. 비어 있으면 '?'다.
+        /// v를 사용하며, 글을 반환한다.
+        /// </summary>
+        private static string Value(string v) => v.Length > 0 ? v : "?";
+
+        /// <summary>
+        /// 0~1 부담 기준을 백분율 글로 바꾼다. 비었거나 수가 아니면 '?'다.
+        /// v를 사용하며, 'NN%' 글을 반환한다.
+        /// </summary>
+        private static string Percent(string v)
+        {
+            if (!float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out float f)) return "?";
+            return (f * 100f).ToString("0.#", CultureInfo.InvariantCulture) + "%";
+        }
+
+        /// <summary>
+        /// 조건 조각들을 한 줄로 이어 center에 가운데 맞춰 놓는다.
+        /// center와 parts(글, 편집 대상, 그룹, 행)를 사용하며, _segments에 조각을 더한다.
+        /// </summary>
+        private void AddLabel(Vector2 center, params (string text, EditTarget target, int group, int item)[] parts)
+        {
+            float h = Z(16f), pad = Z(4f), total = 0f;
+            var widths = new float[parts.Length];
+            for (int i = 0; i < parts.Length; i++)
+            {
+                widths[i] = _rowStyle.CalcSize(new GUIContent(parts[i].text)).x + (parts[i].target != EditTarget.None ? pad * 2f : 0f);
+                total += widths[i];
+            }
+            float x = center.x - total * 0.5f;
+            for (int i = 0; i < parts.Length; i++)
+            {
+                _segments.Add(new Segment { Text = parts[i].text, Target = parts[i].target, Group = parts[i].group, Item = parts[i].item, Rect = new Rect(x, center.y - h * 0.5f, widths[i], h) });
+                x += widths[i];
+            }
+        }
+
+        /// <summary>
+        /// 진입선 조건 조각을 그린다. 고칠 수 있는 조각은 다른 바탕과 밑줄로 구분한다.
+        /// 입력값은 없으며, _segments를 그린다.
+        /// </summary>
+        private void DrawSegments()
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            foreach (Segment s in _segments)
+            {
+                bool editable = s.Target != EditTarget.None;
+                EditorGUI.DrawRect(s.Rect, editable ? new Color(0.30f, 0.22f, 0.10f, 0.95f) : new Color(0.10f, 0.10f, 0.12f, 0.92f));
+                if (editable) EditorGUI.DrawRect(new Rect(s.Rect.x + Z(3f), s.Rect.yMax - 1f, s.Rect.width - Z(6f), 1f), new Color(1f, 0.78f, 0.35f));
+                var r = new Rect(s.Rect.x + (editable ? Z(4f) : 0f), s.Rect.y + Z(1f), s.Rect.width, s.Rect.height);
+                _scoreStyle.wordWrap = false;
+                GUI.Label(r, s.Text, editable ? _scoreStyle : _rowStyle);
+                _scoreStyle.wordWrap = true;
+            }
+        }
+
+        /// <summary>
+        /// 진입선 조건의 고칠 수 있는 조각을 누르면 편집을 시작한다. 기준값은 인라인 입력, 열쇠 파편과 need는 메뉴로 고른다.
+        /// 텍스트 오류·검사 대기 중에는 이유만 보인다. e, doc, inside, editable, windowMouse를 사용하며, 처리하면 이벤트를 사용 처리한다.
+        /// </summary>
+        private void HandleSegmentInput(Event e, DialogueEditorDocument doc, bool inside, bool editable, Vector2 windowMouse)
+        {
+            if (!inside || e.type != EventType.MouseDown || e.button != 0 || _inline != InlineKind.None) return;
+            Segment hit = null;
+            for (int i = _segments.Count - 1; i >= 0; i--)
+                if (_segments[i].Target != EditTarget.None && _segments[i].Rect.Contains(e.mousePosition)) { hit = _segments[i]; break; }
+            if (hit == null) return;
+            _focused = true;
+            e.Use();
+            if (!editable) { Notify("텍스트 오류를 고치거나 검사가 끝난 뒤 조건을 바꿀 수 있다."); return; }
+            if (hit.Group < 0 || hit.Group >= doc.Groups.Count) return;
+            switch (hit.Target)
+            {
+                case EditTarget.KeyFlag:
+                    KeyFlagMenu(doc, hit.Group).DropDown(new Rect(windowMouse, Vector2.zero));
+                    break;
+                case EditTarget.Need:
+                    NeedMenu(doc, hit.Group, hit.Item).DropDown(new Rect(windowMouse, Vector2.zero));
+                    break;
+                default:
+                    StartValueEdit(doc, hit.Target, hit.Group);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 엔딩 기준값의 인라인 편집을 시작한다. 부담 기준은 백분율 숫자로 고친다.
+        /// doc, target, group을 사용하며, 인라인 상태를 바꾼다.
+        /// </summary>
+        private void StartValueEdit(DialogueEditorDocument doc, EditTarget target, int group)
+        {
+            DialogueEditorDocument.Group g = doc.Groups[group];
+            _inline = InlineKind.Value;
+            _inlineTarget = target;
+            _inlineKey = KeyOf(g);
+            _inlineRow = -1;
+            string v = g.Get(ColumnOf(target));
+            _inlineText = target == EditTarget.BurdenLimit ? Percent(v).TrimEnd('%').Replace("?", "") : v;
+            _inlineError = "";
+            _inlineFocus = true;
+        }
+
+        /// <summary>
+        /// 편집 대상의 CSV 열 이름을 구한다.
+        /// target을 사용하며, 열 이름을 반환한다.
+        /// </summary>
+        private static string ColumnOf(EditTarget target)
+        {
+            switch (target)
+            {
+                case EditTarget.TruthTrust: return EndingScript.TRUTH_TRUST;
+                case EditTarget.KeyFlag: return EndingScript.KEY_FLAG;
+                case EditTarget.LeaveTrust: return EndingScript.LEAVE_TRUST;
+                case EditTarget.BurdenLimit: return EndingScript.BURDEN_LIMIT;
+                default: return "need";
+            }
+        }
+
+        /// <summary>
+        /// 엔딩 기준값 입력을 확정한다. 신뢰 기준은 정수, 부담 기준은 0 초과 100 이하의 백분율이며 CSV에는 0~1 실수로 쓴다.
+        /// doc과 idx(그룹 번호)를 사용하며, 바뀐 복사본 또는 (오류·변화 없음이면) null을 반환한다.
+        /// </summary>
+        private DialogueEditorDocument ConfirmValue(DialogueEditorDocument doc, int idx)
+        {
+            string text = _inlineText.Trim();
+            string column = ColumnOf(_inlineTarget);
+            string value;
+            if (_inlineTarget == EditTarget.BurdenLimit)
+            {
+                if (!float.TryParse(text.TrimEnd('%').Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float p)) { _inlineError = "부담 기준은 100처럼 백분율 숫자로 입력한다."; return null; }
+                if (p <= 0f || p > 100f) { _inlineError = "부담 기준은 0% 초과 100% 이하여야 한다."; return null; }
+                value = (p / 100f).ToString("0.####", CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                if (!int.TryParse(text.TrimStart('+'), NumberStyles.Integer, CultureInfo.InvariantCulture, out int v)) { _inlineError = "신뢰 기준은 정수로 입력한다."; return null; }
+                value = v.ToString(CultureInfo.InvariantCulture);
+            }
+            if (value == doc.Groups[idx].Get(column)) { CancelInline(); return null; }
+            DialogueEditorDocument copy = doc.Clone();
+            copy.Groups[idx].Fields[column] = value;
+            RenamedFrom = RenamedTo = null;
+            _inlineAwait = true;
+            return copy;
+        }
+
+        /// <summary>
+        /// 열쇠 파편 대상을 고르는 메뉴를 만든다. '없음'과 이 회차 손님의 파편 Flag(하나뿐인 것)만 고를 수 있다.
+        /// doc과 truth(그룹 번호)를 사용하며, 메뉴를 반환한다. 고르면 key_flag를 바꾼 복사본을 _pending에 둔다.
+        /// </summary>
+        private GenericMenu KeyFlagMenu(DialogueEditorDocument doc, int truth)
+        {
+            string current = doc.Groups[truth].Get(EndingScript.KEY_FLAG);
+            var menu = new GenericMenu();
+            menu.AddItem(new GUIContent("없음 (신뢰만 판정)"), current.Length == 0, () => _pending = WithGroupField(doc, truth, EndingScript.KEY_FLAG, ""));
+            (ClientCase owner, List<string> flags) = DialogueEditorFormat.CaseFragmentFlags(doc.AssetPath);
+            if (owner == null) { menu.AddDisabledItem(new GUIContent("열린 씬에서 이 파일의 손님을 찾지 못했다")); return menu; }
+            menu.AddSeparator("");
+            foreach (string flag in flags)
+            {
+                string f = flag;
+                menu.AddItem(new GUIContent(f), f == current, () => _pending = WithGroupField(doc, truth, EndingScript.KEY_FLAG, f));
+            }
+            return menu;
+        }
+
+        /// <summary>
+        /// 직접 엔딩 선택지의 need 플래그를 켜고 끄는 메뉴를 만든다. Flags.csv의 플래그마다 한 항목이고, 고를 때마다 하나를 더하거나 뺀다.
+        /// doc, group, item을 사용하며, 메뉴를 반환한다. 고르면 need를 바꾼 복사본을 _pending에 둔다.
+        /// </summary>
+        private GenericMenu NeedMenu(DialogueEditorDocument doc, int group, int item)
+        {
+            var current = new List<string>();
+            foreach (string part in doc.Groups[group].Items[item].Get("need").Split('|'))
+                if (part.Trim().Length > 0) current.Add(part.Trim());
+            var menu = new GenericMenu();
+            menu.AddItem(new GUIContent("조건 모두 지우기 (선택 시 즉시)"), current.Count == 0, () => _pending = WithNeed(doc, group, item, new List<string>()));
+            menu.AddSeparator("");
+            foreach (DialogueData.FlagDef d in DialogueData.LoadFlags(new List<string>()))
+            {
+                if (d.Id.Length == 0) continue;
+                string id = d.Id;
+                bool on = current.Contains(id);
+                menu.AddItem(new GUIContent(id), on, () =>
+                {
+                    var next = new List<string>(current);
+                    if (on) next.Remove(id);
+                    else next.Add(id);
+                    _pending = WithNeed(doc, group, item, next);
+                });
+            }
+            return menu;
+        }
+
+        /// <summary>
+        /// 그룹 칸 하나를 바꾼 복사본을 만든다. 값이 비면 칸을 지운다.
+        /// doc, group, column, value를 사용하며, 새 문서를 반환한다.
+        /// </summary>
+        private static DialogueEditorDocument WithGroupField(DialogueEditorDocument doc, int group, string column, string value)
+        {
+            DialogueEditorDocument copy = doc.Clone();
+            if (value.Length == 0) copy.Groups[group].Fields.Remove(column);
+            else copy.Groups[group].Fields[column] = value;
+            return copy;
+        }
+
+        /// <summary>
+        /// 선택지의 need 목록을 바꾼 복사본을 만든다.
+        /// doc, group, item, flags를 사용하며, 새 문서를 반환한다.
+        /// </summary>
+        private static DialogueEditorDocument WithNeed(DialogueEditorDocument doc, int group, int item, List<string> flags)
+        {
+            DialogueEditorDocument copy = doc.Clone();
+            DialogueEditorDocument.Item i = copy.Groups[group].Items[item];
+            if (flags.Count == 0) i.Fields.Remove("need");
+            else i.Fields["need"] = string.Join("|", flags);
+            return copy;
+        }
+
         // ---------------------------------------------------------------- 우클릭 추가
 
         /// <summary>
@@ -1343,8 +2161,46 @@ namespace EyeMaze.EditorTools
             bool full = g.Section == Csv.SECTION_DIALOGUE && g.Items.Count >= 3;
             var menu = new GenericMenu();
             if (!editable || full) menu.AddDisabledItem(new GUIContent(label + (full ? " (선택지 3개)" : " (텍스트 오류 또는 검사 대기 중)")));
+            else if (g.Section == Csv.SECTION_TALK)
+            {
+                menu.AddItem(new GUIContent(label + "/기본 화자 (" + g.Actor + ")"), false, () => _pending = InsertRow(doc, group, index, ""));
+                menu.AddItem(new GUIContent(label + "/서술"), false, () => _pending = InsertRow(doc, group, index, TalkScript.Narration));
+                menu.AddItem(new GUIContent(label + "/???"), false, () => _pending = InsertRow(doc, group, index, TalkScript.Unknown));
+                var speakers = new List<string>();
+                foreach (DialogueEditorDocument.Group groupEntry in doc.Groups)
+                    foreach (DialogueEditorDocument.Item line in groupEntry.Items)
+                    {
+                        string speaker = line.Get("speaker");
+                        if (speaker.Length > 0 && speaker != TalkScript.Narration && speaker != TalkScript.Unknown && !speakers.Contains(speaker)) speakers.Add(speaker);
+                    }
+                foreach (FieldNPC npc in Object.FindObjectsByType<FieldNPC>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                    if (!string.IsNullOrEmpty(npc.DisplayName) && !speakers.Contains(npc.DisplayName)) speakers.Add(npc.DisplayName);
+                foreach (ClientCase client in Object.FindObjectsByType<ClientCase>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                    if (!string.IsNullOrEmpty(client.PersonName) && !speakers.Contains(client.PersonName)) speakers.Add(client.PersonName);
+                foreach (string speaker in speakers)
+                {
+                    string selected = speaker;
+                    menu.AddItem(new GUIContent(label + "/" + selected), false, () => _pending = InsertRow(doc, group, index, selected));
+                }
+            }
             else menu.AddItem(new GUIContent(label), false, () => _pending = InsertRow(doc, group, index));
+            if (g.Section == Csv.SECTION_ENDING && !g.Id.StartsWith("@") && g.Get("after").Length == 0)
+            {
+                menu.AddSeparator("");
+                if (editable) menu.AddItem(new GUIContent("after 추가"), false, () => _pending = AddAfter(doc, group));
+                else menu.AddDisabledItem(new GUIContent("after 추가 (텍스트 오류 또는 검사 대기 중)"));
+            }
             return menu;
+        }
+
+        /// <summary>
+        /// after가 없는 엔딩에 편집 가능한 새 문구를 넣은 복사본을 만든다.
+        /// </summary>
+        private static DialogueEditorDocument AddAfter(DialogueEditorDocument doc, int group)
+        {
+            DialogueEditorDocument copy = doc.Clone();
+            copy.Groups[group].Fields["after"] = "새 after";
+            return copy;
         }
 
         /// <summary>
@@ -1361,7 +2217,7 @@ namespace EyeMaze.EditorTools
         /// 그룹의 지정 위치에 새 행을 넣은 복사본을 만든다. 새 선택지는 글 '새 선택지'와 수치 0, 다른 행은 '새 대사' 또는 '새 문구'다.
         /// doc, group, index를 사용하며, 새 문서를 반환한다.
         /// </summary>
-        public static DialogueEditorDocument InsertRow(DialogueEditorDocument doc, int group, int index)
+        public static DialogueEditorDocument InsertRow(DialogueEditorDocument doc, int group, int index, string speaker = "")
         {
             DialogueEditorDocument copy = doc.Clone();
             DialogueEditorDocument.Group g = copy.Groups[group];
@@ -1371,7 +2227,11 @@ namespace EyeMaze.EditorTools
                 item.Fields[DialogueEditorFormat.TEXT] = "새 선택지";
                 foreach (string c in new[] { "trust", "dilation", "spring" }) item.Fields[c] = "0";
             }
-            else item.Fields[DialogueEditorFormat.TEXT] = doc.Kind == DialogueEditorKind.Strings ? "새 문구" : "새 대사";
+            else
+            {
+                item.Fields[DialogueEditorFormat.TEXT] = doc.Kind == DialogueEditorKind.Strings ? "새 문구" : "새 대사";
+                if (g.Section == Csv.SECTION_TALK && !string.IsNullOrEmpty(speaker)) item.Fields["speaker"] = speaker;
+            }
             g.Items.Insert(Mathf.Clamp(index, 0, g.Items.Count), item);
             return copy;
         }
@@ -1391,9 +2251,9 @@ namespace EyeMaze.EditorTools
                     if (e.button == 2 || (e.button == 0 && HitBox(boxes, e.mousePosition) == null)) { _panning = true; e.Use(); break; }
                     if (e.button != 0) break;
                     Box hit = HitBox(boxes, e.mousePosition);
-                    if (hit != null && _inline == InlineKind.None && (hit.Kind == BoxKind.After || e.mousePosition.y < hit.Rect.y + Z(HEADER_HEIGHT)))
+                    if (hit != null && _inline == InlineKind.None && (hit.Kind != BoxKind.Group || e.mousePosition.y < hit.Rect.y + Z(HEADER_HEIGHT)))
                     {
-                        _dragNode = KeyOf(doc.Groups[hit.Group]) + (hit.Kind == BoxKind.After ? "#after" : "");
+                        _dragNode = OffsetKey(doc, hit);
                         e.Use();
                     }
                     break;

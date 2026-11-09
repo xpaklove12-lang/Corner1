@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Text;
 
@@ -52,6 +53,7 @@ namespace EyeMaze.EditorTools
         {
             public DialogueEditorDocument Doc;
             public string Csv;
+            public string FlagsCsv;
             /// <summary>이 상태로 오게 한 편집이 그룹 ID 변경이면 그 이전·새 그룹 키. 실행 취소·다시 실행 때 크기 설정 키를 옮긴다.</summary>
             public string RenamedFrom;
             public string RenamedTo;
@@ -81,6 +83,7 @@ namespace EyeMaze.EditorTools
             _split = EditorPrefs.GetFloat(SPLIT_PREF, DEFAULT_SPLIT);
             _graph.SizeLoader = LoadNodeSize;
             _graph.SizeSaver = SaveNodeSize;
+            _graph.FragmentTextSaver = SaveFragmentText;
             RefreshPaths();
             if (!string.IsNullOrEmpty(_openPath)) OpenPath(_openPath);
         }
@@ -519,9 +522,10 @@ namespace EyeMaze.EditorTools
         {
             _doc = doc;
             if (DialogueEditorFormat.Save(doc.AssetPath, csv)) _savedAt = System.DateTime.Now.ToString("HH:mm:ss");
-            if (_historyIndex >= 0 && _history[_historyIndex].Csv == csv) return;
+            string flagsCsv = ReadFlagsSource();
+            if (_historyIndex >= 0 && _history[_historyIndex].Csv == csv && _history[_historyIndex].FlagsCsv == flagsCsv) return;
             if (_historyIndex + 1 < _history.Count) _history.RemoveRange(_historyIndex + 1, _history.Count - _historyIndex - 1);
-            _history.Add(new Snapshot { Doc = doc.Clone(), Csv = csv, RenamedFrom = renamedFrom, RenamedTo = renamedTo });
+            _history.Add(new Snapshot { Doc = doc.Clone(), Csv = csv, FlagsCsv = flagsCsv, RenamedFrom = renamedFrom, RenamedTo = renamedTo });
             _historyIndex = _history.Count - 1;
         }
 
@@ -533,8 +537,148 @@ namespace EyeMaze.EditorTools
         {
             _history.Clear();
             var rowLines = new List<int>();
-            _history.Add(new Snapshot { Doc = _doc.Clone(), Csv = DialogueEditorFormat.WriteCsv(_doc, rowLines) });
+            _history.Add(new Snapshot { Doc = _doc.Clone(), Csv = DialogueEditorFormat.WriteCsv(_doc, rowLines), FlagsCsv = ReadFlagsSource() });
             _historyIndex = 0;
+        }
+
+        /// <summary>
+        /// Flags.csv의 UTF-8 본문을 BOM 없이 읽는다. 파일이 없거나 형식이 틀리면 null이다.
+        /// </summary>
+        private static string ReadFlagsSource()
+        {
+            try
+            {
+                string path = Path.GetFullPath(DialogueData.FlagsPath);
+                return File.Exists(path) && Csv.TryDecodeUtf8(File.ReadAllBytes(path), out string source) ? source : null;
+            }
+            catch (IOException) { return null; }
+        }
+
+        /// <summary>
+        /// Flags.csv를 저장·재임포트하고 게임에서 읽는 플래그 문구를 즉시 갱신한다.
+        /// </summary>
+        private static bool WriteFlagsSource(string source, out string error)
+        {
+            error = "";
+            try
+            {
+                DialogueEditorFormat.Save(DialogueData.FlagsPath, source);
+                TextAsset asset = AssetDatabase.LoadAssetAtPath<TextAsset>(DialogueData.FlagsPath);
+                if (asset == null) { error = "저장 후 Flags.csv를 다시 읽지 못했다."; return false; }
+                Flags.LoadDefinitions(asset, true);
+                return true;
+            }
+            catch (IOException ex) { error = "Flags.csv 저장 실패: " + ex.Message; return false; }
+        }
+
+        /// <summary>
+        /// 파편 Flag ID의 획득 문구를 Flags.csv에 저장하고 대화 편집과 같은 기록에 추가한다.
+        /// </summary>
+        private (bool ok, string error) SaveFragmentText(string flag, string text)
+        {
+            string before = ReadFlagsSource();
+            if (before == null) return (false, "Flags.csv를 UTF-8로 읽지 못했다.");
+            if (_historyIndex >= 0 && _history[_historyIndex].FlagsCsv != before)
+                return (false, "Flags.csv가 창 밖에서 바뀌었다. 파일을 다시 열고 수정한다.");
+            if (!TryReplaceFlagText(before, flag, DialogueEditorFormat.Body(text), out string after, out string error)) return (false, error);
+            if (before == after) return (true, "");
+            if (!WriteFlagsSource(after, out error)) return (false, error);
+            if (_historyIndex + 1 < _history.Count) _history.RemoveRange(_historyIndex + 1, _history.Count - _historyIndex - 1);
+            var rowLines = new List<int>();
+            _history.Add(new Snapshot { Doc = _doc.Clone(), Csv = DialogueEditorFormat.WriteCsv(_doc, rowLines), FlagsCsv = after });
+            _historyIndex = _history.Count - 1;
+            _savedAt = System.DateTime.Now.ToString("HH:mm:ss");
+            Repaint();
+            return (true, "");
+        }
+
+        /// <summary>CSV 칸의 원문 시작·끝과 따옴표를 해석한 값을 보관한다.</summary>
+        private struct CellRange
+        {
+            public int Start;
+            public int End;
+            public string Value;
+        }
+
+        /// <summary>
+        /// 따옴표 안의 쉼표·줄바꿈을 고려해 CSV 칸의 원문 위치를 찾는다.
+        /// </summary>
+        private static List<List<CellRange>> ReadCellRanges(string source, out bool closed)
+        {
+            var rows = new List<List<CellRange>>();
+            var cells = new List<CellRange>();
+            var value = new StringBuilder();
+            int start = 0;
+            bool quoted = false;
+            for (int i = 0; i < source.Length; i++)
+            {
+                char c = source[i];
+                if (c == '"')
+                {
+                    if (quoted && i + 1 < source.Length && source[i + 1] == '"') { value.Append('"'); i++; }
+                    else quoted = !quoted;
+                    continue;
+                }
+                if (!quoted && (c == ',' || c == '\n'))
+                {
+                    cells.Add(new CellRange { Start = start, End = i, Value = value.ToString() });
+                    value.Clear();
+                    start = i + 1;
+                    if (c == '\n') { rows.Add(cells); cells = new List<CellRange>(); }
+                    continue;
+                }
+                if (c != '\r') value.Append(c);
+            }
+            closed = !quoted;
+            if (start < source.Length || cells.Count > 0)
+            {
+                cells.Add(new CellRange { Start = start, End = source.Length, Value = value.ToString() });
+                rows.Add(cells);
+            }
+            return rows;
+        }
+
+        /// <summary>
+        /// 지정한 Flag ID의 text 칸 원문만 바꾸고 다른 행과 열을 그대로 둔다.
+        /// </summary>
+        private static bool TryReplaceFlagText(string source, string flag, string text, out string changed, out string error)
+        {
+            changed = source;
+            error = "";
+            List<List<CellRange>> rows = ReadCellRanges(source, out bool closed);
+            if (!closed) { error = "Flags.csv의 따옴표가 닫히지 않았다."; return false; }
+            int idColumn = -1, textColumn = -1;
+            bool header = false;
+            CellRange target = new CellRange();
+            int matches = 0;
+            foreach (List<CellRange> row in rows)
+            {
+                if (row.Count == 0 || row[0].Value.Trim().Length == 0 || row[0].Value.TrimStart().StartsWith("#")) continue;
+                if (!header)
+                {
+                    header = true;
+                    for (int i = 0; i < row.Count; i++)
+                    {
+                        if (row[i].Value.Trim() == "id") idColumn = i;
+                        if (row[i].Value.Trim() == "text") textColumn = i;
+                    }
+                    continue;
+                }
+                if (idColumn < 0 || textColumn < 0) break;
+                if (idColumn >= row.Count || row[idColumn].Value.Trim() != flag) continue;
+                if (textColumn >= row.Count) { error = "Flags.csv의 '" + flag + "' 행에 text 칸이 없다."; return false; }
+                target = row[textColumn];
+                matches++;
+            }
+            if (idColumn < 0 || textColumn < 0) { error = "Flags.csv에 id 또는 text 열이 없다."; return false; }
+            if (matches != 1) { error = matches == 0 ? "Flags.csv에 파편 플래그 '" + flag + "'가 없다." : "Flags.csv에 파편 플래그 '" + flag + "'가 중복돼 있다."; return false; }
+            if (target.Value.Trim() == text) return true;
+            string encoded = "\"" + text.Replace("\"", "\"\"") + "\"";
+            changed = source.Substring(0, target.Start) + encoded + source.Substring(target.End);
+            var errors = new List<string>();
+            Csv.Parse(changed, errors);
+            if (errors.Count > 0) { changed = source; error = errors[0]; return false; }
+            return true;
         }
 
         /// <summary>
@@ -592,6 +736,20 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private void RestoreSnapshot(int index)
         {
+            string currentFlags = ReadFlagsSource();
+            if (_historyIndex >= 0 && currentFlags != _history[_historyIndex].FlagsCsv)
+            {
+                _issues.Add(new DialogueEditorFormat.Issue { Message = "Flags.csv가 창 밖에서 바뀌었다. 파일을 다시 열어 실행 취소 기록을 갱신한다." });
+                Repaint();
+                return;
+            }
+            string nextFlags = _history[index].FlagsCsv;
+            if (nextFlags != null && nextFlags != currentFlags && !WriteFlagsSource(nextFlags, out string flagsError))
+            {
+                _issues.Add(new DialogueEditorFormat.Issue { Message = flagsError });
+                Repaint();
+                return;
+            }
             // 되돌리거나 다시 하는 편집이 ID 변경이면 노드 크기 설정 키도 따라 옮긴다.
             Snapshot moving = index < _historyIndex ? _history[_historyIndex] : _history[index];
             if (moving.RenamedFrom != null && moving.RenamedTo != null)
