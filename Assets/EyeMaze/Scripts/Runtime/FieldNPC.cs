@@ -62,6 +62,17 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("inner")] private LineRenderer _inner;
         [SerializeField, FormerlySerializedAs("marker")] private LineRenderer _marker;
 
+        [Header("캐릭터 스프라이트")]
+        [SerializeField] private SpriteRenderer _characterRenderer;
+        [SerializeField] private Sprite _standingSprite;
+        [SerializeField] private Sprite[] _walkingSprites;
+        [SerializeField] private Sprite _sittingSprite;
+        [SerializeField] private float _walkFrameSeconds = 0.12f;
+        [Tooltip("앉을 때 스프라이트를 왼쪽으로 향하게 한다")]
+        [SerializeField] private bool _sitFacingLeft;
+        [Tooltip("걷는 동안 위로 들리는 높이")]
+        [SerializeField] private float _walkBobHeight = 0.01f;
+
         [NonSerialized] private int _drawnKey = int.MinValue;
         [NonSerialized] private bool _present = true;
         [NonSerialized] private bool _talked;
@@ -77,6 +88,9 @@ namespace EyeMaze
         [NonSerialized] private Vector3 _sitFrom;
         [NonSerialized] private float _sitFromHeight;
         [NonSerialized] private Action _sitDone;
+        [NonSerialized] private bool _sitting = true;
+        [NonSerialized] private float _walkFrameTime;
+        [NonSerialized] private int _walkFrame;
 
         public bool Met { get => _met; set => _met = value; }
         public bool Resolved { get => _resolved; set => _resolved = value; }
@@ -115,12 +129,14 @@ namespace EyeMaze
         void Update()
         {
             if (Application.isPlaying) Animate(Time.deltaTime);
+            UpdateCharacterSprite(Time.deltaTime);
             int key = HashCode.Combine(Radius, _height, _bodyColor, _resolved, Present, _talkOnly);
             if (key == _drawnKey) return;
             _drawnKey = key;
             bool show = Present;
-            if (_body != null && _body.enabled != show) _body.enabled = show;
-            if (_inner != null && _inner.enabled != show) _inner.enabled = show;
+            bool showBody = show && (_characterRenderer == null || _standingSprite == null);
+            if (_body != null && _body.enabled != showBody) _body.enabled = showBody;
+            if (_inner != null && _inner.enabled != showBody) _inner.enabled = showBody;
             if (_marker != null && _marker.enabled != show) _marker.enabled = show;
             float w = Radius * 2f;
             float half = Mathf.Max(0.001f, _height * 0.5f - w * 0.5f);
@@ -230,6 +246,7 @@ namespace EyeMaze
         public void StandAt(float x)
         {
             SaveSeat();
+            _sitting = false;
             _height = _standHeight;
             transform.position = new Vector3(x, _floorY + _standHeight * 0.5f, _seatPos.z);
             Present = true;
@@ -244,6 +261,11 @@ namespace EyeMaze
         {
             SaveSeat();
             if (!Mathf.Approximately(_height, _standHeight)) StandAt(transform.position.x);
+            _sitting = false;
+            if (_characterRenderer != null && !Mathf.Approximately(x, transform.position.x))
+                _characterRenderer.flipX = x < transform.position.x;
+            _walkFrame = 0;
+            _walkFrameTime = 0f;
             _walking = true;
             _walkTargetX = x;
             _walkDone = done;
@@ -267,6 +289,8 @@ namespace EyeMaze
         public void SitDown(Action done)
         {
             SaveSeat();
+            _sitting = true;
+            if (_characterRenderer != null) _characterRenderer.flipX = _sitFacingLeft;
             _sitFrom = transform.position;
             _sitFromHeight = _height;
             _sitT = 0f;
@@ -307,7 +331,7 @@ namespace EyeMaze
                 Vector3 p = transform.position;
                 p.x = Mathf.MoveTowards(p.x, _walkTargetX, _walkSpeedNow * dt);
                 _bobT += dt * 9f;
-                p.y = _floorY + _height * 0.5f + Mathf.Abs(Mathf.Sin(_bobT)) * 0.06f;
+                p.y = _floorY + _height * 0.5f + Mathf.Abs(Mathf.Sin(_bobT)) * _walkBobHeight;
                 transform.position = p;
                 if (Mathf.Approximately(p.x, _walkTargetX))
                 {
@@ -334,6 +358,31 @@ namespace EyeMaze
                     d?.Invoke();
                 }
             }
+        }
+
+        /// <summary>
+        /// 등장과 이동 및 착석 상태에 맞는 캐릭터 스프라이트를 표시한다.
+        /// dt와 설정된 프레임을 사용하며 렌더러와 걷기 프레임 상태를 변경한다.
+        /// </summary>
+        private void UpdateCharacterSprite(float dt)
+        {
+            if (_characterRenderer == null || _standingSprite == null) return;
+            _characterRenderer.enabled = Present;
+            Sprite sprite = _sitting && _sittingSprite != null ? _sittingSprite : _standingSprite;
+            if (_walking && _walkingSprites != null && _walkingSprites.Length > 0)
+            {
+                if (Application.isPlaying)
+                {
+                    _walkFrameTime += dt;
+                    if (_walkFrameTime >= Mathf.Max(0.01f, _walkFrameSeconds))
+                    {
+                        _walkFrameTime = 0f;
+                        _walkFrame = (_walkFrame + 1) % _walkingSprites.Length;
+                    }
+                }
+                sprite = _walkingSprites[_walkFrame];
+            }
+            _characterRenderer.sprite = sprite;
         }
 
         /// <summary>

@@ -49,3 +49,5 @@ SDD 작업을 시작할 때 이 파일을 가장 먼저 읽는다.
 | 006 | `specs/006-blink-illusion-rotation.md` | 깜빡임 때 맵과 시선을 함께 무작위로 돌려 맵이 변한 듯한 착시를 준다 | 구현완료 |
 | 007 | `specs/007-wall-knockback.md` | 벽이나 잠긴 문에 세게 부딪히면 미로가 지지직 흐려지고 시선이 밀려나며 부담감이 오른다 | 구현완료 |
 | 008 | `specs/007-dialogue-log.md` | 지나간 필드 대화, 만남 대화, 엔딩 대사를 L 키로 다시 읽는 대화 기록 창 | 구현완료 |
+| 009 | `specs/009-field-character-animation.md` | 세 인물의 필드 전신 캐릭터와 걷기·앉기 표현 | 구현완료 |
+| 010 | `specs/010-walk-cycle-and-player.md` | 걷기 GIF 기반 애니메이션과 주인공 임시 외형 | 작성중 |
