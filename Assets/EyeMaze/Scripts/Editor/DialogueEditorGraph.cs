@@ -61,6 +61,8 @@ namespace EyeMaze.EditorTools
             Value,
             /// <summary>선택지의 신뢰·동공 변화량 배지</summary>
             Badge,
+            /// <summary>직접 엔딩 조건에 더할 새 조건 변수(Flag ID)</summary>
+            NewFlag,
         }
 
         /// <summary>트리에서 눌러 고칠 수 있는 조건·수치 항목</summary>
@@ -201,6 +203,8 @@ namespace EyeMaze.EditorTools
         public System.Func<string, string, (bool ok, string error)> FragmentTextSaver { get; set; }
         /// <summary>손님과 층 파편 묶음을 받아 새 기억 파편을 만드는 창의 함수. 결과로 성공 여부, 오류, 새 파편을 돌려준다.</summary>
         public System.Func<ClientCase, GameObject, (bool ok, string error, MemoryFragment fragment)> FragmentCreator { get; set; }
+        /// <summary>Flag ID를 받아 Flags.csv에 새 플래그 줄을 넣는 창의 함수. 결과로 성공 여부와 오류를 돌려준다.</summary>
+        public System.Func<string, (bool ok, string error)> FlagCreator { get; set; }
 
         /// <summary>마지막으로 확정한 ID 변경의 이전·새 그룹 키 (없으면 null). 창이 크기 설정 키를 옮길 때 쓴다.</summary>
         public string RenamedFrom { get; private set; }
@@ -1659,6 +1663,7 @@ namespace EyeMaze.EditorTools
             }
             if (_inline == InlineKind.Value) return ConfirmValue(doc, idx);
             if (_inlineRow < 0 || _inlineRow >= g.Items.Count) { CancelInline(); return null; }
+            if (_inline == InlineKind.NewFlag) return ConfirmNewFlag(doc, idx, text);
             if (_inline == InlineKind.Badge)
             {
                 bool valid = _inlineColumn == "dilation"
@@ -1743,6 +1748,12 @@ namespace EyeMaze.EditorTools
                 if (response == null) return Rect.zero;
                 Rect line = ResponseLineRect(response, _inlineLine);
                 return new Rect(line.x + Z(4f), line.y + Z(2f), line.width - Z(8f), Z(20f));
+            }
+            if (_inline == InlineKind.NewFlag)
+            {
+                int idx = GroupIndex(doc, _inlineKey);
+                Segment s = _segments.Find(seg => seg.Target == EditTarget.Need && seg.Group == idx && seg.Item == _inlineRow);
+                return s == null ? Rect.zero : new Rect(s.Rect.x, s.Rect.y - Z(2f), Mathf.Max(s.Rect.width, Z(160f)), s.Rect.height + Z(4f));
             }
             if (_inline == InlineKind.Value)
             {
@@ -2153,6 +2164,99 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
+        /// 위치에 있는 직접 엔딩 조건 조각을 찾는다. 앞에 붙은 '조건' 글자 위도 그 조건으로 본다.
+        /// position(그래프 좌표)을 사용하며, need 조각(없으면 null)을 반환한다.
+        /// </summary>
+        private Segment NeedSegmentAt(Vector2 position)
+        {
+            for (int i = _segments.Count - 1; i >= 0; i--)
+            {
+                Segment seg = _segments[i];
+                if (seg.Target != EditTarget.Need) continue;
+                if (seg.Rect.Contains(position)) return seg;
+                if (i > 0 && _segments[i - 1].Target == EditTarget.None && _segments[i - 1].Rect.Contains(position)) return seg;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 직접 엔딩 조건의 우클릭 메뉴를 만든다. 조건에 없는 플래그를 source별로 더하고, 조건의 플래그를 빼고, 새 조건 변수를 만든다.
+        /// doc, group, item(선택지 행), editable을 사용하며, 메뉴를 반환한다. 고르면 need를 바꾼 복사본을 _pending에 두거나 ID 입력을 연다.
+        /// </summary>
+        private GenericMenu NeedContextMenu(DialogueEditorDocument doc, int group, int item, bool editable)
+        {
+            var menu = new GenericMenu();
+            if (!editable)
+            {
+                menu.AddDisabledItem(new GUIContent("조건 변수 편집 (텍스트 오류 또는 검사 대기 중)"));
+                return menu;
+            }
+            var current = new List<string>();
+            foreach (string part in doc.Groups[group].Items[item].Get("need").Split('|'))
+                if (part.Trim().Length > 0) current.Add(part.Trim());
+            bool any = false;
+            foreach (DialogueData.FlagDef d in DialogueData.LoadFlags(new List<string>()))
+            {
+                if (d.Id.Length == 0 || current.Contains(d.Id)) continue;
+                string id = d.Id;
+                string source = !string.IsNullOrEmpty(d.Condition) ? "계산" : !string.IsNullOrWhiteSpace(d.Source) ? d.Source.Trim() : "기타";
+                menu.AddItem(new GUIContent($"조건 추가/{source.Replace("/", "∕")}/{id}"), false,
+                    () => _pending = WithNeed(doc, group, item, new List<string>(current) { id }));
+                any = true;
+            }
+            if (!any) menu.AddDisabledItem(new GUIContent("조건 추가 (더할 플래그가 없음)"));
+            foreach (string flag in current)
+            {
+                string id = flag;
+                menu.AddItem(new GUIContent("조건 빼기/" + id), false, () =>
+                {
+                    var next = new List<string>(current);
+                    next.Remove(id);
+                    _pending = WithNeed(doc, group, item, next);
+                });
+            }
+            menu.AddSeparator("");
+            if (FlagCreator == null) menu.AddDisabledItem(new GUIContent("새 조건 변수 만들기…"));
+            else menu.AddItem(new GUIContent("새 조건 변수 만들기…"), false, () => StartNewFlagEdit(doc, group, item));
+            return menu;
+        }
+
+        /// <summary>
+        /// 새 조건 변수의 ID 입력을 조건 자리에서 시작한다.
+        /// doc, group, item을 사용하며, 인라인 상태를 바꾼다.
+        /// </summary>
+        private void StartNewFlagEdit(DialogueEditorDocument doc, int group, int item)
+        {
+            _inline = InlineKind.NewFlag;
+            _inlineKey = KeyOf(doc.Groups[group]);
+            _inlineRow = item;
+            _inlineText = "";
+            _inlineError = "";
+            _inlineFocus = true;
+            _focused = true;
+        }
+
+        /// <summary>
+        /// 새 조건 변수 입력을 확정한다. ID 규칙에 맞으면 Flags.csv에 줄을 넣고 그 ID를 조건에 더한 복사본을 만든다.
+        /// doc, idx(그룹), text(입력한 ID)를 사용하며, 복사본 또는 (입력창을 유지할 때) null을 반환한다.
+        /// </summary>
+        private DialogueEditorDocument ConfirmNewFlag(DialogueEditorDocument doc, int idx, string text)
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(text, "^[a-z0-9_]+$")) { _inlineError = "ID는 영문 소문자, 숫자, _만 쓴다."; return null; }
+            foreach (DialogueData.FlagDef d in DialogueData.LoadFlags(new List<string>()))
+                if (d.Id == text) { _inlineError = $"'{text}'는 Flags.csv에 이미 있다. 조건 추가 메뉴에서 고른다."; return null; }
+            (bool ok, string error) = FlagCreator(text);
+            if (!ok) { _inlineError = error; return null; }
+            var flags = new List<string>();
+            foreach (string part in doc.Groups[idx].Items[_inlineRow].Get("need").Split('|'))
+                if (part.Trim().Length > 0) flags.Add(part.Trim());
+            flags.Add(text);
+            RenamedFrom = RenamedTo = null;
+            _inlineAwait = true;
+            return WithNeed(doc, idx, _inlineRow, flags);
+        }
+
+        /// <summary>
         /// 선택지의 need 목록을 바꾼 복사본을 만든다.
         /// doc, group, item, flags를 사용하며, 새 문서를 반환한다.
         /// </summary>
@@ -2175,6 +2279,14 @@ namespace EyeMaze.EditorTools
         private void HandleContextMenu(Event e, DialogueEditorDocument doc, List<Box> boxes, bool inside, bool editable, Vector2 windowMouse)
         {
             if (e.type != EventType.ContextClick || !inside) return;
+            Segment need = NeedSegmentAt(e.mousePosition);
+            if (need != null && need.Group < doc.Groups.Count)
+            {
+                // 진입선 조건 위: 조건 변수를 더하고 빼거나 새로 만드는 메뉴
+                NeedContextMenu(doc, need.Group, need.Item, editable).DropDown(new Rect(windowMouse, Vector2.zero));
+                e.Use();
+                return;
+            }
             Box hit = HitBox(boxes, e.mousePosition);
             if (hit == null)
             {

@@ -86,6 +86,7 @@ namespace EyeMaze.EditorTools
             _graph.SizeSaver = SaveNodeSize;
             _graph.FragmentTextSaver = SaveFragmentText;
             _graph.FragmentCreator = CreateFragment;
+            _graph.FlagCreator = AddFlag;
             RefreshPaths();
             if (!string.IsNullOrEmpty(_openPath)) OpenPath(_openPath);
         }
@@ -610,6 +611,27 @@ namespace EyeMaze.EditorTools
             _savedAt = System.DateTime.Now.ToString("HH:mm:ss");
             Repaint();
             return (true, "", created);
+        }
+
+        /// <summary>
+        /// Flags.csv 끝에 id만 채운 플래그 줄을 넣고 실행 취소 기록에 더한다.
+        /// id를 사용하며, 성공 여부와 오류를 반환하고 Flags.csv와 기록을 바꾼다.
+        /// </summary>
+        private (bool ok, string error) AddFlag(string id)
+        {
+            string before = ReadFlagsSource();
+            if (before == null) return (false, "Flags.csv를 UTF-8로 읽지 못했다.");
+            if (_historyIndex >= 0 && _history[_historyIndex].FlagsCsv != before)
+                return (false, "Flags.csv가 창 밖에서 바뀌었다. 파일을 다시 열고 추가한다.");
+            foreach (List<CellRange> row in ReadCellRanges(before, out _))
+                if (row.Count > 0 && row[0].Value.Trim() == id) return (false, $"'{id}'는 Flags.csv에 이미 있다.");
+            string newline = before.Contains("\r\n") ? "\r\n" : "\n";
+            string after = before + (before.Length == 0 || before.EndsWith("\n") ? "" : newline) + $"{id},,,,,,{newline}";
+            if (!WriteFlagsSource(after, out string error)) return (false, error);
+            if (_historyIndex + 1 < _history.Count) _history.RemoveRange(_historyIndex + 1, _history.Count - _historyIndex - 1);
+            _history.Add(new Snapshot { Doc = _doc.Clone(), Csv = DialogueEditorFormat.WriteCsv(_doc, new List<int>()), FlagsCsv = after });
+            _historyIndex = _history.Count - 1;
+            return (true, "");
         }
 
         /// <summary>
