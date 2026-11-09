@@ -52,6 +52,10 @@ namespace EyeMaze
         [Tooltip("바닥 높이 (서 있을 때 발이 닿는 곳)")]
         [SerializeField, FormerlySerializedAs("floorY")] private float _floorY = -3f;
 
+        [Header("앉는 자리")]
+        [Tooltip("앉을 자리 (예: 소파_1의 seatpoint). 이 점에 몸 아래쪽이 닿게 앉는다. 비우면 씬에 놓인 원래 위치에 앉는다")]
+        [SerializeField] private Transform _seatPoint;
+
         [Header("그림")]
         [SerializeField, FormerlySerializedAs("body")] private LineRenderer _body;
         [Tooltip("몸 안쪽을 검게 칠해 테두리만 남김")]
@@ -84,8 +88,8 @@ namespace EyeMaze
         public TextAsset TalkCsv => _talkCsv;
         public TalkScript Talk => TalkScript.Get(_talkCsv);
 
-        /// <summary>씬에 놓인 원래 자리 (의자 위)</summary>
-        public Vector3 SeatPosition { get { SaveSeat(); return _seatPos; } }
+        /// <summary>앉았을 때 몸 중심 위치 (seatPoint가 있으면 그 위, 없으면 씬에 놓인 원래 자리)</summary>
+        public Vector3 SeatPosition { get { SaveSeat(); return SeatTarget(); } }
 
         /// <summary>지금 방에 있는지 (에디트 모드에선 항상 true)</summary>
         public bool Present
@@ -102,7 +106,9 @@ namespace EyeMaze
 
         void Start()
         {
-            if (Application.isPlaying) Present = !_appearsLater;
+            if (!Application.isPlaying) return;
+            Present = !_appearsLater;
+            if (_seatPoint != null) transform.position = SeatPosition;
         }
 
         void Update()
@@ -266,6 +272,17 @@ namespace EyeMaze
         }
 
         /// <summary>
+        /// 앉았을 때 몸 중심이 올 위치를 계산한다.
+        /// _seatPoint와 _seatHeight를 사용하며, seatPoint 위로 앉은 키의 절반만큼 올린 위치(없으면 _seatPos)를 반환한다.
+        /// </summary>
+        private Vector3 SeatTarget()
+        {
+            if (_seatPoint == null) return _seatPos;
+            Vector3 p = _seatPoint.position;
+            return new Vector3(p.x, p.y + _seatHeight * 0.5f, _seatPos.z);
+        }
+
+        /// <summary>
         /// 걷기와 앉기 움직임을 한 프레임 진행한다.
         /// dt를 사용하며, 위치와 키를 바꾸고 끝나면 콜백을 부른다.
         /// </summary>
@@ -292,7 +309,7 @@ namespace EyeMaze
             {
                 _sitT = Mathf.Min(1f, _sitT + dt / 0.4f);
                 float e = Mathf.SmoothStep(0f, 1f, _sitT);
-                transform.position = Vector3.Lerp(_sitFrom, _seatPos, e);
+                transform.position = Vector3.Lerp(_sitFrom, SeatTarget(), e);
                 float h = Mathf.Lerp(_sitFromHeight, _seatHeight, e);
                 if (!Mathf.Approximately(h, _height)) _height = h;
                 if (_sitT >= 1f)
