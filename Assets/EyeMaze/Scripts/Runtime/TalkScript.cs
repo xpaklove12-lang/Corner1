@@ -6,9 +6,9 @@ using UnityEngine;
 namespace EyeMaze
 {
     /// <summary>
-    /// 필드에서 말을 걸었을 때 나오는 대사 CSV(Data/Talk/이름.csv)를 읽은 결과.
-    /// 줄 하나가 대사 한 줄이고, 같은 group 값을 가진 줄들이 한 번의 대화가 된다 (Z로 한 줄씩 넘김).
-    /// 열: group, need, set, speaker, text (그 밖의 열은 메모로 무시).
+    /// 인물·회차 CSV(Data/Dialogue/인물_DayN.csv)에서 한 actor의 section=talk 행, 곧 필드에서 말을 걸었을 때 나오는 대사를 읽은 결과.
+    /// 줄 하나가 대사 한 줄이고, 같은 id 값을 가진 줄들이 한 번의 대화가 된다 (Z로 한 줄씩 넘김).
+    /// 열: id, need, set, speaker, text (그 밖의 열은 이 단계에서 무시). section 열이 없는 옛 형식 파일은 group 열을 대화 id로 읽는다.
     ///
     /// 말을 걸면 위에서부터 need 플래그가 모두 켜진 첫 group을 보여준다. 그래서 조건이 까다로운 group을 위에 둔다.
     /// 예약된 group: enter(컷신으로 들어와서 하는 말), reveal(이 사람과의 대화 뒤 다음 사람이 들어올 때의 서술).
@@ -72,7 +72,8 @@ namespace EyeMaze
             return null;
         }
 
-        private static readonly Dictionary<TextAsset, TalkScript> Cache = new Dictionary<TextAsset, TalkScript>();
+        // 같은 파일이라도 actor마다 다른 대사이므로 (파일, actor)로 기억한다.
+        private static readonly Dictionary<(TextAsset, string), TalkScript> Cache = new Dictionary<(TextAsset, string), TalkScript>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics() => Cache.Clear();
@@ -81,30 +82,35 @@ namespace EyeMaze
         public static void Invalidate() => Cache.Clear();
 
         /// <summary>
-        /// CSV를 읽은 대사를 가져온다. 처음 한 번만 읽는다.
-        /// asset을 사용하며, 대사 또는 null을 반환한다. 오류는 Console에 한 번 보여준다.
+        /// CSV에서 한 actor의 대사를 가져온다. 처음 한 번만 읽는다.
+        /// asset과 actor를 사용하며, 대사 또는 null을 반환한다. 오류는 Console에 한 번 보여준다.
         /// </summary>
-        public static TalkScript Get(TextAsset asset)
+        public static TalkScript Get(TextAsset asset, string actor)
         {
             if (asset == null) return null;
-            if (Cache.TryGetValue(asset, out TalkScript s)) return s;
-            s = Parse(asset);
-            Cache[asset] = s;
-            foreach (string e in s.Errors) Debug.LogError($"[필드 대화 CSV] {asset.name}: {e}", asset);
+            actor = actor ?? "";
+            if (Cache.TryGetValue((asset, actor), out TalkScript s)) return s;
+            s = Parse(asset, actor);
+            Cache[(asset, actor)] = s;
+            foreach (string e in s.Errors) Debug.LogError($"[필드 대화 CSV] {asset.name} ({actor}): {e}", asset);
             return s;
         }
 
         /// <summary>
-        /// CSV를 읽어 대화 묶음을 만든다.
-        /// asset을 사용하며, 새 대사를 반환한다.
+        /// CSV에서 한 actor의 talk 행을 읽어 대화 묶음을 만든다. 통합 회차 CSV에서 actor가 비면 talk 행이 없는 것으로 본다.
+        /// asset과 actor를 사용하며, 새 대사를 반환한다.
         /// </summary>
-        public static TalkScript Parse(TextAsset asset)
+        public static TalkScript Parse(TextAsset asset, string actor)
         {
             var s = new TalkScript { Name = asset != null ? asset.name : "" };
-            foreach (Csv.Row r in Csv.Read(asset, s.Errors))
+            List<Csv.Row> all = Csv.Read(asset, s.Errors);
+            string idColumn = Csv.IdColumn(all, "group");
+            bool unified = idColumn != "group";
+            List<Csv.Row> rows = unified && string.IsNullOrEmpty(actor) ? new List<Csv.Row>() : Csv.Section(all, Csv.SECTION_TALK, actor);
+            foreach (Csv.Row r in rows)
             {
-                string id = r["group"];
-                if (id.Length == 0) { s.Errors.Add($"{r.Line}행 group 칸이 비어 있다."); continue; }
+                string id = r[idColumn];
+                if (id.Length == 0) { s.Errors.Add($"{r.Line}행 {idColumn} 칸이 비어 있다."); continue; }
                 Group g = s.Find(id);
                 if (g == null)
                 {

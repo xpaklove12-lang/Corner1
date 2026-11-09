@@ -7,7 +7,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 상담 한 건(손님 한 명)의 데이터. 그 사람에게 말을 걸어 눈 속으로 들어갈 때 디렉터가 이 데이터를 불러온다.
-    /// 대화 CSV(Data/Dialogue/이름.csv), 기억 파편 묶음, 결말과 문구를 가진다.
+    /// 인물·회차 CSV(Data/Dialogue/인물_DayN.csv) 하나에서 상담 대화와 엔딩·문구를 읽고, 기억 파편 묶음과 결말 조건을 가진다.
     /// 상담 순서는 order 값으로 정한다.
     /// </summary>
     public class ClientCase : MonoBehaviour
@@ -22,7 +22,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("npc")] private FieldNPC _npc;
 
         [Header("눈 속")]
-        [Tooltip("이 사람의 대화 CSV (UTF-8). Data/Dialogue 폴더에 있다")]
+        [Tooltip("이 사람의 인물·회차 CSV (UTF-8, Data/Dialogue/인물_DayN.csv). 상담 대화와 엔딩·문구를 함께 읽는다")]
         [SerializeField] private TextAsset _dialogueCsv;
         [Tooltip("이 케이스의 기억 파편 묶음들 (층마다 하나)")]
         [SerializeField, FormerlySerializedAs("fragmentGroups")] private List<GameObject> _fragmentGroups = new List<GameObject>();
@@ -49,10 +49,8 @@ namespace EyeMaze
         public TextAsset DialogueCsv => _dialogueCsv;
         public DialogueScript Script => DialogueScript.Get(_dialogueCsv);
 
-        [Tooltip("이 사람의 엔딩과 문구 CSV (Data/Ending/이름.csv). 비우면 아래 인스펙터 값을 쓴다")]
-        [SerializeField] private TextAsset _endingCsv;
-        public TextAsset EndingCsv => _endingCsv;
-        public EndingScript EndingData => EndingScript.Get(_endingCsv);
+        /// <summary>회차 CSV의 엔딩과 문구. CSV에 없으면 아래 인스펙터 값을 쓴다.</summary>
+        public EndingScript EndingData => EndingScript.Get(_dialogueCsv);
         public List<GameObject> FragmentGroups => _fragmentGroups;
         public int MazeSeed => _mazeSeed;
         public string IntroMessage => EndingData?.Text(EndingScript.Intro) ?? _introMessage;

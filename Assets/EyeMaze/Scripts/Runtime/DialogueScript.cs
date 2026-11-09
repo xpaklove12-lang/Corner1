@@ -6,9 +6,10 @@ using UnityEngine;
 namespace EyeMaze
 {
     /// <summary>
-    /// 한 사람의 대화 CSV(Data/Dialogue/이름.csv)를 읽은 결과.
-    /// 줄 하나가 선택지 하나이고, 같은 node 값을 가진 줄들이 한 장면이 된다. 첫 장면이 시작 장면이다.
-    /// 열: node, situation, text, response, need, set, trust, dilation, spring, goto, ending, back (그 밖의 열은 메모로 무시).
+    /// 인물·회차 CSV(Data/Dialogue/인물_DayN.csv)에서 section=dialogue 행을 읽은 결과.
+    /// 줄 하나가 선택지 하나이고, 같은 id 값을 가진 줄들이 한 장면이 된다. 첫 장면이 시작 장면이다.
+    /// 열: id, situation, text, response, need, set, trust, dilation, spring, goto, ending, back (그 밖의 열은 이 단계에서 무시).
+    /// section 열이 없는 옛 형식 파일은 node 열을 장면 id로 읽는다.
     /// 자세한 규칙은 Data/README.md에 있다.
     /// </summary>
     public class DialogueScript
@@ -101,13 +102,15 @@ namespace EyeMaze
         public static DialogueScript Parse(TextAsset asset)
         {
             var s = new DialogueScript { Name = asset != null ? asset.name : "" };
-            List<Csv.Row> rows = Csv.Read(asset, s.Errors);
-            if (rows.Count > 0 && !rows[0].Has("node")) s.Errors.Add("머리글에 node 열이 없다.");
+            List<Csv.Row> all = Csv.Read(asset, s.Errors);
+            string idColumn = Csv.IdColumn(all, "node");
+            List<Csv.Row> rows = Csv.Section(all, Csv.SECTION_DIALOGUE);
+            if (all.Count > 0 && !all[0].Has(idColumn)) s.Errors.Add($"머리글에 {idColumn} 열이 없다.");
 
             foreach (Csv.Row r in rows)
             {
-                string id = r["node"];
-                if (id.Length == 0) { s.Errors.Add($"{r.Line}행 node 칸이 비어 있다."); continue; }
+                string id = r[idColumn];
+                if (id.Length == 0) { s.Errors.Add($"{r.Line}행 {idColumn} 칸이 비어 있다."); continue; }
                 if (!s._byId.TryGetValue(id, out Node node))
                 {
                     node = new Node { Id = id, Line = r.Line };

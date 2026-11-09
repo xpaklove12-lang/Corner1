@@ -9,7 +9,8 @@ using UnityEditor;
 namespace EyeMaze.EditorTools
 {
     /// <summary>
-    /// 기획 데이터(Data/Flags.csv, Data/Dialogue/*.csv)를 읽고 서로 맞는지 검사한다.
+    /// 기획 데이터(Data/Flags.csv, Data/Dialogue/인물_DayN.csv)를 읽고 서로 맞는지 검사한다.
+    /// 인물·회차 CSV 하나에 section=talk(필드 대사), dialogue(상담), ending(엔딩·문구) 행이 함께 있다.
     /// CSV를 저장하면 자동으로 다시 읽고 검사해서 Console에 알려준다.
     /// </summary>
     public static class DialogueData
@@ -17,8 +18,6 @@ namespace EyeMaze.EditorTools
         public const string DataFolder = "Assets/EyeMaze/Data";
         public const string FlagsPath = DataFolder + "/Flags.csv";
         public const string DialogueFolder = DataFolder + "/Dialogue";
-        public const string TalkFolder = DataFolder + "/Talk";
-        public const string EndingFolder = DataFolder + "/Ending";
 
         /// <summary>Flags.csv 한 줄</summary>
         public class FlagDef
@@ -61,38 +60,55 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// Data/Dialogue 폴더의 대화 CSV를 모두 불러온다.
-        /// 입력값은 없으며, (에셋, 읽은 대화) 목록을 반환한다.
+        /// Data/Dialogue 폴더의 인물·회차 CSV 에셋을 모두 찾는다.
+        /// 입력값은 없으며, 에셋 목록을 반환한다.
         /// </summary>
-        public static List<(TextAsset asset, DialogueScript script)> LoadDialogues()
+        public static List<TextAsset> LoadDayAssets()
         {
-            var list = new List<(TextAsset, DialogueScript)>();
+            var list = new List<TextAsset>();
             if (!AssetDatabase.IsValidFolder(DialogueFolder)) return list;
             foreach (string guid in AssetDatabase.FindAssets("t:TextAsset", new[] { DialogueFolder }))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
                 if (!path.EndsWith(".csv", System.StringComparison.OrdinalIgnoreCase)) continue;
                 var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
-                if (asset != null) list.Add((asset, DialogueScript.Parse(asset)));
+                if (asset != null) list.Add(asset);
             }
             return list;
         }
 
         /// <summary>
-        /// Data/Talk 폴더의 필드 대화 CSV를 모두 불러온다.
-        /// 입력값은 없으며, (에셋, 읽은 대사) 목록을 반환한다.
+        /// 인물·회차 CSV의 상담 대화(section=dialogue)를 모두 불러온다.
+        /// 입력값은 없으며, (에셋, 읽은 대화) 목록을 반환한다.
         /// </summary>
-        public static List<(TextAsset asset, TalkScript script)> LoadTalks()
+        public static List<(TextAsset asset, DialogueScript script)> LoadDialogues()
         {
-            var list = new List<(TextAsset, TalkScript)>();
-            if (!AssetDatabase.IsValidFolder(TalkFolder)) return list;
-            foreach (string guid in AssetDatabase.FindAssets("t:TextAsset", new[] { TalkFolder }))
-            {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                if (!path.EndsWith(".csv", System.StringComparison.OrdinalIgnoreCase)) continue;
-                var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
-                if (asset != null) list.Add((asset, TalkScript.Parse(asset)));
-            }
+            var list = new List<(TextAsset, DialogueScript)>();
+            foreach (TextAsset asset in LoadDayAssets()) list.Add((asset, DialogueScript.Parse(asset)));
+            return list;
+        }
+
+        /// <summary>
+        /// CSV의 talk 행에 나오는 actor ID를 처음 나온 순서로 모은다.
+        /// asset을 사용하며, actor ID 목록을 반환한다.
+        /// </summary>
+        public static List<string> TalkActors(TextAsset asset)
+        {
+            var actors = new List<string>();
+            foreach (Csv.Row r in Csv.Section(Csv.Read(asset, new List<string>()), Csv.SECTION_TALK))
+                if (r[Csv.ACTOR].Length > 0 && !actors.Contains(r[Csv.ACTOR])) actors.Add(r[Csv.ACTOR]);
+            return actors;
+        }
+
+        /// <summary>
+        /// 인물·회차 CSV의 필드 대사(section=talk)를 actor마다 불러온다.
+        /// 입력값은 없으며, (에셋, actor, 읽은 대사) 목록을 반환한다.
+        /// </summary>
+        public static List<(TextAsset asset, string actor, TalkScript script)> LoadTalks()
+        {
+            var list = new List<(TextAsset, string, TalkScript)>();
+            foreach (TextAsset asset in LoadDayAssets())
+                foreach (string actor in TalkActors(asset)) list.Add((asset, actor, TalkScript.Parse(asset, actor)));
             return list;
         }
 
@@ -120,11 +136,11 @@ namespace EyeMaze.EditorTools
                         foreach (string f in c.Set) Add(setters, f, $"{asset.name}.csv {c.Line}행", asset);
                         foreach (string f in c.Need) Add(users, f, $"{asset.name}.csv {c.Line}행", asset);
                     }
-            foreach ((TextAsset asset, TalkScript t) in LoadTalks())
+            foreach ((TextAsset asset, string actor, TalkScript t) in LoadTalks())
                 foreach (TalkScript.Group g in t.Groups)
                 {
-                    foreach (string f in g.Set) Add(setters, f, $"Talk/{asset.name}.csv {g.Row}행", asset);
-                    foreach (string f in g.Need) Add(users, f, $"Talk/{asset.name}.csv {g.Row}행", asset);
+                    foreach (string f in g.Set) Add(setters, f, $"{asset.name}.csv {actor} {g.Row}행", asset);
+                    foreach (string f in g.Need) Add(users, f, $"{asset.name}.csv {actor} {g.Row}행", asset);
                 }
         }
 
@@ -197,37 +213,42 @@ namespace EyeMaze.EditorTools
                     }
             }
 
-            // 엔딩 CSV: 문법 검사 + 어느 손님에도 연결되지 않은 파일
-            var usedEndingCsv = new HashSet<TextAsset>(Object.FindObjectsByType<ClientCase>(FindObjectsInactive.Include, FindObjectsSortMode.None)
-                .Where(c => c.EndingCsv != null).Select(c => c.EndingCsv));
-            if (AssetDatabase.IsValidFolder(EndingFolder))
-                foreach (string guid in AssetDatabase.FindAssets("t:TextAsset", new[] { EndingFolder }))
-                {
-                    var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(AssetDatabase.GUIDToAssetPath(guid));
-                    if (asset == null) continue;
-                    foreach (string e in EndingScript.Parse(asset).Errors) Err($"Ending/{asset.name}.csv: {e}", asset);
-                    if (!usedEndingCsv.Contains(asset)) Warn($"Ending/{asset.name}.csv가 어느 손님(ClientCase)에도 연결되지 않았다.", asset);
-                }
-            foreach (ClientCase c in Object.FindObjectsByType<ClientCase>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            // 엔딩(section=ending): 문법 검사 + 어느 손님에도 연결되지 않은 파일
+            var cases = Object.FindObjectsByType<ClientCase>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var usedCsv = new HashSet<TextAsset>(cases.Where(c => c.DialogueCsv != null).Select(c => c.DialogueCsv));
+            foreach (TextAsset asset in LoadDayAssets())
             {
-                if (c.EndingCsv == null) continue;
+                foreach (string e in EndingScript.Parse(asset).Errors) Err($"{asset.name}.csv ending: {e}", asset);
+                if (!usedCsv.Contains(asset)) Warn($"{asset.name}.csv가 어느 손님(ClientCase)에도 연결되지 않았다.", asset);
+            }
+            foreach (ClientCase c in cases)
+            {
+                if (c.DialogueCsv == null) continue;
                 var ids = new HashSet<string>(c.Endings.Select(e => e.Id));
                 foreach (string must in new[] { "truth", "half", "leave" })
-                    if (!ids.Contains(must)) Warn($"Ending/{c.EndingCsv.name}.csv에 '{must}' 엔딩이 없다 (게임이 직접 부르는 엔딩).", c.EndingCsv);
+                    if (!ids.Contains(must)) Warn($"{c.DialogueCsv.name}.csv에 '{must}' 엔딩이 없다 (게임이 직접 부르는 엔딩).", c.DialogueCsv);
             }
 
-            foreach ((TextAsset asset, TalkScript t) in LoadTalks())
+            foreach ((TextAsset asset, string actor, TalkScript t) in LoadTalks())
             {
-                foreach (string e in t.Errors) Err($"Talk/{asset.name}.csv: {e}", asset);
+                string where = $"{asset.name}.csv {actor}";
+                foreach (string e in t.Errors) Err($"{where}: {e}", asset);
                 foreach (TalkScript.Group g in t.Groups)
                 {
                     foreach (string f in g.Need.Concat(g.Set))
-                        if (!known.Contains(f)) Err($"Talk/{asset.name}.csv {g.Row}행 플래그 '{f}'가 Flags.csv에 없다.", asset);
+                        if (!known.Contains(f)) Err($"{where} {g.Row}행 플래그 '{f}'가 Flags.csv에 없다.", asset);
                     foreach (string f in g.Set)
-                        if (computed.Contains(f)) Err($"Talk/{asset.name}.csv {g.Row}행 '{f}'는 계산 플래그라 set으로 켤 수 없다.", asset);
+                        if (computed.Contains(f)) Err($"{where} {g.Row}행 '{f}'는 계산 플래그라 set으로 켤 수 없다.", asset);
                     foreach (string f in g.Need)
-                        if (known.Contains(f) && !computed.Contains(f) && !setters.ContainsKey(f)) Warn($"Talk/{asset.name}.csv {g.Row}행 플래그 '{f}'를 켜는 곳이 없다. 이 대화는 나오지 않는다.", asset);
+                        if (known.Contains(f) && !computed.Contains(f) && !setters.ContainsKey(f)) Warn($"{where} {g.Row}행 플래그 '{f}'를 켜는 곳이 없다. 이 대화는 나오지 않는다.", asset);
                 }
+            }
+
+            // 필드 NPC: 회차 CSV를 쓰면 그 안에서 자기 talk 행을 고를 actor ID가 있어야 한다. talk 행이 없는 actor는 인스펙터 대사를 쓴다.
+            foreach (FieldNPC n in Object.FindObjectsByType<FieldNPC>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (n.TalkCsv == null) continue;
+                if (string.IsNullOrEmpty(n.DialogueActorId)) Err($"필드 NPC '{n.name}'에 actor ID가 없다. {n.TalkCsv.name}.csv에서 대사를 고를 수 없다.", n);
             }
 
             foreach (MemoryFragment f in Object.FindObjectsByType<MemoryFragment>(FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -263,14 +284,29 @@ namespace EyeMaze.EditorTools
         [MenuItem("EyeMaze/새 대화 CSV 만들기")]
         private static void CreateDialogue()
         {
-            string path = EditorUtility.SaveFilePanelInProject("새 대화 CSV", "NewPerson", "csv", "사람 이름(영문)으로 저장", DialogueFolder);
+            string path = EditorUtility.SaveFilePanelInProject("새 대화 CSV", "NewPerson_Day1", "csv", "인물 이름(영문)_Day회차로 저장", DialogueFolder);
             if (string.IsNullOrEmpty(path)) return;
-            const string template =
-                "node,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,memo\r\n" +
-                "start,처음 장면 상황 설명,첫 번째 질문,상대의 반응,,,0,0,0,,,,\r\n" +
-                "start,,플래그가 있어야 열리는 질문,반응,flag_id,,1,0.1,0,next,,,\r\n" +
-                "next,다음 장면 상황 (뒤로가기가 자동으로 붙음),질문,반응,,,0,0,0,,,,\r\n";
-            File.WriteAllText(path, template, new System.Text.UTF8Encoding(true));
+            // 파일 이름의 _DayN 앞부분을 상담 인물 actor ID로 쓴다.
+            string actor = Path.GetFileNameWithoutExtension(path);
+            int day = actor.LastIndexOf("_Day", System.StringComparison.Ordinal);
+            if (day > 0) actor = actor.Substring(0, day);
+            var columns = new List<string> { "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring", "goto", "ending", "back", "title", "after", "speaker", "memo" };
+            var sb = new System.Text.StringBuilder(string.Join(",", columns)).Append("\r\n");
+            void Row(string section, string id, params (string column, string value)[] cells)
+            {
+                var row = new string[columns.Count];
+                row[0] = section; row[1] = actor; row[2] = id;
+                foreach ((string column, string value) in cells) row[columns.IndexOf(column)] = value;
+                sb.Append(string.Join(",", row)).Append("\r\n");
+            }
+            Row("talk", "enter", ("text", "들어와 앉은 뒤 첫마디"));
+            Row("dialogue", "start", ("situation", "처음 장면 상황 설명"), ("text", "첫 번째 질문"), ("response", "상대의 반응"), ("trust", "0"), ("dilation", "0"), ("spring", "0"));
+            Row("dialogue", "start", ("text", "플래그가 있어야 열리는 질문"), ("response", "반응"), ("need", "flag_id"), ("trust", "1"), ("dilation", "0.1"), ("spring", "0"), ("goto", "next"));
+            Row("dialogue", "next", ("situation", "다음 장면 상황 (뒤로가기가 자동으로 붙음)"), ("text", "질문"), ("response", "반응"), ("trust", "0"), ("dilation", "0"), ("spring", "0"));
+            Row("ending", "@intro", ("text", "눈 속에 들어왔을 때 첫 문구"));
+            foreach (string id in new[] { "truth", "half", "leave" })
+                Row("ending", id, ("title", "엔딩 · " + id), ("situation", "엔딩 상황"), ("after", "필드로 돌아온 뒤 말을 걸면 나오는 말"), ("text", "엔딩 대사"));
+            File.WriteAllText(path, sb.ToString(), new System.Text.UTF8Encoding(true));
             AssetDatabase.ImportAsset(path);
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
         }

@@ -47,4 +47,4 @@ SDD 작업을 시작할 때 이 파일을 가장 먼저 읽는다.
 | 004 | `specs/004-return-to-start-option.md` | 모든 대화 노드에 처음 이야기로 돌아가는 공통 선택지 추가 | 구현완료 |
 | 005 | `specs/005-burden-gauge.md` | 들여다보는 동안 차오르고 가득 차면 상담이 끝나는 부담감 게이지 | 구현완료 |
 | 006 | `specs/006-blink-illusion-rotation.md` | 깜빡임 때 맵과 시선을 함께 무작위로 돌려 맵이 변한 듯한 착시를 준다 | 구현완료 |
-| 007 | `specs/007-dialogue-editor.md` | CSV 기반 대사를 SUDS식 텍스트와 노드 분기 뷰에서 함께 편집 | 구현완료 |
+| 007 | `specs/007-dialogue-editor.md` | 인물·회차별 통합 CSV의 전체 대사 흐름을 텍스트와 노드 뷰에서 편집 | 승인 |

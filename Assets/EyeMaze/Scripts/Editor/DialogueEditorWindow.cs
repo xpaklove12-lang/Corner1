@@ -61,7 +61,7 @@ namespace EyeMaze.EditorTools
             DrawToolbar();
             if (_doc == null)
             {
-                EditorGUILayout.HelpBox("편집할 CSV를 위에서 고르세요. Data/Dialogue, Data/Talk, Data/Ending, Data/Strings.csv를 지원합니다.", MessageType.Info);
+                EditorGUILayout.HelpBox("편집할 CSV를 위에서 고르세요. 인물·회차 파일(Data/Dialogue/인물_DayN.csv)과 공용 Data/Strings.csv를 지원합니다.", MessageType.Info);
                 return;
             }
             Rect body = GUILayoutUtility.GetRect(0f, 100000f, 0f, 100000f);
@@ -237,7 +237,7 @@ namespace EyeMaze.EditorTools
         private void RefreshPaths()
         {
             var list = new List<string>();
-            foreach (string folder in new[] { DialogueData.DialogueFolder, DialogueData.TalkFolder, DialogueData.EndingFolder })
+            foreach (string folder in new[] { DialogueData.DialogueFolder })
             {
                 if (!AssetDatabase.IsValidFolder(folder)) continue;
                 var found = new List<string>();

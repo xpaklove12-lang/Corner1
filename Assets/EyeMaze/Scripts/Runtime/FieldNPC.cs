@@ -22,8 +22,10 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("resolved")] private bool _resolved;
 
         [Header("필드 대화 CSV")]
-        [Tooltip("말을 걸었을 때 나오는 대사 CSV (Data/Talk/이름.csv, UTF-8). 비우거나 맞는 대화가 없으면 아래 칸들의 대사를 쓴다")]
+        [Tooltip("말을 걸었을 때 나오는 대사가 있는 인물·회차 CSV (Data/Dialogue/인물_DayN.csv, UTF-8). 비우거나 맞는 대화가 없으면 아래 칸들의 대사를 쓴다")]
         [SerializeField] private TextAsset _talkCsv;
+        [Tooltip("같은 CSV에서 이 NPC의 talk 행을 고르는 actor ID (예: EunjaeMom, Eunjae, Jisu)")]
+        [SerializeField] private string _dialogueActorId;
 
         [Header("초상화 / 대화")]
         [Tooltip("말할 때 텍스트 상자 왼쪽에 뜨는 초상화")]
@@ -87,7 +89,8 @@ namespace EyeMaze
         public string RevealLine => _revealLine;
         public bool IsMoving => _walking || _sitT >= 0f;
         public TextAsset TalkCsv => _talkCsv;
-        public TalkScript Talk => TalkScript.Get(_talkCsv);
+        public string DialogueActorId => _dialogueActorId;
+        public TalkScript Talk => TalkScript.Get(_talkCsv, _dialogueActorId);
 
         /// <summary>앉았을 때 몸 중심 위치 (seatPoint가 있으면 그 위, 없으면 씬에 놓인 원래 자리)</summary>
         public Vector3 SeatPosition { get { SaveSeat(); return SeatTarget(); } }

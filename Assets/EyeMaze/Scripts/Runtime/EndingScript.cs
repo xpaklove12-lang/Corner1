@@ -5,11 +5,11 @@ using UnityEngine;
 namespace EyeMaze
 {
     /// <summary>
-    /// 한 사람의 엔딩과 문구 CSV(Data/Ending/이름.csv)를 읽은 결과.
-    /// 열: id, title, situation, after, line, memo.
+    /// 인물·회차 CSV(Data/Dialogue/인물_DayN.csv)에서 section=ending 행, 곧 한 사람의 엔딩과 문구를 읽은 결과.
+    /// 열: id, title, situation, after, text, memo. section 열이 없는 옛 형식 파일은 line 열을 대사로 읽는다.
     /// - 엔딩: 줄 하나가 엔딩 대사 한 줄. 같은 id끼리 한 엔딩이고, title/situation/after는 그 엔딩의 첫 줄에 쓴다.
     /// - 사람별 문구: id를 @intro(눈 속에 들어왔을 때), @idle(기다릴 때 상황), @abyss(심연에 들어왔을 때)로 쓰고 line에 글을 적는다.
-    ///   같은 id를 여러 줄 쓰면 줄바꿈으로 이어진다.
+    ///   같은 id를 여러 줄 쓰면 줄바꿈으로 이어진다. 아래 설명의 line은 통합 회차 CSV의 text 열이다.
     /// </summary>
     public class EndingScript
     {
@@ -61,11 +61,13 @@ namespace EyeMaze
             var s = new EndingScript { Name = asset != null ? asset.name : "" };
             var byId = new Dictionary<string, EndingDef>();
             var firstRow = new Dictionary<string, int>();
-            foreach (Csv.Row r in Csv.Read(asset, s.Errors))
+            List<Csv.Row> all = Csv.Read(asset, s.Errors);
+            string lineColumn = all.Count > 0 && all[0].Has(Csv.SECTION) ? "text" : "line";
+            foreach (Csv.Row r in Csv.Section(all, Csv.SECTION_ENDING))
             {
                 string id = r["id"];
                 if (id.Length == 0) { s.Errors.Add($"{r.Line}행 id 칸이 비어 있다."); continue; }
-                string line = r["line"].Replace("\\n", "\n");
+                string line = r[lineColumn].Replace("\\n", "\n");
 
                 if (id.StartsWith("@"))
                 {

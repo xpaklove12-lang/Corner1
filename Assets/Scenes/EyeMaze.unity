@@ -7378,7 +7378,8 @@ MonoBehaviour:
   _lineAfterResolved: "\"\uC624\uB298 \uAC10\uC0AC\uD588\uC2B5\uB2C8\uB2E4.\""
   _met: 0
   _resolved: 0
-  _talkCsv: {fileID: 4900000, guid: fd5cf4d4e97a4438b2bdc0d9af4e1972, type: 3}
+  _talkCsv: {fileID: 4900000, guid: 9645e3951c884dba85eb5b4c028d980c, type: 3}
+  _dialogueActorId: Jisu
   _portrait: {fileID: -2730927549540315392, guid: 178b6fb6f2058704eb2fbbc1536bdc04, type: 3}
   _talkOnly: 0
   _talkLines: []
@@ -10747,7 +10748,8 @@ MonoBehaviour:
     \uB9D0\uD558\uACE0 \uC2F6\uC5B4\uC84C\uC5B4\uC694.\""
   _met: 0
   _resolved: 0
-  _talkCsv: {fileID: 4900000, guid: e082857978424ab5be04cbcdc647f427, type: 3}
+  _talkCsv: {fileID: 4900000, guid: cde56ac62c9d4e898f79edc8882a916f, type: 3}
+  _dialogueActorId: EunjaeMom
   _portrait: {fileID: -3604548235104814106, guid: 76af8779ced393f4fb322bcc8c7d0251, type: 3}
   _talkOnly: 1
   _talkLines:
@@ -22826,7 +22828,6 @@ MonoBehaviour:
   _truthTrust: 3
   _keyFragment: {fileID: 2097229964}
   _leaveTrust: -2
-  _endingCsv: {fileID: 4900000, guid: 4c40bd88f0e34a289bc321f60768623b, type: 3}
 --- !u!4 &999279899
 Transform:
   m_ObjectHideFlags: 0
@@ -30118,7 +30119,6 @@ MonoBehaviour:
   _truthTrust: 3
   _keyFragment: {fileID: 2092412453}
   _leaveTrust: -2
-  _endingCsv: {fileID: 4900000, guid: 7a1bc3f00a064ac9a914adcea49c7940, type: 3}
 --- !u!1 &1336671186
 GameObject:
   m_ObjectHideFlags: 0
@@ -47301,7 +47301,8 @@ MonoBehaviour:
   _lineAfterResolved: "\"\u2026\uB2E4\uC74C \uC8FC\uC5D0\uB3C4 \uC62C\uAC8C\uC694.\""
   _met: 0
   _resolved: 0
-  _talkCsv: {fileID: 4900000, guid: 67224b7ee0bd433289fd0396c4e41141, type: 3}
+  _talkCsv: {fileID: 4900000, guid: cde56ac62c9d4e898f79edc8882a916f, type: 3}
+  _dialogueActorId: Eunjae
   _portrait: {fileID: -223924168, guid: 76af8779ced393f4fb322bcc8c7d0251, type: 3}
   _talkOnly: 0
   _talkLines: []
