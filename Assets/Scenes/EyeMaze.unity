@@ -25192,9 +25192,15 @@ LineRenderer:
   m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Positions:
+<<<<<<< HEAD
   - {x: -0.11519482, y: -0.14011241, z: -0}
   - {x: 0, y: 0, z: 0}
   - {x: 0.11519482, y: 0.14011241, z: 0}
+=======
+  - {x: -0.030085899, y: -0.20780277, z: -0}
+  - {x: 0, y: 0, z: 0}
+  - {x: 0.030085899, y: 0.20780277, z: 0}
+>>>>>>> dev
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.035
@@ -35979,7 +35985,11 @@ LineRenderer:
   - {x: 0, y: 0.001, z: 0}
   m_Parameters:
     serializedVersion: 3
+<<<<<<< HEAD
     widthMultiplier: 0.430171
+=======
+    widthMultiplier: 0.47994673
+>>>>>>> dev
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -36006,8 +36016,13 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
+<<<<<<< HEAD
       key0: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.40392157}
       key1: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.40392157}
+=======
+      key0: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.49803922}
+      key1: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.49803922}
+>>>>>>> dev
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -43009,9 +43024,15 @@ LineRenderer:
   m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Positions:
+<<<<<<< HEAD
   - {x: 0.098197065, y: -0.08049218, z: -0}
   - {x: 0, y: 0, z: 0}
   - {x: -0.098197065, y: 0.08049218, z: 0}
+=======
+  - {x: 0.14549272, y: -0.020846378, z: -0}
+  - {x: 0, y: 0, z: 0}
+  - {x: -0.14549272, y: 0.020846378, z: 0}
+>>>>>>> dev
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.035
