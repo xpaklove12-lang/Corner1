@@ -28,14 +28,18 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("talkOnly")] private bool _talkOnly;
         [Tooltip("talkOnly일 때 Z로 한 줄씩 넘기는 대사")]
         [SerializeField, FormerlySerializedAs("talkLines"), TextArea(1, 3)] private List<string> _talkLines = new List<string>();
+        [Tooltip("첫 대화에서 이름이 밝혀지기 전에 대신 보일 이름 (비우면 처음부터 이름을 보인다)")]
+        [SerializeField] private string _unknownName = "";
+        [Tooltip("첫 대화에서 unknownName으로 보일 앞쪽 줄 수. 그다음 줄부터 이름이 보인다")]
+        [SerializeField] private int _unknownNameLines;
         [Tooltip("대화를 마친 뒤 다시 말을 걸면 나오는 말")]
         [SerializeField, FormerlySerializedAs("lineAfterTalk"), TextArea(1, 2)] private string _lineAfterTalk = "…";
         [Tooltip("대화를 마치면 방을 나간다")]
         [SerializeField, FormerlySerializedAs("leavesAfterTalk")] private bool _leavesAfterTalk;
         [Tooltip("대화를 마치면 이 사람이 들어온다")]
         [SerializeField, FormerlySerializedAs("revealAfterTalk")] private FieldNPC _revealAfterTalk;
-        [Tooltip("그 사람이 들어올 때 나오는 서술 (그 사람의 초상화와 함께)")]
-        [SerializeField, FormerlySerializedAs("revealLine"), TextArea(1, 3)] private string _revealLine;
+        [Tooltip("그 사람이 들어올 때 한 줄씩 나오는 서술 (그 사람의 초상화와 함께)")]
+        [SerializeField, TextArea(1, 3)] private List<string> _revealLines = new List<string>();
 
         [Header("등장")]
         [Tooltip("켜면 Play 시작 때는 방에 없고, 누군가와의 대화 뒤에 들어온다 (에디트 모드에선 항상 보임)")]
@@ -76,7 +80,9 @@ namespace EyeMaze
         public Sprite Portrait => _portrait;
         public bool TalkOnly => _talkOnly;
         public List<string> TalkLines => _talkLines;
-        public string RevealLine => _revealLine;
+        public List<string> RevealLines => _revealLines;
+        public string UnknownName => _unknownName;
+        public int UnknownNameLines => _unknownNameLines;
         public bool IsMoving => _walking || _sitT >= 0f;
 
         /// <summary>씬에 놓인 원래 자리 (의자 위)</summary>
@@ -155,7 +161,7 @@ namespace EyeMaze
             if (_talkOnly)
             {
                 if (_talked) { flow.ShowConversation(DisplayName, _portrait, new List<string> { _lineAfterTalk }, null); return; }
-                flow.ShowConversation(DisplayName, _portrait, _talkLines, () => FinishTalk(flow));
+                flow.ShowConversation(DisplayName, _portrait, _talkLines, () => FinishTalk(flow), _unknownName, _unknownNameLines);
                 return;
             }
             if (_resolved) flow.ShowConversation(DisplayName, _portrait, new List<string> { _lineAfterResolved }, null);
@@ -275,8 +281,8 @@ namespace EyeMaze
             if (_revealAfterTalk != null)
             {
                 _revealAfterTalk.Present = true;
-                if (!string.IsNullOrEmpty(_revealLine))
-                    flow.ShowConversation(null, _revealAfterTalk.Portrait, new List<string> { _revealLine }, null);
+                if (_revealLines.Count > 0)
+                    flow.ShowConversation(null, _revealAfterTalk.Portrait, _revealLines, null);
             }
         }
     }

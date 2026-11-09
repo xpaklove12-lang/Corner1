@@ -60,6 +60,8 @@ namespace EyeMaze
         [NonSerialized] private bool _returnResolved;
         [NonSerialized] private List<string> _convLines;
         [NonSerialized] private string _convSpeaker;
+        [NonSerialized] private string _convHiddenSpeaker;
+        [NonSerialized] private int _convHiddenLines;
         [NonSerialized] private int _convIndex;
         [NonSerialized] private Action _convDone;
 
@@ -208,11 +210,14 @@ namespace EyeMaze
         /// <summary>
         /// 여러 줄 대화를 연다. Z로 한 줄씩 넘기고, 마지막 줄 다음 Z에서 닫히며 done이 불린다.
         /// speaker, portrait, lines, done을 사용하며, 글 상자 상태와 초상화를 바꾸고 플레이어를 멈춘다.
+        /// hiddenSpeaker와 hiddenLines를 주면 앞쪽 hiddenLines줄 동안은 speaker 대신 hiddenSpeaker를 이름으로 보인다.
         /// </summary>
-        public void ShowConversation(string speaker, Sprite portrait, List<string> lines, Action done)
+        public void ShowConversation(string speaker, Sprite portrait, List<string> lines, Action done, string hiddenSpeaker = null, int hiddenLines = 0)
         {
             _convLines = lines != null && lines.Count > 0 ? lines : new List<string> { "…" };
             _convSpeaker = speaker;
+            _convHiddenSpeaker = hiddenSpeaker;
+            _convHiddenLines = hiddenLines;
             _convIndex = 0;
             _convDone = done;
             _fieldPortrait = portrait;
@@ -377,12 +382,14 @@ namespace EyeMaze
 
         /// <summary>
         /// 지금 대화 줄을 글 상자 문자열로 만든다.
-        /// _convLines, _convIndex, _convSpeaker를 사용하며, _fieldText를 바꾼다.
+        /// _convLines, _convIndex, _convSpeaker, 가려진 이름 설정을 사용하며, _fieldText를 바꾼다.
         /// </summary>
         private void ShowConvLine()
         {
             string line = _convLines[Mathf.Clamp(_convIndex, 0, _convLines.Count - 1)];
-            _fieldText = string.IsNullOrEmpty(_convSpeaker) ? line : $"{_convSpeaker}\n{line}";
+            // 이름이 밝혀지기 전의 줄에서는 가려진 이름을 쓴다.
+            string speaker = _convIndex < _convHiddenLines && !string.IsNullOrEmpty(_convHiddenSpeaker) ? _convHiddenSpeaker : _convSpeaker;
+            _fieldText = string.IsNullOrEmpty(speaker) ? line : $"{speaker}\n{line}";
         }
 
         /// <summary>

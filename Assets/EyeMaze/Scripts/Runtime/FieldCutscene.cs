@@ -153,7 +153,7 @@ namespace EyeMaze
                     {
                         _step = Step.MotherOut;
                         _mother.WalkTo(_doorX, () => { _mother.Present = false; _step = Step.Between; _timer = _betweenDelay; });
-                    });
+                    }, _mother.UnknownName, _mother.UnknownNameLines);
                     break;
 
                 case Step.Between:
@@ -169,8 +169,8 @@ namespace EyeMaze
                             _daughter.SitDown(() =>
                             {
                                 _step = Step.Reveal;
-                                if (!string.IsNullOrEmpty(_mother.RevealLine))
-                                    _flow.ShowConversation(null, _daughter.Portrait, new List<string> { _mother.RevealLine }, () => { _seated = _daughter; _step = Step.WaitResolved; });
+                                if (_mother.RevealLines.Count > 0)
+                                    _flow.ShowConversation(null, _daughter.Portrait, _mother.RevealLines, () => { _seated = _daughter; _step = Step.WaitResolved; });
                                 else { _seated = _daughter; _step = Step.WaitResolved; }
                             });
                         });
