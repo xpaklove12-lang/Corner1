@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
 namespace EyeMaze
@@ -38,9 +39,9 @@ namespace EyeMaze
         [Header("문 앞 호출")]
         [Tooltip("독백이 걷히고 띵-동이 뜬 뒤 첫 혼잣말이 나오기까지 (초)")]
         [SerializeField] private float _firstCallDelay = 2f;
-        [Tooltip("첫 혼잣말을 넘긴 뒤 띵-동이 다시 뜨고 두 번째 혼잣말이 나오기까지 (초)")]
-        [SerializeField] private float _secondCallDelay = 1f;
-        [SerializeField, TextArea(1, 3)] private string _firstCallLine = "뭐야..? 한창 분위기 잡고있는데.";
+        [Tooltip("첫 혼잣말을 넘긴 뒤 띵-동이 다시 뜨고, 넘김 입력(Z·Enter·Space)을 받기 시작하기까지 (초). 입력이 있어야 두 번째 혼잣말이 열린다")]
+        [SerializeField] private float _secondCallDelay = 0.5f;
+        [SerializeField, TextArea(1, 3)] private string _firstCallLine = "뭐야? 한창 분위기 잡고있는데.";
         [SerializeField, TextArea(1, 3)] private string _secondCallLine = "아직 첫 상담까지는 시간이 남았을 텐데...";
         [Tooltip("문을 열어 줄 때까지 필드 조작 안내 자리에 띄우는 문구")]
         [SerializeField] private string _doorGuide = "문을 열어서 손님을 맞이하세요.";
@@ -48,8 +49,12 @@ namespace EyeMaze
         [Header("첫 손님 맞이")]
         [Tooltip("출입구에서 방 안쪽을 향하는 x 방향 (-1: 왼쪽, 1: 오른쪽)")]
         [SerializeField] private float _inwardSign = -1f;
-        [Tooltip("어머니가 출입구에서 방 안쪽으로 걸어 들어오는 한 걸음 거리 (걷는 속도는 어머니 FieldNPC 설정)")]
+        [Tooltip("어머니가 출입구에서 방 안쪽으로 걸어 들어오는 한 걸음 거리")]
         [SerializeField] private float _motherStep = 0.6f;
+        [Tooltip("어머니가 출입구에 나타난 뒤 걷기 시작할 때까지 서 있는 시간 (초)")]
+        [SerializeField] private float _motherWaitSeconds = 1f;
+        [Tooltip("어머니가 한 걸음을 출발해서 도착하기까지 걸리는 시간 (초)")]
+        [SerializeField] private float _motherWalkSeconds = 1f;
         [Tooltip("플레이어가 출입구에서 멀어지며 물러서는 한 걸음 거리")]
         [SerializeField] private float _playerStep = 0.6f;
         [Tooltip("플레이어가 한 걸음 물러서는 데 걸리는 시간 (초)")]
@@ -67,6 +72,8 @@ namespace EyeMaze
         [NonSerialized] private FieldNPC _seated;
         [NonSerialized] private ClientCase _nextCase;
         [NonSerialized] private bool _motherArrived;
+        [NonSerialized] private float _motherWaitT;
+        [NonSerialized] private float _motherToX;
         [NonSerialized] private float _playerFromX;
         [NonSerialized] private float _playerToX;
         [NonSerialized] private float _playerStepT;
@@ -113,8 +120,9 @@ namespace EyeMaze
                     break;
 
                 case Step.CallSecond:
+                    // 대기 시간이 지나도 플레이어가 넘겨야 두 번째 혼잣말이 열린다. 대기는 A를 닫은 입력이 바로 B를 여는 것도 막는다.
                     _timer -= Time.deltaTime;
-                    if (_timer <= 0f) ShowCallLine(_secondCallLine, () => { _step = Step.WaitDoor; _door.Ring(); });
+                    if (_timer <= 0f && AdvancePressed()) ShowCallLine(_secondCallLine, () => { _step = Step.WaitDoor; _door.Ring(); });
                     break;
 
                 case Step.WaitDoor:
@@ -124,6 +132,12 @@ namespace EyeMaze
 
                 case Step.Arrive:
                     StepPlayer(Time.deltaTime);
+                    // 어머니는 출입구에 잠시 서 있다가 걷기 시작한다. 걷기 시작은 한 번만 한다.
+                    if (_motherWaitT > 0f)
+                    {
+                        _motherWaitT -= Time.deltaTime;
+                        if (_motherWaitT <= 0f) _mother.WalkToIn(_motherToX, _motherWalkSeconds, () => _motherArrived = true);
+                    }
                     if (_motherArrived && _playerStepT >= 1f) { _step = Step.Pause; _timer = _talkDelay; }
                     break;
 
@@ -213,7 +227,19 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 문을 열어 준 직후 어머니를 출입구에 세우고, 어머니의 전진과 플레이어의 후퇴를 함께 시작한다.
+        /// 이번 프레임에 대사 넘김 입력이 들어왔는지 확인한다.
+        /// 키보드 Z·Enter·Space와 게임패드 아래 버튼을 사용하며, 눌렸으면 true를 반환한다.
+        /// </summary>
+        private static bool AdvancePressed()
+        {
+            Keyboard kb = Keyboard.current;
+            Gamepad pad = Gamepad.current;
+            if (kb != null && (kb.zKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame)) return true;
+            return pad != null && pad.buttonSouth.wasPressedThisFrame;
+        }
+
+        /// <summary>
+        /// 문을 열어 준 직후 어머니를 출입구에 세우고 플레이어의 후퇴를 시작한다. 어머니의 전진은 _motherWaitSeconds 뒤에 시작한다.
         /// _doorX, _inwardSign, 한 걸음 거리와 _talkDistance, 플레이어 위치를 사용하며, _step과 두 사람의 이동 상태를 바꾼다.
         /// </summary>
         private void BeginArrival()
@@ -221,8 +247,9 @@ namespace EyeMaze
             _step = Step.Arrive;
             float motherX = _doorX + _inwardSign * _motherStep;
             _motherArrived = false;
+            _motherToX = motherX;
+            _motherWaitT = Mathf.Max(0.0001f, _motherWaitSeconds);
             _mother.StandAt(_doorX);
-            _mother.WalkTo(motherX, () => _motherArrived = true);
 
             FieldPlayer player = _flow.Player;
             _playerFromX = player.Position.x;

@@ -63,6 +63,7 @@ namespace EyeMaze
         [NonSerialized] private bool _walking;
         [NonSerialized] private float _walkTargetX;
         [NonSerialized] private Action _walkDone;
+        [NonSerialized] private float _walkSpeedNow;
         [NonSerialized] private float _bobT;
         [NonSerialized] private float _sitT = -1f;
         [NonSerialized] private Vector3 _sitFrom;
@@ -185,6 +186,17 @@ namespace EyeMaze
             _walking = true;
             _walkTargetX = x;
             _walkDone = done;
+            _walkSpeedNow = _walkSpeed;
+        }
+
+        /// <summary>
+        /// x까지 정해진 시간 동안 걸어간다. 걷는 속도 설정 대신 거리와 시간으로 속도를 정한다.
+        /// x, 걸리는 시간 seconds, 도착 콜백 done을 사용하며, 걷기 상태와 이번 걸음의 속도를 바꾼다.
+        /// </summary>
+        public void WalkToIn(float x, float seconds, Action done)
+        {
+            WalkTo(x, done);
+            _walkSpeedNow = Mathf.Abs(x - transform.position.x) / Mathf.Max(0.01f, seconds);
         }
 
         /// <summary>
@@ -221,7 +233,7 @@ namespace EyeMaze
             if (_walking)
             {
                 Vector3 p = transform.position;
-                p.x = Mathf.MoveTowards(p.x, _walkTargetX, _walkSpeed * dt);
+                p.x = Mathf.MoveTowards(p.x, _walkTargetX, _walkSpeedNow * dt);
                 _bobT += dt * 9f;
                 p.y = _floorY + _height * 0.5f + Mathf.Abs(Mathf.Sin(_bobT)) * 0.06f;
                 transform.position = p;

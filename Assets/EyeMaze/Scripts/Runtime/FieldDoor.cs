@@ -18,7 +18,21 @@ namespace EyeMaze
         [Tooltip("문 위치에서 호출 글씨까지의 월드 거리")]
         [SerializeField] private Vector2 _bellWorldOffset = new Vector2(0f, 1.4f);
 
+        [Header("호출 글씨 흔들림")]
+        [Tooltip("글씨가 보이는 동안 울림이 반복되는 간격 (초). 나타나는 순간 첫 울림이 시작된다")]
+        [SerializeField] private float _ringInterval = 1f;
+        [Tooltip("울림 한 번의 길이 (초)")]
+        [SerializeField] private float _ringDuration = 0.45f;
+        [Tooltip("울림 중 가장 커질 때 늘어나는 크기 비율 (0.35면 1.35배)")]
+        [SerializeField] private float _ringScale = 0.35f;
+        [Tooltip("울림 중 좌우로 기우는 최대 각도 (도)")]
+        [SerializeField] private float _ringAngle = 12f;
+        [Tooltip("울림 한 번 동안 좌우로 흔들리는 횟수")]
+        [SerializeField] private float _ringWiggles = 3f;
+
         private bool _ringing;
+        private float _bellShownTime;
+        private Vector3 _bellBaseScale = Vector3.one;
 
         public bool Answered { get; private set; }
         public override string Verb => "맞이하기";
@@ -26,7 +40,9 @@ namespace EyeMaze
 
         void Start()
         {
-            if (Application.isPlaying) ShowBell(false);
+            if (!Application.isPlaying) return;
+            _bellBaseScale = _bell.rectTransform.localScale;
+            ShowBell(false);
         }
 
         void LateUpdate()
@@ -41,15 +57,37 @@ namespace EyeMaze
                 rt.anchorMin = anchor;
                 rt.anchorMax = anchor;
             }
+            AnimateBell(rt, Time.time - _bellShownTime);
         }
 
         /// <summary>
         /// 호출 글씨만 보이거나 숨긴다. 상호작용 가능 여부는 바꾸지 않는다.
-        /// on을 사용하며, _bell의 enabled를 바꾼다.
+        /// on을 사용하며, _bell의 enabled를 바꾸고 새로 보일 때 울림 시작 시각을 기록한다.
         /// </summary>
         public void ShowBell(bool on)
         {
-            if (_bell.enabled != on) _bell.enabled = on;
+            if (_bell.enabled == on) return;
+            _bell.enabled = on;
+            if (on) _bellShownTime = Time.time;
+        }
+
+        /// <summary>
+        /// 호출 글씨를 초인종이 울리듯 부풀리고 좌우로 흔든다. 울림 사이에는 원래 크기와 각도로 쉰다.
+        /// rt와 나타난 뒤 지난 시간 elapsed, 흔들림 설정값을 사용하며, rt의 크기와 회전을 바꾼다.
+        /// </summary>
+        private void AnimateBell(RectTransform rt, float elapsed)
+        {
+            float phase = Mathf.Repeat(elapsed, Mathf.Max(0.01f, _ringInterval));
+            float k = phase / Mathf.Max(0.01f, _ringDuration);
+            float scale = 1f;
+            float angle = 0f;
+            if (k < 1f)
+            {
+                scale += _ringScale * Mathf.Sin(Mathf.PI * k);
+                angle = _ringAngle * Mathf.Sin(k * _ringWiggles * 2f * Mathf.PI) * (1f - k);
+            }
+            rt.localScale = _bellBaseScale * scale;
+            rt.localRotation = Quaternion.Euler(0f, 0f, angle);
         }
 
         /// <summary>
