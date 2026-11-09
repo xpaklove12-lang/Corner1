@@ -6,6 +6,7 @@ using System.Text;
 using UnityEngine;
 
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEditor.ShortcutManagement;
 
 namespace EyeMaze.EditorTools
@@ -84,6 +85,7 @@ namespace EyeMaze.EditorTools
             _graph.SizeLoader = LoadNodeSize;
             _graph.SizeSaver = SaveNodeSize;
             _graph.FragmentTextSaver = SaveFragmentText;
+            _graph.FragmentCreator = CreateFragment;
             RefreshPaths();
             if (!string.IsNullOrEmpty(_openPath)) OpenPath(_openPath);
         }
@@ -540,6 +542,74 @@ namespace EyeMaze.EditorTools
             var rowLines = new List<int>();
             _history.Add(new Snapshot { Doc = _doc.Clone(), Csv = DialogueEditorFormat.WriteCsv(_doc, rowLines), FlagsCsv = ReadFlagsSource() });
             _historyIndex = 0;
+        }
+
+        /// <summary>
+        /// 새 기억 파편을 만든다. Flags.csv에 파편 플래그 줄을 넣고, 열린 씬의 group(그 층 파편 묶음)에 기존 파편을 복제한 오브젝트를 둔다.
+        /// client(이 회차 손님)와 group을 사용하며, 성공 여부와 오류, 새 파편을 반환하고 Flags.csv·실행 취소 기록·씬을 바꾼다.
+        /// </summary>
+        private (bool ok, string error, MemoryFragment fragment) CreateFragment(ClientCase client, GameObject group)
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) return (false, "Play Mode 중에는 파편을 추가할 수 없다.", null);
+            MemoryFragment template = group.GetComponentInChildren<MemoryFragment>(true);
+            if (template == null) template = client.Fragments().Find(f => f != null);
+            if (template == null) return (false, $"'{client.PersonName}' 케이스에 복제할 기존 파편이 없다.", null);
+            IrisMaze maze = group.GetComponentInParent<IrisMaze>(true);
+            MazeLayer layer = group.GetComponentInParent<MazeLayer>(true);
+            if (maze == null || layer == null) return (false, $"'{group.name}' 묶음이 미로 층 아래에 있지 않다.", null);
+
+            string before = ReadFlagsSource();
+            if (before == null) return (false, "Flags.csv를 UTF-8로 읽지 못했다.", null);
+            if (_historyIndex >= 0 && _history[_historyIndex].FlagsCsv != before)
+                return (false, "Flags.csv가 창 밖에서 바뀌었다. 파일을 다시 열고 추가한다.", null);
+
+            // Flag ID는 파일 이름의 인물 부분을 소문자로 쓰고, Flags.csv에 없는 가장 작은 번호를 붙인다.
+            var ids = new HashSet<string>();
+            foreach (List<CellRange> row in ReadCellRanges(before, out _)) if (row.Count > 0) ids.Add(row[0].Value.Trim());
+            string person = Path.GetFileNameWithoutExtension(_doc.AssetPath);
+            int day = person.IndexOf("_Day", System.StringComparison.Ordinal);
+            if (day > 0) person = person.Substring(0, day);
+            string prefix = person.ToLowerInvariant() + "_fragment_";
+            int n = 1;
+            while (ids.Contains(prefix + n)) n++;
+            string flag = prefix + n;
+
+            string newline = before.Contains("\r\n") ? "\r\n" : "\n";
+            string after = before + (before.Length == 0 || before.EndsWith("\n") ? "" : newline)
+                + $"{flag},{client.PersonName} · 새 기억,파편,,새 기억,새 기억 글,{newline}";
+            if (!WriteFlagsSource(after, out string error)) return (false, error, null);
+            if (_historyIndex + 1 < _history.Count) _history.RemoveRange(_historyIndex + 1, _history.Count - _historyIndex - 1);
+            _history.Add(new Snapshot { Doc = _doc.Clone(), Csv = DialogueEditorFormat.WriteCsv(_doc, new List<int>()), FlagsCsv = after });
+            _historyIndex = _history.Count - 1;
+
+            // 같은 층에서 이 묶음 파편이 쓰지 않는 첫 칸을 바깥 ring, sector 0부터 찾는다.
+            var used = new HashSet<(int, int)>();
+            foreach (MemoryFragment f in group.GetComponentsInChildren<MemoryFragment>(true)) used.Add((f.Ring, maze.Mod(f.Sector)));
+            int ring = -1, sector = 0;
+            for (int r = 0; r < maze.Rings && ring < 0; r++)
+            {
+                if (maze.LayerOfRing(r) != layer.Index) continue;
+                for (int s = 0; s < maze.Sectors; s++)
+                    if (!used.Contains((r, s))) { ring = r; sector = s; break; }
+            }
+            if (ring < 0) { ring = template.Ring; sector = template.Sector; }
+
+            GameObject go = Instantiate(template.gameObject, group.transform);
+            go.name = "기억 조각 · 새 기억";
+            Undo.RegisterCreatedObjectUndo(go, "기억 파편 추가");
+            MemoryFragment created = go.GetComponent<MemoryFragment>();
+            var so = new SerializedObject(created);
+            so.FindProperty("_flag").stringValue = flag;
+            so.FindProperty("_title").stringValue = "새 기억";
+            so.FindProperty("_text").stringValue = "새 기억 글";
+            so.FindProperty("_collected").boolValue = false;
+            so.FindProperty("_ring").intValue = ring;
+            so.FindProperty("_sector").intValue = sector;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorSceneManager.MarkSceneDirty(go.scene);
+            _savedAt = System.DateTime.Now.ToString("HH:mm:ss");
+            Repaint();
+            return (true, "", created);
         }
 
         /// <summary>

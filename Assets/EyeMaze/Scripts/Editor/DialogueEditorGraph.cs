@@ -199,6 +199,8 @@ namespace EyeMaze.EditorTools
 
         /// <summary>파편 Flag ID의 획득 문구를 Flags.csv에 저장한다.</summary>
         public System.Func<string, string, (bool ok, string error)> FragmentTextSaver { get; set; }
+        /// <summary>손님과 층 파편 묶음을 받아 새 기억 파편을 만드는 창의 함수. 결과로 성공 여부, 오류, 새 파편을 돌려준다.</summary>
+        public System.Func<ClientCase, GameObject, (bool ok, string error, MemoryFragment fragment)> FragmentCreator { get; set; }
 
         /// <summary>마지막으로 확정한 ID 변경의 이전·새 그룹 키 (없으면 null). 창이 크기 설정 키를 옮길 때 쓴다.</summary>
         public string RenamedFrom { get; private set; }
@@ -2357,7 +2359,7 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// 빈 곳 우클릭 메뉴를 만든다. 인물·회차 파일이면 상담 장면, actor별 Talk 대화, 엔딩을 추가할 수 있다.
+        /// 빈 곳 우클릭 메뉴를 만든다. 인물·회차 파일이면 상담 장면, actor별 Talk 대화, 엔딩, 층별 기억 파편을 추가할 수 있다.
         /// 텍스트 오류·검사 대기 중에는 항목을 비활성화한다. doc과 editable을 사용하며, 메뉴를 반환한다.
         /// </summary>
         private GenericMenu BuildCreateMenu(DialogueEditorDocument doc, bool editable)
@@ -2386,7 +2388,42 @@ namespace EyeMaze.EditorTools
             if (dialogueActor == null) menu.AddDisabledItem(new GUIContent("엔딩 추가 (상담 actor가 없음)"));
             else if (!editable) menu.AddDisabledItem(new GUIContent("엔딩 추가" + disabled));
             else menu.AddItem(new GUIContent("엔딩 추가"), false, () => QueueCreate(doc, Csv.SECTION_ENDING, dialogueActor));
+
+            // 기억 파편은 씬의 이 회차 손님 파편 묶음(층마다 하나)에 넣는다.
+            menu.AddSeparator("");
+            ClientCase client = DialogueEditorFormat.CaseOf(doc.AssetPath);
+            var groups = new List<GameObject>();
+            if (client != null) foreach (GameObject go in client.FragmentGroups) if (go != null) groups.Add(go);
+            if (groups.Count == 0) menu.AddDisabledItem(new GUIContent("기억 파편 추가 (씬에 이 손님의 파편 묶음이 없음)"));
+            else if (EditorApplication.isPlayingOrWillChangePlaymode) menu.AddDisabledItem(new GUIContent("기억 파편 추가 (Play Mode 중)"));
+            else if (!editable || FragmentCreator == null) menu.AddDisabledItem(new GUIContent("기억 파편 추가" + disabled));
+            else
+                foreach (GameObject go in groups)
+                {
+                    GameObject group = go;
+                    MazeLayer layer = group.GetComponentInParent<MazeLayer>(true);
+                    // 메뉴 경로 구분자와 겹치지 않게 '/'를 바꾼다.
+                    string name = (layer != null ? layer.name : group.name).Replace("/", "∕");
+                    menu.AddItem(new GUIContent("기억 파편 추가/" + name), false, () => CreateFragment(client, group));
+                }
             return menu;
+        }
+
+        /// <summary>
+        /// 창에 새 기억 파편을 만들게 하고, 성공하면 그 파편 카드를 선택해 획득 문구 편집을 연다. 실패하면 이유를 보인다.
+        /// client와 group(층 파편 묶음)을 사용하며, 선택과 인라인 상태를 바꾼다.
+        /// </summary>
+        private void CreateFragment(ClientCase client, GameObject group)
+        {
+            (bool ok, string error, MemoryFragment fragment) = FragmentCreator(client, group);
+            if (!ok) { Notify(error); return; }
+            _selKey = null;
+            _selRow = -1;
+            _selResponse = _selAfter = false;
+            _selFragment = fragment;
+            _selectionLine = 0;
+            _focused = true;
+            StartFragmentEdit(true);
         }
 
         /// <summary>
