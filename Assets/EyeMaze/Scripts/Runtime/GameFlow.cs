@@ -184,7 +184,8 @@ namespace EyeMaze
                             if (_director.HeartFinished) BeginReturn(true);
                             else _director.NextHeartLine();
                         }
-                        else if (_director.CurrentMode == EyeMazeDirector.Mode.Talk && leave) BeginReturn(false);
+                        // 스펙 009: 대화 중 Q는 휴식 신호가 있으면 승낙을 기록하고 바로 나간다.
+                        else if (_director.CurrentMode == EyeMazeDirector.Mode.Talk && leave) LeaveTalk();
                     }
                     break;
 
@@ -195,6 +196,16 @@ namespace EyeMaze
             }
 
             if (_state == State.Field) _fade = Mathf.MoveTowards(_fade, _fadeTarget, _fadeSpeed * dt);
+        }
+
+        /// <summary>
+        /// 대화 중 자리를 뜬다. 휴식 신호가 있으면 쉬어 주기로 기록한 뒤 나간다.
+        /// 디렉터의 휴식 신호를 사용하며, 디렉터의 휴식 상태와 화면 상태를 바꾼다.
+        /// </summary>
+        private void LeaveTalk()
+        {
+            if (_director.RestRequested) _director.AcceptRest();
+            BeginReturn(false);
         }
 
         // 필드 글 상자
@@ -384,6 +395,8 @@ namespace EyeMaze
                 if (ending != null && !string.IsNullOrEmpty(ending.AfterLine)) _currentNpc.LineAfterResolved = ending.AfterLine;
                 ShowConversation(_currentNpc.DisplayName, _currentNpc.Portrait, new List<string> { _currentNpc.LineAfterResolved }, null);
             }
+            // 스펙 009: 쉬어 주고 돌아오면 상담실에서 내담자의 리액션을 보여 준다.
+            else if (_director != null && _director.RestAccepted && _currentNpc != null) _currentNpc.TryTalk(this, TalkScript.Rest, null, null);
             _returnResolved = false;
         }
 

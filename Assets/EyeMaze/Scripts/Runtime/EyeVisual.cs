@@ -17,6 +17,9 @@ namespace EyeMaze
         private const int COVER_COLUMNS = 33;
         private const int COVER_SORTING_ORDER = 21;
         private const float COVER_MARGIN = 0.05f;
+        // 스펙 009: 눈물 메시 그리기 상수 추가
+        private const int TEAR_SORTING_ORDER = 20;
+        private const float TEAR_WAVE_FREQUENCY = 9f;
 
         private static readonly AnimationCurve _lens = new AnimationCurve(
             new Keyframe(0f, 0f, 3f, 3f),
@@ -57,6 +60,16 @@ namespace EyeMaze
         [Tooltip("초점. 0이면 어둡고 테두리가 번져 보인다")]
         [SerializeField, FormerlySerializedAs("focus"), Range(0f, 1f)] private float _focus = 1f;
 
+        // 스펙 009: 눈물 모양과 색 설정 추가
+        [Header("눈물")]
+        [SerializeField] private Color _tearColor = new Color(0.62f, 0.8f, 1f, 0.45f);
+        [Tooltip("가득 찼을 때 눈 높이 대비 수위")]
+        [SerializeField, Range(0f, 1f)] private float _tearMaxHeight = 0.55f;
+        [Tooltip("눈물 수면의 일렁임 높이")]
+        [SerializeField] private float _tearWaveHeight = 0.06f;
+        [Tooltip("눈물 수면의 일렁임 빠르기")]
+        [SerializeField] private float _tearWaveSpeed = 2f;
+
         [Header("그림")]
         [SerializeField, FormerlySerializedAs("sclera")] private LineRenderer _sclera;
         [SerializeField, FormerlySerializedAs("irisDisc")] private LineRenderer _irisDisc;
@@ -75,8 +88,17 @@ namespace EyeMaze
         [NonSerialized] private int _drawnLidKey = int.MinValue;
         [NonSerialized] private Vector3[] _lidPoints;
         [NonSerialized] private readonly Vector3[] _lashPoints = new Vector3[2];
+        // 스펙 009: 눈물 수위와 메시 상태 추가
+        [NonSerialized] private float _tearLevel;
+        [NonSerialized] private Mesh _tearMesh;
+        [NonSerialized] private MeshRenderer _tearRenderer;
+        [NonSerialized] private Vector3[] _tearVertices;
+        [NonSerialized] private Color[] _tearColors;
 
         public float Focus { get => _focus; set => _focus = value; }
+
+        /// <summary>눈물 수위 (0 = 없음, 1 = 가득)</summary>
+        public float TearLevel { get => _tearLevel; set => _tearLevel = Mathf.Clamp01(value); }
 
         /// <summary>눈꺼풀이 닫힌 정도 (0 = 뜸, 1 = 완전히 감김)</summary>
         public float Closed { get => _closed; set => _closed = Mathf.Clamp01(value); }
@@ -97,6 +119,8 @@ namespace EyeMaze
 
         void Update()
         {
+            // 스펙 009: 수면이 일렁이므로 눈 모양 캐시와 상관없이 매 프레임 그린다.
+            DrawTear();
             float irisRadius = _maze != null ? _maze.OuterRadius : 3f;
             int key = HashCode.Combine(
                 HashCode.Combine(_scleraWidth, _scleraHeight, _scleraColor, _irisColor, _rimColor, irisRadius, _focus, _irisDiscPadding),
@@ -256,6 +280,72 @@ namespace EyeMaze
             _coverRenderer = cover.AddComponent<MeshRenderer>();
             _coverRenderer.sharedMaterial = _sclera.sharedMaterial;
             _coverRenderer.sortingOrder = COVER_SORTING_ORDER;
+        }
+
+        /// <summary>
+        /// 눈 아래쪽부터 차오르는 눈물을 흰자 모양에 맞춰 메시로 그린다. Play 중에만 그리고 수위가 0이면 숨긴다.
+        /// _tearLevel, 흰자 크기, 눈물 설정값을 사용하며, 눈물 메시의 정점과 표시 상태를 바꾼다.
+        /// </summary>
+        private void DrawTear()
+        {
+            if (!Application.isPlaying || _sclera == null) return;
+            if (_tearMesh == null)
+            {
+                if (_tearLevel <= 0f) return;
+                CreateTear();
+            }
+            _tearRenderer.enabled = _tearLevel > 0f;
+            if (!_tearRenderer.enabled) return;
+
+            float halfWidth = _scleraWidth * 0.5f;
+            float halfHeight = _scleraHeight * 0.5f;
+            float surface = -halfHeight + _scleraHeight * _tearMaxHeight * _tearLevel;
+            float phase = Time.time * _tearWaveSpeed;
+            for (int i = 0; i < COVER_COLUMNS; i++)
+            {
+                float t = i / (COVER_COLUMNS - 1f);
+                float edge = halfHeight * _lens.Evaluate(t);
+                float wave = Mathf.Sin(t * TEAR_WAVE_FREQUENCY + phase) * _tearWaveHeight * _tearLevel;
+                float x = Mathf.Lerp(-halfWidth, halfWidth, t);
+                _tearVertices[i * 2] = new Vector3(x, Mathf.Clamp(surface + wave, -edge, edge), 0f);
+                _tearVertices[i * 2 + 1] = new Vector3(x, -edge, 0f);
+                _tearColors[i * 2] = _tearColor;
+                _tearColors[i * 2 + 1] = _tearColor;
+            }
+            _tearMesh.vertices = _tearVertices;
+            _tearMesh.colors = _tearColors;
+            _tearMesh.RecalculateBounds();
+        }
+
+        /// <summary>
+        /// 눈물 오브젝트와 메시를 Play 중에 한 번 만든다. 씬에는 저장되지 않는다.
+        /// _sclera의 재질을 사용하며, 눈물 메시와 렌더러, 정점 배열을 만든다.
+        /// </summary>
+        private void CreateTear()
+        {
+            var tear = new GameObject("눈물");
+            tear.transform.SetParent(transform, false);
+
+            _tearVertices = new Vector3[COVER_COLUMNS * 2];
+            _tearColors = new Color[COVER_COLUMNS * 2];
+            var triangles = new int[(COVER_COLUMNS - 1) * 6];
+            for (int i = 0; i < COVER_COLUMNS - 1; i++)
+            {
+                int v = i * 2;
+                int n = i * 6;
+                triangles[n] = v;
+                triangles[n + 1] = v + 2;
+                triangles[n + 2] = v + 3;
+                triangles[n + 3] = v;
+                triangles[n + 4] = v + 3;
+                triangles[n + 5] = v + 1;
+            }
+
+            _tearMesh = new Mesh { name = "눈물", vertices = _tearVertices, triangles = triangles };
+            tear.AddComponent<MeshFilter>().sharedMesh = _tearMesh;
+            _tearRenderer = tear.AddComponent<MeshRenderer>();
+            _tearRenderer.sharedMaterial = _sclera.sharedMaterial;
+            _tearRenderer.sortingOrder = TEAR_SORTING_ORDER;
         }
     }
 }
