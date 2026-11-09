@@ -22825,9 +22825,6 @@ MonoBehaviour:
       \uCC44, \uADF8 \uBAA9\uC18C\uB9AC\uB97C \uC9C0\uC6E0\uB2E4."
     _afterLine: "\"\u2026\" \uC740\uC7AC\uB294 \uB05D\uAE4C\uC9C0 \uB098\uB97C \uBCF4\uC9C0
       \uC54A\uC558\uB2E4."
-  _truthTrust: 3
-  _keyFragment: {fileID: 2097229964}
-  _leaveTrust: -2
 --- !u!4 &999279899
 Transform:
   m_ObjectHideFlags: 0
@@ -30116,9 +30113,6 @@ MonoBehaviour:
     - "\uB2E4\uC74C \uB0A0, \uD68C\uC0AC\uC5D0\uC11C \uC5F0\uB77D\uC774 \uC654\uB2E4.
       \uC9C0\uC218\uC758 \uC0C1\uB2F4 \uC2E0\uCCAD\uC774 \uCDE8\uC18C\uB410\uB2E4\uACE0."
     _afterLine: "\u2026"
-  _truthTrust: 3
-  _keyFragment: {fileID: 2092412453}
-  _leaveTrust: -2
 --- !u!1 &1336671186
 GameObject:
   m_ObjectHideFlags: 0

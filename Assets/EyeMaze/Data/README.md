@@ -63,7 +63,7 @@ Flags.csv에 없는 이름을 쓰면 검사 오류가 납니다(오타 방지).
 인물 한 명의 한 회차(예: `Eunjae_Day1.csv`)에 필요한 대사를 한 파일에 둡니다. 머리글은 아래와 같습니다.
 
 ```
-section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo
+section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit
 ```
 
 | 열 | 뜻 |
@@ -160,6 +160,10 @@ talk,EunjaeMom,reveal,,,-,"은재는 나를 한 번 보더니, 말없이 창밖�
 | after | 필드로 돌아온 뒤 이 사람에게 말을 걸면 나오는 말. 첫 줄에만 |
 | text | 엔딩 대사 |
 | memo | 자유 |
+| truth_trust | `truth` 첫 줄에만. 심연 핵심에 닿았을 때 신뢰가 이 값 이상이고 열쇠 파편을 주웠으면 `truth`, 아니면 `half` (정수) |
+| key_flag | `truth` 첫 줄에만. 열쇠 파편의 Flag ID. 이 손님의 파편 중 Flag가 하나뿐인 것만 쓸 수 있고, 비우면 파편 조건 없이 신뢰만 봅니다 |
+| leave_trust | `leave` 첫 줄에만. 선택지를 고른 뒤 신뢰가 이 값 이하면 `leave` (정수) |
+| burden_limit | `leave` 첫 줄에만. 들여다보는 동안 부담감이 이 값에 닿으면 `leave`. 0 초과 1 이하 (`1` = 100%) |
 
 - `truth`, `half`, `leave`는 게임이 직접 부르는 엔딩이라 꼭 있어야 합니다(진짜 엔딩, 반쪽 엔딩, 신뢰가 바닥났을 때).
 - 그 밖의 엔딩(`delete`, `expose` 등)은 dialogue 줄의 `ending` 칸에서 부릅니다.

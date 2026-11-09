@@ -49,7 +49,7 @@ namespace EyeMaze.EditorTools
         public static readonly string[] DAY_COLUMNS =
         {
             "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring",
-            "goto", "ending", "back", "title", "after", "speaker", "memo",
+            "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit",
         };
 
         private static readonly string[] STRINGS_COLUMNS = { "key", "text", "memo" };
@@ -79,9 +79,9 @@ namespace EyeMaze.EditorTools
         {
             IdColumn = "id",
             BodyColumn = TEXT,
-            GroupColumns = new[] { "title", "situation", "after" },
+            GroupColumns = new[] { "title", "situation", "after", "truth_trust", "key_flag", "leave_trust", "burden_limit" },
             ItemColumns = new[] { "memo" },
-            NumberColumns = new string[0],
+            NumberColumns = new[] { "truth_trust", "leave_trust", "burden_limit" },
         };
 
         private static readonly Schema StringsSchema = new Schema
@@ -562,7 +562,7 @@ namespace EyeMaze.EditorTools
         /// </summary>
         public static bool IsNumber(string column, string v)
         {
-            if (column == "dilation") return float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out _);
+            if (column == "dilation" || column == "burden_limit") return float.TryParse(v, NumberStyles.Float, CultureInfo.InvariantCulture, out _);
             return int.TryParse(v, NumberStyles.Integer, CultureInfo.InvariantCulture, out _);
         }
 
@@ -690,8 +690,67 @@ namespace EyeMaze.EditorTools
                 else issues.Add(new Issue { Message = e });
             }
 
-            if (doc.Kind == DialogueEditorKind.Day) CheckFlags(doc, issues);
+            if (doc.Kind == DialogueEditorKind.Day)
+            {
+                CheckFlags(doc, issues);
+                CheckKeyFlag(doc, issues);
+            }
             return csv;
+        }
+
+        /// <summary>
+        /// 이 회차 파일을 쓰는 씬의 손님(ClientCase)을 찾는다.
+        /// path를 사용하며, 손님 또는 (없으면) null을 반환한다.
+        /// </summary>
+        public static ClientCase CaseOf(string path)
+        {
+            foreach (ClientCase c in Object.FindObjectsByType<ClientCase>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (c.DialogueCsv != null && AssetDatabase.GetAssetPath(c.DialogueCsv) == path) return c;
+            return null;
+        }
+
+        /// <summary>
+        /// 이 회차 손님의 파편 Flag ID를 모은다. 같은 Flag가 둘 이상인 것은 빼서 열쇠 파편 후보로 쓰지 않는다.
+        /// path를 사용하며, (손님, 고유한 Flag 목록)을 반환한다. 손님이 없으면 (null, 빈 목록)이다.
+        /// </summary>
+        public static (ClientCase owner, List<string> flags) CaseFragmentFlags(string path)
+        {
+            ClientCase c = CaseOf(path);
+            var flags = new List<string>();
+            if (c == null) return (null, flags);
+            var count = new Dictionary<string, int>();
+            foreach (MemoryFragment f in c.Fragments())
+            {
+                if (string.IsNullOrEmpty(f.Flag)) continue;
+                count.TryGetValue(f.Flag, out int n);
+                count[f.Flag] = n + 1;
+                if (n == 0) flags.Add(f.Flag);
+            }
+            flags.RemoveAll(f => count[f] > 1);
+            return (c, flags);
+        }
+
+        /// <summary>
+        /// truth의 key_flag가 이 회차 손님의 파편 중 하나(Flag가 고유한 것)를 가리키는지 본다. 비어 있으면 파편 조건이 없다.
+        /// 손님을 씬에서 찾지 못하면 확인할 수 없다는 경고를 남긴다. doc을 사용하며, 문제를 issues에 남긴다.
+        /// </summary>
+        private static void CheckKeyFlag(DialogueEditorDocument doc, List<Issue> issues)
+        {
+            foreach (DialogueEditorDocument.Group g in doc.Groups)
+            {
+                if (g.Section != Csv.SECTION_ENDING || g.Id != EndingScript.TRUTH) continue;
+                string key = g.Get(EndingScript.KEY_FLAG);
+                if (key.Length == 0) return;
+                (ClientCase owner, List<string> flags) = CaseFragmentFlags(doc.AssetPath);
+                if (owner == null)
+                {
+                    issues.Add(new Issue { Line = g.TextLine, Error = false, Message = $"이 파일을 쓰는 손님(ClientCase)을 열린 씬에서 찾지 못해 열쇠 파편 '{key}'를 확인하지 못했다." });
+                    return;
+                }
+                if (!flags.Contains(key))
+                    issues.Add(new Issue { Line = g.TextLine, Message = $"열쇠 파편 '{key}'가 '{owner.PersonName}' 케이스의 파편(Flag가 하나뿐인 것) 중에 없다." });
+                return;
+            }
         }
 
         /// <summary>

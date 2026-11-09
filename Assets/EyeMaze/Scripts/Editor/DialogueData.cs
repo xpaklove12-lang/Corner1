@@ -227,6 +227,9 @@ namespace EyeMaze.EditorTools
                 var ids = new HashSet<string>(c.Endings.Select(e => e.Id));
                 foreach (string must in new[] { "truth", "half", "leave" })
                     if (!ids.Contains(must)) Warn($"{c.DialogueCsv.name}.csv에 '{must}' 엔딩이 없다 (게임이 직접 부르는 엔딩).", c.DialogueCsv);
+                // 엔딩 판정의 열쇠 파편은 이 손님의 파편 중 Flag가 하나뿐인 것이어야 한다.
+                c.FindKeyFragment(out string keyError);
+                if (keyError.Length > 0) Err($"{c.DialogueCsv.name}.csv: {keyError}", c.DialogueCsv);
             }
 
             foreach ((TextAsset asset, string actor, TalkScript t) in LoadTalks())
@@ -290,7 +293,7 @@ namespace EyeMaze.EditorTools
             string actor = Path.GetFileNameWithoutExtension(path);
             int day = actor.LastIndexOf("_Day", System.StringComparison.Ordinal);
             if (day > 0) actor = actor.Substring(0, day);
-            var columns = new List<string> { "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring", "goto", "ending", "back", "title", "after", "speaker", "memo" };
+            var columns = new List<string> { "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring", "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit" };
             var sb = new System.Text.StringBuilder(string.Join(",", columns)).Append("\r\n");
             void Row(string section, string id, params (string column, string value)[] cells)
             {
@@ -304,8 +307,10 @@ namespace EyeMaze.EditorTools
             Row("dialogue", "start", ("text", "플래그가 있어야 열리는 질문"), ("response", "반응"), ("need", "flag_id"), ("trust", "1"), ("dilation", "0.1"), ("spring", "0"), ("goto", "next"));
             Row("dialogue", "next", ("situation", "다음 장면 상황 (뒤로가기가 자동으로 붙음)"), ("text", "질문"), ("response", "반응"), ("trust", "0"), ("dilation", "0"), ("spring", "0"));
             Row("ending", "@intro", ("text", "눈 속에 들어왔을 때 첫 문구"));
-            foreach (string id in new[] { "truth", "half", "leave" })
-                Row("ending", id, ("title", "엔딩 · " + id), ("situation", "엔딩 상황"), ("after", "필드로 돌아온 뒤 말을 걸면 나오는 말"), ("text", "엔딩 대사"));
+            // truth·leave 첫 줄에는 엔딩 판정 기준을 함께 적는다. 열쇠 파편(key_flag)은 비워 두면 신뢰만 본다.
+            Row("ending", "truth", ("title", "엔딩 · truth"), ("situation", "엔딩 상황"), ("after", "필드로 돌아온 뒤 말을 걸면 나오는 말"), ("text", "엔딩 대사"), ("truth_trust", "3"));
+            Row("ending", "half", ("title", "엔딩 · half"), ("situation", "엔딩 상황"), ("after", "필드로 돌아온 뒤 말을 걸면 나오는 말"), ("text", "엔딩 대사"));
+            Row("ending", "leave", ("title", "엔딩 · leave"), ("situation", "엔딩 상황"), ("after", "필드로 돌아온 뒤 말을 걸면 나오는 말"), ("text", "엔딩 대사"), ("leave_trust", "-2"), ("burden_limit", "1"));
             File.WriteAllText(path, sb.ToString(), new System.Text.UTF8Encoding(true));
             AssetDatabase.ImportAsset(path);
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<TextAsset>(path);

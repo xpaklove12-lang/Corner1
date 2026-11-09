@@ -60,12 +60,16 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("endings")] private List<EndingDef> _endings = new List<EndingDef>();
         [Tooltip("파편에 닿았을 때 이 신뢰 이상 + 열쇠 파편을 모았으면 truth, 아니면 half 엔딩")]
         [SerializeField, FormerlySerializedAs("truthTrust")] private int _truthTrust = 3;
-        [Tooltip("진짜 결말에 꼭 필요한 기억 파편 (없으면 신뢰만 봄)")]
+        [Tooltip("진짜 결말에 꼭 필요한 기억 파편 (없으면 신뢰만 봄). 케이스를 불러오면 회차 CSV의 key_flag로 찾은 파편으로 바뀐다")]
         [SerializeField, FormerlySerializedAs("keyFragment")] private MemoryFragment _keyFragment;
         [Tooltip("신뢰가 이 값 이하로 떨어지면 leave 엔딩 (그 사람이 떠남)")]
         [SerializeField, FormerlySerializedAs("leaveTrust")] private int _leaveTrust = -2;
+        [Tooltip("부담감이 이 값(0~1)에 닿으면 leave 엔딩. 케이스를 불러오면 회차 CSV의 burden_limit으로 바뀐다")]
+        [SerializeField, Range(0.01f, 1f)] private float _burdenLimit = 1f;
         [Tooltip("지금 진행 중인 엔딩 id")]
         [SerializeField, FormerlySerializedAs("currentEnding")] private string _currentEnding;
+        // 케이스의 회차 CSV에서 읽은 열쇠 파편 Flag ID (비면 파편 조건 없음)
+        private string _keyFlag = "";
 
         [Header("상담 케이스")]
         [Tooltip("지금 눈 속에 불러온 손님")]
@@ -331,9 +335,15 @@ namespace EyeMaze
             _activeCase = c;
             if (_person != null) _person.DisplayName = c.PersonName;
             _endings = c.Endings;
-            _keyFragment = c.KeyFragment;
-            _truthTrust = c.TruthTrust;
-            _leaveTrust = c.LeaveTrust;
+            // 엔딩 판정 기준은 회차 CSV에서 읽는다. 값이 없거나 열쇠 파편을 못 찾으면 알리고, 파편 조건은 충족되지 않은 것으로 본다.
+            _truthTrust = c.TruthTrust ?? _truthTrust;
+            _leaveTrust = c.LeaveTrust ?? _leaveTrust;
+            _burdenLimit = c.BurdenLimit ?? _burdenLimit;
+            _keyFlag = c.KeyFlag;
+            _keyFragment = c.FindKeyFragment(out string keyError);
+            if (keyError.Length > 0) Debug.LogError($"[엔딩 판정] {keyError} truth 엔딩은 나오지 않는다.", c);
+            if (c.TruthTrust == null || c.LeaveTrust == null || c.BurdenLimit == null)
+                Debug.LogError($"[엔딩 판정] {c.PersonName}의 회차 CSV에 truth_trust, leave_trust, burden_limit 중 빠진 값이 있다. 디렉터의 값을 쓴다.", c);
             if (!string.IsNullOrEmpty(c.IntroMessage)) _introMessage = c.IntroMessage;
             if (!string.IsNullOrEmpty(c.IdleSituation)) _idleSituation = c.IdleSituation;
             if (!string.IsNullOrEmpty(c.AbyssMessage)) _abyssMessage = c.AbyssMessage;
@@ -496,7 +506,7 @@ namespace EyeMaze
             int trust = _person != null ? Mathf.Max(0, _person.Trust) : 0;
             float seconds = Mathf.Max(0.1f, _burdenFillSeconds + _burdenSecondsPerTrust * trust);
             _burden = Mathf.Min(1f, _burden + dt / seconds);
-            if (_burden < 1f) return;
+            if (_burden < _burdenLimit) return;
 
             // 가득 차면 상담이 끝난다. leave 엔딩이 없는 손님이면 시선만 거둔다.
             if (FindEnding("leave") != null) StartEnding("leave", _burdenEndLine);
@@ -526,7 +536,8 @@ namespace EyeMaze
         {
             if (_core != null) _core.Touch();
             int trust = _person != null ? _person.Trust : 0;
-            bool keyOk = _keyFragment == null || _keyFragment.Collected;
+            // key_flag가 정해져 있으면 그 파편을 주웠을 때만 충족된다. 파편을 못 찾았으면 충족되지 않는다.
+            bool keyOk = string.IsNullOrEmpty(_keyFlag) ? _keyFragment == null || _keyFragment.Collected : _keyFragment != null && _keyFragment.Collected;
             StartEnding(trust >= _truthTrust && keyOk ? "truth" : "half", null);
         }
 

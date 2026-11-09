@@ -38,9 +38,6 @@ namespace EyeMaze
 
         [Header("결말")]
         [SerializeField, FormerlySerializedAs("endings")] private List<EndingDef> _endings = new List<EndingDef>();
-        [SerializeField, FormerlySerializedAs("truthTrust")] private int _truthTrust = 3;
-        [SerializeField, FormerlySerializedAs("keyFragment")] private MemoryFragment _keyFragment;
-        [SerializeField, FormerlySerializedAs("leaveTrust")] private int _leaveTrust = -2;
 
         public int Order => _order;
         public string PersonName => _personName;
@@ -66,8 +63,44 @@ namespace EyeMaze
                 return e != null && e.Endings.Count > 0 ? e.Endings : _endings;
             }
         }
-        public int TruthTrust => _truthTrust;
-        public MemoryFragment KeyFragment => _keyFragment;
-        public int LeaveTrust => _leaveTrust;
+
+        /// <summary>truth 판정 신뢰 기준. 회차 CSV truth 행의 truth_trust이며 없으면 null이다.</summary>
+        public int? TruthTrust => EndingData?.TruthTrust;
+        /// <summary>truth 판정 열쇠 파편 Flag ID. 회차 CSV truth 행의 key_flag이며 비면 파편 조건이 없다.</summary>
+        public string KeyFlag => EndingData?.KeyFlag ?? "";
+        /// <summary>leave 판정 신뢰 기준. 회차 CSV leave 행의 leave_trust이며 없으면 null이다.</summary>
+        public int? LeaveTrust => EndingData?.LeaveTrust;
+        /// <summary>leave 판정 부담 기준(0~1). 회차 CSV leave 행의 burden_limit이며 없으면 null이다.</summary>
+        public float? BurdenLimit => EndingData?.BurdenLimit;
+
+        /// <summary>
+        /// 이 케이스의 파편 묶음 안에 있는 기억 파편을 모두 모은다 (꺼진 것 포함).
+        /// 입력값은 없으며, 파편 목록을 반환한다.
+        /// </summary>
+        public List<MemoryFragment> Fragments()
+        {
+            var list = new List<MemoryFragment>();
+            foreach (GameObject g in _fragmentGroups)
+                if (g != null) list.AddRange(g.GetComponentsInChildren<MemoryFragment>(true));
+            return list;
+        }
+
+        /// <summary>
+        /// key_flag와 Flag가 같은 이 케이스의 파편을 찾는다. 하나뿐일 때만 그 파편을 돌려준다.
+        /// 입력값은 없으며, 파편(조건이 없거나 못 찾으면 null)을 반환하고 못 찾은 이유를 error에 쓴다.
+        /// </summary>
+        public MemoryFragment FindKeyFragment(out string error)
+        {
+            error = "";
+            string flag = KeyFlag;
+            if (flag.Length == 0) return null;
+            MemoryFragment found = null;
+            int count = 0;
+            foreach (MemoryFragment f in Fragments())
+                if (f.Flag == flag) { found = f; count++; }
+            if (count == 1) return found;
+            error = count == 0 ? $"열쇠 파편 '{flag}'가 '{_personName}' 케이스의 파편에 없다." : $"열쇠 파편 '{flag}'가 '{_personName}' 케이스에 {count}개 있다.";
+            return null;
+        }
     }
 }
