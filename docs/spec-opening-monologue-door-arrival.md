@@ -98,7 +98,7 @@ B가 닫힌 뒤부터 문 상호작용이 수락될 때까지 다음을 유지�
 
 ### FR-005 · 어머니 대화와 기존 흐름 연결
 
-플레이어와 어머니의 한 걸음 이동이 **모두 끝난 순간부터** 2초를 센다. 그동안 두 인물은 멈춰 있고 플레이어 이동·상호작용은 막는다. 2초 뒤 어머니 대사(위 10줄, `Data/Talk/EunjaeMom.csv`의 `enter`)를 시작한다. 첫 줄의 이름은 `???`로 가리고 2번 줄부터 `은재 어머니`를 보인다. 이름 가리기는 `Data/Talk/EunjaeMom.csv`의 `speaker` 칸에 `???`를 적어 정한다. 대사를 넘기는 기존 입력은 작동한다. 마지막 줄 이후의 어머니 퇴장, 은재 입장·착석은 기존 `FieldCutscene` 동작을 따르고, 착석 뒤에는 위 서술 3줄을 차례로 표시한다.
+플레이어와 어머니의 한 걸음 이동이 **모두 끝난 순간부터** 2초를 센다. 그동안 두 인물은 멈춰 있고 플레이어 이동·상호작용은 막는다. 2초 뒤 어머니 대사(위 10줄, `Data/Dialogue/Eunjae_Day1.csv`의 `section=talk`, `actor=EunjaeMom`, `id=enter`)를 시작한다. 첫 줄의 이름은 `???`로 가리고 2번 줄부터 `은재 어머니`를 보인다. 이름 가리기는 같은 줄의 `speaker` 칸에 `???`를 적어 정한다. 대사를 넘기는 기존 입력은 작동한다. 마지막 줄 이후의 어머니 퇴장, 은재 입장·착석은 기존 `FieldCutscene` 동작을 따르고, 착석 뒤에는 위 서술 3줄을 차례로 표시한다.
 
 대기 시간 2초는 Inspector에서 조절할 수 있게 하되, 기본 설정값은 2초다.
 
@@ -120,7 +120,7 @@ flowchart TD
 
 ## 구현 방식
 
-- 대사는 `dev`의 CSV 데이터 구조를 따른다. 시작 독백은 `Data/Strings.csv`의 `opening`, 혼잣말 A·B는 `field.call_first`·`field.call_second`, 문 안내 문구는 `hint.door`, 어머니 대사와 착석 뒤 서술은 `Data/Talk/EunjaeMom.csv`의 `enter`·`reveal`에 둔다. 씬·Inspector 값은 CSV에 해당 줄이 없을 때만 쓰는 예비값이다.
+- 대사는 `dev`의 CSV 데이터 구조를 따른다. 시작 독백은 `Data/Strings.csv`의 `opening`, 혼잣말 A·B는 `field.call_first`·`field.call_second`, 문 안내 문구는 `hint.door`, 어머니 대사와 착석 뒤 서술은 `Data/Dialogue/Eunjae_Day1.csv`의 `actor=EunjaeMom` talk 줄 `enter`·`reveal`에 둔다. 씬·Inspector 값은 CSV에 해당 줄이 없을 때만 쓰는 예비값이다.
 - `speaker` 칸에 `???`를 쓰면 이름 자리에 `???`를 보이고 초상화는 말을 건 사람 것을 쓴다(`TalkScript.Unknown`).
 - UI는 사용자 결정에 따라 씬에 이미 있는 uGUI 레거시 `Text`(Galmuri11) 방식을 쓴다. `docs/claude.md`의 TextMeshPro 규칙에 대한 예외이며, 이유는 프로젝트에 TMP Essentials와 한글 TMP 폰트 에셋이 없기 때문이다.
 - 안내 문구는 기존 `_fieldHint` Text를 재사용하므로 새 UI 오브젝트가 필요 없다.

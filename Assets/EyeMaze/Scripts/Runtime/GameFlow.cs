@@ -113,8 +113,8 @@ namespace EyeMaze
             Gamepad pad = DialogueLog.BlocksInput ? null : Gamepad.current;
             if (kb != null)
             {
-                // 상호작용과 대사 넘기기는 Space로 한다. 만남 화면의 Space는 시선 조작이라 엔딩 대사와 파편 읽기에서만 넘기기로 쓴다.
-                bool endingLines = _state == State.Encounter && _director != null && _director.CurrentMode == EyeMazeDirector.Mode.Ending;
+                // 상호작용과 대사 넘기기는 Space로 한다. 만남 화면의 Space는 시선 조작이라 엔딩 대사, 선택지 결과 줄 넘기기, 파편 읽기에서만 넘기기로 쓴다.
+                bool endingLines = _state == State.Encounter && _director != null && (_director.CurrentMode == EyeMazeDirector.Mode.Ending || _director.IsReadingResponse);
                 bool readingLines = _state == State.Encounter && _director != null && _director.IsReading;
                 bool spaceAdvance = kb.spaceKey.wasPressedThisFrame && (_state == State.Field || endingLines);
                 interact = kb.enterKey.wasPressedThisFrame || spaceAdvance;
@@ -132,6 +132,8 @@ namespace EyeMaze
                 Vector2 s = pad.leftStick.ReadValue();
                 if (s.sqrMagnitude > 0.04f) move += s;
                 if (_state == State.Field && pad.buttonSouth.wasPressedThisFrame) interact = true;
+                // 선택지 결과 줄은 패드 아래 버튼으로도 넘긴다.
+                if (_state == State.Encounter && _director != null && _director.IsReadingResponse && pad.buttonSouth.wasPressedThisFrame) interact = true;
                 if (pad.buttonEast.wasPressedThisFrame) leave = true;
             }
 
@@ -187,6 +189,7 @@ namespace EyeMaze
                             if (_director.HeartFinished) BeginReturn(true);
                             else _director.NextHeartLine();
                         }
+                        else if (_director.IsReadingResponse && interact) _director.NextResponseLine();
                         // 스펙 011: 대화 중 Q는 휴식 신호가 있으면 승낙을 기록하고 바로 나간다.
                         else if (_director.CurrentMode == EyeMazeDirector.Mode.Talk && leave) LeaveTalk();
                     }

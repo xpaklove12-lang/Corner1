@@ -123,7 +123,8 @@ namespace EyeMaze
             // 스펙 012: 새로 얻은 파편 줄을 강조해 표시
             Set(_memories, HighlightedSummary(d.CollectedSummary()));
 
-            IReadOnlyList<EyeMazeDirector.ChoiceView> choices = d.CurrentMode == EyeMazeDirector.Mode.Talk
+            // 선택지 결과를 한 줄씩 넘기는 동안에는 선택지를 숨긴다.
+            IReadOnlyList<EyeMazeDirector.ChoiceView> choices = d.CurrentMode == EyeMazeDirector.Mode.Talk && !d.IsReadingResponse
                 ? d.CurrentChoices() : System.Array.Empty<EyeMazeDirector.ChoiceView>();
             EnsureButtons(choices.Count);
             LayoutButtons(choices.Count);

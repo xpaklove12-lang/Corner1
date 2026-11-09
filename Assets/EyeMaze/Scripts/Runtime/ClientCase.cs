@@ -7,7 +7,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 상담 한 건(손님 한 명)의 데이터. 그 사람에게 말을 걸어 눈 속으로 들어갈 때 디렉터가 이 데이터를 불러온다.
-    /// 대화 CSV(Data/Dialogue/이름.csv), 기억 파편 묶음, 결말과 문구를 가진다.
+    /// 인물·회차 CSV(Data/Dialogue/인물_DayN.csv) 하나에서 상담 대화와 엔딩·문구를 읽고, 기억 파편 묶음과 결말 조건을 가진다.
     /// 상담 순서는 order 값으로 정한다.
     /// </summary>
     public class ClientCase : MonoBehaviour
@@ -22,7 +22,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("npc")] private FieldNPC _npc;
 
         [Header("눈 속")]
-        [Tooltip("이 사람의 대화 CSV (UTF-8). Data/Dialogue 폴더에 있다")]
+        [Tooltip("이 사람의 인물·회차 CSV (UTF-8, Data/Dialogue/인물_DayN.csv). 상담 대화와 엔딩·문구를 함께 읽는다")]
         [SerializeField] private TextAsset _dialogueCsv;
         [Tooltip("이 케이스의 기억 파편 묶음들 (층마다 하나)")]
         [SerializeField, FormerlySerializedAs("fragmentGroups")] private List<GameObject> _fragmentGroups = new List<GameObject>();
@@ -38,9 +38,6 @@ namespace EyeMaze
 
         [Header("결말")]
         [SerializeField, FormerlySerializedAs("endings")] private List<EndingDef> _endings = new List<EndingDef>();
-        [SerializeField, FormerlySerializedAs("truthTrust")] private int _truthTrust = 3;
-        [SerializeField, FormerlySerializedAs("keyFragment")] private MemoryFragment _keyFragment;
-        [SerializeField, FormerlySerializedAs("leaveTrust")] private int _leaveTrust = -2;
 
         public int Order => _order;
         public string PersonName => _personName;
@@ -49,10 +46,8 @@ namespace EyeMaze
         public TextAsset DialogueCsv => _dialogueCsv;
         public DialogueScript Script => DialogueScript.Get(_dialogueCsv);
 
-        [Tooltip("이 사람의 엔딩과 문구 CSV (Data/Ending/이름.csv). 비우면 아래 인스펙터 값을 쓴다")]
-        [SerializeField] private TextAsset _endingCsv;
-        public TextAsset EndingCsv => _endingCsv;
-        public EndingScript EndingData => EndingScript.Get(_endingCsv);
+        /// <summary>회차 CSV의 엔딩과 문구. CSV에 없으면 아래 인스펙터 값을 쓴다.</summary>
+        public EndingScript EndingData => EndingScript.Get(_dialogueCsv);
         public List<GameObject> FragmentGroups => _fragmentGroups;
         public int MazeSeed => _mazeSeed;
         public string IntroMessage => EndingData?.Text(EndingScript.Intro) ?? _introMessage;
@@ -68,8 +63,44 @@ namespace EyeMaze
                 return e != null && e.Endings.Count > 0 ? e.Endings : _endings;
             }
         }
-        public int TruthTrust => _truthTrust;
-        public MemoryFragment KeyFragment => _keyFragment;
-        public int LeaveTrust => _leaveTrust;
+
+        /// <summary>truth 판정 신뢰 기준. 회차 CSV truth 행의 truth_trust이며 없으면 null이다.</summary>
+        public int? TruthTrust => EndingData?.TruthTrust;
+        /// <summary>truth 판정 열쇠 파편 Flag ID. 회차 CSV truth 행의 key_flag이며 비면 파편 조건이 없다.</summary>
+        public string KeyFlag => EndingData?.KeyFlag ?? "";
+        /// <summary>leave 판정 신뢰 기준. 회차 CSV leave 행의 leave_trust이며 없으면 null이다.</summary>
+        public int? LeaveTrust => EndingData?.LeaveTrust;
+        /// <summary>leave 판정 부담 기준(0~1). 회차 CSV leave 행의 burden_limit이며 없으면 null이다.</summary>
+        public float? BurdenLimit => EndingData?.BurdenLimit;
+
+        /// <summary>
+        /// 이 케이스의 파편 묶음 안에 있는 기억 파편을 모두 모은다 (꺼진 것 포함).
+        /// 입력값은 없으며, 파편 목록을 반환한다.
+        /// </summary>
+        public List<MemoryFragment> Fragments()
+        {
+            var list = new List<MemoryFragment>();
+            foreach (GameObject g in _fragmentGroups)
+                if (g != null) list.AddRange(g.GetComponentsInChildren<MemoryFragment>(true));
+            return list;
+        }
+
+        /// <summary>
+        /// key_flag와 Flag가 같은 이 케이스의 파편을 찾는다. 하나뿐일 때만 그 파편을 돌려준다.
+        /// 입력값은 없으며, 파편(조건이 없거나 못 찾으면 null)을 반환하고 못 찾은 이유를 error에 쓴다.
+        /// </summary>
+        public MemoryFragment FindKeyFragment(out string error)
+        {
+            error = "";
+            string flag = KeyFlag;
+            if (flag.Length == 0) return null;
+            MemoryFragment found = null;
+            int count = 0;
+            foreach (MemoryFragment f in Fragments())
+                if (f.Flag == flag) { found = f; count++; }
+            if (count == 1) return found;
+            error = count == 0 ? $"열쇠 파편 '{flag}'가 '{_personName}' 케이스의 파편에 없다." : $"열쇠 파편 '{flag}'가 '{_personName}' 케이스에 {count}개 있다.";
+            return null;
+        }
     }
 }

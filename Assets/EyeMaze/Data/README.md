@@ -9,19 +9,13 @@
 Data/
   Flags.csv            ← 플래그 목록 + 파편/단서 힌트 글 (전체 공용)
   Strings.csv          ← 공용 문구 (오프닝, 안내, 시스템 메시지, 층 이름, 잠긴 문)
-  Ending/              ← 사람별 엔딩 대사 + 눈 속 문구(@intro, @idle, @abyss)
-    Eunjae.csv
-    Jisu.csv
-  Dialogue/            ← 눈 속 상담 대화 (선택지)
-    Eunjae.csv
-    Jisu.csv
-  Talk/                ← 필드에서 말 걸었을 때 대사
-    EunjaeMom.csv
-    Eunjae.csv
-    Jisu.csv
+  Dialogue/            ← 인물·회차 파일. 한 파일에 필드 대사(talk), 상담 선택지(dialogue), 엔딩·문구(ending)를 함께 둔다
+    Eunjae_Day1.csv    ← 은재 1회차 (은재 어머니의 필드 대사 포함)
+    Jisu_Day1.csv      ← 지수 1회차
 ```
 
 CSV를 저장하면 Unity가 자동으로 다시 읽고 검사합니다. 오류는 Console과 **메뉴 EyeMaze → 플래그 관리자** 창에 나옵니다.
+인물·회차 파일과 Strings.csv는 **메뉴 EyeMaze → 대사 편집기**에서 텍스트와 노드 트리로 함께 편집할 수 있습니다. 편집기는 유효한 변경을 같은 CSV에 바로 저장합니다(주석 줄과 모르는 열은 저장할 때 사라집니다).
 
 ---
 
@@ -40,7 +34,7 @@ CSV를 저장하면 Unity가 자동으로 다시 읽고 검사합니다. 오류�
 플래그가 켜지는 곳은 세 군데입니다.
 1. **기억 파편**을 주우면: 파편 인스펙터의 `Flag` 칸
 2. **필드 단서**를 살펴보면: 단서 인스펙터의 `Flag` 칸
-3. **대화 선택지**를 고르면: 대화 CSV의 `set` 칸
+3. **대화 선택지**를 고르면: 인물·회차 CSV의 `set` 칸
 
 ### 계산 플래그 (condition)
 수치 조건이나 "아직 안 했을 때" 같은 조건도 **플래그로 이름을 붙여** 씁니다. 대화 CSV에는 계속 이름만 적습니다.
@@ -64,24 +58,44 @@ Flags.csv에 없는 이름을 쓰면 검사 오류가 납니다(오타 방지).
 파편과 단서는 각각 플래그 하나와 연결돼 있으므로, 그 플래그 줄의 `title`, `text`에 힌트 글을 적습니다.
 비워 두면 씬 인스펙터에 적힌 글을 씁니다.
 
-## 2. Dialogue/이름.csv — 한 사람의 대화
+## 2. Dialogue/인물_DayN.csv — 한 인물의 한 회차
 
-**한 줄 = 선택지 하나.** 같은 `node` 값을 가진 줄들이 한 장면이 됩니다. **파일의 첫 장면이 시작 장면**입니다.
+인물 한 명의 한 회차(예: `Eunjae_Day1.csv`)에 필요한 대사를 한 파일에 둡니다. 머리글은 아래와 같습니다.
+
+```
+section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest,ending_need
+```
+
+| 열 | 뜻 |
+|---|---|
+| section | 이 줄이 속한 단계. `talk`(필드에서 말 걸었을 때), `dialogue`(눈 속 상담 선택지), `ending`(엔딩과 사람별 문구) 중 하나 |
+| actor | 누구의 줄인지. `talk`는 대사를 하는 필드 NPC의 actor ID(`EunjaeMom`, `Eunjae`, `Jisu`), `dialogue`·`ending`은 상담 인물 ID(파일마다 한 명) |
+| id | 단계 안의 묶음 이름. `talk`는 대화 이름, `dialogue`는 장면, `ending`은 엔딩 id. 같은 section·actor 안에서만 겹치지 않으면 됩니다 |
+
+- 줄은 `talk`, `dialogue`, `ending` 순서로 모아 적습니다. 한 단계 안의 묶음·줄 순서는 그대로 지킵니다.
+- 각 단계에서 쓰지 않는 열은 비워 둡니다. 아래 표는 단계별로 쓰는 열입니다.
+- 씬 연결: 손님(ClientCase)의 `Dialogue Csv`에 이 파일을 놓으면 상담과 엔딩을 이 파일에서 읽습니다. 필드 NPC(FieldNPC)의 `Talk Csv`에 같은 파일을, `Dialogue Actor Id`에 그 NPC의 actor ID를 적으면 그 actor의 `talk` 줄만 읽습니다.
+- 회차 번호(`Day2` 등)는 파일 이름으로만 나눕니다. 날짜에 따라 회차 파일을 바꾸는 기능은 아직 없습니다.
+
+### 2-1. section=dialogue — 눈 속 상담
+
+**한 줄 = 선택지 하나.** 같은 `id`를 가진 줄들이 한 장면이 됩니다. **첫 dialogue 장면이 시작 장면**입니다.
 
 | 열 | 뜻 | 예 |
 |---|---|---|
-| node | 장면 id | `window` |
+| id | 장면 id | `window` |
 | situation | 장면 상황 설명. 그 장면의 **첫 줄에만** 씁니다 | 은재가 창밖만 보고 있다. |
 | text | 내가 하는 말 (선택지) | 오늘은 좀 어떠세요? |
-| response | 상대 반응 | 대답이 없다. |
+| response | 상대 반응. 줄바꿈 표기 `\n`으로 나눈 줄은 게임에서 한 줄씩 넘긴다(빈 줄은 쓰지 않는다) | 대답이 없다. |
 | need | 이 선택지를 고르는 데 필요한 플래그. 여러 개면 `\|`로 구분하고, 모두 켜져야 합니다. 안 켜져 있으면 `???`로 보입니다 | `eunjae_piano_hands` |
 | set | 고르면 켜지는 플래그 (`\|`로 여러 개) | `asked_piano` |
 | trust | 신뢰 변화 (정수) | `1` / `-1` |
 | dilation | 동공 변화 (-1 ~ 1) | `0.15` |
 | spring | 태엽 변화 (-8 ~ 8) | `2` |
 | goto | 고르면 이동할 장면 id. 비우면 그 장면에 머뭅니다 | `phone` |
-| ending | 고르면 바로 이 엔딩으로 끝 (goto와 같이 쓰지 않음) | `delete` |
+| ending | 고르면 바로 이 엔딩으로 끝. 같은 파일 ending 단계의 id (goto와 같이 쓰지 않음) | `delete` |
 | rest | 채우면 고른 뒤 눈물 신호가 나타나고, Q를 누르면 이 대사가 나온다 (비우면 없음) | `"…잠시 쉬어도 될까요?"` |
+| ending_need | `ending`이 있는 선택지에만. 채우면 고른 뒤 이 플래그가 모두 켜져 있을 때만 엔딩으로 가고, 아니면 결과와 goto로 진행합니다. 이때는 goto와 같이 쓸 수 있습니다 (need는 선택지가 열리는 조건) | `trust_le_m3` |
 | back | 뒤로가기 문구 바꾸기 (아래 참고). 장면의 아무 줄에나 씁니다 | `잠깐, 다른 얘기를 해도 될까요?` |
 | memo | 자유. 게임에서 읽지 않습니다 | |
 
@@ -98,59 +112,66 @@ Flags.csv에 없는 이름을 쓰면 검사 오류가 납니다(오타 방지).
 
 ### 허브 구조 예시
 ```
-node,situation,text,response,need,set,trust,dilation,spring,goto,ending,back
-hub,은재가 창밖을 본다.,요즘 피아노는 치세요?,…,,,0,0,0,piano,,
-hub,,그 휴대폰 얘기 해도 될까요?,…,eunjae_phone_flipped,,1,0.1,0,phone,,
-piano,손가락이 멈춘다.,그 곡 기억나요?,…,,asked_piano,1,0.1,2,,,
-phone,휴대폰을 쥔다.,뒤집어 둔 이유가 있죠?,…,asked_piano,,1,0.2,0,,,그 얘긴 나중에 할까요?
+section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back
+dialogue,Eunjae,hub,은재가 창밖을 본다.,요즘 피아노는 치세요?,…,,,0,0,0,piano,,
+dialogue,Eunjae,hub,,그 휴대폰 얘기 해도 될까요?,…,eunjae_phone_flipped,,1,0.1,0,phone,,
+dialogue,Eunjae,piano,손가락이 멈춘다.,그 곡 기억나요?,…,,asked_piano,1,0.1,2,,,
+dialogue,Eunjae,phone,휴대폰을 쥔다.,뒤집어 둔 이유가 있죠?,…,asked_piano,,1,0.2,0,,,그 얘긴 나중에 할까요?
 ```
 → `piano`, `phone`에는 뒤로가기가 자동으로 붙어 `hub`로 돌아갑니다. `phone`의 질문은 `piano`에서 `asked_piano`를 켜야 열립니다.
 
-## 3. Talk/이름.csv — 필드에서 말 걸었을 때
+### 2-2. section=talk — 필드에서 말 걸었을 때
 
-**한 줄 = 대사 한 줄.** 같은 `group` 값을 가진 줄들이 한 번의 대화가 되며, Space를 누를 때마다 한 줄씩 넘어갑니다.
+**한 줄 = 대사 한 줄.** 같은 actor·`id`를 가진 줄들이 한 번의 대화가 되며, Space를 누를 때마다 한 줄씩 넘어갑니다.
 
 | 열 | 뜻 |
 |---|---|
-| group | 대화 이름 |
+| actor | 이 대사를 하는 필드 NPC의 actor ID |
+| id | 대화 이름 |
 | need | 이 대화가 나오는 데 필요한 플래그 (`\|`로 여러 개) |
 | set | 이 대화를 끝까지 보면 켜지는 플래그 |
 | speaker | 비우면 말을 건 사람, `-`이면 이름 없는 서술, `???`이면 이름 자리에 ???를 보임(초상화는 말을 건 사람 것, 아직 누군지 모를 때), 다른 이름을 쓰면 그 사람이 말함(초상화도 그 사람 것) |
 | text | 대사 |
 | memo | 자유 |
 
-- 말을 걸면 **위에서부터** need가 모두 켜진 첫 대화가 나옵니다. 그래서 "다시 말 걸었을 때"처럼 조건이 있는 대화를 위쪽에 둡니다.
-- 예약된 group:
+- 말을 걸면 그 actor의 대화 중 **위에서부터** need가 모두 켜진 첫 대화가 나옵니다. 그래서 "다시 말 걸었을 때"처럼 조건이 있는 대화를 위쪽에 둡니다.
+- 예약된 id:
   - `enter`: 컷신으로 들어와서 하는 말 (은재 어머니의 첫 대사, 지수가 앉은 뒤 첫마디 등)
   - `reveal`: 이 사람과 이야기한 뒤 다음 사람이 들어올 때의 서술
   - `rest`: 휴식 신호 중 쉬어 주고 상담실로 돌아온 직후의 리액션
-- 상담 손님(은재, 지수)은 상담이 끝난 뒤에만 이 파일의 대화가 나옵니다. 맞는 대화가 없으면 엔딩의 afterLine이 나옵니다.
+- 상담 손님(은재, 지수)은 상담이 끝난 뒤에만 자기 actor의 talk 대화가 나옵니다. 맞는 대화가 없으면 엔딩의 after가 나옵니다.
 
 ```
-group,need,set,speaker,text
-again,eunjae_mom_talked,,,"""밖에서 기다릴게요."""
-enter,,eunjae_mom_talked,,"선생님, 와 주셔서 감사해요."
-enter,,,,우리 은재가… 석 달째 입을 열지 않아요.
-reveal,,,-,"은재는 나를 한 번 보더니, 말없이 창밖으로 시선을 돌렸다."
+section,actor,id,need,set,speaker,text
+talk,EunjaeMom,again,eunjae_mom_talked,,,"""밖에서 기다릴게요."""
+talk,EunjaeMom,enter,,eunjae_mom_talked,,"선생님, 와 주셔서 감사해요."
+talk,EunjaeMom,enter,,,,우리 은재가… 석 달째 입을 열지 않아요.
+talk,EunjaeMom,reveal,,,-,"은재는 나를 한 번 보더니, 말없이 창밖으로 시선을 돌렸다."
 ```
+(실제 파일은 공통 머리글 순서를 따르고, 이 단계에서 쓰지 않는 열은 비워 둡니다.)
 
-## 4. Ending/이름.csv — 엔딩과 사람별 문구
+### 2-3. section=ending — 엔딩과 사람별 문구
 
 **엔딩**: 한 줄 = 엔딩 대사 한 줄. 같은 `id`끼리 한 엔딩입니다.
 
 | 열 | 뜻 |
 |---|---|
-| id | 엔딩 id. 대화 CSV의 `ending` 칸에서 부르는 이름 |
+| actor | 상담 인물 ID (dialogue 단계와 같은 값) |
+| id | 엔딩 id. dialogue 줄의 `ending` 칸에서 부르는 이름 |
 | title | 엔딩 제목 (마지막에 `— 제목 —`으로 나옴). 첫 줄에만 |
 | situation | 엔딩 동안 상황 칸 문장. 첫 줄에만 |
 | after | 필드로 돌아온 뒤 이 사람에게 말을 걸면 나오는 말. 첫 줄에만 |
-| line | 엔딩 대사 |
+| text | 엔딩 대사 |
 | memo | 자유 |
+| truth_trust | `truth` 첫 줄에만. 심연 핵심에 닿았을 때 신뢰가 이 값 이상이고 열쇠 파편을 주웠으면 `truth`, 아니면 `half` (정수) |
+| key_flag | `truth` 첫 줄에만. 열쇠 파편의 Flag ID. 이 손님의 파편 중 Flag가 하나뿐인 것만 쓸 수 있고, 비우면 파편 조건 없이 신뢰만 봅니다 |
+| leave_trust | `leave` 첫 줄에만. 선택지를 고른 뒤 신뢰가 이 값 이하면 `leave` (정수) |
+| burden_limit | `leave` 첫 줄에만. 들여다보는 동안 부담감이 이 값에 닿으면 `leave`. 0 초과 1 이하 (`1` = 100%) |
 
 - `truth`, `half`, `leave`는 게임이 직접 부르는 엔딩이라 꼭 있어야 합니다(진짜 엔딩, 반쪽 엔딩, 신뢰가 바닥났을 때).
-- 그 밖의 엔딩(`delete`, `expose` 등)은 대화 CSV의 `ending` 칸에서 부릅니다.
+- 그 밖의 엔딩(`delete`, `expose` 등)은 dialogue 줄의 `ending` 칸에서 부릅니다.
 
-**사람별 문구**: `id`에 특수 id를 쓰고 `line`에 글을 적습니다. 여러 줄이면 줄바꿈으로 이어집니다.
+**사람별 문구**: `id`에 특수 id를 쓰고 `text`에 글을 적습니다. 여러 줄이면 줄바꿈으로 이어집니다.
 
 | 특수 id | 언제 |
 |---|---|
@@ -158,7 +179,7 @@ reveal,,,-,"은재는 나를 한 번 보더니, 말없이 창밖으로 시선을
 | `@idle` | 대화 장면이 없을 때 상황 칸 |
 | `@abyss` | 미로를 지나 심연(동공 안)에 들어왔을 때 |
 
-## 5. Strings.csv — 공용 문구
+## 3. Strings.csv — 공용 문구
 
 | 열 | 뜻 |
 |---|---|
@@ -171,7 +192,8 @@ reveal,,,-,"은재는 나를 한 번 보더니, 말없이 창밖으로 시선을
 - 표에서 줄을 지우면 코드에 적힌 기본 글이 나옵니다.
 - 공용 문구 속 `은재`, `그녀`는 지금 손님 이름과 대명사로 자동으로 바뀝니다.
 
-## 6. 새 사람 추가
-1. 메뉴 **EyeMaze → 새 대화 CSV 만들기**를 누르면 템플릿이 생깁니다.
-2. 씬의 손님(ClientCase) 인스펙터 `Dialogue Csv` 칸에 그 파일을, `Ending Csv` 칸에 Ending 파일을 끌어다 놓습니다. 필드 대사가 있으면 그 사람(FieldNPC) 인스펙터의 `Talk Csv` 칸에 Talk 파일을 놓습니다.
-3. 메뉴 **EyeMaze → 기획 데이터 검사**로 확인합니다.
+## 4. 새 인물·회차 추가
+1. 메뉴 **EyeMaze → 새 대화 CSV 만들기**를 누르고 `인물_Day1` 같은 이름으로 저장하면 talk·dialogue·ending 줄이 있는 템플릿이 생깁니다.
+2. 씬의 손님(ClientCase) 인스펙터 `Dialogue Csv` 칸에 그 파일을 끌어다 놓습니다. 엔딩과 문구도 이 파일에서 읽습니다.
+3. 필드 대사가 있는 사람(FieldNPC)마다 `Talk Csv` 칸에 같은 파일을 놓고 `Dialogue Actor Id`에 그 사람의 actor ID를 적습니다. 보호자처럼 상담 인물이 아닌 사람의 대사도 같은 파일에 다른 actor로 적습니다.
+4. 메뉴 **EyeMaze → 대사 편집기**에서 파일을 열어 흐름을 확인하고, **EyeMaze → 기획 데이터 검사**로 오류가 없는지 확인합니다.

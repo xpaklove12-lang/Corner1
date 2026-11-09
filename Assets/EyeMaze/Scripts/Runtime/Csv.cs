@@ -13,6 +13,36 @@ namespace EyeMaze
     /// </summary>
     public static class Csv
     {
+        /// <summary>인물·회차 CSV(Data/Dialogue/인물_DayN.csv)에서 행의 단계를 나누는 열</summary>
+        public const string SECTION = "section";
+        /// <summary>인물·회차 CSV에서 Talk를 말하는 FieldNPC 또는 상담 인물을 나누는 열</summary>
+        public const string ACTOR = "actor";
+        public const string SECTION_TALK = "talk";
+        public const string SECTION_DIALOGUE = "dialogue";
+        public const string SECTION_ENDING = "ending";
+
+        /// <summary>
+        /// 줄 목록에서 한 단계(section)의 줄만 고른다. section 열이 없는 옛 형식이면 모든 줄을 그대로 쓴다.
+        /// rows, section, actor(비우면 모든 actor)를 사용하며, 고른 줄 목록을 반환한다.
+        /// </summary>
+        public static List<Row> Section(List<Row> rows, string section, string actor = null)
+        {
+            if (rows.Count == 0 || !rows[0].Has(SECTION)) return rows;
+            var list = new List<Row>();
+            foreach (Row r in rows)
+            {
+                if (!string.Equals(r[SECTION], section, StringComparison.OrdinalIgnoreCase)) continue;
+                if (!string.IsNullOrEmpty(actor) && r[ACTOR] != actor) continue;
+                list.Add(r);
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// 통합 회차 CSV이면 그룹 id 열 이름을 id로, 옛 형식이면 oldColumn을 쓴다.
+        /// rows와 oldColumn을 사용하며, 쓸 열 이름을 반환한다.
+        /// </summary>
+        public static string IdColumn(List<Row> rows, string oldColumn) => rows.Count > 0 && rows[0].Has(SECTION) ? "id" : oldColumn;
         /// <summary>CSV 한 줄. 머리글 이름으로 칸을 꺼낸다.</summary>
         public class Row
         {

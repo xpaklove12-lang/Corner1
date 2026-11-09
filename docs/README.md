@@ -54,3 +54,4 @@ SDD 작업을 시작할 때 이 파일을 가장 먼저 읽는다.
 | 011 | `specs/011-client-rest-request.md` | 내담자의 동공이 떨리고 눈물이 차면 쉬어 줄 수 있고, 쉬어 주면 부담감이 줄어든다 | 구현완료 |
 | 012 | `specs/012-fragment-visibility-feedback.md` | 줍지 않은 파편을 맥동과 빛으로 눈에 띄게 하고, 주운 순간 고리와 목록 강조로 알린다 | 구현완료 |
 | 013 | `specs/009-cutscene-fast-forward.md` | 조작 없는 컷신·대사 구간을 키를 누르는 동안 빨리감기 | 구현완료 |
+| 014 | `specs/014-dialogue-editor.md` | 인물·회차별 통합 CSV의 전체 대사 흐름을 텍스트와 노드 뷰에서 편집 | 승인 |

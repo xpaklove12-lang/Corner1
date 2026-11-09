@@ -6,9 +6,10 @@ using UnityEngine;
 namespace EyeMaze
 {
     /// <summary>
-    /// 한 사람의 대화 CSV(Data/Dialogue/이름.csv)를 읽은 결과.
-    /// 줄 하나가 선택지 하나이고, 같은 node 값을 가진 줄들이 한 장면이 된다. 첫 장면이 시작 장면이다.
-    /// 열: node, situation, text, response, need, set, trust, dilation, spring, goto, ending, back (그 밖의 열은 메모로 무시).
+    /// 인물·회차 CSV(Data/Dialogue/인물_DayN.csv)에서 section=dialogue 행을 읽은 결과.
+    /// 줄 하나가 선택지 하나이고, 같은 id 값을 가진 줄들이 한 장면이 된다. 첫 장면이 시작 장면이다.
+    /// 열: id, situation, text, response, need, set, trust, dilation, spring, goto, ending, back (그 밖의 열은 이 단계에서 무시).
+    /// section 열이 없는 옛 형식 파일은 node 열을 장면 id로 읽는다.
     /// 자세한 규칙은 Data/README.md에 있다.
     /// </summary>
     public class DialogueScript
@@ -31,6 +32,8 @@ namespace EyeMaze
             public int Spring;
             public string Goto;
             public string Ending;
+            /// <summary>스펙 014 FR-038: 고른 뒤 ending으로 갈지 가르는 조건. 비면 고르는 즉시 ending으로 간다.</summary>
+            public string[] EndingNeed = Array.Empty<string>();
             // 스펙 011: 내담자가 쉬자고 할 때의 대사 추가
             public string Rest;
             public int Line;
@@ -103,13 +106,15 @@ namespace EyeMaze
         public static DialogueScript Parse(TextAsset asset)
         {
             var s = new DialogueScript { Name = asset != null ? asset.name : "" };
-            List<Csv.Row> rows = Csv.Read(asset, s.Errors);
-            if (rows.Count > 0 && !rows[0].Has("node")) s.Errors.Add("머리글에 node 열이 없다.");
+            List<Csv.Row> all = Csv.Read(asset, s.Errors);
+            string idColumn = Csv.IdColumn(all, "node");
+            List<Csv.Row> rows = Csv.Section(all, Csv.SECTION_DIALOGUE);
+            if (all.Count > 0 && !all[0].Has(idColumn)) s.Errors.Add($"머리글에 {idColumn} 열이 없다.");
 
             foreach (Csv.Row r in rows)
             {
-                string id = r["node"];
-                if (id.Length == 0) { s.Errors.Add($"{r.Line}행 node 칸이 비어 있다."); continue; }
+                string id = r[idColumn];
+                if (id.Length == 0) { s.Errors.Add($"{r.Line}행 {idColumn} 칸이 비어 있다."); continue; }
                 if (!s._byId.TryGetValue(id, out Node node))
                 {
                     node = new Node { Id = id, Line = r.Line };
@@ -135,6 +140,7 @@ namespace EyeMaze
                     Spring = r.Int("spring", s.Errors),
                     Goto = r["goto"],
                     Ending = r["ending"],
+                    EndingNeed = r.List("ending_need"),
                     Rest = Text(r["rest"]),
                     Line = r.Line,
                 });
@@ -147,7 +153,9 @@ namespace EyeMaze
                 foreach (Choice c in n.Choices)
                 {
                     if (c.Goto.Length > 0 && s.Find(c.Goto) == null) s.Errors.Add($"{c.Line}행 goto '{c.Goto}' 장면이 없다.");
-                    if (c.Goto.Length > 0 && c.Ending.Length > 0) s.Errors.Add($"{c.Line}행 goto와 ending을 함께 쓸 수 없다 (ending이 먼저 실행된다).");
+                    // 결과 분기 조건이 있으면 조건이 맞지 않을 때 goto로 가므로 함께 쓸 수 있다.
+                    if (c.Goto.Length > 0 && c.Ending.Length > 0 && c.EndingNeed.Length == 0) s.Errors.Add($"{c.Line}행 goto와 ending을 함께 쓸 수 없다 (ending이 먼저 실행된다). 함께 쓰려면 ending_need를 채운다.");
+                    if (c.EndingNeed.Length > 0 && c.Ending.Length == 0) s.Errors.Add($"{c.Line}행 ending_need는 ending이 있는 선택지에만 쓴다.");
                 }
             }
             return s;
