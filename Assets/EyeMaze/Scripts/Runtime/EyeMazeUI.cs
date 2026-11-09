@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 using UnityEngine;
@@ -27,22 +28,24 @@ namespace EyeMaze
         [Header("선택지")]
         [SerializeField, FormerlySerializedAs("optionButtons")] private Button[] _optionButtons = new Button[3];
         [SerializeField, FormerlySerializedAs("optionLabels")] private Text[] _optionLabels = new Text[3];
+        [Tooltip("첫 노드가 아닐 때 보이는 '처음 이야기로' 공통 선택지 버튼")]
+        [SerializeField] private Button _returnButton;
+        [SerializeField] private Text _returnLabel;
         [SerializeField, FormerlySerializedAs("gazeButtonLabel")] private Text _gazeButtonLabel;
 
-        [Header("태엽")]
-        [Tooltip("태엽 막대 (남은 태엽 / 용량)")]
-        [SerializeField, FormerlySerializedAs("springFill")] private RectTransform _springFill;
-        [SerializeField, FormerlySerializedAs("springFillImage")] private Image _springFillImage;
-        [SerializeField, FormerlySerializedAs("springLabel")] private Text _springLabel;
-        [Tooltip("태엽을 감을수록 도는 톱니 아이콘")]
-        [SerializeField, FormerlySerializedAs("springGear")] private RectTransform _springGear;
-        [Tooltip("켜면 막대가 아래에서 위로 차오름")]
-        [SerializeField, FormerlySerializedAs("springVertical")] private bool _springVertical = true;
-        [Tooltip("막대 위의 파란 목표선 (태엽의 targetPoint 높이에 맞춰짐)")]
-        [SerializeField, FormerlySerializedAs("springTarget")] private RectTransform _springTarget;
+        [Header("부담감")]
+        [Tooltip("부담감 막대의 채움. 피벗을 아래에 두고 세로 스케일로 채운다")]
+        [SerializeField] private RectTransform _burdenFill;
+        [Tooltip("대화로 부담감이 갑자기 바뀔 때 막대가 따라가는 속도 (초당 0~1 비율)")]
+        [SerializeField] private float _burdenAnimSpeed = 0.5f;
+        // 스펙 006: 깜빡일 때 가릴 부담감 표시 참조와 현재 투명도 추가
+        [Tooltip("깜빡일 때 함께 가려지는 부담감 막대와 글")]
+        [SerializeField] private Graphic[] _burdenGraphics = new Graphic[0];
 
-        [Header("깜빡임")]
-        [SerializeField, FormerlySerializedAs("blinkOverlay")] private Image _blinkOverlay;
+        [NonSerialized] private float _burdenShown = -1f;
+        [NonSerialized] private float _burdenAlpha = -1f;
+
+        // 스펙 006: 깜빡임 전체 화면 페이드 필드 제거
 
         void Update()
         {
@@ -55,7 +58,6 @@ namespace EyeMaze
                     ("trust", p.Trust), ("dilation", (p.Dilation * 100f).ToString("0")), ("mode", ModeName(d.CurrentMode))));
 
             DialogueScript.Node node = d.CurrentNode;
-            WindingIntro w = d.Intro;
             string sit;
             if (d.CurrentMode == EyeMazeDirector.Mode.Ending)
             {
@@ -63,7 +65,7 @@ namespace EyeMaze
                 sit = e != null && !string.IsNullOrEmpty(e.Situation) ? e.Situation : Strings.Get("ui.ending_situation", "{name}의 마음이 들린다.", ("name", p != null ? p.DisplayName : "그녀"));
             }
             else if (d.InAbyss) sit = Strings.Get("ui.abyss", "그녀의 마음 속 심연");
-            else if (d.IsReading) sit = Strings.Get("ui.reading", "시선이 파편에 머문다. 태엽이 잠시 멈췄다.");
+            else if (d.IsReading) sit = Strings.Get("ui.reading", "시선이 파편에 머문다.");
             else if (d.CurrentMode == EyeMazeDirector.Mode.Gaze)
             {
                 MazeLayer layer = d.CursorLayer;
@@ -90,50 +92,37 @@ namespace EyeMaze
                 Set(_optionLabels[i], c.Available ? $"{i + 1}. {c.Text}" : $"{i + 1}. " + Strings.Get("ui.locked_choice", "??? (아직 모르는 이야기)"));
             }
 
-            Set(_gazeButtonLabel, d.CurrentMode == EyeMazeDirector.Mode.Gaze ? Strings.Get("ui.gaze_button_gaze", "시선 거두기 (Space)")
-                : (w != null && w.IsHolding ? Strings.Get("ui.gaze_button_holding", "…파란 선에서 뗀다") : Strings.Get("ui.gaze_button", "Space 꾹 → 파란 선에서 떼기")));
+            if (_burdenFill != null)
+            {
+                // Play에서는 막대가 실제 값을 일정한 속도로 따라가 차오르거나 떨어지는 모습이 보인다. 에디트 모드에서는 바로 맞춘다.
+                bool snap = !Application.isPlaying || _burdenShown < 0f;
+                _burdenShown = snap ? d.Burden : Mathf.MoveTowards(_burdenShown, d.Burden, _burdenAnimSpeed * Time.deltaTime);
+                Vector3 scale = new Vector3(1f, _burdenShown, 1f);
+                if (_burdenFill.localScale != scale) _burdenFill.localScale = scale;
+            }
+
+            // 스펙 006: 눈꺼풀이 닫히는 만큼 부담감 막대와 글을 가린다.
+            float burdenAlpha = 1f - d.BlinkAmount;
+            if (!Mathf.Approximately(burdenAlpha, _burdenAlpha))
+            {
+                _burdenAlpha = burdenAlpha;
+                foreach (Graphic g in _burdenGraphics) g.canvasRenderer.SetAlpha(burdenAlpha);
+            }
+
+            bool showReturn = d.CanReturnToStart;
+            if (_returnButton != null && _returnButton.gameObject.activeSelf != showReturn)
+                _returnButton.gameObject.SetActive(showReturn);
+            if (showReturn) Set(_returnLabel, $"4. {d.ReturnText}");
+
+            Set(_gazeButtonLabel, d.CurrentMode == EyeMazeDirector.Mode.Gaze ? Strings.Get("ui.gaze_button_gaze", "시선 거두기 (Space)") : Strings.Get("ui.gaze_button", "들여다보기 (Space)"));
             Set(_hint, d.IsReading
-                ? Strings.Get("hint.reading", "Space / Z  계속 (읽는 동안 태엽이 멈춤)")
+                ? Strings.Get("hint.reading", "Space / Z  계속")
                 : d.InAbyss
                 ? Strings.Get("hint.abyss", "WASD / 방향키로 가장 반짝이는 파편에 다가간다")
                 : d.CurrentMode == EyeMazeDirector.Mode.Gaze
                 ? Strings.Get("hint.gaze", "WASD / 방향키로 이동   ·   Space 시선 거두기   ·   금색 = 잠긴 문   ·   하늘색 점 = 파편")
                 : d.CurrentMode == EyeMazeDirector.Mode.Ending ? (d.HeartFinished ? Strings.Get("hint.ending_done", "Space / Z  돌아가기") : Strings.Get("hint.ending", "Space / Z  계속"))
-                : Strings.Get("hint.talk", "Space 꾹 = 태엽 감기, 파란 선에서 떼면 들여다보기   ·   숫자키 대화   ·   Q 자리 떠나기"));
-
-            if (w != null)
-            {
-                if (_springFill != null)
-                {
-                    float g = w.Gauge01;
-                    Vector2 max = _springVertical ? new Vector2(1f, g) : new Vector2(g, 1f);
-                    if (_springFill.anchorMax != max) _springFill.anchorMax = max;
-                }
-                if (_springFillImage != null)
-                {
-                    Color c = Color.Lerp(w.GaugeColor, w.StrainColor, w.Strain);
-                    if (_springFillImage.color != c) _springFillImage.color = c;
-                }
-                if (_springGear != null)
-                {
-                    Quaternion rot = Quaternion.Euler(0f, 0f, -w.Gauge01 * w.Capacity * 18f + Mathf.Sin(Time.realtimeSinceStartup * 60f) * w.Strain * 4f);
-                    if (_springGear.localRotation != rot) _springGear.localRotation = rot;
-                }
-                if (_springTarget != null)
-                {
-                    Vector2 a = _springVertical ? new Vector2(0f, w.TargetPoint) : new Vector2(w.TargetPoint, 0f);
-                    Vector2 b = _springVertical ? new Vector2(1f, w.TargetPoint) : new Vector2(w.TargetPoint, 1f);
-                    if (_springTarget.anchorMin != a) _springTarget.anchorMin = a;
-                    if (_springTarget.anchorMax != b) _springTarget.anchorMax = b;
-                }
-                Set(_springLabel, Strings.Get("ui.spring", "태엽  {now} / {max}", ("now", Mathf.CeilToInt(w.Wound - 1e-3f)), ("max", w.Capacity))
-                    + (w.IsFull ? Strings.Get("ui.spring_full", "   — 가득 (더 감으면 미끄러진다)") : ""));
-            }
-            if (_blinkOverlay != null)
-            {
-                var c = new Color(0f, 0f, 0f, d.BlinkAmount * 0.97f);
-                if (_blinkOverlay.color != c) _blinkOverlay.color = c;
-            }
+                : Strings.Get("hint.talk", "Space = 눈 들여다보기   ·   숫자키 대화   ·   Q 자리 떠나기"));
         }
 
         /// <summary>

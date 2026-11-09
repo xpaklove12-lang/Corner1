@@ -5,7 +5,6 @@ namespace EyeMaze
 {
     /// <summary>
     /// 미로의 한 층(고리 묶음). 오브젝트를 회전시키면 그 층의 벽, 문, 기억 조각이 함께 돈다.
-    /// rotateOnBlink가 0이 아니면 눈을 깜빡일 때마다 그만큼(칸 단위) 회전한다.
     /// </summary>
     [ExecuteAlways]
     public class MazeLayer : MonoBehaviour
@@ -17,8 +16,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("displayName")] private string _displayName = "층";
         [Tooltip("현재 회전량 (칸 단위, 반시계 +)")]
         [SerializeField, FormerlySerializedAs("offset")] private int _offset;
-        [Tooltip("깜빡일 때마다 회전하는 칸 수 (0 = 고정)")]
-        [SerializeField, FormerlySerializedAs("rotateOnBlink")] private int _rotateOnBlink;
+        // 스펙 006: 깜빡임 층 회전 설정 제거
 
         private IrisMaze _maze;
 
@@ -26,7 +24,6 @@ namespace EyeMaze
         /// <summary>층 이름. Strings.csv의 layer.0, layer.1 … 이 있으면 그걸 쓴다.</summary>
         public string DisplayName => Strings.Get("layer." + _index, _displayName);
         public int Offset { get => _offset; set => _offset = value; }
-        public int RotateOnBlink => _rotateOnBlink;
 
         void OnValidate() => EyeHooks.Repaint();
 

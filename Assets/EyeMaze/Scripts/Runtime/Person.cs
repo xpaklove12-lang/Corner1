@@ -8,7 +8,7 @@ namespace EyeMaze
     {
         [Header("상태")]
         [SerializeField, FormerlySerializedAs("displayName")] private string _displayName = "은재";
-        [Tooltip("층 사이의 문을 열고, 감을 수 있는 태엽 양을 늘린다")]
+        [Tooltip("층 사이의 문을 연다")]
         [SerializeField, FormerlySerializedAs("trust")] private int _trust;
         [Tooltip("동공 크기. 높을수록 마음이 열려 있음")]
         [SerializeField, FormerlySerializedAs("dilation"), Range(0f, 1f)] private float _dilation = 0.2f;

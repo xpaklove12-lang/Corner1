@@ -20,9 +20,9 @@ wind.need,태엽이 풀려 있다. 먼저 감아야 한다.,
 wind.perfect,딱 맞았다. 태엽이 단단히 감겼다.,
 wind.good,조금 어긋났다. 태엽이 덜 감겼다.,
 wind.poor,많이 어긋났다. 태엽이 헐겁게 감겼다.,
-msg.gaze_on,{name}의 눈을 들여다본다. 태엽이 풀리는 동안만 볼 수 있다.,{name} = 손님 이름
-msg.gaze_off,시선을 거뒀다. 남은 태엽은 그대로다.,
-msg.respawn,"눈을 깜빡이자, 다른 층의 길이 바뀌었다.",파편을 읽은 뒤
+msg.gaze_on,{name}의 눈을 들여다본다.,{name} = 손님 이름
+msg.gaze_off,시선을 거뒀다.,
+msg.respawn,다른 층의 길이 바뀌었다.,파편을 읽은 뒤
 msg.blink_rotate,눈을 깜빡였다. 무언가가 돌아갔다.,
 msg.deeper,더 깊은 곳으로 들어왔다 — {layer},{layer} = 층 이름
 msg.fragment,파편 — {title}\n{text},{title} {text} = 파편 이름/글 (Flags.csv)
@@ -42,19 +42,19 @@ mode.gaze,들여다보는 중,
 mode.ending,마음,
 ui.ending_situation,{name}의 마음이 들린다.,엔딩 situation이 비었을 때
 ui.abyss,그녀의 마음 속 심연,
-ui.reading,시선이 파편에 머문다. 태엽이 잠시 멈췄다.,
+ui.reading,시선이 파편에 머문다.,
 ui.gaze_situation,{name}의 눈 속 — {layer},
 ui.locked_choice,??? (아직 모르는 이야기),조건이 안 맞는 선택지
 ui.fragments,파편들 ({got}/{all}),
 ui.fragments_none,· 아직 없음,
 ui.spring,태엽  {now} / {max},
 ui.spring_full,   — 가득 (더 감으면 미끄러진다),
-ui.gaze_button,Space 꾹 → 파란 선에서 떼기,
+ui.gaze_button,들여다보기 (Space),
 ui.gaze_button_holding,…파란 선에서 뗀다,
 ui.gaze_button_gaze,시선 거두기 (Space),
-hint.talk,"Space 꾹 = 태엽 감기, 파란 선에서 떼면 들여다보기   ·   숫자키 대화   ·   Q 자리 떠나기",아래 조작 안내
+hint.talk,Space = 눈 들여다보기   ·   숫자키 대화   ·   Q 자리 떠나기,아래 조작 안내
 hint.gaze,WASD / 방향키로 이동   ·   Space 시선 거두기   ·   금색 = 잠긴 문   ·   하늘색 점 = 파편,
-hint.reading,Space / Z  계속 (읽는 동안 태엽이 멈춤),
+hint.reading,Space / Z  계속,
 hint.abyss,WASD / 방향키로 가장 반짝이는 파편에 다가간다,
 hint.ending,Space / Z  계속,
 hint.ending_done,Space / Z  돌아가기,

@@ -24,7 +24,6 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("room")] private FieldRoom _room;
         [SerializeField, FormerlySerializedAs("player")] private FieldPlayer _player;
         [SerializeField, FormerlySerializedAs("director")] private EyeMazeDirector _director;
-        [SerializeField, FormerlySerializedAs("intro")] private WindingIntro _intro;
         [Tooltip("눈 화면의 기준 (눈 오브젝트)")]
         [SerializeField, FormerlySerializedAs("eyeAnchor")] private Transform _eyeAnchor;
 
@@ -67,7 +66,6 @@ namespace EyeMaze
 
         public State CurrentState { get => _state; set => _state = value; }
         public Camera Cam => _cam;
-        public WindingIntro Intro => _intro;
         public FieldPlayer Player => _player;
         public EyeMazeDirector Director => _director;
         public FieldNPC CurrentNpc => _currentNpc;
@@ -314,7 +312,7 @@ namespace EyeMaze
 
         /// <summary>
         /// 바로 만남 화면으로 바꾼다. 에디트 모드 버튼과 줌인 끝에서 쓴다.
-        /// 현재 상대를 사용하며, 카메라와 디렉터, 상담 케이스, 태엽 상태를 바꾼다.
+        /// 현재 상대를 사용하며, 카메라와 디렉터, 상담 케이스, 안내 문구를 바꾼다.
         /// </summary>
         public void EnterEncounterNow()
         {
@@ -334,12 +332,7 @@ namespace EyeMaze
             }
             bool first = _currentNpc == null || !_currentNpc.Met;
             if (_currentNpc != null && Application.isPlaying) _currentNpc.Met = true;
-            if (_intro != null)
-            {
-                // Play에서는 풀린 태엽(흐릿한 눈)에서 시작하고, 에디트 모드에서는 보기 편하게 가득 감는다.
-                if (Application.isPlaying) _intro.ResetForEncounter(first);
-                else _intro.FillUp();
-            }
+            if (_director != null && Application.isPlaying) _director.ShowEncounterGuide(first);
             _fadeTarget = 0f;
         }
 
