@@ -30,7 +30,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("portrait")] private Sprite _portrait;
         [Tooltip("켜면 눈을 들여다보지 않고 대화만 한다 (예: 보호자)")]
         [SerializeField, FormerlySerializedAs("talkOnly")] private bool _talkOnly;
-        [Tooltip("talkOnly일 때 Z로 한 줄씩 넘기는 대사")]
+        [Tooltip("talkOnly일 때 Space로 한 줄씩 넘기는 대사")]
         [SerializeField, FormerlySerializedAs("talkLines"), TextArea(1, 3)] private List<string> _talkLines = new List<string>();
         [Tooltip("대화를 마친 뒤 다시 말을 걸면 나오는 말")]
         [SerializeField, FormerlySerializedAs("lineAfterTalk"), TextArea(1, 2)] private string _lineAfterTalk = "…";

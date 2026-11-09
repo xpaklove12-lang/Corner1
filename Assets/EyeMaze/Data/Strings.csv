@@ -37,7 +37,7 @@ msg.dilation_down,(동공이 좁아졌다.),
 msg.spring_up,(태엽이 {n}칸 감겼다.),{n} = 칸 수
 msg.spring_down,(태엽이 {n}칸 풀렸다.),
 dialogue.back,다른 질문을 해볼까요?,뒤로가기 기본 문구 (대화 CSV back 칸이 비었을 때)
-ui.status,신뢰 {trust}   ·   동공 {dilation}%   ·   {mode},위쪽 상태 줄
+ui.status,신뢰 {trust},위쪽 상태 줄
 mode.talk,대화 중,
 mode.gaze,들여다보는 중,
 mode.ending,마음,
@@ -55,12 +55,12 @@ ui.gaze_button_holding,…파란 선에서 뗀다,
 ui.gaze_button_gaze,시선 거두기 (Space),
 hint.talk,Space = 눈 들여다보기   ·   숫자키 대화   ·   Q 자리 떠나기,아래 조작 안내
 hint.gaze,WASD / 방향키로 이동   ·   Space 시선 거두기   ·   금색 = 잠긴 문   ·   하늘색 점 = 파편,
-hint.reading,Space / Z  계속,
+hint.reading,Space  계속,
 hint.abyss,WASD / 방향키로 가장 반짝이는 파편에 다가간다,
-hint.ending,Space / Z  계속,
-hint.ending_done,Space / Z  돌아가기,
-hint.field,A D / ← →  이동   ·   Z  말 걸기 / 살펴보기,필드 조작 안내
-hint.text_next,Z  다음,
+hint.ending,Space  계속,
+hint.ending_done,Space  돌아가기,
+hint.field,A D / ← →  이동   ·   Space  말 걸기 / 살펴보기,필드 조작 안내
+hint.text_next,Space  다음,
 hint.door,문을 열어서 손님을 맞이하세요.,문을 열어 줄 때까지 필드 조작 안내 자리에 뜨는 문구
 field.call_first,뭐야? 한창 분위기 잡고있는데.,독백 뒤 띵-동이 울리고 나오는 첫 혼잣말 (이름 없음)
 field.call_second,아직 첫 상담까지는 시간이 남았을 텐데...,띵-동이 다시 울린 뒤 두 번째 혼잣말

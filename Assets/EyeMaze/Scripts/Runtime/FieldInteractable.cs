@@ -3,7 +3,7 @@ using UnityEngine.Serialization;
 
 namespace EyeMaze
 {
-    /// <summary>필드에서 Z로 상호작용할 수 있는 것 (사람, 단서).</summary>
+    /// <summary>필드에서 Space로 상호작용할 수 있는 것 (사람, 단서).</summary>
     public abstract class FieldInteractable : MonoBehaviour
     {
         [Header("상호작용")]
@@ -27,7 +27,7 @@ namespace EyeMaze
         protected virtual void OnValidate() => EyeHooks.Repaint();
 
         /// <summary>
-        /// 플레이어가 Z를 눌러 이 대상과 상호작용한다.
+        /// 플레이어가 Space를 눌러 이 대상과 상호작용한다.
         /// flow를 사용하며, 대상마다 대화나 글 상자 같은 게임 흐름 상태를 바꾼다.
         /// </summary>
         public abstract void Interact(GameFlow flow);
