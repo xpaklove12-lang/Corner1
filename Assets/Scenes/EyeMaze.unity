@@ -13150,9 +13150,9 @@ MonoBehaviour:
   _blinkRecoverSeconds: 0.2
   _respawnMazeAfterReading: 1
   _burden: 0
-  _burdenFillSeconds: 85.8
+  _burdenFillSeconds: 100
   _burdenSecondsPerTrust: 17.2
-  _burdenRelief: 0.2
+  _burdenRelief: 0.25
   _burdenEndLine: "\uC740\uC7AC\uAC00 \uC2DC\uC120\uC744 \uD53C\uD588\uB2E4. \uB354\uB294
     \uB9C8\uC8FC \uBCF4\uAE30 \uD798\uB4E0 \uAC83 \uAC19\uB2E4."
   _bumpMinSpeed: 0.8
@@ -22324,7 +22324,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1.15
-  m_Text: "2. ??? (\uC544\uC9C1 \uBAA8\uB974\uB294 \uC774\uC57C\uAE30)"
+  m_Text: "2. \uC190\uAC00\uB77D\uC740\u2026 \uC544\uC9C1 \uADF8 \uACE1\uC744 \uAE30\uC5B5\uD558\uACE0
+    \uC788\uB098 \uBD10\uC694."
 --- !u!222 &984894231
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -24851,9 +24852,9 @@ LineRenderer:
   m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Positions:
-  - {x: -0.111704856, y: -0.10313019, z: -0}
+  - {x: -0.11519482, y: -0.14011241, z: -0}
   - {x: 0, y: 0, z: 0}
-  - {x: 0.111704856, y: 0.10313019, z: 0}
+  - {x: 0.11519482, y: 0.14011241, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.035
@@ -35532,7 +35533,7 @@ LineRenderer:
   - {x: 0, y: 0.001, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.37904942
+    widthMultiplier: 0.430171
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -35559,8 +35560,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.3019608}
-      key1: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.3019608}
+      key0: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.40392157}
+      key1: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.40392157}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -42404,9 +42405,9 @@ LineRenderer:
   m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Positions:
-  - {x: 0.072153285, y: -0.07822832, z: -0}
+  - {x: 0.098197065, y: -0.08049218, z: -0}
   - {x: 0, y: 0, z: 0}
-  - {x: -0.072153285, y: 0.07822832, z: 0}
+  - {x: -0.098197065, y: 0.08049218, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.035
