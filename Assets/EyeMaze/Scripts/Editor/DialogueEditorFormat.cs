@@ -49,7 +49,7 @@ namespace EyeMaze.EditorTools
         public static readonly string[] DAY_COLUMNS =
         {
             "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring",
-            "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest",
+            "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need",
         };
 
         private static readonly string[] STRINGS_COLUMNS = { "key", "text", "memo" };
@@ -71,7 +71,7 @@ namespace EyeMaze.EditorTools
             IdColumn = "id",
             BodyColumn = TEXT,
             GroupColumns = new[] { "situation", "back" },
-            ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "spring", "memo", "ending", "rest" },
+            ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "spring", "memo", "ending", "rest", "ending_need" },
             NumberColumns = new[] { "trust", "dilation", "spring" },
         };
 
@@ -827,7 +827,13 @@ namespace EyeMaze.EditorTools
             foreach (DialogueEditorDocument.Group g in doc.Groups)
             {
                 if (g.Section == Csv.SECTION_TALK) Check(g.Get("need"), g.Get("set"), g.TextLine);
-                else if (g.Section == Csv.SECTION_DIALOGUE) foreach (DialogueEditorDocument.Item i in g.Items) Check(i.Get("need"), i.Get("set"), i.TextLine);
+                else if (g.Section == Csv.SECTION_DIALOGUE)
+                    foreach (DialogueEditorDocument.Item i in g.Items)
+                    {
+                        Check(i.Get("need"), i.Get("set"), i.TextLine);
+                        // 결과 분기 조건도 need와 같은 규칙으로 검사한다.
+                        Check(i.Get("ending_need"), "", i.TextLine);
+                    }
             }
         }
 

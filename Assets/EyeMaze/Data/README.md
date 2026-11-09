@@ -63,7 +63,7 @@ Flags.csv에 없는 이름을 쓰면 검사 오류가 납니다(오타 방지).
 인물 한 명의 한 회차(예: `Eunjae_Day1.csv`)에 필요한 대사를 한 파일에 둡니다. 머리글은 아래와 같습니다.
 
 ```
-section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest
+section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest,ending_need
 ```
 
 | 열 | 뜻 |
@@ -95,6 +95,7 @@ section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,end
 | goto | 고르면 이동할 장면 id. 비우면 그 장면에 머뭅니다 | `phone` |
 | ending | 고르면 바로 이 엔딩으로 끝. 같은 파일 ending 단계의 id (goto와 같이 쓰지 않음) | `delete` |
 | rest | 채우면 고른 뒤 눈물 신호가 나타나고, Q를 누르면 이 대사가 나온다 (비우면 없음) | `"…잠시 쉬어도 될까요?"` |
+| ending_need | `ending`이 있는 선택지에만. 채우면 고른 뒤 이 플래그가 모두 켜져 있을 때만 엔딩으로 가고, 아니면 결과와 goto로 진행합니다. 이때는 goto와 같이 쓸 수 있습니다 (need는 선택지가 열리는 조건) | `trust_le_m3` |
 | back | 뒤로가기 문구 바꾸기 (아래 참고). 장면의 아무 줄에나 씁니다 | `잠깐, 다른 얘기를 해도 될까요?` |
 | memo | 자유. 게임에서 읽지 않습니다 | |
 

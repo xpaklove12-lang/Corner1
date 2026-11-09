@@ -134,7 +134,7 @@ namespace EyeMaze.EditorTools
                     foreach (DialogueScript.Choice c in n.Choices)
                     {
                         foreach (string f in c.Set) Add(setters, f, $"{asset.name}.csv {c.Line}행", asset);
-                        foreach (string f in c.Need) Add(users, f, $"{asset.name}.csv {c.Line}행", asset);
+                        foreach (string f in c.Need.Concat(c.EndingNeed)) Add(users, f, $"{asset.name}.csv {c.Line}행", asset);
                     }
             foreach ((TextAsset asset, string actor, TalkScript t) in LoadTalks())
                 foreach (TalkScript.Group g in t.Groups)
@@ -202,7 +202,7 @@ namespace EyeMaze.EditorTools
                 foreach (DialogueScript.Node n in s.Nodes)
                     foreach (DialogueScript.Choice c in n.Choices)
                     {
-                        foreach (string f in c.Need.Concat(c.Set))
+                        foreach (string f in c.Need.Concat(c.Set).Concat(c.EndingNeed))
                             if (!known.Contains(f)) Err($"{asset.name}.csv {c.Line}행 플래그 '{f}'가 Flags.csv에 없다.", asset);
                         foreach (string f in c.Set)
                             if (computed.Contains(f)) Err($"{asset.name}.csv {c.Line}행 '{f}'는 계산 플래그라 set으로 켤 수 없다.", asset);
@@ -293,7 +293,7 @@ namespace EyeMaze.EditorTools
             string actor = Path.GetFileNameWithoutExtension(path);
             int day = actor.LastIndexOf("_Day", System.StringComparison.Ordinal);
             if (day > 0) actor = actor.Substring(0, day);
-            var columns = new List<string> { "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring", "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest" };
+            var columns = new List<string> { "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring", "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need" };
             var sb = new System.Text.StringBuilder(string.Join(",", columns)).Append("\r\n");
             void Row(string section, string id, params (string column, string value)[] cells)
             {

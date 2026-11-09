@@ -953,7 +953,8 @@ namespace EyeMaze
             float burdenBefore = _burden;
             if (helpful) _burden = Mathf.Max(0f, _burden - _burdenRelief);
             foreach (string f in o.Set) Flags.Set(f);
-            if (!string.IsNullOrEmpty(o.Ending)) { StartEnding(o.Ending, o.Response); return; }
+            // 스펙 014 FR-038: 결과 분기 조건이 모두 맞을 때만 엔딩으로 가고, 아니면 일반 선택지처럼 진행한다.
+            if (!string.IsNullOrEmpty(o.Ending) && Flags.AllSet(o.EndingNeed)) { StartEnding(o.Ending, o.Response); return; }
             var sb = new StringBuilder();
             // 스펙 004: 문이 실제로 열렸을 때만 문이 열렸다고 알림
             if (o.Trust > 0) sb.Append("\n" + (OpenGateCount() > openBefore

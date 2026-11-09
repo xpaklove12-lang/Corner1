@@ -32,6 +32,8 @@ namespace EyeMaze
             public int Spring;
             public string Goto;
             public string Ending;
+            /// <summary>스펙 014 FR-038: 고른 뒤 ending으로 갈지 가르는 조건. 비면 고르는 즉시 ending으로 간다.</summary>
+            public string[] EndingNeed = Array.Empty<string>();
             // 스펙 011: 내담자가 쉬자고 할 때의 대사 추가
             public string Rest;
             public int Line;
@@ -138,6 +140,7 @@ namespace EyeMaze
                     Spring = r.Int("spring", s.Errors),
                     Goto = r["goto"],
                     Ending = r["ending"],
+                    EndingNeed = r.List("ending_need"),
                     Rest = Text(r["rest"]),
                     Line = r.Line,
                 });
@@ -150,7 +153,9 @@ namespace EyeMaze
                 foreach (Choice c in n.Choices)
                 {
                     if (c.Goto.Length > 0 && s.Find(c.Goto) == null) s.Errors.Add($"{c.Line}행 goto '{c.Goto}' 장면이 없다.");
-                    if (c.Goto.Length > 0 && c.Ending.Length > 0) s.Errors.Add($"{c.Line}행 goto와 ending을 함께 쓸 수 없다 (ending이 먼저 실행된다).");
+                    // 결과 분기 조건이 있으면 조건이 맞지 않을 때 goto로 가므로 함께 쓸 수 있다.
+                    if (c.Goto.Length > 0 && c.Ending.Length > 0 && c.EndingNeed.Length == 0) s.Errors.Add($"{c.Line}행 goto와 ending을 함께 쓸 수 없다 (ending이 먼저 실행된다). 함께 쓰려면 ending_need를 채운다.");
+                    if (c.EndingNeed.Length > 0 && c.Ending.Length == 0) s.Errors.Add($"{c.Line}행 ending_need는 ending이 있는 선택지에만 쓴다.");
                 }
             }
             return s;
