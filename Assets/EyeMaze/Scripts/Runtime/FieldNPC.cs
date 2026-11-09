@@ -30,7 +30,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("portrait")] private Sprite _portrait;
         [Tooltip("켜면 눈을 들여다보지 않고 대화만 한다 (예: 보호자)")]
         [SerializeField, FormerlySerializedAs("talkOnly")] private bool _talkOnly;
-        [Tooltip("talkOnly일 때 Z로 한 줄씩 넘기는 대사")]
+        [Tooltip("talkOnly일 때 Space로 한 줄씩 넘기는 대사")]
         [SerializeField, FormerlySerializedAs("talkLines"), TextArea(1, 3)] private List<string> _talkLines = new List<string>();
         [Tooltip("대화를 마친 뒤 다시 말을 걸면 나오는 말")]
         [SerializeField, FormerlySerializedAs("lineAfterTalk"), TextArea(1, 2)] private string _lineAfterTalk = "…";
@@ -211,11 +211,12 @@ namespace EyeMaze
             return true;
         }
 
+        // 스펙 007: 대화 기록에서 만남 상대의 얼굴을 찾도록 공개
         /// <summary>
-        /// 이름으로 씬의 다른 사람 초상화를 찾는다 (speaker 칸에 다른 사람 이름을 쓴 줄용).
+        /// 이름으로 씬의 다른 사람 초상화를 찾는다 (speaker 칸에 다른 사람 이름을 쓴 줄, 대화 기록의 얼굴용).
         /// name을 사용하며, 찾은 초상화 또는 null을 반환한다.
         /// </summary>
-        private static Sprite PortraitOf(string name)
+        public static Sprite PortraitOf(string name)
         {
             foreach (FieldNPC n in FindObjectsByType<FieldNPC>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (n.DisplayName == name) return n.Portrait;

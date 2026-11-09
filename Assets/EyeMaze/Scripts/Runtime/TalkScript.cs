@@ -7,7 +7,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 필드에서 말을 걸었을 때 나오는 대사 CSV(Data/Talk/이름.csv)를 읽은 결과.
-    /// 줄 하나가 대사 한 줄이고, 같은 group 값을 가진 줄들이 한 번의 대화가 된다 (Z로 한 줄씩 넘김).
+    /// 줄 하나가 대사 한 줄이고, 같은 group 값을 가진 줄들이 한 번의 대화가 된다 (Space로 한 줄씩 넘김).
     /// 열: group, need, set, speaker, text (그 밖의 열은 메모로 무시).
     ///
     /// 말을 걸면 위에서부터 need 플래그가 모두 켜진 첫 group을 보여준다. 그래서 조건이 까다로운 group을 위에 둔다.
