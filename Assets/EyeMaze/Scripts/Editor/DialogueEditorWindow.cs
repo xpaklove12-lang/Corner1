@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Reflection;
+using System.Text;
 
 using UnityEngine;
 
@@ -15,6 +17,10 @@ namespace EyeMaze.EditorTools
         private const float TEXT_WIDTH_RATIO = 0.42f;
         // 입력이 이만큼(초) 멈추면 텍스트를 검사한다.
         private const double TEXT_APPLY_DELAY = 0.75;
+        private const string TEXT_CONTROL = "DialogueEditorText";
+
+        // 에디터 텍스트 상자가 지금 쓰는 편집기. Tab 들여쓰기에서 커서 위치를 읽고 바꾸는 데 쓴다.
+        private static readonly FieldInfo ActiveEditorField = typeof(EditorGUI).GetField("activeEditor", BindingFlags.NonPublic | BindingFlags.Static);
 
         // 스크립트가 다시 컴파일돼도 열던 파일을 다시 열려고 경로만 저장한다.
         [SerializeField] private string _openPath = "";
@@ -112,19 +118,19 @@ namespace EyeMaze.EditorTools
         {
             float issueHeight = _issues.Count > 0 ? Mathf.Min(120f, 22f + _issues.Count * 18f) : 0f;
             var textRect = new Rect(rect.x, rect.y, rect.width, rect.height - issueHeight);
-            var style = new GUIStyle(EditorStyles.textArea) { wordWrap = true, richText = false };
-            // 줄바꿈된 높이를 직접 계산해 가로 스크롤 없이 창 너비에 맞춘다.
+            HandleTabKey();
+            // 입력 상자의 글자는 투명하게 두고, 같은 글자 모양으로 문법별 색을 입힌 글을 그 위에 겹쳐 그린다.
+            // 두 글의 글자 위치가 같아야 하므로 같은 스타일에서 글자색과 richText만 다르게 쓴다.
+            GUIStyle style = InputStyle();
             float width = textRect.width - 16f;
             float height = Mathf.Max(textRect.height, style.CalcHeight(new GUIContent(_draft), width));
             _textScroll = GUI.BeginScrollView(textRect, _textScroll, new Rect(0f, 0f, width, height), false, true);
-            string next = EditorGUI.TextArea(new Rect(0f, 0f, width, height), _draft, style);
+            var area = new Rect(0f, 0f, width, height);
+            GUI.SetNextControlName(TEXT_CONTROL);
+            string next = EditorGUI.TextArea(area, _draft, style);
+            if (Event.current.type == EventType.Repaint) HighlightStyle(style).Draw(area, new GUIContent(Highlight(next)), false, false, false, false);
             GUI.EndScrollView();
-            if (next != _draft)
-            {
-                _draft = next;
-                _textPending = true;
-                _editedAt = EditorApplication.timeSinceStartup;
-            }
+            SetDraftFromInput(next);
 
             if (issueHeight <= 0f) return;
             var listRect = new Rect(rect.x, textRect.yMax, rect.width, issueHeight);
@@ -150,6 +156,133 @@ namespace EyeMaze.EditorTools
                 y += h + 2f;
             }
             GUI.EndScrollView();
+        }
+
+        /// <summary>
+        /// 텍스트 입력 상자 스타일을 만든다. 글자는 투명하게 두고 커서와 선택 영역만 보이게 한다.
+        /// 입력값은 없으며, 새 스타일을 반환한다.
+        /// </summary>
+        private static GUIStyle InputStyle()
+        {
+            var style = new GUIStyle(EditorStyles.textArea) { wordWrap = true, richText = false };
+            Color clear = new Color(0f, 0f, 0f, 0f);
+            style.normal.textColor = style.focused.textColor = style.hover.textColor = style.active.textColor = clear;
+            style.onNormal.textColor = style.onFocused.textColor = style.onHover.textColor = style.onActive.textColor = clear;
+            return style;
+        }
+
+        /// <summary>
+        /// 문법 색을 입힌 글을 그릴 스타일을 만든다. 입력 상자와 같은 글자 모양과 여백을 쓰고 배경은 그리지 않는다.
+        /// input을 사용하며, 새 스타일을 반환한다.
+        /// </summary>
+        private static GUIStyle HighlightStyle(GUIStyle input)
+        {
+            var style = new GUIStyle(input) { richText = true };
+            style.normal.background = style.focused.background = style.hover.background = style.active.background = null;
+            style.normal.textColor = EditorStyles.textArea.normal.textColor;
+            return style;
+        }
+
+        /// <summary>
+        /// 텍스트 뷰의 각 줄에 문법별 색 태그를 붙인다. 라벨은 청록, 선택지는 노랑, Line: 대사는 기본색,
+        /// [eye]는 보라, [goto]는 파랑, 오류가 난 줄은 빨강이다. 글자 자체는 바꾸지 않는다.
+        /// text를 사용하며, 색 태그를 붙인 글을 반환한다.
+        /// </summary>
+        private string Highlight(string text)
+        {
+            bool pro = EditorGUIUtility.isProSkin;
+            string label = pro ? "#4FD1C5" : "#007A72";
+            string choice = pro ? "#E6C547" : "#8A6A00";
+            string eye = pro ? "#C792EA" : "#7A3EA8";
+            string go = pro ? "#6CB6FF" : "#1F5FBF";
+            string error = pro ? "#FF6B6B" : "#C62828";
+            var errorLines = new HashSet<int>();
+            foreach (DialogueEditorFormat.Issue i in _issues) if (i.Error && i.Line > 0) errorLines.Add(i.Line);
+
+            var sb = new StringBuilder();
+            string[] lines = text.Split('\n');
+            for (int n = 0; n < lines.Length; n++)
+            {
+                if (n > 0) sb.Append('\n');
+                string line = lines[n];
+                string t = line.TrimStart();
+                string color = null;
+                if (errorLines.Contains(n + 1)) color = error;
+                else if (t.StartsWith(":")) color = label;
+                else if (t.StartsWith("*")) color = choice;
+                else if (t.StartsWith("[goto")) color = go;
+                else if (t.StartsWith("[eye")) color = eye;
+                string safe = EscapeRichText(line);
+                if (color == null || safe.Length == 0) sb.Append(safe);
+                else sb.Append("<color=").Append(color).Append('>').Append(safe).Append("</color>");
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// 글 안의 꺾쇠가 색 태그로 읽히지 않도록 폭이 없는 문자를 끼워 넣는다. 글자 위치는 바뀌지 않는다.
+        /// s를 사용하며, 바꾼 글을 반환한다.
+        /// </summary>
+        private static string EscapeRichText(string s) => s.IndexOf('<') < 0 ? s : s.Replace("<", "<\u200B");
+
+        /// <summary>
+        /// 텍스트 입력 중 Tab과 Shift+Tab을 받아 커서가 있는 줄 맨 앞의 탭 문자를 하나 넣거나 뺀다.
+        /// 기본 동작(포커스 이동)은 막는다. 이벤트와 에디터 텍스트 편집기를 사용하며, _draft를 바꾼다.
+        /// </summary>
+        private void HandleTabKey()
+        {
+            Event e = Event.current;
+            if (e.type != EventType.KeyDown || GUI.GetNameOfFocusedControl() != TEXT_CONTROL) return;
+            bool tabKey = e.keyCode == KeyCode.Tab;
+            bool tabChar = e.character == '\t' || e.character == (char)25;
+            if (!tabKey && !tabChar) return;
+            // Tab은 키 이벤트와 글자 이벤트가 따로 오므로 키 이벤트에서만 처리하고 둘 다 막는다.
+            if (tabKey) Indent(!e.shift);
+            e.Use();
+        }
+
+        /// <summary>
+        /// 커서가 있는 줄의 들여쓰기를 탭 문자 한 단계 늘리거나 줄인다.
+        /// add(늘릴지)를 사용하며, _draft와 텍스트 편집기의 글·커서를 바꾼다.
+        /// </summary>
+        private void Indent(bool add)
+        {
+            var editor = ActiveEditorField?.GetValue(null) as TextEditor;
+            if (editor == null) return;
+            string text = editor.text ?? _draft;
+            int cursor = Mathf.Clamp(editor.cursorIndex, 0, text.Length);
+            int select = Mathf.Clamp(editor.selectIndex, 0, text.Length);
+            int lineStart = cursor == 0 ? 0 : text.LastIndexOf('\n', cursor - 1) + 1;
+            if (add)
+            {
+                text = text.Insert(lineStart, "\t");
+                cursor++;
+                if (select >= lineStart) select++;
+            }
+            else
+            {
+                if (lineStart >= text.Length || text[lineStart] != '\t') return;
+                text = text.Remove(lineStart, 1);
+                if (cursor > lineStart) cursor--;
+                if (select > lineStart) select--;
+            }
+            editor.text = text;
+            editor.cursorIndex = cursor;
+            editor.selectIndex = select;
+            SetDraftFromInput(text);
+            GUI.changed = true;
+        }
+
+        /// <summary>
+        /// 입력으로 바뀐 텍스트 초안을 받고 검사 대기를 시작한다.
+        /// text를 사용하며, _draft, _textPending, _editedAt을 바꾼다.
+        /// </summary>
+        private void SetDraftFromInput(string text)
+        {
+            if (text == _draft) return;
+            _draft = text;
+            _textPending = true;
+            _editedAt = EditorApplication.timeSinceStartup;
         }
 
         /// <summary>

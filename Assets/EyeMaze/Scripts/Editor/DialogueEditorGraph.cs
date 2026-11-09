@@ -12,6 +12,7 @@ namespace EyeMaze.EditorTools
     /// again 같은 조건부 재대화와 @intro·@idle·@abyss는 해당 단계 옆의 보조 카드로 놓는다. Strings는 key 순서대로 격자에 놓는다.
     /// 화면에서 노드를 끌어 옮긴 위치와 화면 이동은 이 창에서만 쓰고 저장하지 않는다.
     /// 연결점을 끌어 같은 상담 actor의 다른 노드에 놓으면 goto가, 행 카드를 끌어 같은 단계의 다른 자리에 놓으면 소속과 순서가 바뀐 새 문서를 돌려준다.
+    /// 그룹이나 행을 우클릭해 추가를 고르면 새 행을 넣은 새 문서를 돌려준다.
     /// </summary>
     public class DialogueEditorGraph
     {
@@ -63,6 +64,8 @@ namespace EyeMaze.EditorTools
         private int _cardGroup = -1;
         private int _cardItem = -1;
         private Vector2 _mouse;
+        // 우클릭 메뉴처럼 나중에 확정되는 편집. 다음 Draw에서 돌려준다.
+        private DialogueEditorDocument _pending;
 
         private static GUIStyle _rowStyle;
         private static GUIStyle _headerStyle;
@@ -106,6 +109,12 @@ namespace EyeMaze.EditorTools
             bool inside = new Rect(0f, 0f, rect.width, rect.height).Contains(e.mousePosition);
             DialogueEditorDocument changed = editable ? HandleEditInput(e, doc, boxes, inside) : null;
             if (!editable) ClearDrag();
+            HandleContextMenu(e, doc, boxes, inside, editable);
+            if (changed == null && _pending != null)
+            {
+                changed = editable ? _pending : null;
+                _pending = null;
+            }
             HandleViewInput(e, doc, boxes, inside);
             // 선이 상자에 가리지 않도록 상자를 먼저 그리고 선을 위에 그린다.
             foreach (Box b in boxes) DrawBox(doc, b);
@@ -757,6 +766,68 @@ namespace EyeMaze.EditorTools
             EditorGUI.DrawRect(new Rect(r.x - 2f, r.yMax, r.width + 4f, 2f), color);
             EditorGUI.DrawRect(new Rect(r.x - 2f, r.y, 2f, r.height), color);
             EditorGUI.DrawRect(new Rect(r.xMax, r.y, 2f, r.height), color);
+        }
+
+        // ---------------------------------------------------------------- 우클릭 추가
+
+        /// <summary>
+        /// 그룹 노드나 그 안의 행을 우클릭하면 추가 메뉴를 띄운다. 행 위면 그 행 뒤에, 그 밖이면 그룹 끝에 넣는다.
+        /// 편집할 수 없을 때와 선택지가 3개인 Dialogue 노드에서는 메뉴 항목을 비활성화한다.
+        /// e, doc, boxes, inside, editable을 사용하며, 고른 결과를 _pending에 둔다.
+        /// </summary>
+        private void HandleContextMenu(Event e, DialogueEditorDocument doc, List<Box> boxes, bool inside, bool editable)
+        {
+            if (e.type != EventType.ContextClick || !inside) return;
+            Box hit = HitBox(boxes, e.mousePosition);
+            if (hit == null || hit.Kind != BoxKind.Group) return;
+            BuildAddMenu(doc, hit.Group, RowAt(doc, hit, e.mousePosition.y), editable).ShowAsContext();
+            e.Use();
+        }
+
+        /// <summary>
+        /// 그룹 또는 행의 추가 메뉴를 만든다. 행이 있으면 그 행 뒤에, 없으면(-1) 그룹 끝에 넣는 항목이다.
+        /// doc, group, row, editable을 사용하며, 메뉴를 반환한다. 항목을 고르면 결과를 _pending에 둔다.
+        /// </summary>
+        private GenericMenu BuildAddMenu(DialogueEditorDocument doc, int group, int row, bool editable)
+        {
+            DialogueEditorDocument.Group g = doc.Groups[group];
+            int index = row >= 0 ? row + 1 : g.Items.Count;
+            string what = AddLabel(doc, g);
+            string label = row >= 0 ? $"{row + 1}번 행 뒤에 {what} 추가" : $"'{g.Id}' 끝에 {what} 추가";
+            bool full = g.Section == Csv.SECTION_DIALOGUE && g.Items.Count >= 3;
+            var menu = new GenericMenu();
+            if (!editable || full) menu.AddDisabledItem(new GUIContent(label + (full ? " (선택지 3개)" : " (텍스트 오류 또는 검사 대기 중)")));
+            else menu.AddItem(new GUIContent(label), false, () => _pending = InsertRow(doc, group, index));
+            return menu;
+        }
+
+        /// <summary>
+        /// 그룹에 넣을 새 행의 이름을 정한다.
+        /// doc과 g를 사용하며, 선택지·대사·문구 중 하나를 반환한다.
+        /// </summary>
+        private static string AddLabel(DialogueEditorDocument doc, DialogueEditorDocument.Group g)
+        {
+            if (g.Section == Csv.SECTION_DIALOGUE) return "선택지";
+            return doc.Kind == DialogueEditorKind.Strings ? "문구" : "대사";
+        }
+
+        /// <summary>
+        /// 그룹의 지정 위치에 새 행을 넣은 복사본을 만든다. 새 선택지는 글 '새 선택지'와 수치 0, 다른 행은 '새 대사' 또는 '새 문구'다.
+        /// doc, group, index를 사용하며, 새 문서를 반환한다.
+        /// </summary>
+        public static DialogueEditorDocument InsertRow(DialogueEditorDocument doc, int group, int index)
+        {
+            DialogueEditorDocument copy = doc.Clone();
+            DialogueEditorDocument.Group g = copy.Groups[group];
+            var item = new DialogueEditorDocument.Item();
+            if (g.Section == Csv.SECTION_DIALOGUE)
+            {
+                item.Fields[DialogueEditorFormat.TEXT] = "새 선택지";
+                foreach (string c in new[] { "trust", "dilation", "spring" }) item.Fields[c] = "0";
+            }
+            else item.Fields[DialogueEditorFormat.TEXT] = doc.Kind == DialogueEditorKind.Strings ? "새 문구" : "새 대사";
+            g.Items.Insert(Mathf.Clamp(index, 0, g.Items.Count), item);
+            return copy;
         }
 
         // ---------------------------------------------------------------- 화면 조작
