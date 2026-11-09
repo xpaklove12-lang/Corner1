@@ -47,4 +47,11 @@ SDD 작업을 시작할 때 이 파일을 가장 먼저 읽는다.
 | 004 | `specs/004-return-to-start-option.md` | 모든 대화 노드에 처음 이야기로 돌아가는 공통 선택지 추가 | 구현완료 |
 | 005 | `specs/005-burden-gauge.md` | 들여다보는 동안 차오르고 가득 차면 상담이 끝나는 부담감 게이지 | 구현완료 |
 | 006 | `specs/006-blink-illusion-rotation.md` | 깜빡임 때 맵과 시선을 함께 무작위로 돌려 맵이 변한 듯한 착시를 준다 | 구현완료 |
-| 007 | `specs/007-dialogue-editor.md` | 인물·회차별 통합 CSV의 전체 대사 흐름을 텍스트와 노드 뷰에서 편집 | 승인 |
+| 007 | `specs/007-wall-knockback.md` | 벽이나 잠긴 문에 세게 부딪히면 미로가 지지직 흐려지고 시선이 밀려나며 부담감이 오른다 | 구현완료 |
+| 008 | `specs/007-dialogue-log.md` | 지나간 필드 대화, 만남 대화, 엔딩 대사를 L 키로 다시 읽는 대화 기록 창 | 구현완료 |
+| 009 | `specs/009-blink-visible-turn.md` | 눈을 뜨며 미로가 층별 시간차로 부드럽게 도는 모습을 보여 준다 | 구현완료 |
+| 010 | `specs/010-blink-wall-change-effects.md` | 깜빡임 뒤 동공에서 퍼지는 파문을 따라 벽이 실제로 바뀐다 | 구현완료 |
+| 011 | `specs/011-client-rest-request.md` | 내담자의 동공이 떨리고 눈물이 차면 쉬어 줄 수 있고, 쉬어 주면 부담감이 줄어든다 | 구현완료 |
+| 012 | `specs/012-fragment-visibility-feedback.md` | 줍지 않은 파편을 맥동과 빛으로 눈에 띄게 하고, 주운 순간 고리와 목록 강조로 알린다 | 구현완료 |
+| 013 | `specs/009-cutscene-fast-forward.md` | 조작 없는 컷신·대사 구간을 키를 누르는 동안 빨리감기 | 구현완료 |
+| 014 | `specs/014-dialogue-editor.md` | 인물·회차별 통합 CSV의 전체 대사 흐름을 텍스트와 노드 뷰에서 편집 | 승인 |

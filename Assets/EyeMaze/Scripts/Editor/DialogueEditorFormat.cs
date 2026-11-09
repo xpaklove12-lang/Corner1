@@ -49,7 +49,7 @@ namespace EyeMaze.EditorTools
         public static readonly string[] DAY_COLUMNS =
         {
             "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring",
-            "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit",
+            "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest",
         };
 
         private static readonly string[] STRINGS_COLUMNS = { "key", "text", "memo" };
@@ -71,7 +71,7 @@ namespace EyeMaze.EditorTools
             IdColumn = "id",
             BodyColumn = TEXT,
             GroupColumns = new[] { "situation", "back" },
-            ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "spring", "memo", "ending" },
+            ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "spring", "memo", "ending", "rest" },
             NumberColumns = new[] { "trust", "dilation", "spring" },
         };
 

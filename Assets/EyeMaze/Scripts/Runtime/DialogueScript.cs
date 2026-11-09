@@ -32,6 +32,8 @@ namespace EyeMaze
             public int Spring;
             public string Goto;
             public string Ending;
+            // 스펙 011: 내담자가 쉬자고 할 때의 대사 추가
+            public string Rest;
             public int Line;
         }
 
@@ -136,6 +138,7 @@ namespace EyeMaze
                     Spring = r.Int("spring", s.Errors),
                     Goto = r["goto"],
                     Ending = r["ending"],
+                    Rest = Text(r["rest"]),
                     Line = r.Line,
                 });
             }

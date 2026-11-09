@@ -11,7 +11,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 게임 시작 독백. 검은 화면에서 한 줄씩 한 글자씩 찍히고, 다 찍히면 ▼가 깜빡인다.
-    /// Z / Enter / Space / 클릭으로 (찍히는 중이면 한 번에 다 보여주고) 다음 줄로 넘긴다.
+    /// Space / Enter / 클릭으로 (찍히는 중이면 한 번에 다 보여주고) 다음 줄로 넘긴다.
     /// 마지막 줄 다음엔 검은 화면이 서서히 걷히며 필드가 시작된다.
     /// 대사는 DefaultLines()에서 고치면 반영된다 (useScriptLines 켜짐). 인스펙터에서 고치려면 useScriptLines를 끈다.
     /// </summary>
@@ -49,6 +49,9 @@ namespace EyeMaze
 
         public static bool IsPlaying => _current != null && _current._playing;
 
+        /// <summary>줄 사이 공백이나 암전 해제 중이 아니라 넘기기 입력을 받을 수 있는 상태인지.</summary>
+        public bool CanAdvance => _playing && !_finishing && _gap <= 0f;
+
         void OnValidate() => EyeHooks.Repaint();
 
         void Start()
@@ -73,7 +76,8 @@ namespace EyeMaze
             }
             if (!_playing) return;
 
-            float dt = Time.unscaledDeltaTime;
+            // 빨리감기 배속이 줄 간격과 암전 해제에도 적용되도록 timeScale을 따른다.
+            float dt = Time.deltaTime;
             if (_finishing)
             {
                 if (_group != null) _group.alpha = Mathf.MoveTowards(_group.alpha, 0f, dt / Mathf.Max(0.05f, _fadeOutSeconds));
@@ -99,8 +103,18 @@ namespace EyeMaze
                 if (_nextMark.enabled != show) _nextMark.enabled = show;
             }
 
-            if (!Pressed()) return;
-            if (typing) { tw.Complete(); return; }
+            if (Pressed()) Advance();
+        }
+
+        /// <summary>
+        /// 넘기기 입력 한 번을 처리한다. 찍히는 중이면 줄을 끝까지 보여주고, 다 보였으면 다음 줄로 넘기거나 암전 해제를 시작한다.
+        /// _index, _lines, Typewriter 상태를 사용하며, _index와 _gap 또는 _finishing을 바꾼다.
+        /// </summary>
+        public void Advance()
+        {
+            if (!_playing || _finishing || _gap > 0f) return;
+            Typewriter tw = _text != null ? _text.GetComponent<Typewriter>() : null;
+            if (tw != null && tw.IsTyping) { tw.Complete(); return; }
 
             _index++;
             if (_index >= _lines.Count)
@@ -199,7 +213,7 @@ namespace EyeMaze
             Keyboard kb = Keyboard.current;
             Mouse mouse = Mouse.current;
             Gamepad pad = Gamepad.current;
-            if (kb != null && (kb.zKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame)) return true;
+            if (kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame)) return true;
             if (mouse != null && mouse.leftButton.wasPressedThisFrame) return true;
             if (pad != null && pad.buttonSouth.wasPressedThisFrame) return true;
             return false;

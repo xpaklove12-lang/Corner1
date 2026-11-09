@@ -63,7 +63,7 @@ Flags.csv에 없는 이름을 쓰면 검사 오류가 납니다(오타 방지).
 인물 한 명의 한 회차(예: `Eunjae_Day1.csv`)에 필요한 대사를 한 파일에 둡니다. 머리글은 아래와 같습니다.
 
 ```
-section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit
+section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest
 ```
 
 | 열 | 뜻 |
@@ -94,6 +94,7 @@ section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,end
 | spring | 태엽 변화 (-8 ~ 8) | `2` |
 | goto | 고르면 이동할 장면 id. 비우면 그 장면에 머뭅니다 | `phone` |
 | ending | 고르면 바로 이 엔딩으로 끝. 같은 파일 ending 단계의 id (goto와 같이 쓰지 않음) | `delete` |
+| rest | 채우면 고른 뒤 눈물 신호가 나타나고, Q를 누르면 이 대사가 나온다 (비우면 없음) | `"…잠시 쉬어도 될까요?"` |
 | back | 뒤로가기 문구 바꾸기 (아래 참고). 장면의 아무 줄에나 씁니다 | `잠깐, 다른 얘기를 해도 될까요?` |
 | memo | 자유. 게임에서 읽지 않습니다 | |
 
@@ -120,7 +121,7 @@ dialogue,Eunjae,phone,휴대폰을 쥔다.,뒤집어 둔 이유가 있죠?,…,a
 
 ### 2-2. section=talk — 필드에서 말 걸었을 때
 
-**한 줄 = 대사 한 줄.** 같은 actor·`id`를 가진 줄들이 한 번의 대화가 되며, Z를 누를 때마다 한 줄씩 넘어갑니다.
+**한 줄 = 대사 한 줄.** 같은 actor·`id`를 가진 줄들이 한 번의 대화가 되며, Space를 누를 때마다 한 줄씩 넘어갑니다.
 
 | 열 | 뜻 |
 |---|---|
@@ -136,6 +137,7 @@ dialogue,Eunjae,phone,휴대폰을 쥔다.,뒤집어 둔 이유가 있죠?,…,a
 - 예약된 id:
   - `enter`: 컷신으로 들어와서 하는 말 (은재 어머니의 첫 대사, 지수가 앉은 뒤 첫마디 등)
   - `reveal`: 이 사람과 이야기한 뒤 다음 사람이 들어올 때의 서술
+  - `rest`: 휴식 신호 중 쉬어 주고 상담실로 돌아온 직후의 리액션
 - 상담 손님(은재, 지수)은 상담이 끝난 뒤에만 자기 actor의 talk 대화가 나옵니다. 맞는 대화가 없으면 엔딩의 after가 나옵니다.
 
 ```

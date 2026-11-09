@@ -39,9 +39,9 @@
 
 ### 인물·회차 CSV
 
-- 경로는 `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`, `Jisu_Day1.csv`처럼 정한다. 공통 머리글은 `section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit`다.
+- 경로는 `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`, `Jisu_Day1.csv`처럼 정한다. 공통 머리글은 `section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest`다.
 - `section=talk`: `actor`는 대사를 실행하는 FieldNPC의 안정적인 ID(`EunjaeMom`, `Eunjae`, `Jisu`), `id`는 기존 `group`, `text`는 기존 대사다. `speaker`, `need`, `set`, `memo`는 기존 의미를 유지한다. 같은 actor 안에서 그룹의 첫 등장 순서가 `TalkScript.Pick()` 우선순위다.
-- `section=dialogue`: `actor`는 상담 인물 ID, `id`는 기존 `node`, `text`는 선택지다. `situation`, `response`, `need`, `set`, 수치, `goto`, `ending`, `back`, `memo`는 기존 의미를 유지한다. 첫 dialogue 노드가 상담 시작 노드다.
+- `section=dialogue`: `actor`는 상담 인물 ID, `id`는 기존 `node`, `text`는 선택지다. `situation`, `response`, `need`, `set`, 수치, `goto`, `ending`, `back`, `memo`는 기존 의미를 유지한다. `rest`는 그 선택지를 고르면 내담자가 쉬자고 청하는 대사다(스펙 011). 첫 dialogue 노드가 상담 시작 노드다.
 - `section=ending`: `actor`는 상담 인물 ID, `id`는 기존 엔딩 id 또는 `@intro`·`@idle`·`@abyss`, `text`는 기존 `line`이다. `title`, `situation`, `after`, `memo`는 기존 의미를 유지한다. `truth` 첫 행에는 정수 `truth_trust`와 파편의 Flag ID `key_flag`, `leave` 첫 행에는 정수 `leave_trust`와 0 초과 1 이하의 실수 `burden_limit`을 기록한다. `half` 조건은 `truth`의 반대로 계산하므로 별도 열을 갖지 않는다. 빈 `key_flag`는 파편 조건이 없다는 뜻이다.
 - 행은 section별로 Talk, Dialogue, Ending 순서로 모아 기록한다. 한 section 안의 그룹·행 순서는 유지한다. `Talk`의 `again`처럼 재상호작용용 그룹은 원래 우선순위를 보존한다. `Strings.csv`는 그대로 별도 파일로 둔다.
 - 기존 `Dialogue/Eunjae.csv`와 `Dialogue/Jisu.csv`의 파일·`.meta`를 각각 `Eunjae_Day1.csv`, `Jisu_Day1.csv`로 이름을 바꿔 GUID를 유지한 뒤 Talk·Ending 행을 넣는다. 은재 Day1에는 `Talk/EunjaeMom.csv`의 실사용 행을 `actor=EunjaeMom`으로 포함한다. `Talk/Eunjae.csv`처럼 주석만 있는 파일에는 이관할 대사 행이 없다. 지수 Day1에는 `Talk/Jisu.csv`의 실사용 행을 포함한다.
@@ -175,7 +175,7 @@ flowchart TD
 - `Dialogue`의 첫 등장 노드가 시작 노드다. 노드·선택지 순서 변경으로 시작 노드나 선택지 순서가 달라지면 새 CSV에도 그 순서를 반영한다.
 - `Dialogue` 노드의 선택지는 최대 3개다. 자동 뒤로가기 선택지는 CSV 행이 아니므로 노드 뷰에서 연결·이동 대상으로 취급하지 않는다.
 - `goto`가 없는 선택지는 현재 노드 유지로, `ending`은 종료 카드로 표시한다. 두 값의 동시 지정, 존재하지 않는 대상, 중복 또는 빈 필수 ID는 오류다.
-- `Talk`의 `enter`·`reveal`과 그룹 우선순위, `Ending`의 `@intro`·`@idle`·`@abyss`, `Strings`의 같은 key 다중 행을 보존한다.
+- `Talk`의 `enter`·`reveal`·`rest`(쉬어 주고 돌아온 직후의 리액션, 스펙 011)와 그룹 우선순위, `Ending`의 `@intro`·`@idle`·`@abyss`, `Strings`의 같은 key 다중 행을 보존한다.
 - 한 파일 안에서 `id`는 같은 section·actor 안에서만 고유하다. `goto`와 `ending` 참조는 같은 상담 actor의 Dialogue 노드와 Ending id에서 각각 찾는다. `Talk`의 `speaker`는 화면 표시용이며 actor별 그룹 선택과 별개다.
 - 노드 뷰는 `enter`·`reveal` 같은 등장 Talk를 상담 진입 단계 앞에 놓고, 상담 선택지의 `goto`·`ending` 연결과 각 엔딩의 `after` 대사 카드를 잇는다. Talk에서 상담으로 가는 선은 실제 필드 상호작용을 뜻하는 안내선으로 표시하고 CSV에 임의의 `goto`를 만들지 않는다. `again` 같은 조건부 재대화와 `@intro`·`@idle`·`@abyss`는 해당 단계 옆의 보조 카드로 표시한다.
 - Day2 이상 파일도 같은 이름과 열 구조로 편집할 수 있지만, 이번 범위에서 날짜에 따른 활성 회차 전환과 같은 인물의 복수 ClientCase 선택은 구현하지 않는다.
@@ -206,7 +206,7 @@ flowchart TD
 - 결과 줄 넘기기(게임): 첫 줄을 메시지 줄에 보이고 Z·Enter·Space로 다음 줄로 넘긴다. 신뢰·동공·부담 안내 문구는 마지막 줄 뒤에 붙인다. 줄을 넘기는 동안 선택지 버튼을 숨기고 Space 들여다보기 전환과 숫자 선택을 받지 않는다. 마지막 줄 다음 입력에서 `goto` 장면으로 이동한다. 고른 뒤 신뢰가 `leave_trust` 이하라 `leave` 엔딩이 되면, 결과 줄을 엔딩 앞줄로 한 줄씩 보인 뒤 `leave` 엔딩 대사를 잇는다(같은 줄을 두 번 보이지 않는다). `response`가 한 줄이면 기존 동작과 같다. 직접 엔딩 선택지는 결과 줄을 엔딩 앞줄로 한 줄씩 보인 뒤 엔딩 대사를 잇는다.
 - 기억 파편 추가: 층 후보는 이 회차 파일을 쓰는 씬 `ClientCase`의 파편 묶음이며, 메뉴에는 묶음이 놓인 층 이름을 보인다. 씬에 그 손님이 없거나 묶음이 없거나, 텍스트 오류·검사 대기 중이거나, Play Mode 중이면 메뉴를 비활성화한다. 새 Flag ID는 `<파일 이름의 인물 부분 소문자>_fragment_N`(예: `Eunjae_Day1.csv` → `eunjae_fragment_1`)이며 Flags.csv에 없는 가장 작은 N을 쓴다. 새 Flags.csv 줄은 description `<손님 이름> · 새 기억`, source `파편`, title `새 기억`, text `새 기억 글`이다. 새 오브젝트는 같은 묶음(없으면 같은 손님)의 기존 파편을 복제해 그림 설정을 이어받고, 이름은 `기억 조각 · 새 기억`, Collected는 끔, 위치는 그 층의 ring 중 같은 묶음 파편이 쓰지 않는 첫 칸(바깥 ring, sector 0부터)이다. 씬은 변경 표시만 하고 저장하지 않는다. Flags.csv 변경은 창의 실행 취소 기록 하나이고, 씬 오브젝트 추가는 Unity 실행 취소(Edit > Undo) 하나다. Flag ID 바꾸기는 이 기능에 넣지 않는다.
 - 조건 변수 메뉴: `조건 추가/<source>/<id>`에는 지금 조건에 없는 Flags.csv 플래그를 source(파편·단서·대화·계산, 비면 기타)별로 보이고, `조건 빼기/<id>`에는 지금 조건의 플래그를 보인다. `새 조건 변수 만들기`는 조건 자리에 ID 입력창을 연다. ID는 영문 소문자·숫자·`_`만 쓰며 Flags.csv에 이미 있으면 거절한다. 새 Flags.csv 줄은 id만 채우고 나머지 칸은 비운다. Flags.csv 줄 추가와 need 변경은 실행 취소 기록 각각 하나다. 텍스트 오류·검사 대기 중에는 메뉴 항목을 비활성화한다. 왼쪽 클릭 메뉴(FR-025)는 그대로 둔다.
-- Delete 제거: 그룹 노드를 지우면 그 그룹의 모든 행이 사라지고, 같은 actor 선택지에서 지운 장면을 가리키는 `goto`나 지운 엔딩을 가리키는 `ending`을 비운다. 행을 클릭해 그룹을 선택한 상태에서도 그룹 전체를 지운다. 게임이 직접 부르는 예약 ID(`enter`, `reveal`, `truth`, `half`, `leave`, `@`로 시작하는 ID)와 공용 Strings의 key는 지우지 않고 이유를 보인다. 기억 파편 카드와 판정 카드는 Delete로 지우지 않는다. 텍스트 오류·검사 대기 중이거나 인라인 편집 중이면 동작하지 않는다. 제거는 실행 취소 기록 하나이며, 검사에 실패하면 저장하지 않는다.
+- Delete 제거: 그룹 노드를 지우면 그 그룹의 모든 행이 사라지고, 같은 actor 선택지에서 지운 장면을 가리키는 `goto`나 지운 엔딩을 가리키는 `ending`을 비운다. 행을 클릭해 그룹을 선택한 상태에서도 그룹 전체를 지운다. 게임이 직접 부르는 예약 ID(`enter`, `reveal`, `rest`, `truth`, `half`, `leave`, `@`로 시작하는 ID)와 공용 Strings의 key는 지우지 않고 이유를 보인다. 기억 파편 카드와 판정 카드는 Delete로 지우지 않는다. 텍스트 오류·검사 대기 중이거나 인라인 편집 중이면 동작하지 않는다. 제거는 실행 취소 기록 하나이며, 검사에 실패하면 저장하지 않는다.
 - 조건 수치 편집: 대상은 Flags.csv `condition`이 `trust`·`dilation`·`spring` 중 하나와 숫자의 비교 하나(`>=`, `<=`, `>`, `<`, `==`, `!=`)인 계산 플래그다. 직접 엔딩 조건은 플래그마다 따로 클릭할 수 있게 보인다. 대상이 아닌 플래그를 클릭하면 FR-025 메뉴를 띄운다. 입력창은 `>=3`처럼 비교와 수치를 함께 보이며, `5`처럼 수치만 쓰면 비교를 유지하고 `=`·`≥`·`≤`·`≠`도 각각 `==`·`>=`·`<=`·`!=`로 받는다. 확정하면 같은 변수·비교·수치의 계산 플래그를 Flags.csv에서 찾아 쓰고, 없으면 `<변수>_<수치>`(비교가 `>=`일 때)나 `<변수>_<le|lt|gt|eq|ne>_<수치>` ID로 description `<신뢰|동공|태엽> <수치> <이상|이하|초과|미만|와 같음|이 아님>`, source `계산`인 줄을 추가한다. 수치의 `-`는 `m`, `.`은 `_`로 ID에 적는다(예: `dilation_0_5`, `trust_le_m2`). 우클릭 메뉴의 `<플래그> 비교/<비교>`는 수치를 유지한 채 같은 규칙으로 바꾼다. 형식이 틀리면 입력창에 이유를 보이고 저장하지 않는다. Flags.csv 줄 추가와 need 변경은 실행 취소 기록 각각 하나다.
 
 ## 7. Inspector 노출값

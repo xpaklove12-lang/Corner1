@@ -7,16 +7,18 @@ namespace EyeMaze
 {
     /// <summary>
     /// 인물·회차 CSV(Data/Dialogue/인물_DayN.csv)에서 한 actor의 section=talk 행, 곧 필드에서 말을 걸었을 때 나오는 대사를 읽은 결과.
-    /// 줄 하나가 대사 한 줄이고, 같은 id 값을 가진 줄들이 한 번의 대화가 된다 (Z로 한 줄씩 넘김).
-    /// 열: id, need, set, speaker, text (그 밖의 열은 이 단계에서 무시). section 열이 없는 옛 형식 파일은 group 열을 대화 id로 읽는다.
+    /// 줄 하나가 대사 한 줄이고, 같은 id 값을 가진 줄들이 한 번의 대화가 된다 (Space로 한 줄씩 넘김).
+    /// 열: id, need, set, speaker, text (그 밖의 열은 메모로 무시). section 열이 없는 옛 형식 파일(Data/Talk/이름.csv)은 group 열을 대화 id로 읽는다.
     ///
     /// 말을 걸면 위에서부터 need 플래그가 모두 켜진 첫 group을 보여준다. 그래서 조건이 까다로운 group을 위에 둔다.
-    /// 예약된 group: enter(컷신으로 들어와서 하는 말), reveal(이 사람과의 대화 뒤 다음 사람이 들어올 때의 서술).
+    /// 예약된 group: enter(컷신으로 들어와서 하는 말), reveal(이 사람과의 대화 뒤 다음 사람이 들어올 때의 서술), rest(쉬어 주고 돌아온 직후의 리액션).
     /// </summary>
     public class TalkScript
     {
         public const string Enter = "enter";
         public const string Reveal = "reveal";
+        // 스펙 011: 쉬어 주고 돌아온 직후의 리액션 묶음 추가
+        public const string Rest = "rest";
 
         /// <summary>speaker 칸에 이 값을 쓰면 이름 없는 서술이 된다</summary>
         public const string Narration = "-";
@@ -42,7 +44,8 @@ namespace EyeMaze
             public int Row;
             public readonly List<Line> Lines = new List<Line>();
 
-            public bool IsReserved => Id == Enter || Id == Reveal;
+            // 스펙 011: rest 묶음도 평소 말을 걸 때 고르지 않도록 예약
+            public bool IsReserved => Id == Enter || Id == Reveal || Id == Rest;
         }
 
         private readonly List<Group> _groups = new List<Group>();

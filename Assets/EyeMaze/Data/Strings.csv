@@ -22,22 +22,23 @@ wind.perfect,딱 맞았다. 태엽이 단단히 감겼다.,
 wind.good,조금 어긋났다. 태엽이 덜 감겼다.,
 wind.poor,많이 어긋났다. 태엽이 헐겁게 감겼다.,
 msg.gaze_on,{name}의 눈을 들여다본다.,{name} = 손님 이름
-msg.gaze_off,시선을 거뒀다.,
+msg.gaze_off,관찰을 잠시 멈추고 생각에 잠긴다.,
 msg.respawn,다른 층의 길이 바뀌었다.,파편을 읽은 뒤
-msg.blink_rotate,눈을 깜빡였다. 무언가가 돌아갔다.,
+msg.blink_rotate,눈이 깜빡였다.,
 msg.deeper,더 깊은 곳으로 들어왔다 — {layer},{layer} = 층 이름
 msg.fragment,파편 — {title}\n{text},{title} {text} = 파편 이름/글 (Flags.csv)
-msg.no_talk_in_gaze,들여다보는 중에는 말할 수 없다. (Space로 시선 거두기),
+msg.no_talk_in_gaze,들여다보는 중에는 말할 수 없다. (Space로 관찰 중지),
 msg.locked_choice,아직 모르는 이야기다. 눈 속에서 단서를 찾아야 한다.,??? 선택지를 골랐을 때
 msg.already,이미 한 이야기다. {name}는 다음 말을 기다리고 있다.,
-msg.trust_up,(신뢰가 깊어졌다. 눈 속 어딘가의 문이 열렸다.),선택지 반응 뒤에 붙는 안내
+msg.trust_up,(신뢰가 깊어졌다. 눈 속 어딘가의 문이 열렸다.),신뢰가 올라 문이 실제로 열렸을 때 선택지 반응 뒤에 붙는 안내
+msg.trust_up_no_gate,(신뢰가 깊어졌다.),신뢰가 올랐지만 열린 문이 없을 때 선택지 반응 뒤에 붙는 안내
 msg.trust_down,,비워 두면 안 붙음
 msg.dilation_up,(동공이 조금 커졌다.),
 msg.dilation_down,(동공이 좁아졌다.),
 msg.spring_up,(태엽이 {n}칸 감겼다.),{n} = 칸 수
 msg.spring_down,(태엽이 {n}칸 풀렸다.),
 dialogue.back,다른 질문을 해볼까요?,뒤로가기 기본 문구 (대화 CSV back 칸이 비었을 때)
-ui.status,신뢰 {trust}   ·   동공 {dilation}%   ·   {mode},위쪽 상태 줄
+ui.status,신뢰 {trust},위쪽 상태 줄
 mode.talk,대화 중,
 mode.gaze,들여다보는 중,
 mode.ending,마음,
@@ -45,22 +46,24 @@ ui.ending_situation,{name}의 마음이 들린다.,엔딩 situation이 비었을
 ui.abyss,그녀의 마음 속 심연,
 ui.reading,시선이 파편에 머문다.,
 ui.gaze_situation,{name}의 눈 속 — {layer},
+ui.rest_hint_talk,(잠시 쉴 시간이 필요한 거 같다.),휴식 신호 중 대화 화면의 쉬자는 대사 아래 안내
+ui.rest_hint_gaze,{name}가 하고 싶은 말이 있는 거 같다. 잠시 관찰을 멈춰보자.,휴식 신호 중 들여다볼 때 눈 속 표시 아래 안내
 ui.locked_choice,??? (아직 모르는 이야기),조건이 안 맞는 선택지
 ui.fragments,파편들 ({got}/{all}),
 ui.fragments_none,· 아직 없음,
 ui.spring,태엽  {now} / {max},
 ui.spring_full,   — 가득 (더 감으면 미끄러진다),
-ui.gaze_button,들여다보기 (Space),
+ui.gaze_button,마음 읽기 (Space),
 ui.gaze_button_holding,…파란 선에서 뗀다,
-ui.gaze_button_gaze,시선 거두기 (Space),
-hint.talk,Space = 눈 들여다보기   ·   숫자키 대화   ·   Q 자리 떠나기,아래 조작 안내
-hint.gaze,WASD / 방향키로 이동   ·   Space 시선 거두기   ·   금색 = 잠긴 문   ·   하늘색 점 = 파편,
-hint.reading,Space / Z  계속,
+ui.gaze_button_gaze,관찰 중지 (Space),
+hint.talk,Space = 마음 읽기   ·   숫자키 대화   ·   Q 잠시 휴식하기,아래 조작 안내
+hint.gaze,WASD / 방향키로 이동   ·   Space 관찰 중지,
+hint.reading,Space  계속,
 hint.abyss,WASD / 방향키로 가장 반짝이는 파편에 다가간다,
-hint.ending,Space / Z  계속,
-hint.ending_done,Space / Z  돌아가기,
-hint.field,A D / ← →  이동   ·   Z  말 걸기 / 살펴보기,필드 조작 안내
-hint.text_next,Z  다음,
+hint.ending,Space  계속,
+hint.ending_done,Space  돌아가기,
+hint.field,A D / ← →  이동   ·   Space  말 걸기 / 살펴보기,필드 조작 안내
+hint.text_next,Space  다음,
 hint.door,문을 열어서 손님을 맞이하세요.,문을 열어 줄 때까지 필드 조작 안내 자리에 뜨는 문구
 field.call_first,뭐야? 한창 분위기 잡고있는데.,독백 뒤 띵-동이 울리고 나오는 첫 혼잣말 (이름 없음)
 field.call_second,아직 첫 상담까지는 시간이 남았을 텐데...,띵-동이 다시 울린 뒤 두 번째 혼잣말

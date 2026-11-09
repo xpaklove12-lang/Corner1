@@ -27,10 +27,14 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("openColor")] private Color _openColor = new Color(0.6f, 1f, 0.7f, 0.45f);
 
         [NonSerialized] private int _drawnKey = int.MinValue;
+        // 스펙 010: 연출 중 문 색에 곱할 투명도 추가
+        [NonSerialized] private float _visualAlpha = 1f;
         private IrisMaze _maze;
 
         public int Ring => _ring;
         public int Sector => _sector;
+        /// <summary>연출 중 문 색에 곱하는 투명도. 통과 판정에는 쓰지 않는다.</summary>
+        public float VisualAlpha { get => _visualAlpha; set => _visualAlpha = value; }
         /// <summary>
         /// 막혔을 때 문구. Strings.csv의 gate.pupil(동공 문) / gate.first(첫 문) / gate.deep(그 안쪽 문)이 있으면 그걸 쓴다.
         /// </summary>
@@ -58,7 +62,8 @@ namespace EyeMaze
         public bool CanPass(Person p)
         {
             if (p == null) return true;
-            bool trustOk = _requiredTrust < 0 || p.Trust >= _requiredTrust;
+            // 스펙 004: 안 좋은 말의 감점이 문을 막지 않도록 GateTrust로 판단
+            bool trustOk = _requiredTrust < 0 || p.GateTrust >= _requiredTrust;
             bool dilOk = _requiredDilation < 0f || p.Dilation >= _requiredDilation;
             return trustOk && dilOk;
         }
@@ -71,7 +76,8 @@ namespace EyeMaze
             if (_maze == null) _maze = GetComponentInParent<IrisMaze>();
             if (_maze == null || _line == null) return;
             bool open = CanPass(_maze.Person);
-            int key = HashCode.Combine(_ring, _sector, _maze.GeometryKey, open, _maze.WallAlpha, _maze.Focus, _lockedColor, _openColor);
+            // 스펙 010: 표시 투명도가 바뀌어도 다시 칠하도록 키에 포함
+            int key = HashCode.Combine(_ring, _sector, _maze.GeometryKey, open, _maze.WallAlpha, _maze.Focus, HashCode.Combine(_lockedColor, _openColor), _visualAlpha);
             if (key == _drawnKey) return;
             _drawnKey = key;
 
@@ -79,7 +85,8 @@ namespace EyeMaze
             Shapes.SetArc(_line, _maze.RingInner(_ring), _sector * d + d * 0.12f, (_sector + 1) * d - d * 0.12f, 6);
             _line.widthMultiplier = _maze.WallWidthNow * (open ? 1.2f : 2.4f);
             Color c = open ? _openColor : _lockedColor;
-            c.a *= Mathf.Lerp(0.5f, 1f, _maze.WallAlpha) * _maze.FocusAlpha;
+            // 스펙 010: 문 색에 표시 투명도를 곱함
+            c.a *= Mathf.Lerp(0.5f, 1f, _maze.WallAlpha) * _maze.FocusAlpha * _visualAlpha;
             Shapes.SetColor(_line, c);
             _line.sortingOrder = 6;
         }

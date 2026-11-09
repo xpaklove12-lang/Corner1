@@ -1682,7 +1682,7 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private static bool IsReservedId(DialogueEditorDocument.Group g)
         {
-            if (g.Section == Csv.SECTION_TALK) return g.Id == TalkScript.Enter || g.Id == TalkScript.Reveal;
+            if (g.Section == Csv.SECTION_TALK) return g.Id == TalkScript.Enter || g.Id == TalkScript.Reveal || g.Id == TalkScript.Rest;
             if (g.Section == Csv.SECTION_ENDING) return g.Id == "truth" || g.Id == "half" || g.Id == "leave" || g.Id.StartsWith("@");
             return false;
         }

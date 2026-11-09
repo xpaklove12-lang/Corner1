@@ -11,7 +11,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 필드 ↔ 만남(눈동자 미로) 흐름.
-    /// 필드에서는 이동하고 Z / Enter / Space로 말을 걸거나 살펴본다.
+    /// 필드에서는 이동하고 Space / Enter로 말을 걸거나 살펴본다.
     /// 말을 걸면 그 사람에게 줌인한 뒤 암전되고 눈 화면으로 들어간다. 만남에서 Q는 자리 떠나기(진행 유지)다.
     /// 에디트 모드에서는 GameFlow 인스펙터의 버튼으로 필드 화면과 만남 화면을 오갈 수 있다.
     /// </summary>
@@ -108,16 +108,19 @@ namespace EyeMaze
             bool interact = false;
             bool leave = false;
             Vector2 move = Vector2.zero;
-            Keyboard kb = Keyboard.current;
-            Gamepad pad = Gamepad.current;
+            // 스펙 007: 대화 기록 창이 열려 있으면 키 입력을 처리하지 않는다.
+            Keyboard kb = DialogueLog.BlocksInput ? null : Keyboard.current;
+            Gamepad pad = DialogueLog.BlocksInput ? null : Gamepad.current;
             if (kb != null)
             {
-                // Space도 Z처럼 쓴다. 필드와 엔딩(마음의 소리) 대사, 선택지 결과 줄 넘기기에서만 해당한다.
+                // 상호작용과 대사 넘기기는 Space로 한다. 만남 화면의 Space는 시선 조작이라 엔딩 대사, 선택지 결과 줄 넘기기, 파편 읽기에서만 넘기기로 쓴다.
                 bool endingLines = _state == State.Encounter && _director != null && (_director.CurrentMode == EyeMazeDirector.Mode.Ending || _director.IsReadingResponse);
+                bool readingLines = _state == State.Encounter && _director != null && _director.IsReading;
                 bool spaceAdvance = kb.spaceKey.wasPressedThisFrame && (_state == State.Field || endingLines);
-                interact = kb.zKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || spaceAdvance;
+                interact = kb.enterKey.wasPressedThisFrame || spaceAdvance;
                 leave = kb.qKey.wasPressedThisFrame;
-                bool skip = kb.zKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || spaceAdvance;
+                bool skip = kb.xKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || spaceAdvance
+                            || (readingLines && kb.spaceKey.wasPressedThisFrame);
                 if (skip && Typewriter.AnyTyping) { Typewriter.SkipAll(); interact = false; }
                 if (kb.wKey.isPressed || kb.upArrowKey.isPressed) move.y += 1f;
                 if (kb.sKey.isPressed || kb.downArrowKey.isPressed) move.y -= 1f;
@@ -187,7 +190,8 @@ namespace EyeMaze
                             else _director.NextHeartLine();
                         }
                         else if (_director.IsReadingResponse && interact) _director.NextResponseLine();
-                        else if (_director.CurrentMode == EyeMazeDirector.Mode.Talk && leave) BeginReturn(false);
+                        // 스펙 011: 대화 중 Q는 휴식 신호가 있으면 승낙을 기록하고 바로 나간다.
+                        else if (_director.CurrentMode == EyeMazeDirector.Mode.Talk && leave) LeaveTalk();
                     }
                     break;
 
@@ -200,6 +204,16 @@ namespace EyeMaze
             if (_state == State.Field) _fade = Mathf.MoveTowards(_fade, _fadeTarget, _fadeSpeed * dt);
         }
 
+        /// <summary>
+        /// 대화 중 자리를 뜬다. 휴식 신호가 있으면 쉬어 주기로 기록한 뒤 나간다.
+        /// 디렉터의 휴식 신호를 사용하며, 디렉터의 휴식 상태와 화면 상태를 바꾼다.
+        /// </summary>
+        private void LeaveTalk()
+        {
+            if (_director.RestRequested) _director.AcceptRest();
+            BeginReturn(false);
+        }
+
         // 필드 글 상자
 
         /// <summary>
@@ -209,7 +223,7 @@ namespace EyeMaze
         public void ShowText(string text) => ShowConversation(null, null, new List<string> { text }, null);
 
         /// <summary>
-        /// 여러 줄 대화를 연다. Z로 한 줄씩 넘기고, 마지막 줄 다음 Z에서 닫히며 done이 불린다.
+        /// 여러 줄 대화를 연다. Space로 한 줄씩 넘기고, 마지막 줄 다음 Space에서 닫히며 done이 불린다.
         /// speaker, portrait, lines, done을 사용하며, 글 상자 상태와 초상화를 바꾸고 플레이어를 멈춘다.
         /// </summary>
         public void ShowConversation(string speaker, Sprite portrait, List<string> lines, Action done)
@@ -387,6 +401,8 @@ namespace EyeMaze
                 if (ending != null && !string.IsNullOrEmpty(ending.AfterLine)) _currentNpc.LineAfterResolved = ending.AfterLine;
                 ShowConversation(_currentNpc.DisplayName, _currentNpc.Portrait, new List<string> { _currentNpc.LineAfterResolved }, null);
             }
+            // 스펙 011: 쉬어 주고 돌아오면 상담실에서 내담자의 리액션을 보여 준다.
+            else if (_director != null && _director.RestAccepted && _currentNpc != null) _currentNpc.TryTalk(this, TalkScript.Rest, null, null);
             _returnResolved = false;
         }
 
@@ -401,6 +417,8 @@ namespace EyeMaze
             if (_convSpeakers != null && i < _convSpeakers.Count) _convSpeaker = _convSpeakers[i];
             if (_convPortraits != null && i < _convPortraits.Count) _fieldPortrait = _convPortraits[i];
             _fieldText = string.IsNullOrEmpty(_convSpeaker) ? line : $"{_convSpeaker}\n{line}";
+            // 스펙 007: 글 상자에 나온 줄을 얼굴과 함께 대화 기록에 남긴다. 같은 줄을 다시 보여줘도 한 번만 남는다.
+            DialogueLog.Add(_convSpeaker, line, false, string.IsNullOrEmpty(_convSpeaker) ? null : _fieldPortrait);
         }
 
         /// <summary>

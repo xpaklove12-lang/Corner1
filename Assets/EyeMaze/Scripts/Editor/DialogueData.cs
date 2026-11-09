@@ -293,7 +293,7 @@ namespace EyeMaze.EditorTools
             string actor = Path.GetFileNameWithoutExtension(path);
             int day = actor.LastIndexOf("_Day", System.StringComparison.Ordinal);
             if (day > 0) actor = actor.Substring(0, day);
-            var columns = new List<string> { "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring", "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit" };
+            var columns = new List<string> { "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring", "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest" };
             var sb = new System.Text.StringBuilder(string.Join(",", columns)).Append("\r\n");
             void Row(string section, string id, params (string column, string value)[] cells)
             {

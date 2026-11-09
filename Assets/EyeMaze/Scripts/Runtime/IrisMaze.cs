@@ -50,6 +50,8 @@ namespace EyeMaze
         public float WallAlpha { get => _wallAlpha; set => _wallAlpha = value; }
         public float Focus { get => _focus; set => _focus = value; }
         public Person Person => _person;
+        // 스펙 010: 연출 오브젝트가 같은 선 재질을 쓰도록 공개
+        public Material LineMaterial => _lineMaterial;
 
         public float FocusAlpha => Mathf.Lerp(0.12f, 1f, _focus * _focus);
         public Color WallColor => new Color(_wallColorBase.r, _wallColorBase.g, _wallColorBase.b, _wallColorBase.a * _wallAlpha * FocusAlpha);
