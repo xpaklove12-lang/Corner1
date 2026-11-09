@@ -26,6 +26,10 @@ namespace EyeMaze.EditorTools
 
         // 에디터 텍스트 상자가 지금 쓰는 편집기. Tab 들여쓰기에서 커서 위치를 읽고 바꾸는 데 쓴다.
         private static readonly FieldInfo ActiveEditorField = typeof(EditorGUI).GetField("activeEditor", BindingFlags.NonPublic | BindingFlags.Static);
+        // 에디터 텍스트 상자는 처음 클릭해 포커스를 줄 때 글 전체를 선택한다. 문서 전체가 한 번의 입력으로 바뀌지 않도록 끈다.
+        // 에디터 텍스트 상자들이 함께 쓰는 편집기. 초안을 코드에서 바꿀 때 예전 글을 들고 편집 중으로 남지 않게 비운다.
+        private static readonly PropertyInfo RecycledEditorProperty = typeof(EditorGUI).GetProperty("s_RecycledEditor", BindingFlags.NonPublic | BindingFlags.Static);
+        private static readonly FieldInfo SelectAllOnMouseUpField = typeof(EditorGUI).GetField("s_SelectAllOnMouseUp", BindingFlags.NonPublic | BindingFlags.Static);
 
         // 스크립트가 다시 컴파일돼도 열던 파일을 다시 열려고 경로만 저장한다.
         [SerializeField] private string _openPath = "";
@@ -250,6 +254,8 @@ namespace EyeMaze.EditorTools
                 _textScroll.y = Mathf.Max(0f, LineTop(style, width, _highlightLine) - textRect.height * 0.3f);
                 _scrollToHighlight = false;
             }
+            // 클릭으로 포커스를 줄 때 전체 선택하지 않고 클릭한 자리에 커서를 둔다.
+            if (Event.current.type == EventType.MouseUp && textRect.Contains(Event.current.mousePosition)) SelectAllOnMouseUpField?.SetValue(null, false);
             _textScroll = GUI.BeginScrollView(textRect, _textScroll, new Rect(0f, 0f, width, height), false, true);
             var area = new Rect(0f, 0f, width, height);
             GUI.SetNextControlName(TEXT_CONTROL);
@@ -263,7 +269,9 @@ namespace EyeMaze.EditorTools
             }
             if (Event.current.type == EventType.Repaint) HighlightStyle(style).Draw(area, new GUIContent(Highlight(next)), false, false, false, false);
             GUI.EndScrollView();
-            SetDraftFromInput(next);
+            // 에디터의 텍스트 입력은 편집기 하나를 여러 입력창이 함께 쓴다. 다른 입력창(노드 뷰의 인라인 편집)의 글이
+            // 이 상자의 반환값으로 넘어와 초안을 덮지 않도록, 이 상자가 키보드 포커스를 가진 때만 받는다.
+            if (GUI.GetNameOfFocusedControl() == TEXT_CONTROL) SetDraftFromInput(next);
 
             if (issueHeight <= 0f) return;
             var listRect = new Rect(rect.x, textRect.yMax, rect.width, issueHeight);
@@ -325,8 +333,7 @@ namespace EyeMaze.EditorTools
             _highlightLine = line;
             _scrollToHighlight = true;
             // 노드 뷰에서 누른 F2·Enter가 텍스트 상자로 가지 않도록 텍스트 입력을 끝낸다.
-            GUI.FocusControl(null);
-            EditorGUIUtility.editingTextField = false;
+            EndTextInput();
             Repaint();
         }
 
@@ -476,7 +483,7 @@ namespace EyeMaze.EditorTools
         {
             string notice = _draftHasErrors ? "텍스트에 오류가 있어 마지막 정상 상태를 보여줍니다. 오류를 고치기 전에는 노드를 편집할 수 없습니다." : null;
             DialogueEditorDocument changed = _graph.Draw(rect, _doc, !_draftHasErrors && !_textPending, notice);
-            if (Event.current.type == EventType.Used) Repaint();
+            if (Event.current.type == EventType.Used || _graph.WantsRepaint) Repaint();
             if (_graph.TakeSelectionLine(out int line))
             {
                 if (line > 0) ShowTextLine(line);
@@ -611,8 +618,23 @@ namespace EyeMaze.EditorTools
         private void SetDraftText(string text)
         {
             _draft = text;
-            GUI.FocusControl(null);
+            EndTextInput();
+        }
+
+        /// <summary>
+        /// 텍스트 상자 입력을 끝낸다. 키보드 포커스를 비우고, 공용 편집기가 예전 글을 들고 텍스트 상자를 계속 편집 중으로 여기지 않게 연결을 끊는다.
+        /// OnGUI 밖(단축키 실행 취소 등)에서 불러도 같은 결과가 되도록 정적 상태를 직접 바꾼다.
+        /// 입력값은 없으며, 키보드 포커스와 공용 편집기 상태를 바꾼다.
+        /// </summary>
+        private static void EndTextInput()
+        {
+            GUIUtility.keyboardControl = 0;
             EditorGUIUtility.editingTextField = false;
+            if (RecycledEditorProperty?.GetValue(null) is TextEditor editor)
+            {
+                editor.controlID = 0;
+                editor.text = "";
+            }
         }
 
         /// <summary>
@@ -705,7 +727,7 @@ namespace EyeMaze.EditorTools
             ResetHistory();
             _openPath = path;
             _selected = System.Array.IndexOf(_paths, path);
-            GUI.FocusControl(null);
+            EndTextInput();
             Repaint();
         }
     }

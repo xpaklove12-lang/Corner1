@@ -137,6 +137,9 @@ namespace EyeMaze.EditorTools
         /// <summary>인라인 편집 중인지</summary>
         public bool IsInlineEditing => _inline != InlineKind.None;
 
+        /// <summary>인라인 입력창에 포커스를 주는 중이라 한 번 더 그려야 하는지</summary>
+        public bool WantsRepaint => _inlineFocus;
+
         /// <summary>선택한 행 번호 (그룹만 선택했거나 선택이 없으면 -1)</summary>
         public int SelectedRow => _selKey == null ? -1 : _selRow;
 
@@ -196,6 +199,7 @@ namespace EyeMaze.EditorTools
                 return;
             }
             if (_inline == InlineKind.Rename && RenamedTo != null) _selKey = RenamedTo;
+            ReleaseInlineFocus();
             _inline = InlineKind.None;
             _inlineError = "";
             // 창이 크기 설정 키를 옮긴 뒤이므로 다음 편집이 이 값을 다시 쓰지 않게 지운다.
@@ -208,10 +212,21 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private void CancelInline()
         {
+            if (_inline != InlineKind.None) ReleaseInlineFocus();
             _inline = InlineKind.None;
             _inlineAwait = false;
             _inlineError = "";
             RenamedFrom = RenamedTo = null;
+        }
+
+        /// <summary>
+        /// 닫는 인라인 입력창의 키보드 포커스와 입력 상태를 끝낸다. 남겨 두면 그 글이 다른 입력창으로 넘어갈 수 있다.
+        /// 입력값은 없으며, 키보드 포커스를 비운다.
+        /// </summary>
+        private void ReleaseInlineFocus()
+        {
+            _inlineFocus = false;
+            GUIUtility.keyboardControl = 0;
         }
 
         /// <summary>
@@ -254,7 +269,7 @@ namespace EyeMaze.EditorTools
             bool inside = new Rect(0f, 0f, rect.width, rect.height).Contains(e.mousePosition);
             DialogueEditorDocument changed = HandleKeys(e, doc, editable);
             HandleResize(e, doc, boxes, inside);
-            HandleSelection(e, doc, boxes, inside);
+            HandleSelection(e, doc, boxes, inside, editable);
             bool blocked = !editable || _inline != InlineKind.None;
             if (changed == null && !blocked) changed = HandleEditInput(e, doc, boxes, inside);
             if (blocked) ClearDrag();
@@ -1030,9 +1045,10 @@ namespace EyeMaze.EditorTools
 
         /// <summary>
         /// 노드 뷰 안을 클릭하면 노드·엔딩 카드·행을 선택하고, 빈 곳을 클릭하면 선택을 푼다. 뷰 밖을 클릭하면 키 입력을 받지 않는다.
-        /// 이벤트는 사용 처리하지 않아 끌기·연결과 함께 동작한다. e, doc, boxes, inside를 사용하며, 선택 상태를 바꾼다.
+        /// 이벤트는 사용 처리하지 않아 끌기·연결과 함께 동작한다. 대사 행을 더블 클릭하면 Enter처럼 본문 편집을 시작하고 그 클릭은 사용 처리한다.
+        /// e, doc, boxes, inside, editable을 사용하며, 선택 상태를 바꾼다.
         /// </summary>
-        private void HandleSelection(Event e, DialogueEditorDocument doc, List<Box> boxes, bool inside)
+        private void HandleSelection(Event e, DialogueEditorDocument doc, List<Box> boxes, bool inside, bool editable)
         {
             if (e.type != EventType.MouseDown || e.button != 0) return;
             if (!inside)
@@ -1062,6 +1078,12 @@ namespace EyeMaze.EditorTools
             _selKey = KeyOf(g);
             _selRow = row;
             _selectionLine = row >= 0 ? g.Items[row].TextLine : g.TextLine;
+            if (e.clickCount == 2 && row >= 0)
+            {
+                StartBodyEdit(doc, editable);
+                // 두 번째 클릭으로 카드 끌기나 화면 이동이 시작되지 않게 한다.
+                e.Use();
+            }
         }
 
         /// <summary>
@@ -1268,11 +1290,23 @@ namespace EyeMaze.EditorTools
             if (r.width <= 0f) return;
             var style = new GUIStyle(EditorStyles.textField) { fontSize = Mathf.Max(6, Mathf.RoundToInt(11f * _zoom)) };
             GUI.SetNextControlName(INLINE_CONTROL);
-            _inlineText = EditorGUI.TextField(r, _inlineText, style);
+            // 에디터 공용 텍스트 편집기(EditorGUI)를 쓰면 입력창이 생기고 사라질 때 컨트롤 번호가 밀려 텍스트 뷰가 이 글을 가져갈 수 있다.
+            // 그래서 자기 상태를 따로 갖는 GUI.TextField를 쓴다.
+            string typed = GUI.TextField(r, _inlineText, style);
+            // 입력창이 실제로 포커스를 가진 때만 받아, 다른 입력창의 글이 섞이지 않게 한다.
+            if (GUI.GetNameOfFocusedControl() == INLINE_CONTROL) _inlineText = typed;
             if (_inlineFocus)
             {
-                EditorGUI.FocusTextInControl(INLINE_CONTROL);
-                _inlineFocus = false;
+                // 포커스는 다음 그리기에서 적용되므로, 입력창이 실제로 입력 중이 될 때까지 다시 요청한다.
+                // 잡히면 전체 선택 대신 커서를 글 끝에 두어 바로 이어서 입력할 수 있게 한다.
+                if (GUI.GetNameOfFocusedControl() == INLINE_CONTROL)
+                {
+                    _inlineFocus = false;
+                    var editor = (TextEditor)GUIUtility.GetStateObject(typeof(TextEditor), GUIUtility.keyboardControl);
+                    editor.text = _inlineText;
+                    editor.MoveTextEnd();
+                }
+                else GUI.FocusControl(INLINE_CONTROL);
             }
             string hint = _inlineError.Length > 0 ? _inlineError : "Enter 확정 · Esc 취소";
             var hr = new Rect(r.x, r.yMax + 2f, Mathf.Max(r.width, 220f), 18f);
