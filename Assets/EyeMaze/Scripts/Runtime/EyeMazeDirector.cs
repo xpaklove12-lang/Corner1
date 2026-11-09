@@ -111,9 +111,9 @@ namespace EyeMaze
         [Tooltip("지금 부담감 (0~1). 들여다보는 동안 차오르고, 가득 차면 leave 엔딩이 된다")]
         [SerializeField, Range(0f, 1f)] private float _burden;
         [Tooltip("신뢰 0일 때 0에서 가득까지 걸리는 들여다보기 시간(초)")]
-        [SerializeField] private float _burdenFillSeconds = 42.9f;
+        [SerializeField] private float _burdenFillSeconds = 85.8f;
         [Tooltip("신뢰 1당 늘어나는 시간(초)")]
-        [SerializeField] private float _burdenSecondsPerTrust = 8.6f;
+        [SerializeField] private float _burdenSecondsPerTrust = 17.2f;
         [Tooltip("좋은 말을 처음 했을 때 줄어드는 양")]
         [SerializeField, Range(0f, 1f)] private float _burdenRelief = 0.25f;
         [Tooltip("가득 찼을 때 엔딩 앞에 보이는 한 줄. '은재'는 지금 손님 이름으로 바뀐다")]

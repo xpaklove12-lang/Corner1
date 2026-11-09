@@ -13150,8 +13150,8 @@ MonoBehaviour:
   _blinkRecoverSeconds: 0.2
   _respawnMazeAfterReading: 1
   _burden: 0
-  _burdenFillSeconds: 42.9
-  _burdenSecondsPerTrust: 8.6
+  _burdenFillSeconds: 85.8
+  _burdenSecondsPerTrust: 17.2
   _burdenRelief: 0.25
   _burdenEndLine: "\uC740\uC7AC\uAC00 \uC2DC\uC120\uC744 \uD53C\uD588\uB2E4. \uB354\uB294
     \uB9C8\uC8FC \uBCF4\uAE30 \uD798\uB4E0 \uAC83 \uAC19\uB2E4."
