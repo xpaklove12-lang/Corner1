@@ -23,3 +23,6 @@
 # OS
 .DS_Store
 Thumbs.db
+AGENTS.override.md
+claude.override.md
+.obsidian/

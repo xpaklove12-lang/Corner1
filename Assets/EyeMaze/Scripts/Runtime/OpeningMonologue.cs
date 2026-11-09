@@ -11,7 +11,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 게임 시작 독백. 검은 화면에서 한 줄씩 한 글자씩 찍히고, 다 찍히면 ▼가 깜빡인다.
-    /// Z / Enter / Space / 클릭으로 (찍히는 중이면 한 번에 다 보여주고) 다음 줄로 넘긴다.
+    /// Space / Enter / 클릭으로 (찍히는 중이면 한 번에 다 보여주고) 다음 줄로 넘긴다.
     /// 마지막 줄 다음엔 검은 화면이 서서히 걷히며 필드가 시작된다.
     /// 대사는 DefaultLines()에서 고치면 반영된다 (useScriptLines 켜짐). 인스펙터에서 고치려면 useScriptLines를 끈다.
     /// </summary>
@@ -122,12 +122,13 @@ namespace EyeMaze
         /// </summary>
         public static List<string> DefaultLines() => new List<string>
         {
-            "모든 눈동자 안에는 생각의 파편이 있다.",
-            "나는 어찌 된 영문인지 그 파편을 볼 수 있다.",
-            "띠리릭 띠리릭… (전화벨이 울렸다)",
-            "??? : 여보세요? 아, 네 선생님. 지금 상담실 앞입니다",
-            "나 : 아, 네. 금방 가겠습니다.",
-            "아 맞다 오늘 월요일이지",
+            "눈은 영혼의 창이라는 말이 있다.",
+            "내겐 이 말이 단순한 비유가 아니다.",
+            "언제부터인가, 사람의 눈을 들여다보면 그 너머 마음의 조각을 읽을 수 있게 되었다.",
+            "상담소를 연 것도 그래서였다. 내가 본 것을 그들도 보았으면 해서.",
+            "그토록 아름다운 마음의 조각들을.",
+            "띵-동",
+            "..?",
         };
 
         /// <summary>
@@ -198,7 +199,7 @@ namespace EyeMaze
             Keyboard kb = Keyboard.current;
             Mouse mouse = Mouse.current;
             Gamepad pad = Gamepad.current;
-            if (kb != null && (kb.zKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame)) return true;
+            if (kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame)) return true;
             if (mouse != null && mouse.leftButton.wasPressedThisFrame) return true;
             if (pad != null && pad.buttonSouth.wasPressedThisFrame) return true;
             return false;

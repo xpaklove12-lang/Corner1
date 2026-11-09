@@ -42,7 +42,21 @@ namespace EyeMaze
         [Tooltip("깜빡일 때 함께 가려지는 부담감 막대와 글")]
         [SerializeField] private Graphic[] _burdenGraphics = new Graphic[0];
 
+        [Header("신뢰도 막대")]
+        [Tooltip("신뢰도 막대의 핸들. 가운데가 신뢰 0, 왼쪽 끝이 손님이 떠나는 신뢰(leaveTrust), 오른쪽 끝이 진실 엔딩 신뢰(truthTrust)")]
+        [SerializeField] private RectTransform _trustHandle;
+        [Tooltip("가운데에서 핸들까지 칠하는 채움")]
+        [SerializeField] private RectTransform _trustFill;
+        [Tooltip("신뢰에 따라 색이 바뀌는 그림들 (핸들, 채움)")]
+        [SerializeField] private Graphic[] _trustTinted = new Graphic[0];
+        [SerializeField] private Color _trustNeutralColor = Color.white;
+        [SerializeField] private Color _trustNegativeColor = new Color(0.95f, 0.27f, 0.24f, 1f);
+        [SerializeField] private Color _trustPositiveColor = new Color(0.13f, 0.56f, 0.97f, 1f);
+        [Tooltip("신뢰가 바뀔 때 핸들이 따라가는 속도 (초당 -1~1 비율)")]
+        [SerializeField] private float _trustAnimSpeed = 3f;
+
         [NonSerialized] private float _burdenShown = -1f;
+        [NonSerialized] private float _trustShown = float.NaN;
         [NonSerialized] private float _burdenAlpha = -1f;
 
         // 스펙 010: 기억 목록 줄 강조 시간과 현재 강조 상태 추가
@@ -76,8 +90,11 @@ namespace EyeMaze
             Person p = d.Person;
 
             if (p != null)
-                Set(_status, Strings.Get("ui.status", "신뢰 {trust}   ·   동공 {dilation}%   ·   {mode}",
-                    ("trust", p.Trust), ("dilation", (p.Dilation * 100f).ToString("0")), ("mode", ModeName(d.CurrentMode))));
+            {
+                Set(_status, Strings.Get("ui.status", "신뢰 {trust}",
+                    ("trust", p.Trust > 0 ? "+" + p.Trust : p.Trust.ToString()), ("dilation", (p.Dilation * 100f).ToString("0")), ("mode", ModeName(d.CurrentMode))));
+                UpdateTrustBar(p.Trust, d.LeaveTrust, d.TruthTrust);
+            }
 
             DialogueScript.Node node = d.CurrentNode;
             string sit;
@@ -150,13 +167,13 @@ namespace EyeMaze
             // 스펙 004: 들어갈 때는 마음 읽기, 나올 때는 관찰 중지로 표시
             Set(_gazeButtonLabel, d.CurrentMode == EyeMazeDirector.Mode.Gaze ? Strings.Get("ui.gaze_button_gaze", "관찰 중지 (Space)") : Strings.Get("ui.gaze_button", "마음 읽기 (Space)"));
             Set(_hint, d.IsReading
-                ? Strings.Get("hint.reading", "Space / Z  계속")
+                ? Strings.Get("hint.reading", "Space  계속")
                 : d.InAbyss
                 ? Strings.Get("hint.abyss", "WASD / 방향키로 가장 반짝이는 파편에 다가간다")
                 : d.CurrentMode == EyeMazeDirector.Mode.Gaze
                 // 시선 조작 안내에서 금색 문, 하늘색 점 설명 삭제
                 ? Strings.Get("hint.gaze", "WASD / 방향키로 이동   ·   Space 관찰 중지")
-                : d.CurrentMode == EyeMazeDirector.Mode.Ending ? (d.HeartFinished ? Strings.Get("hint.ending_done", "Space / Z  돌아가기") : Strings.Get("hint.ending", "Space / Z  계속"))
+                : d.CurrentMode == EyeMazeDirector.Mode.Ending ? (d.HeartFinished ? Strings.Get("hint.ending_done", "Space  돌아가기") : Strings.Get("hint.ending", "Space  계속"))
                 // 스펙 004: Q 안내를 잠시 휴식하기로 표시
                 : Strings.Get("hint.talk", "Space = 마음 읽기   ·   숫자키 대화   ·   Q 잠시 휴식하기"));
         }
@@ -195,6 +212,41 @@ namespace EyeMaze
             for (int i = 0; i < lines.Length; i++)
                 if (lines[i] == target) lines[i] = $"<color=#{hex}>{target}</color>";
             return string.Join("\n", lines);
+        }
+
+        /// <summary>
+        /// 신뢰도 막대의 핸들 위치와 채움, 색을 신뢰에 맞춘다. 가운데가 0이고, 왼쪽 반은 0~leave를, 오른쪽 반은 0~truth를 같은 칸으로 나눈다.
+        /// trust, leave(음수), truth를 사용하며, 핸들과 채움의 앵커, _trustTinted의 색, _trustShown을 바꾼다.
+        /// </summary>
+        private void UpdateTrustBar(int trust, int leave, int truth)
+        {
+            if (_trustHandle == null && _trustFill == null) return;
+            // 음수 쪽은 떠나는 신뢰에서, 양수 쪽은 진실 엔딩 신뢰에서 막대 끝에 정확히 닿는다.
+            float target = trust < 0
+                ? -Mathf.Clamp01(trust / (float)Mathf.Min(-1, leave))
+                : Mathf.Clamp01(trust / (float)Mathf.Max(1, truth));
+            // Play에서는 핸들이 일정한 속도로 따라가고, 에디트 모드에서는 바로 맞춘다.
+            bool snap = !Application.isPlaying || float.IsNaN(_trustShown);
+            _trustShown = snap ? target : Mathf.MoveTowards(_trustShown, target, _trustAnimSpeed * Time.deltaTime);
+
+            float x = 0.5f + 0.5f * _trustShown;
+            if (_trustHandle != null)
+            {
+                Vector2 a = new Vector2(x, 0.5f);
+                if (_trustHandle.anchorMin != a) { _trustHandle.anchorMin = a; _trustHandle.anchorMax = a; }
+            }
+            if (_trustFill != null)
+            {
+                Vector2 min = new Vector2(Mathf.Min(0.5f, x), 0f);
+                Vector2 max = new Vector2(Mathf.Max(0.5f, x), 1f);
+                if (_trustFill.anchorMin != min) _trustFill.anchorMin = min;
+                if (_trustFill.anchorMax != max) _trustFill.anchorMax = max;
+            }
+            Color c = _trustShown < 0f
+                ? Color.Lerp(_trustNeutralColor, _trustNegativeColor, -_trustShown)
+                : Color.Lerp(_trustNeutralColor, _trustPositiveColor, _trustShown);
+            foreach (Graphic g in _trustTinted)
+                if (g != null && g.color != c) g.color = c;
         }
 
         /// <summary>
