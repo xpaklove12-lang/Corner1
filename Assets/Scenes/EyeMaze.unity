@@ -13150,6 +13150,7 @@ MonoBehaviour:
   _truthTrust: 3
   _keyFragment: {fileID: 2097229964}
   _leaveTrust: -2
+  _burdenLimit: 1
   _currentEnding: 
   _activeCase: {fileID: 999279898}
   _moveSpeed: 1.6
@@ -16456,7 +16457,6 @@ MonoBehaviour:
   _doorX: 6.45
   _betweenDelay: 1
   _firstCallDelay: 2
-  _secondCallDelay: 0.5
   _firstCallLine: "\uBB50\uC57C? \uD55C\uCC3D \uBD84\uC704\uAE30 \uC7A1\uACE0\uC788\uB294\uB370."
   _secondCallLine: "\uC544\uC9C1 \uCCAB \uC0C1\uB2F4\uAE4C\uC9C0\uB294 \uC2DC\uAC04\uC774
     \uB0A8\uC558\uC744 \uD150\uB370..."
@@ -22267,7 +22267,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1.15
-  m_Text: "\uD30C\uD3B8\uB4E4 (0/5)\n\xB7 \uC544\uC9C1 \uC5C6\uC74C"
+  m_Text: "\uD30C\uD3B8\uB4E4 (0/6)\n\xB7 \uC544\uC9C1 \uC5C6\uC74C"
 --- !u!222 &981459051
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -22346,8 +22346,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1.15
-  m_Text: "2. \uC190\uAC00\uB77D\uC740\u2026 \uC544\uC9C1 \uADF8 \uACE1\uC744 \uAE30\uC5B5\uD558\uACE0
-    \uC788\uB098 \uBD10\uC694."
+  m_Text: "2. \uC1FC\uD33D \uB179\uD134 20\uBC88. \uC190\uAC00\uB77D\uC740\u2026
+    \uC544\uC9C1 \uADF8 \uACE1\uC744 \uAE30\uC5B5\uD558\uACE0 \uC788\uB098 \uBD10\uC694."
 --- !u!222 &984894231
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -23342,7 +23342,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1.15
-  m_Text: "1. \uC624\uB298\uC740 \uC880 \uC5B4\uB5A0\uC138\uC694?"
+  m_Text: "1. \uC740\uC7AC\uC528, \uC624\uB298 \uC5B4\uB5A4 \uC77C\uB85C \uC624\uC168\uB098\uC694?"
 --- !u!222 &1021435106
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -23589,8 +23589,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1.15
-  m_Text: "3. \uB9D0 \uC548 \uD574\uB3C4 \uB3FC\uC694. \uADF8\uB0E5 \uAC19\uC774
-    \uC549\uC544 \uC788\uC744\uAC8C\uC694."
+  m_Text: "3. \uC5B5\uC9C0\uB85C \uB9D0\uC500\uD558\uB824\uACE0 \uD558\uC9C0 \uC54A\uC73C\uC154\uB3C4
+    \uB3FC\uC694. \uC624\uB298\uC740 \uC7A0\uC2DC \uC26C\uB2E4 \uAC00\uC154\uC694."
 --- !u!222 &1036565336
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -24870,9 +24870,9 @@ LineRenderer:
   m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Positions:
-  - {x: -0.030085899, y: -0.20780277, z: -0}
+  - {x: -0.09675406, y: 0.09628895, z: -0}
   - {x: 0, y: 0, z: 0}
-  - {x: 0.030085899, y: 0.20780277, z: 0}
+  - {x: 0.09675406, y: -0.09628895, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.035
@@ -29642,6 +29642,7 @@ MonoBehaviour:
   _bell: {fileID: 1727881674}
   _camera: {fileID: 1413807250}
   _bellWorldOffset: {x: 0, y: 1.4}
+  _ringCount: 1
   _ringInterval: 1
   _ringDuration: 0.45
   _ringScale: 0.35
@@ -35651,7 +35652,7 @@ LineRenderer:
   - {x: 0, y: 0.001, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.47994673
+    widthMultiplier: 0.3520042
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -35678,8 +35679,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.49803922}
-      key1: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.49803922}
+      key0: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.2509804}
+      key1: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.2509804}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -42603,9 +42604,9 @@ LineRenderer:
   m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Positions:
-  - {x: 0.14549272, y: -0.020846378, z: -0}
+  - {x: -0.067435026, y: -0.06769523, z: -0}
   - {x: 0, y: 0, z: 0}
-  - {x: -0.14549272, y: 0.020846378, z: 0}
+  - {x: 0.067435026, y: 0.06769523, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.035
@@ -45137,10 +45138,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 1
     m_LineSpacing: 1.15
-  m_Text: "\u25B6 \uC740\uC7AC\uAC00 \uCC3D\uBC16\uB9CC \uBCF4\uACE0 \uC788\uB2E4.
-    \uC11D \uB2EC\uC9F8 \uD55C\uB9C8\uB514\uB3C4 \uD558\uC9C0 \uC54A\uC558\uB2E4\uACE0
-    \uD55C\uB2E4. \uBB34\uB98E \uC704 \uC190\uAC00\uB77D\uB9CC \uC26C\uC9C0 \uC54A\uACE0
-    \uC6C0\uC9C1\uC778\uB2E4."
+  m_Text: "\u25B6 \uCC3D\uBC16\uC744 \uD5A5\uD574 \uB3CC\uC544\uAC04 \uACE0\uAC1C.
+    \uD750\uB974\uB294 \uC801\uB9C9\uC744 \uAE68\uB294 \uAC74 \uC26C\uC9C0 \uC54A\uACE0
+    \uBB34\uB98E\uC744 \uCE58\uB294 \uC190\uAC00\uB77D \uC18C\uB9AC\uBFD0\uC774\uB2E4."
 --- !u!222 &2031131638
 CanvasRenderer:
   m_ObjectHideFlags: 0
