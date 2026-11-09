@@ -181,6 +181,8 @@ namespace EyeMaze
         [NonSerialized] private bool _typingPrev;
         [NonSerialized] private bool _acceptedLastFrame;
         [NonSerialized] private readonly List<ChoiceView> _choices = new List<ChoiceView>();
+        // 스펙 007: 마지막으로 상황 문구를 대화 기록에 남긴 장면 추가
+        [NonSerialized] private DialogueScript.Node _loggedNode;
 
         /// <summary>화면에 보여줄 선택지 하나 (뒤로가기 포함)</summary>
         public struct ChoiceView
@@ -325,6 +327,9 @@ namespace EyeMaze
                 return;
             }
 
+            // 스펙 007: 만남 중 장면이 바뀌면 그 장면의 상황 문구를 대화 기록에 남긴다.
+            if (_acceptInput && _mode != Mode.Ending) LogSituation();
+
             float dt = Time.deltaTime;
             _bumpFlash = Mathf.MoveTowards(_bumpFlash, 0f, dt * 3f);
 
@@ -346,7 +351,8 @@ namespace EyeMaze
             }
             if (_reading) _readT += dt;
 
-            if (!_acceptInput)
+            // 스펙 007: 대화 기록 창이 열려 있으면 입력을 받지 않는다.
+            if (!_acceptInput || DialogueLog.BlocksInput)
             {
                 // 필드 화면에서는 입력을 받지 않는다.
                 _velocity = Vector2.zero;
@@ -806,11 +812,20 @@ namespace EyeMaze
             bool helpful = o.Trust > 0 || o.Dilation > 0f;
             if (helpful && _usedOptions.Contains(key))
             {
-                if (!string.IsNullOrEmpty(o.Goto) && string.IsNullOrEmpty(o.Ending)) { _message = o.Response; GoTo(o.Goto); }
+                if (!string.IsNullOrEmpty(o.Goto) && string.IsNullOrEmpty(o.Ending))
+                {
+                    _message = o.Response;
+                    // 스펙 007: 다른 장면으로 넘어가는 말은 다시 골라도 대화 기록에 남긴다.
+                    DialogueLog.Add("", Personalize(o.Text), true);
+                    DialogueLog.Add(Name, Personalize(o.Response), false, FieldNPC.PortraitOf(Name));
+                    GoTo(o.Goto);
+                }
                 else _message = Strings.Get("msg.already", "이미 한 이야기다. {name}는 다음 말을 기다리고 있다.", ("name", Name));
                 return;
             }
             _usedOptions.Add(key);
+            // 스펙 007: 고른 말을 대화 기록에 남긴다.
+            DialogueLog.Add("", Personalize(o.Text), true);
 
             if (_person != null)
             {
@@ -833,6 +848,8 @@ namespace EyeMaze
                 StartEnding("leave", o.Response);
                 return;
             }
+            // 스펙 007: 엔딩으로 이어지지 않을 때만 반응을 남긴다. 엔딩이면 엔딩 줄로 남는다.
+            DialogueLog.Add(Name, Personalize(o.Response), false, FieldNPC.PortraitOf(Name));
             if (!string.IsNullOrEmpty(o.Goto)) GoTo(o.Goto);
         }
 
@@ -1272,6 +1289,20 @@ namespace EyeMaze
         {
             List<string> l = EndingLines;
             _message = l[Mathf.Clamp(_heartIndex, 0, l.Count - 1)];
+            // 스펙 007: 엔딩 줄을 서술로 대화 기록에 남긴다.
+            DialogueLog.Add("", Personalize(_message));
+        }
+
+        /// <summary>
+        /// 스펙 007: 지금 장면이 마지막으로 기록한 장면과 다르면 그 장면의 상황 문구를 대화 기록에 남긴다.
+        /// CurrentNode와 _loggedNode를 사용하며, DialogueLog와 _loggedNode를 바꾼다.
+        /// </summary>
+        private void LogSituation()
+        {
+            DialogueScript.Node node = CurrentNode;
+            if (node == null || node == _loggedNode) return;
+            _loggedNode = node;
+            DialogueLog.Add("", Personalize(node.Situation));
         }
     }
 }

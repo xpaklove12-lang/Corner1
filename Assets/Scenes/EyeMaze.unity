@@ -47964,6 +47964,23 @@ MonoBehaviour:
   _ring: 4
   _sector: 10
   _line: {fileID: 2147044792}
+--- !u!1001 &1700777001
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1000, guid: fdef98224d0d4afc8ce5a72f12a6d33f, type: 3}
+      propertyPath: m_Name
+      value: "대화 기록 (Canvas)"
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: fdef98224d0d4afc8ce5a72f12a6d33f, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -47980,3 +47997,4 @@ SceneRoots:
   - {fileID: 980991311}
   - {fileID: 616554189}
   - {fileID: 1940857934}
+  - {fileID: 1700777001}

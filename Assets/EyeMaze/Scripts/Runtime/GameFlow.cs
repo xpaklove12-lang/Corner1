@@ -108,8 +108,9 @@ namespace EyeMaze
             bool interact = false;
             bool leave = false;
             Vector2 move = Vector2.zero;
-            Keyboard kb = Keyboard.current;
-            Gamepad pad = Gamepad.current;
+            // 스펙 007: 대화 기록 창이 열려 있으면 키 입력을 처리하지 않는다.
+            Keyboard kb = DialogueLog.BlocksInput ? null : Keyboard.current;
+            Gamepad pad = DialogueLog.BlocksInput ? null : Gamepad.current;
             if (kb != null)
             {
                 // 상호작용과 대사 넘기기는 Space로 한다. 만남 화면의 Space는 시선 조작이라 엔딩 대사와 파편 읽기에서만 넘기기로 쓴다.
@@ -400,6 +401,8 @@ namespace EyeMaze
             if (_convSpeakers != null && i < _convSpeakers.Count) _convSpeaker = _convSpeakers[i];
             if (_convPortraits != null && i < _convPortraits.Count) _fieldPortrait = _convPortraits[i];
             _fieldText = string.IsNullOrEmpty(_convSpeaker) ? line : $"{_convSpeaker}\n{line}";
+            // 스펙 007: 글 상자에 나온 줄을 얼굴과 함께 대화 기록에 남긴다. 같은 줄을 다시 보여줘도 한 번만 남는다.
+            DialogueLog.Add(_convSpeaker, line, false, string.IsNullOrEmpty(_convSpeaker) ? null : _fieldPortrait);
         }
 
         /// <summary>

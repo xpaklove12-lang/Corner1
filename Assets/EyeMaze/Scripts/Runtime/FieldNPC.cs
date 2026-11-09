@@ -211,11 +211,12 @@ namespace EyeMaze
             return true;
         }
 
+        // 스펙 007: 대화 기록에서 만남 상대의 얼굴을 찾도록 공개
         /// <summary>
-        /// 이름으로 씬의 다른 사람 초상화를 찾는다 (speaker 칸에 다른 사람 이름을 쓴 줄용).
+        /// 이름으로 씬의 다른 사람 초상화를 찾는다 (speaker 칸에 다른 사람 이름을 쓴 줄, 대화 기록의 얼굴용).
         /// name을 사용하며, 찾은 초상화 또는 null을 반환한다.
         /// </summary>
-        private static Sprite PortraitOf(string name)
+        public static Sprite PortraitOf(string name)
         {
             foreach (FieldNPC n in FindObjectsByType<FieldNPC>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (n.DisplayName == name) return n.Portrait;
