@@ -1494,6 +1494,15 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private DialogueEditorDocument HandleKeys(Event e, DialogueEditorDocument doc, bool editable)
         {
+            // 에디터는 Delete 키를 Delete·SoftDelete 명령으로도 보낸다. 노드 뷰가 노드를 골랐을 때만 받는다.
+            bool deleteCommand = (e.type == EventType.ValidateCommand || e.type == EventType.ExecuteCommand)
+                && (e.commandName == "Delete" || e.commandName == "SoftDelete");
+            if (deleteCommand && _inline == InlineKind.None && _focused && _selKey != null)
+            {
+                bool execute = e.type == EventType.ExecuteCommand;
+                e.Use();
+                return execute ? DeleteSelected(doc, editable) : null;
+            }
             if (e.type != EventType.KeyDown) return null;
             bool enter = e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter;
             if (_inline != InlineKind.None)
@@ -1511,6 +1520,7 @@ namespace EyeMaze.EditorTools
                 return null;
             }
             if (_selKey == null) return null;
+            if (e.keyCode == KeyCode.Delete) { e.Use(); return DeleteSelected(doc, editable); }
             if (e.keyCode == KeyCode.F2 && !_selResponse) { e.Use(); StartRename(doc, editable); }
             else if (enter) { e.Use(); if (_selAfter) StartAfterEdit(doc, editable); else if (_selResponse) StartResponseEdit(doc, editable); else StartBodyEdit(doc, editable); }
             return null;
@@ -1605,6 +1615,61 @@ namespace EyeMaze.EditorTools
             _inlineText = DialogueEditorFormat.Body(_selFragment.Text);
             _inlineError = "";
             _inlineFocus = true;
+        }
+
+        /// <summary>
+        /// 선택한 노드를 지운 복사본을 만든다. 결과 카드는 response를, after 카드는 after를, 그룹 노드는 그룹 전체를 지운다.
+        /// 예약 ID, 공용 Strings key, 텍스트 오류·검사 대기 중이면 지우지 않고 이유를 보인다.
+        /// doc과 editable을 사용하며, 새 문서(지우지 않으면 null)를 반환하고 선택을 푼다.
+        /// </summary>
+        private DialogueEditorDocument DeleteSelected(DialogueEditorDocument doc, bool editable)
+        {
+            int idx = GroupIndex(doc, _selKey);
+            if (idx < 0) return null;
+            DialogueEditorDocument.Group g = doc.Groups[idx];
+            if (!editable) { Notify("텍스트 오류를 고치거나 검사가 끝난 뒤 지울 수 있다."); return null; }
+            DialogueEditorDocument copy;
+            if (_selResponse)
+            {
+                if (_selRow < 0 || _selRow >= g.Items.Count) return null;
+                copy = WithResponse(doc, idx, _selRow, new List<string>());
+                _selResponse = false;
+                return copy;
+            }
+            if (_selAfter)
+            {
+                copy = WithGroupField(doc, idx, "after", "");
+                _selAfter = false;
+                return copy;
+            }
+            if (doc.Kind == DialogueEditorKind.Strings) { Notify("공용 Strings의 key는 코드가 참조하므로 지울 수 없다."); return null; }
+            if (IsReservedId(g)) { Notify($"'{g.Id}'는 게임이 직접 부르는 예약 ID라 지울 수 없다."); return null; }
+            copy = RemoveGroup(doc, idx);
+            _selKey = null;
+            _selRow = -1;
+            _selectionLine = 0;
+            return copy;
+        }
+
+        /// <summary>
+        /// 그룹을 지운 복사본을 만든다. 같은 actor 선택지가 지운 장면을 가리키는 goto나 지운 엔딩을 가리키는 ending은 비운다.
+        /// doc과 group을 사용하며, 새 문서를 반환한다.
+        /// </summary>
+        public static DialogueEditorDocument RemoveGroup(DialogueEditorDocument doc, int group)
+        {
+            DialogueEditorDocument copy = doc.Clone();
+            DialogueEditorDocument.Group g = copy.Groups[group];
+            copy.Groups.RemoveAt(group);
+            string refColumn = g.Section == Csv.SECTION_DIALOGUE ? DialogueEditorFormat.GOTO : g.Section == Csv.SECTION_ENDING ? DialogueEditorFormat.ENDING : null;
+            if (refColumn != null)
+                foreach (DialogueEditorDocument.Group other in copy.Groups)
+                {
+                    if (other.Section != Csv.SECTION_DIALOGUE || other.Actor != g.Actor) continue;
+                    foreach (DialogueEditorDocument.Item i in other.Items)
+                        if (i.Get(refColumn) == g.Id) i.Fields.Remove(refColumn);
+                }
+            DialogueEditorFormat.Normalize(copy);
+            return copy;
         }
 
         /// <summary>
