@@ -29,6 +29,7 @@ namespace EyeMaze.EditorTools
         private bool _textPending;
         private double _editedAt;
         private bool _draftHasErrors;
+        private string _savedAt = "";
         private readonly DialogueEditorGraph _graph = new DialogueEditorGraph();
 
         [MenuItem("EyeMaze/대사 편집기")]
@@ -99,7 +100,8 @@ namespace EyeMaze.EditorTools
             if (_doc == null) return "";
             int errors = 0;
             foreach (DialogueEditorFormat.Issue i in _issues) if (i.Error) errors++;
-            return errors > 0 ? $"오류 {errors}개" : "정상";
+            if (errors > 0) return $"오류 {errors}개 · 저장 안 함";
+            return _savedAt.Length > 0 ? $"정상 · {_savedAt} 저장" : "정상";
         }
 
         /// <summary>
@@ -125,17 +127,29 @@ namespace EyeMaze.EditorTools
             }
 
             if (issueHeight <= 0f) return;
-            GUILayout.BeginArea(new Rect(rect.x, textRect.yMax, rect.width, issueHeight), EditorStyles.helpBox);
-            _issueScroll = EditorGUILayout.BeginScrollView(_issueScroll);
+            var listRect = new Rect(rect.x, textRect.yMax, rect.width, issueHeight);
+            EditorGUI.DrawRect(listRect, new Color(0.12f, 0.12f, 0.13f));
+            var labelStyle = new GUIStyle(EditorStyles.miniLabel) { wordWrap = true };
+            float labelWidth = listRect.width - 24f;
+            var labels = new List<string>();
+            float contentHeight = 4f;
             foreach (DialogueEditorFormat.Issue i in _issues)
             {
                 string where = i.Line > 0 ? $"{i.Line}줄: " : "";
-                var s = new GUIStyle(EditorStyles.miniLabel) { wordWrap = true };
-                s.normal.textColor = i.Error ? new Color(1f, 0.45f, 0.4f) : new Color(1f, 0.8f, 0.3f);
-                GUILayout.Label((i.Error ? "오류 " : "경고 ") + where + i.Message, s);
+                string label = (i.Error ? "오류 " : "경고 ") + where + i.Message;
+                labels.Add(label);
+                contentHeight += labelStyle.CalcHeight(new GUIContent(label), labelWidth) + 2f;
             }
-            EditorGUILayout.EndScrollView();
-            GUILayout.EndArea();
+            _issueScroll = GUI.BeginScrollView(listRect, _issueScroll, new Rect(0f, 0f, labelWidth, contentHeight));
+            float y = 4f;
+            for (int k = 0; k < labels.Count; k++)
+            {
+                labelStyle.normal.textColor = _issues[k].Error ? new Color(1f, 0.45f, 0.4f) : new Color(1f, 0.8f, 0.3f);
+                float h = labelStyle.CalcHeight(new GUIContent(labels[k]), labelWidth);
+                GUI.Label(new Rect(6f, y, labelWidth, h), labels[k], labelStyle);
+                y += h + 2f;
+            }
+            GUI.EndScrollView();
         }
 
         /// <summary>
@@ -151,34 +165,55 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// 텍스트 초안을 해석해 문제가 없으면 공통 모델을 바꾼다. 문제가 있으면 마지막 정상 모델을 그대로 둔다.
+        /// 텍스트 초안을 해석·검사해 문제가 없으면 공통 모델을 바꾸고 CSV에 저장한다.
+        /// 문제가 있으면 마지막 정상 모델과 CSV를 그대로 두고 초안도 저장하지 않는다.
         /// _draft를 사용하며, _doc, _issues, _draftHasErrors를 바꾼다.
         /// </summary>
         private void ApplyDraft()
         {
             var issues = new List<DialogueEditorFormat.Issue>();
             DialogueEditorDocument parsed = DialogueEditorFormat.ParseText(_draft, _doc.Kind, _doc.AssetPath, issues);
+            string csv = HasError(issues) ? null : DialogueEditorFormat.Validate(parsed, issues);
             _issues.Clear();
             _issues.AddRange(issues);
             _draftHasErrors = HasError(issues);
-            if (!_draftHasErrors) _doc = parsed;
+            if (!_draftHasErrors) Commit(parsed, csv);
             Repaint();
         }
 
         /// <summary>
-        /// 노드 뷰에서 바뀐 모델을 텍스트로 다시 써서 두 뷰를 함께 바꾼다.
-        /// changed를 사용하며, _doc과 _draft를 바꾼다.
+        /// 검사를 통과한 모델을 현재 모델로 삼고 CSV로 저장한다.
+        /// doc과 csv를 사용하며, _doc과 _savedAt을 바꾼다.
+        /// </summary>
+        private void Commit(DialogueEditorDocument doc, string csv)
+        {
+            _doc = doc;
+            if (DialogueEditorFormat.Save(doc.AssetPath, csv)) _savedAt = System.DateTime.Now.ToString("HH:mm:ss");
+        }
+
+        /// <summary>
+        /// 노드 뷰에서 바뀐 모델을 검사해 통과하면 텍스트로 다시 써서 두 뷰를 함께 바꾸고 CSV에 저장한다.
+        /// 통과하지 못하면 모델, 텍스트, CSV를 그대로 두고 이유만 보여준다.
+        /// changed를 사용하며, _doc, _draft, _issues를 바꾼다.
         /// </summary>
         private void ApplyGraphEdit(DialogueEditorDocument changed)
         {
             string text = DialogueEditorFormat.WriteText(changed);
             var issues = new List<DialogueEditorFormat.Issue>();
             DialogueEditorDocument parsed = DialogueEditorFormat.ParseText(text, changed.Kind, changed.AssetPath, issues);
-            if (HasError(issues)) return;
-            _doc = parsed;
-            _draft = text;
+            string csv = HasError(issues) ? null : DialogueEditorFormat.Validate(parsed, issues);
             _issues.Clear();
+            if (HasError(issues))
+            {
+                // 거절된 편집의 줄 번호는 화면에 없는 글을 가리키므로 빼고 보여준다.
+                foreach (DialogueEditorFormat.Issue i in issues)
+                    if (i.Error) _issues.Add(new DialogueEditorFormat.Issue { Message = "노드 편집을 되돌렸다: " + i.Message });
+                Repaint();
+                return;
+            }
+            _draft = text;
             _issues.AddRange(issues);
+            Commit(parsed, csv);
             // 입력 중인 텍스트 상자가 새 글을 보이도록 포커스를 푼다.
             GUI.FocusControl(null);
             EditorGUIUtility.editingTextField = false;
@@ -235,6 +270,7 @@ namespace EyeMaze.EditorTools
             _issues.Clear();
             _textPending = false;
             _draftHasErrors = false;
+            _savedAt = "";
             foreach (string e in errors) _issues.Add(new DialogueEditorFormat.Issue { Message = e });
             _openPath = path;
             _selected = System.Array.IndexOf(_paths, path);

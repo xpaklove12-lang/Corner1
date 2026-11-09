@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 
 using UnityEngine;
+
+using UnityEditor;
 
 namespace EyeMaze.EditorTools
 {
@@ -252,6 +255,182 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private static string Body(string v) => v.Replace("\r", "").Replace("\n", "\\n");
 
+        // ---------------------------------------------------------------- 모델 → CSV, 검사
+
+        /// <summary>
+        /// 공통 모델을 CSV 글로 쓴다. 머리글 다음에 그룹 순서, 행 순서대로 한 행씩 쓰고 그룹 칸은 그룹의 첫 행에 적는다.
+        /// doc을 사용하며, CSV 글(CRLF)을 반환하고 rowLines에 각 행의 텍스트 줄 번호를 차례로 담는다.
+        /// </summary>
+        public static string WriteCsv(DialogueEditorDocument doc, List<int> rowLines)
+        {
+            Schema s = SchemaOf(doc.Kind);
+            var sb = new StringBuilder();
+            sb.Append(string.Join(",", s.Columns)).Append("\r\n");
+            foreach (DialogueEditorDocument.Group g in doc.Groups)
+            {
+                if (g.Items.Count == 0)
+                {
+                    WriteRow(sb, s, g, null, true);
+                    rowLines.Add(g.TextLine);
+                    continue;
+                }
+                for (int k = 0; k < g.Items.Count; k++)
+                {
+                    WriteRow(sb, s, g, g.Items[k], k == 0);
+                    rowLines.Add(g.Items[k].TextLine);
+                }
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// CSV 한 행을 쓴다.
+        /// sb, s, g, item(없으면 그룹 칸만), first(그룹의 첫 행인지)를 사용하며, sb에 행을 덧붙인다.
+        /// </summary>
+        private static void WriteRow(StringBuilder sb, Schema s, DialogueEditorDocument.Group g, DialogueEditorDocument.Item item, bool first)
+        {
+            var cells = new List<string>();
+            foreach (string c in s.Columns)
+            {
+                string v;
+                if (c == s.IdColumn) v = g.Id;
+                else if (System.Array.IndexOf(s.GroupColumns, c) >= 0) v = first ? g.Get(c) : "";
+                else v = item != null ? item.Get(c) : "";
+                cells.Add(Cell(v));
+            }
+            sb.Append(string.Join(",", cells)).Append("\r\n");
+        }
+
+        /// <summary>
+        /// CSV 칸 하나를 쓴다. 쉼표, 따옴표, 줄바꿈이나 앞뒤 공백이 있으면 큰따옴표로 감싸고 안의 따옴표는 두 번 쓴다.
+        /// v를 사용하며, CSV 칸 글을 반환한다.
+        /// </summary>
+        private static string Cell(string v)
+        {
+            v = v ?? "";
+            bool quote = v.IndexOfAny(new[] { ',', '"', '\n', '\r' }) >= 0 || (v.Length > 0 && (char.IsWhiteSpace(v[0]) || char.IsWhiteSpace(v[v.Length - 1])));
+            return quote ? "\"" + v.Replace("\"", "\"\"") + "\"" : v;
+        }
+
+        /// <summary>
+        /// 저장하기 전에 공통 모델을 검사한다. 만든 CSV를 기존 런타임 파서로 다시 읽어 그 규칙을 그대로 쓰고,
+        /// Dialogue·Talk의 need·set은 Flags.csv와 맞춰 본다.
+        /// doc을 사용하며, 문제를 issues에 남기고 저장할 CSV 글을 반환한다.
+        /// </summary>
+        public static string Validate(DialogueEditorDocument doc, List<Issue> issues)
+        {
+            var rowLines = new List<int>();
+            string csv = WriteCsv(doc, rowLines);
+            int LineOf(int csvLine) => csvLine - 2 >= 0 && csvLine - 2 < rowLines.Count ? rowLines[csvLine - 2] : 0;
+
+            foreach (DialogueEditorDocument.Group g in doc.Groups)
+            {
+                if (g.Id.StartsWith("#")) issues.Add(new Issue { Line = g.TextLine, Message = $"라벨 '{g.Id}'는 #로 시작할 수 없다 (CSV 주석 줄이 된다)." });
+                if (doc.Kind == DialogueEditorKind.Strings && g.Items.Count == 0)
+                    issues.Add(new Issue { Line = g.TextLine, Message = $"'{g.Id}'에 Line: 문구가 없다." });
+                if (doc.Kind == DialogueEditorKind.Ending && g.Id.StartsWith("@"))
+                    foreach (string c in SchemaOf(doc.Kind).GroupColumns)
+                        if (g.Get(c).Length > 0) issues.Add(new Issue { Line = g.TextLine, Message = $"'{g.Id}'에는 {c}를 쓰지 않는다 (title, situation, after는 엔딩에만 쓴다)." });
+            }
+
+            // 기존 런타임 파서로 다시 읽어 같은 규칙으로 검사한다. 메시지 앞의 'N행'은 텍스트 줄 번호로 바꾼다.
+            var asset = new TextAsset(csv) { name = System.IO.Path.GetFileNameWithoutExtension(doc.AssetPath) };
+            List<string> runtimeErrors;
+            switch (doc.Kind)
+            {
+                case DialogueEditorKind.Dialogue: runtimeErrors = DialogueScript.Parse(asset).Errors; break;
+                case DialogueEditorKind.Talk: runtimeErrors = TalkScript.Parse(asset).Errors; break;
+                case DialogueEditorKind.Ending: runtimeErrors = EndingScript.Parse(asset).Errors; break;
+                default: runtimeErrors = new List<string>(); Csv.Read(asset, runtimeErrors); break;
+            }
+            Object.DestroyImmediate(asset);
+            foreach (string e in runtimeErrors)
+            {
+                Match m = Regex.Match(e, @"^(\d+)행\s*");
+                if (m.Success) issues.Add(new Issue { Line = LineOf(int.Parse(m.Groups[1].Value)), Message = e.Substring(m.Length) });
+                else issues.Add(new Issue { Message = e });
+            }
+
+            if (doc.Kind == DialogueEditorKind.Dialogue || doc.Kind == DialogueEditorKind.Talk) CheckFlags(doc, issues);
+            return csv;
+        }
+
+        /// <summary>
+        /// need·set에 쓴 플래그를 Flags.csv와 맞춰 본다. 목록에 없는 플래그와 set에 쓴 계산 플래그는 오류, 켜는 곳이 없는 need는 경고다.
+        /// doc을 사용하며, 문제를 issues에 남긴다.
+        /// </summary>
+        private static void CheckFlags(DialogueEditorDocument doc, List<Issue> issues)
+        {
+            var loadErrors = new List<string>();
+            var known = new HashSet<string>();
+            var computed = new HashSet<string>();
+            foreach (DialogueData.FlagDef d in DialogueData.LoadFlags(loadErrors))
+            {
+                if (d.Id.Length == 0) continue;
+                known.Add(d.Id);
+                if (!string.IsNullOrEmpty(d.Condition)) computed.Add(d.Id);
+            }
+            if (known.Count == 0) return;
+
+            // 켜는 곳은 저장된 다른 파일·씬과 지금 편집 중인 문서에서 모은다.
+            var setters = new Dictionary<string, List<DialogueData.Ref>>();
+            DialogueData.CollectRefs(DialogueData.LoadDialogues(), setters, new Dictionary<string, List<DialogueData.Ref>>());
+            var setHere = new HashSet<string>();
+            foreach (DialogueEditorDocument.Group g in doc.Groups)
+            {
+                foreach (string f in Split(g.Get("set"))) setHere.Add(f);
+                foreach (DialogueEditorDocument.Item i in g.Items) foreach (string f in Split(i.Get("set"))) setHere.Add(f);
+            }
+
+            void Check(string need, string set, int line)
+            {
+                foreach (string f in Split(need))
+                {
+                    if (!known.Contains(f)) issues.Add(new Issue { Line = line, Message = $"플래그 '{f}'가 Flags.csv에 없다." });
+                    else if (!computed.Contains(f) && !setters.ContainsKey(f) && !setHere.Contains(f))
+                        issues.Add(new Issue { Line = line, Error = false, Message = $"플래그 '{f}'를 켜는 곳(파편/단서/set)이 없어 열리지 않는다." });
+                }
+                foreach (string f in Split(set))
+                {
+                    if (!known.Contains(f)) issues.Add(new Issue { Line = line, Message = $"플래그 '{f}'가 Flags.csv에 없다." });
+                    else if (computed.Contains(f)) issues.Add(new Issue { Line = line, Message = $"'{f}'는 계산 플래그라 set으로 켤 수 없다." });
+                }
+            }
+            foreach (DialogueEditorDocument.Group g in doc.Groups)
+            {
+                if (doc.Kind == DialogueEditorKind.Talk) Check(g.Get("need"), g.Get("set"), g.TextLine);
+                else foreach (DialogueEditorDocument.Item i in g.Items) Check(i.Get("need"), i.Get("set"), i.TextLine);
+            }
+        }
+
+        /// <summary>
+        /// | 로 나눈 목록 글을 나눈다.
+        /// v를 사용하며, 빈 항목을 뺀 목록을 반환한다.
+        /// </summary>
+        private static List<string> Split(string v)
+        {
+            var list = new List<string>();
+            foreach (string part in (v ?? "").Split('|'))
+            {
+                string t = part.Trim();
+                if (t.Length > 0) list.Add(t);
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// CSV 글을 UTF-8(BOM 포함)로 파일에 쓰고 다시 임포트한다. 내용이 같으면 쓰지 않는다.
+        /// path와 csv를 사용하며, 파일을 썼으면 true를 반환한다.
+        /// </summary>
+        public static bool Save(string path, string csv)
+        {
+            string full = System.IO.Path.GetFullPath(path);
+            if (System.IO.File.Exists(full) && Csv.TryDecodeUtf8(System.IO.File.ReadAllBytes(full), out string old) && old == csv) return false;
+            System.IO.File.WriteAllText(full, csv, new UTF8Encoding(true));
+            AssetDatabase.ImportAsset(path);
+            return true;
+        }
+
         // ---------------------------------------------------------------- 텍스트 → 모델
 
         /// <summary>
@@ -286,7 +465,8 @@ namespace EyeMaze.EditorTools
                     FlushPending();
                     string id = t.Substring(1).Trim();
                     choice = null;
-                    if (id.Length == 0) { Err(ln, "라벨 이름이 비어 있다."); g = null; continue; }
+                    // 이름 없는 라벨 아래 줄은 버릴 그룹에 받아 둬서 같은 오류가 줄마다 반복되지 않게 한다.
+                    if (id.Length == 0) { Err(ln, "라벨 이름이 비어 있다."); g = new DialogueEditorDocument.Group { TextLine = ln }; continue; }
                     if (id.IndexOfAny(new[] { ' ', '\t', ',', '"' }) >= 0) Err(ln, $"라벨 '{id}'에 공백, 쉼표, 큰따옴표를 쓸 수 없다.");
                     if (doc.Find(id) != null) Err(ln, $"라벨 '{id}'가 이미 있다.");
                     g = new DialogueEditorDocument.Group { Id = id, TextLine = ln };
