@@ -520,7 +520,8 @@ namespace EyeMaze
         /// </summary>
         private void TryStartBump(Vector2 mazeVelocity)
         {
-            if (_mode != Mode.Gaze || _inAbyss || _bumpCooldownT > 0f) return;
+            // 스펙 007: 파편을 읽기 시작한 프레임에는 밀려남을 시작하지 않는다.
+            if (_mode != Mode.Gaze || _inAbyss || _reading || _bumpCooldownT > 0f) return;
             if (_hitRadial == 0 && _hitTangent == 0) return;
 
             float rad = _cursor.Angle * Mathf.Deg2Rad;
@@ -1085,6 +1086,8 @@ namespace EyeMaze
             ClearBlinkVisual();
             // 스펙 010: 진행 중인 벽 변화 연출을 바로 정리
             _wallChange.Finish();
+            // 스펙 007: 밀려남과 초점 요동을 눈물 초점 복원보다 먼저 멈춘다.
+            StopBump();
             // 스펙 011: 휴식 상태와 눈물 신호를 바로 해제
             _restRequested = false;
             _restAccepted = false;
@@ -1094,8 +1097,6 @@ namespace EyeMaze
             _blinkRecoverT = 0f;
             _burden = 0f;
             _velocity = Vector2.zero;
-            // 스펙 007: 밀려남과 초점 요동을 멈춘다.
-            StopBump();
             // 스펙 004: 옳은 대답으로 얻은 신뢰도 함께 초기화
             if (_person != null) { _person.Trust = 0; _person.EarnedTrust = 0; _person.Dilation = 0.2f; }
             ShowEncounterGuide(true);
