@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace EyeMaze
 {
     /// <summary>
-    /// 상담실 문. 손님이 초인종을 누르면 문이 울리고, 문이 울리는 동안만 Z로 문을 열어 줄 수 있다.
+    /// 상담실 문. 손님이 초인종을 누르면 문이 울리고, 문이 울리는 동안만 Space로 문을 열어 줄 수 있다.
     /// 문 위의 호출 글씨는 FieldCutscene이 필요할 때만 ShowBell로 띄운다.
     /// 문짝 그림은 건드리지 않으며, 열어 준 사실만 Answered로 알린다 (FieldCutscene이 읽는다).
     /// 호출 글씨는 화면 전체를 덮는 필드 UI 아래의 uGUI Text이며, 보이는 동안 문 위치를 따라간다.

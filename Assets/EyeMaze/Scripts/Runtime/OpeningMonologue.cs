@@ -11,7 +11,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 게임 시작 독백. 검은 화면에서 한 줄씩 한 글자씩 찍히고, 다 찍히면 ▼가 깜빡인다.
-    /// Z / Enter / Space / 클릭으로 (찍히는 중이면 한 번에 다 보여주고) 다음 줄로 넘긴다.
+    /// Space / Enter / 클릭으로 (찍히는 중이면 한 번에 다 보여주고) 다음 줄로 넘긴다.
     /// 마지막 줄 다음엔 검은 화면이 서서히 걷히며 필드가 시작된다.
     /// 대사는 DefaultLines()에서 고치면 반영된다 (useScriptLines 켜짐). 인스펙터에서 고치려면 useScriptLines를 끈다.
     /// </summary>
@@ -199,7 +199,7 @@ namespace EyeMaze
             Keyboard kb = Keyboard.current;
             Mouse mouse = Mouse.current;
             Gamepad pad = Gamepad.current;
-            if (kb != null && (kb.zKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame)) return true;
+            if (kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.xKey.wasPressedThisFrame)) return true;
             if (mouse != null && mouse.leftButton.wasPressedThisFrame) return true;
             if (pad != null && pad.buttonSouth.wasPressedThisFrame) return true;
             return false;

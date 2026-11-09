@@ -176,6 +176,10 @@ namespace EyeMaze
         public float BlinkAmount => _blinkAmount;
         public string ReturnText => _returnText;
         public float Burden => _burden;
+        /// <summary>진실 엔딩에 필요한 신뢰 (지금 손님 기준)</summary>
+        public int TruthTrust => _truthTrust;
+        /// <summary>이 신뢰 이하가 되면 손님이 떠난다 (지금 손님 기준, 음수)</summary>
+        public int LeaveTrust => _leaveTrust;
 
         /// <summary>대화 중이고 시작 장면이 아니며 4번 칸이 비어 있으면 처음 이야기로 돌아가는 공통 선택지를 고를 수 있다.</summary>
         public bool CanReturnToStart
@@ -787,8 +791,8 @@ namespace EyeMaze
             Gamepad pad = Gamepad.current;
             if (_reading)
             {
-                // 찍히는 중의 Z는 GameFlow가 글자를 다 보여주는 데 쓰고, 다 찍힌 뒤의 입력으로 계속한다.
-                bool next = (kb != null && (kb.zKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame))
+                // 찍히는 중의 Space는 GameFlow가 글자를 다 보여주는 데 쓰고, 다 찍힌 뒤의 입력으로 계속한다.
+                bool next = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame))
                             || (pad != null && pad.buttonSouth.wasPressedThisFrame);
                 if (next && _readT > 0.3f && !Typewriter.AnyTyping && !_typingPrev) { _reading = false; RespawnMaze(); }
                 Steer(Vector2.zero, dt);
