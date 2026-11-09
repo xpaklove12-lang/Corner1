@@ -21,6 +21,9 @@ namespace EyeMaze
         /// <summary>speaker 칸에 이 값을 쓰면 이름 없는 서술이 된다</summary>
         public const string Narration = "-";
 
+        /// <summary>speaker 칸에 이 값을 쓰면 이름 자리에 ???를 보이고 초상화는 말을 건 사람 것을 쓴다 (아직 누군지 모를 때)</summary>
+        public const string Unknown = "???";
+
         /// <summary>대사 한 줄</summary>
         public class Line
         {
