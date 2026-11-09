@@ -179,6 +179,10 @@ namespace EyeMaze
             public LineRenderer Line { get; }
             public float Elapsed { get; set; }
 
+            /// <summary>
+            /// 재생할 고리 하나의 상태를 만든다.
+            /// fragment와 line을 사용하며, Fragment와 Line을 저장한다.
+            /// </summary>
             public ActiveRing(MemoryFragment fragment, LineRenderer line)
             {
                 Fragment = fragment;
