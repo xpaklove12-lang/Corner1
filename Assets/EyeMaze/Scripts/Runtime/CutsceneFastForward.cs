@@ -58,6 +58,9 @@ namespace EyeMaze
 
         void Update()
         {
+            // 대화 기록 창이 열려 있으면 그 창의 일시정지를 따르고, timeScale과 진행 상태를 건드리지 않는다.
+            if (DialogueLog.IsOpen) return;
+
             bool inSegment = OpeningMonologue.IsPlaying || FieldCutscene.IsPlaying;
             SetActive(inSegment && Held());
             if (!_active) return;

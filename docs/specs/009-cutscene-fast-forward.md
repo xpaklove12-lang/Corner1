@@ -39,7 +39,7 @@
   - 목표 단계로 상태를 직접 점프시키는 방식은 쓰지 않는다.
   - 가로줄 Image를 여러 개 두고 코드로 옮기는 방식은 쓰지 않는다. 오브젝트가 많아지고 모양이 단조롭다.
   - UI 오브젝트를 코드로 생성하지 않는다. 씬에 저장된 오브젝트를 참조만 한다.
-- 외부 의존성: `OpeningMonologue`, `FieldCutscene`, `GameFlow`, `GameFlowUI`, `Typewriter`
+- 외부 의존성: `OpeningMonologue`, `FieldCutscene`, `GameFlow`, `GameFlowUI`, `Typewriter`, `DialogueLog`(대화 기록 창 열림 여부)
 
 ## 4. 구조
 
@@ -91,7 +91,7 @@ flowchart TD
     A[GameFlowUI 갱신] --> B{FieldCutscene.IsPlaying? - FR-006}
     B -- 아니오 --> C[기존 안내만 표시]
     B -- 예 --> D{대사창 열림?}
-    D -- 예 --> E[Z 다음 · Ctrl 빨리감기 - FR-006]
+    D -- 예 --> E[Space 다음 · Ctrl 빨리감기 - FR-006]
     D -- 아니오 --> F[Ctrl 빨리감기 - FR-006]
 ```
 
@@ -111,7 +111,7 @@ flowchart TD
 - FR-003: 빨리감기 중일 때 `CutsceneFastForward`는 찍히고 있는 글을 바로 끝까지 보여준다.
 - FR-004: 빨리감기 중 한 줄이 끝까지 보인 뒤 자동 넘김 간격(실제 시간)이 지나면 `CutsceneFastForward`는 그 줄을 넘긴다. 독백 재생 중이면 `OpeningMonologue.Advance()`, 아니면 필드 대사창이 열려 있을 때 `GameFlow.AdvanceText()`를 부른다.
 - FR-005: 빨리감기 중일 때 `OpeningMonologue`의 줄 사이 간격과 암전 해제는 배속만큼 빨라진다.
-- FR-006: `FieldCutscene.IsPlaying`이 true일 때 `GameFlowUI`는 필드 조작 안내 자리에 빨리감기 안내 문구를 함께 표시한다. 대사창이 열려 있으면 `Z  다음   ·   Ctrl  빨리감기`, 대사창 없이 이동만 진행 중이면 `Ctrl  빨리감기`만 보인다.
+- FR-006: `FieldCutscene.IsPlaying`이 true일 때 `GameFlowUI`는 필드 조작 안내 자리에 빨리감기 안내 문구를 함께 표시한다. 대사창이 열려 있으면 `Space  다음   ·   Ctrl  빨리감기`, 대사창 없이 이동만 진행 중이면 `Ctrl  빨리감기`만 보인다.
 
 - FR-007: 빨리감기 중일 때 `FastForwardOverlay`는 화면 곳곳의 흰색·회색 가로줄이 오른쪽에서 왼쪽으로 지나가며 흐려져 사라지기를 반복하는 오버레이를 보이고, 빨리감기가 끝나면 페이드로 숨긴다.
 - FR-008: 빨리감기 중일 때 `FastForwardOverlay`는 화면 가운데의 큰 `▶▶` 표시의 불투명도를 일정 주기로 부드럽게 오르내린다.
@@ -132,7 +132,8 @@ flowchart TD
 - 줄을 넘기거나 대사창이 닫힘: `_advanceTimer`를 0으로 되돌려 다음 줄도 간격만큼 보여준 뒤 넘긴다.
 - 대사창 없이 이동·대기만 진행 중 (`Arrive`, `Pause`, `MotherOut`, `Between`, `DaughterIn`, `Sitting`, `ClientOut`, `ClientBetween`, `ClientIn`, `ClientSitting`): 배속만 적용하고 넘기기는 하지 않는다.
 - 컴포넌트가 비활성화되거나 파괴됨: `timeScale`을 1로 되돌린다.
-- 빨리감기 키는 기존 넘기기 키(Z, X, Enter, Space)나 이동 키와 겹치지 않는 `Left Ctrl`을 기본값으로 한다.
+- 대화 기록 창(`DialogueLog.IsOpen`)이 열려 있음: `CutsceneFastForward`는 아무것도 하지 않는다. `timeScale`은 대화 기록 창의 일시정지를 따르고, 자동 넘김도 멈춘다. 창이 닫히면 키가 눌려 있으면 배속을 이어가고, 떼어져 있으면 1로 되돌린다.
+- 빨리감기 키는 기존 넘기기 키(X, Enter, Space), 대화 기록 키(L)나 이동 키와 겹치지 않는 `Left Ctrl`을 기본값으로 한다.
 
 ## 7. Inspector 노출값
 
@@ -166,7 +167,7 @@ flowchart TD
 - FR-003: 독백이나 어머니 대사가 찍히는 도중 키를 누르면 그 줄이 바로 끝까지 보인다.
 - FR-004: 시작 독백 첫 줄에서 키를 계속 누르고 있으면 독백 7줄, 혼잣말 A·B가 자동으로 넘어가고 문 앞 안내 문구에서 멈춘다. 문을 연 뒤 다시 누르고 있으면 어머니 10줄, 퇴장, 은재 입장·착석, 서술 3줄까지 자동으로 진행하고 서술이 끝나면 멈춘다. 상담 뒤 손님 교대도 같은 방식으로 진행하고 다음 손님의 첫마디가 끝나면 멈춘다.
 - FR-005: 독백 줄 사이 공백과 마지막 줄 뒤 암전 해제가 키를 누르고 있을 때 평소보다 짧다.
-- FR-006: 혼잣말 A가 떠 있을 때 오른쪽 위 안내에 `Z  다음   ·   Ctrl  빨리감기`가 보이고, 문 앞 안내 문구가 뜨면 빨리감기 안내가 사라진다. 플레이어가 직접 말을 건 대화에서는 빨리감기 안내가 보이지 않는다.
+- FR-006: 혼잣말 A가 떠 있을 때 오른쪽 위 안내에 `Space  다음   ·   Ctrl  빨리감기`가 보이고, 문 앞 안내 문구가 뜨면 빨리감기 안내가 사라진다. 플레이어가 직접 말을 건 대화에서는 빨리감기 안내가 보이지 않는다.
 - FR-007: Play 중 컷신에서 `Left Ctrl`을 누르고 있으면 흰색·회색 가로줄이 서로 다른 때에 오른쪽에서 왼쪽으로 지나가며 흐려져 사라지고, 시작 독백의 검은 화면 위에서도 보인다. 키를 떼면 짧게 사라진다. 에디트 모드와 평소 플레이에서는 보이지 않는다.
 - FR-008: 빨리감기 중 화면 가운데의 큰 `▶▶`가 꺼지지 않고 흐려졌다 밝아지기를 부드럽게 반복하고, 빨리감기가 끝나면 함께 사라진다.
 
