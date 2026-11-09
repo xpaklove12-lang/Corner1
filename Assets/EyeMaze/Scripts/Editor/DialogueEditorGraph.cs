@@ -2166,24 +2166,32 @@ namespace EyeMaze.EditorTools
                 menu.AddItem(new GUIContent(label + "/기본 화자 (" + g.Actor + ")"), false, () => _pending = InsertRow(doc, group, index, ""));
                 menu.AddItem(new GUIContent(label + "/서술"), false, () => _pending = InsertRow(doc, group, index, TalkScript.Narration));
                 menu.AddItem(new GUIContent(label + "/???"), false, () => _pending = InsertRow(doc, group, index, TalkScript.Unknown));
-                var speakers = new List<string>();
-                foreach (DialogueEditorDocument.Group groupEntry in doc.Groups)
-                    foreach (DialogueEditorDocument.Item line in groupEntry.Items)
-                    {
-                        string speaker = line.Get("speaker");
-                        if (speaker.Length > 0 && speaker != TalkScript.Narration && speaker != TalkScript.Unknown && !speakers.Contains(speaker)) speakers.Add(speaker);
-                    }
-                foreach (FieldNPC npc in Object.FindObjectsByType<FieldNPC>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                    if (!string.IsNullOrEmpty(npc.DisplayName) && !speakers.Contains(npc.DisplayName)) speakers.Add(npc.DisplayName);
-                foreach (ClientCase client in Object.FindObjectsByType<ClientCase>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                    if (!string.IsNullOrEmpty(client.PersonName) && !speakers.Contains(client.PersonName)) speakers.Add(client.PersonName);
-                foreach (string speaker in speakers)
+                foreach (string speaker in SpeakerNames(doc))
                 {
                     string selected = speaker;
                     menu.AddItem(new GUIContent(label + "/" + selected), false, () => _pending = InsertRow(doc, group, index, selected));
                 }
             }
             else menu.AddItem(new GUIContent(label), false, () => _pending = InsertRow(doc, group, index));
+            // Talk 대사 행 위에서 우클릭하면 그 행의 화자를 바꾸는 항목도 보인다. 지금 화자에 체크 표시를 한다.
+            if (g.Section == Csv.SECTION_TALK && row >= 0 && row < g.Items.Count)
+            {
+                menu.AddSeparator("");
+                string current = g.Items[row].Get("speaker");
+                string changeLabel = $"{row + 1}번 행 화자 바꾸기";
+                if (!editable) menu.AddDisabledItem(new GUIContent(changeLabel + " (텍스트 오류 또는 검사 대기 중)"));
+                else
+                {
+                    menu.AddItem(new GUIContent(changeLabel + "/기본 화자 (" + g.Actor + ")"), current.Length == 0, () => _pending = WithSpeaker(doc, group, row, ""));
+                    menu.AddItem(new GUIContent(changeLabel + "/서술"), current == TalkScript.Narration, () => _pending = WithSpeaker(doc, group, row, TalkScript.Narration));
+                    menu.AddItem(new GUIContent(changeLabel + "/???"), current == TalkScript.Unknown, () => _pending = WithSpeaker(doc, group, row, TalkScript.Unknown));
+                    foreach (string speaker in SpeakerNames(doc))
+                    {
+                        string selected = speaker;
+                        menu.AddItem(new GUIContent(changeLabel + "/" + selected), current == selected, () => _pending = WithSpeaker(doc, group, row, selected));
+                    }
+                }
+            }
             if (g.Section == Csv.SECTION_ENDING && !g.Id.StartsWith("@") && g.Get("after").Length == 0)
             {
                 menu.AddSeparator("");
@@ -2191,6 +2199,39 @@ namespace EyeMaze.EditorTools
                 else menu.AddDisabledItem(new GUIContent("after 추가 (텍스트 오류 또는 검사 대기 중)"));
             }
             return menu;
+        }
+
+        /// <summary>
+        /// Talk 화자로 고를 수 있는 이름을 모은다. 파일에 이미 쓰인 화자, 열린 씬의 필드 인물 이름, 손님 이름 순서다.
+        /// doc을 사용하며, 겹치지 않는 이름 목록을 반환한다.
+        /// </summary>
+        private static List<string> SpeakerNames(DialogueEditorDocument doc)
+        {
+            var speakers = new List<string>();
+            foreach (DialogueEditorDocument.Group groupEntry in doc.Groups)
+                foreach (DialogueEditorDocument.Item line in groupEntry.Items)
+                {
+                    string speaker = line.Get("speaker");
+                    if (speaker.Length > 0 && speaker != TalkScript.Narration && speaker != TalkScript.Unknown && !speakers.Contains(speaker)) speakers.Add(speaker);
+                }
+            foreach (FieldNPC npc in Object.FindObjectsByType<FieldNPC>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (!string.IsNullOrEmpty(npc.DisplayName) && !speakers.Contains(npc.DisplayName)) speakers.Add(npc.DisplayName);
+            foreach (ClientCase client in Object.FindObjectsByType<ClientCase>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (!string.IsNullOrEmpty(client.PersonName) && !speakers.Contains(client.PersonName)) speakers.Add(client.PersonName);
+            return speakers;
+        }
+
+        /// <summary>
+        /// Talk 대사 한 행의 화자를 바꾼 복사본을 만든다. 빈 값이면 speaker 칸을 지워 기본 화자(그 actor)가 말한다.
+        /// doc, group, row, speaker를 사용하며, 새 문서를 반환한다.
+        /// </summary>
+        private static DialogueEditorDocument WithSpeaker(DialogueEditorDocument doc, int group, int row, string speaker)
+        {
+            DialogueEditorDocument copy = doc.Clone();
+            DialogueEditorDocument.Item item = copy.Groups[group].Items[row];
+            if (speaker.Length == 0) item.Fields.Remove("speaker");
+            else item.Fields["speaker"] = speaker;
+            return copy;
         }
 
         /// <summary>
