@@ -112,8 +112,8 @@ namespace EyeMaze
             Gamepad pad = Gamepad.current;
             if (kb != null)
             {
-                // Space도 Z처럼 쓴다. 필드와 엔딩(마음의 소리) 대사 넘기기에서만 해당한다.
-                bool endingLines = _state == State.Encounter && _director != null && _director.CurrentMode == EyeMazeDirector.Mode.Ending;
+                // Space도 Z처럼 쓴다. 필드와 엔딩(마음의 소리) 대사, 선택지 결과 줄 넘기기에서만 해당한다.
+                bool endingLines = _state == State.Encounter && _director != null && (_director.CurrentMode == EyeMazeDirector.Mode.Ending || _director.IsReadingResponse);
                 bool spaceAdvance = kb.spaceKey.wasPressedThisFrame && (_state == State.Field || endingLines);
                 interact = kb.zKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || spaceAdvance;
                 leave = kb.qKey.wasPressedThisFrame;
@@ -129,6 +129,8 @@ namespace EyeMaze
                 Vector2 s = pad.leftStick.ReadValue();
                 if (s.sqrMagnitude > 0.04f) move += s;
                 if (_state == State.Field && pad.buttonSouth.wasPressedThisFrame) interact = true;
+                // 선택지 결과 줄은 패드 아래 버튼으로도 넘긴다.
+                if (_state == State.Encounter && _director != null && _director.IsReadingResponse && pad.buttonSouth.wasPressedThisFrame) interact = true;
                 if (pad.buttonEast.wasPressedThisFrame) leave = true;
             }
 
@@ -184,6 +186,7 @@ namespace EyeMaze
                             if (_director.HeartFinished) BeginReturn(true);
                             else _director.NextHeartLine();
                         }
+                        else if (_director.IsReadingResponse && interact) _director.NextResponseLine();
                         else if (_director.CurrentMode == EyeMazeDirector.Mode.Talk && leave) BeginReturn(false);
                     }
                     break;

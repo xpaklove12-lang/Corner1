@@ -153,6 +153,11 @@ namespace EyeMaze
         [NonSerialized] private bool _typingPrev;
         [NonSerialized] private bool _acceptedLastFrame;
         [NonSerialized] private readonly List<ChoiceView> _choices = new List<ChoiceView>();
+        // 스펙 007 FR-033: 여러 줄 결과를 한 줄씩 넘기는 상태
+        [NonSerialized] private readonly List<string> _responseLines = new List<string>();
+        [NonSerialized] private int _responseIndex;
+        [NonSerialized] private string _pendingGoto;
+        [NonSerialized] private int _responseDoneFrame = -1;
 
         /// <summary>화면에 보여줄 선택지 하나 (뒤로가기 포함)</summary>
         public struct ChoiceView
@@ -197,6 +202,11 @@ namespace EyeMaze
 
         /// <summary>파편을 읽는 중이면 시선이 멈춘다.</summary>
         public bool IsReading => _mode == Mode.Gaze && _reading;
+
+        /// <summary>선택지 결과를 한 줄씩 넘기는 중인지. 이때는 선택지와 들여다보기 전환을 받지 않는다.</summary>
+        public bool IsReadingResponse => _mode == Mode.Talk && _responseLines.Count > 0;
+        // 마지막 결과 줄을 넘긴 그 프레임의 Space가 들여다보기를 켜지 않게 한다.
+        private bool BlockTalkKeys => IsReadingResponse || _responseDoneFrame == Time.frameCount;
 
         /// <summary>엔딩 대사를 끝까지 봤는지 (그 다음 입력부터 필드로 돌아갈 수 있음)</summary>
         public bool HeartFinished => _mode == Mode.Ending && _heartIndex >= EndingLines.Count - 1;
@@ -552,6 +562,7 @@ namespace EyeMaze
             _velocity = Vector2.zero;
             if (_cursor != null) _cursor.Visible = false;
             _currentEnding = id;
+            _responseLines.Clear();
             _endingLines = BuildEndingLines(FindEnding(id), prefix);
             _heartIndex = 0;
             ShowHeartLine();
@@ -613,7 +624,7 @@ namespace EyeMaze
         /// </summary>
         public void ChooseOption(int index)
         {
-            if (_mode == Mode.Ending) return;
+            if (_mode == Mode.Ending || IsReadingResponse) return;
             if (_mode == Mode.Gaze) { _message = Strings.Get("msg.no_talk_in_gaze", "들여다보는 중에는 말할 수 없다. (Space로 시선 거두기)"); return; }
             DialogueScript.Node node = CurrentNode;
             if (node == null || index < 0) return;
@@ -628,7 +639,7 @@ namespace EyeMaze
             bool helpful = o.Trust > 0 || o.Dilation > 0f;
             if (helpful && _usedOptions.Contains(key))
             {
-                if (!string.IsNullOrEmpty(o.Goto) && string.IsNullOrEmpty(o.Ending)) { _message = o.Response; GoTo(o.Goto); }
+                if (!string.IsNullOrEmpty(o.Goto) && string.IsNullOrEmpty(o.Ending)) ShowResponse(o.Response, "", o.Goto, null);
                 else _message = Strings.Get("msg.already", "이미 한 이야기다. {name}는 다음 말을 기다리고 있다.", ("name", Name));
                 return;
             }
@@ -643,19 +654,59 @@ namespace EyeMaze
             if (helpful) _burden = Mathf.Max(0f, _burden - _burdenRelief);
             foreach (string f in o.Set) Flags.Set(f);
             if (!string.IsNullOrEmpty(o.Ending)) { StartEnding(o.Ending, o.Response); return; }
-            var sb = new StringBuilder(o.Response);
+            var sb = new StringBuilder();
             if (o.Trust > 0) sb.Append("\n" + Strings.Get("msg.trust_up", "(신뢰가 깊어졌다. 눈 속 어딘가의 문이 열렸다.)"));
             if (o.Trust < 0) sb.Append(Strings.Get("msg.trust_down", "") is string td && td.Length > 0 ? "\n" + td : "");
             if (o.Dilation > 0.05f) sb.Append("\n" + Strings.Get("msg.dilation_up", "(동공이 조금 커졌다.)"));
             if (o.Dilation < -0.05f) sb.Append("\n" + Strings.Get("msg.dilation_down", "(동공이 좁아졌다.)"));
             if (_burden < burdenBefore) sb.Append("\n(부담이 조금 줄었다.)");
-            _message = sb.ToString();
-            if (_person != null && _person.Trust <= _leaveTrust && FindEnding("leave") != null)
+            bool leave = _person != null && _person.Trust <= _leaveTrust && FindEnding("leave") != null;
+            ShowResponse(o.Response, sb.ToString(), o.Goto, leave ? o.Response : null);
+        }
+
+        /// <summary>
+        /// 선택지 결과를 메시지 줄에 띄운다. 결과가 여러 줄이면 첫 줄만 띄우고 장면 이동을 마지막 줄 뒤로 미룬다. leave 판정이면 결과 줄을 앞줄로 leave 엔딩을 시작한다.
+        /// response(줄바꿈으로 나눈 결과), notes(마지막 줄 뒤에 붙일 안내 문구), gotoId, leaveLine(leave 엔딩 앞줄, 판정이 없으면 null)을 사용하며,
+        /// _message와 결과 넘기기 상태를 바꾸고, 한 줄이면 바로 엔딩이나 장면 이동을 한다.
+        /// </summary>
+        private void ShowResponse(string response, string notes, string gotoId, string leaveLine)
+        {
+            _responseLines.Clear();
+            // leave 엔딩이면 결과 줄을 엔딩 앞줄로 넘겨 엔딩 안에서 한 줄씩 보인다 (같은 줄을 두 번 보이지 않게).
+            if (leaveLine != null) { StartEnding("leave", leaveLine); return; }
+            string[] lines = (response ?? "").Split('\n');
+            if (lines.Length <= 1)
             {
-                StartEnding("leave", o.Response);
+                _message = (response ?? "") + notes;
+                if (!string.IsNullOrEmpty(gotoId)) GoTo(gotoId);
                 return;
             }
-            if (!string.IsNullOrEmpty(o.Goto)) GoTo(o.Goto);
+            _responseLines.AddRange(lines);
+            _responseLines[_responseLines.Count - 1] += notes;
+            _responseIndex = 0;
+            _pendingGoto = gotoId;
+            _message = _responseLines[0];
+        }
+
+        /// <summary>
+        /// 선택지 결과를 다음 줄로 넘긴다. 마지막 줄 다음이면 미뤄 둔 장면 이동을 한다. 입력은 GameFlow가 받아서 이 메서드를 부른다.
+        /// 입력값은 없으며, 결과 줄 번호와 _message, 대화 장면 또는 엔딩을 바꾼다.
+        /// </summary>
+        public void NextResponseLine()
+        {
+            if (!IsReadingResponse) return;
+            if (_responseIndex < _responseLines.Count - 1)
+            {
+                _responseIndex++;
+                _message = _responseLines[_responseIndex];
+                return;
+            }
+            // 마지막 줄은 메시지 줄에 남긴 채 다음 장면으로 간다.
+            string gotoId = _pendingGoto;
+            _responseLines.Clear();
+            _pendingGoto = null;
+            _responseDoneFrame = Time.frameCount;
+            if (!string.IsNullOrEmpty(gotoId)) GoTo(gotoId);
         }
 
         /// <summary>
@@ -762,6 +813,8 @@ namespace EyeMaze
             _heartIndex = 0;
             _currentEnding = "";
             _endingLines = null;
+            _responseLines.Clear();
+            _pendingGoto = null;
             _usedOptions.Clear();
             if (_core != null) _core.ResetState();
             DialogueScript script = Script;
@@ -813,9 +866,10 @@ namespace EyeMaze
                 if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) move.x -= 1f;
 
                 // Space를 누르면 들여다보거나 시선을 거둔다. 만남 화면에 막 들어온 프레임의 누름은 무시한다.
-                if (kb.spaceKey.wasPressedThisFrame && _acceptedLastFrame) ToggleGaze();
+                // 결과 줄을 넘기는 동안 Space와 숫자는 받지 않는다. 줄 넘기기는 GameFlow가 한다.
+                if (kb.spaceKey.wasPressedThisFrame && _acceptedLastFrame && !BlockTalkKeys) ToggleGaze();
                 if (kb.rKey.wasPressedThisFrame) ResetAll();
-                if (_mode == Mode.Talk)
+                if (_mode == Mode.Talk && !BlockTalkKeys)
                 {
                     if (kb.digit1Key.wasPressedThisFrame) ChooseOption(0);
                     else if (kb.digit2Key.wasPressedThisFrame) ChooseOption(1);
@@ -828,7 +882,7 @@ namespace EyeMaze
             {
                 Vector2 stick = pad.leftStick.ReadValue();
                 if (stick.sqrMagnitude > 0.04f) move += stick;
-                if (pad.buttonSouth.wasPressedThisFrame && _acceptedLastFrame) ToggleGaze();
+                if (pad.buttonSouth.wasPressedThisFrame && _acceptedLastFrame && !BlockTalkKeys) ToggleGaze();
             }
             Steer(move, dt);
         }
@@ -1063,7 +1117,8 @@ namespace EyeMaze
         private List<string> BuildEndingLines(EndingDef e, string prefix)
         {
             var list = new List<string>();
-            if (!string.IsNullOrEmpty(prefix)) list.Add(prefix);
+            // 직접 엔딩 선택지의 결과가 여러 줄이면 한 줄씩 넘긴다.
+            if (!string.IsNullOrEmpty(prefix)) foreach (string l in prefix.Split('\n')) if (l.Length > 0) list.Add(l);
             if (e != null)
             {
                 if (e.Lines != null) foreach (string l in e.Lines) if (!string.IsNullOrEmpty(l)) list.Add(l);

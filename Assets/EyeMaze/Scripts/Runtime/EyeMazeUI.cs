@@ -78,7 +78,8 @@ namespace EyeMaze
             Set(_message, Prefixed(d.Personalize(d.Message), _messagePrefix));
             Set(_memories, d.CollectedSummary());
 
-            IReadOnlyList<EyeMazeDirector.ChoiceView> choices = d.CurrentMode == EyeMazeDirector.Mode.Talk
+            // 선택지 결과를 한 줄씩 넘기는 동안에는 선택지를 숨긴다.
+            IReadOnlyList<EyeMazeDirector.ChoiceView> choices = d.CurrentMode == EyeMazeDirector.Mode.Talk && !d.IsReadingResponse
                 ? d.CurrentChoices() : System.Array.Empty<EyeMazeDirector.ChoiceView>();
             EnsureButtons(choices.Count);
             LayoutButtons(choices.Count);

@@ -86,7 +86,7 @@ section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,end
 | id | 장면 id | `window` |
 | situation | 장면 상황 설명. 그 장면의 **첫 줄에만** 씁니다 | 은재가 창밖만 보고 있다. |
 | text | 내가 하는 말 (선택지) | 오늘은 좀 어떠세요? |
-| response | 상대 반응 | 대답이 없다. |
+| response | 상대 반응. 줄바꿈 표기 `\n`으로 나눈 줄은 게임에서 한 줄씩 넘긴다(빈 줄은 쓰지 않는다) | 대답이 없다. |
 | need | 이 선택지를 고르는 데 필요한 플래그. 여러 개면 `\|`로 구분하고, 모두 켜져야 합니다. 안 켜져 있으면 `???`로 보입니다 | `eunjae_piano_hands` |
 | set | 고르면 켜지는 플래그 (`\|`로 여러 개) | `asked_piano` |
 | trust | 신뢰 변화 (정수) | `1` / `-1` |
