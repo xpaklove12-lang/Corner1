@@ -49,7 +49,7 @@ flowchart TD
 
 - FR-001: 들여다보는 동안 이전 깜빡임이 끝나고 `_blinkInterval`초가 지날 때마다 `EyeMazeDirector`는 눈을 한 번 깜빡인다.
 - FR-002: 단서 말풍선을 닫을 때 `EyeMazeDirector`는 눈을 깜빡이지 않는다.
-- FR-003: `_respawnMazeAfterReading`이 켜진 상태에서 단서 말풍선을 닫을 때 `EyeMazeDirector`는 시선이 있는 층을 뺀 나머지 층의 벽을 무작위로 다시 만든다.
+- FR-003: `_respawnMazeAfterReading`이 켜진 상태에서 단서 말풍선을 닫을 때 `EyeMazeDirector`는 시선이 있는 층을 뺀 나머지 층의 벽을 무작위로 다시 만든다. 바뀌는 모습은 스펙 010 FR-017의 파문 교차 전환으로 보여 준다.
 - FR-004: FR-003의 벽 재생성이 일어날 때 `EyeMazeDirector`는 "다른 층의 길이 바뀌었다." 문구를 표시한다.
 
 ### 상태와 데이터
