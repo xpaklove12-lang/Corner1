@@ -50,6 +50,13 @@ namespace EyeMaze
         [SerializeField] private bool _fitToPassage;
         [Tooltip("그림 가로 길이를 통로 폭의 몇 배로 맞출지")]
         [SerializeField, Range(0.3f, 1.5f)] private float _passageFill = 0.9f;
+        // 스펙 015: 그림이 옆 통로를 덮지 않도록 두께 상한과 막힌 범위 표시선 추가
+        [Tooltip("그림 두께(통로를 따라가는 방향)의 상한. 고리 폭의 몇 배까지 허용할지")]
+        [SerializeField, Range(0.2f, 1f)] private float _thicknessFill = 0.6f;
+        [Tooltip("막고 있는 동안 막힌 길목 전체에 긋는 선의 색")]
+        [SerializeField] private Color _barrierColor = new Color(1f, 1f, 1f, 0.9f);
+        [Tooltip("막힌 길목에 긋는 선의 굵기")]
+        [SerializeField] private float _barrierWidth = 0.025f;
 
         [Header("길 냄")]
         [Tooltip("열린 벽 자리에 그리는 오선 색")]
@@ -96,6 +103,8 @@ namespace EyeMaze
         [NonSerialized] private int _passageSector;
         [NonSerialized] private MazeWall _openedWall;
         [NonSerialized] private bool _flipped;
+        // 스펙 015: 막힌 길목 표시선 렌더러 추가
+        [NonSerialized] private LineRenderer _barrier;
         // 뒤집힘 진행도 (0~1). 뒤집히지 않았으면 0이다.
         [NonSerialized] private float _flipT;
         [NonSerialized] private LineRenderer[] _staff;
@@ -177,10 +186,12 @@ namespace EyeMaze
             _renderer.sprite = flippedLook && _flippedSprite != null ? _flippedSprite : _sprite;
             Color tint = flippedLook && _flippedSprite == null ? _flippedTint : Color.white;
             _renderer.sortingOrder = SORTING_ORDER;
-            _renderer.enabled = shown > 0f;
+            // 수정(015): Play 중 길목을 맡지 못한 사물은 막지 않으므로 그리지 않는다.
+            _renderer.enabled = shown > 0f && (!Application.isPlaying || _hasPassage || _kind == MazePropKind.OpenPath);
             _renderer.color = new Color(tint.r, tint.g, tint.b, tint.a * alpha);
             UpdateOpenedWall();
             DrawStaff(alpha);
+            DrawBarrier(alpha);
         }
 
         /// <summary>
@@ -321,7 +332,9 @@ namespace EyeMaze
             Vector3 full = _sceneScale;
             if (_fitToPassage && _renderer.sprite != null)
             {
-                float s = _passageFill * width / Mathf.Max(0.01f, _sprite.bounds.size.x);
+                // 수정(015): 통로 폭에만 맞추던 크기를 두께 상한(고리 폭 × _thicknessFill)으로도 제한해 옆 통로를 덮지 않게 했다.
+                float s = Mathf.Min(_passageFill * width / Mathf.Max(0.01f, _sprite.bounds.size.x),
+                    _thicknessFill * _maze.RingWidth / Mathf.Max(0.01f, _sprite.bounds.size.y));
                 full = new Vector3(s, s, 1f);
                 transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(across.y, across.x) * Mathf.Rad2Deg);
             }
@@ -407,9 +420,46 @@ namespace EyeMaze
             return line.transform.InverseTransformPoint(world);
         }
 
+        /// <summary>
+        /// 스펙 015: 사물이 길목을 막고 있는 동안 막힌 길목 전체를 가로지르는 선을 그어, 보이는 범위와 막히는 범위를 같게 한다. 막지 않으면 숨긴다.
+        /// alpha, Blocks, 맡은 면, _barrierColor, _barrierWidth를 사용하며, 저장되지 않는 자식 LineRenderer를 만들거나 점과 색을 바꾼다.
+        /// </summary>
+        private void DrawBarrier(float alpha)
+        {
+            if (!Application.isPlaying || !Blocks || alpha <= 0f)
+            {
+                if (_barrier != null) _barrier.enabled = false;
+                return;
+            }
+            if (_barrier == null)
+            {
+                var go = new GameObject("막힘 선") { hideFlags = HideFlags.HideAndDontSave };
+                go.transform.SetParent(transform, false);
+                _barrier = Shapes.Ensure(go, _maze.LineMaterial, 0);
+            }
+            Vector3 center = PassageCenterLocal();
+            PassageAcross(out Vector3 across, out float width);
+            Vector3 a = ToStaffSpace(_barrier, center - across * width * 0.5f);
+            Vector3 b = ToStaffSpace(_barrier, center + across * width * 0.5f);
+            Shapes.SetPoints(_barrier, new[] { a, b }, false);
+            _barrier.widthMultiplier = _barrierWidth;
+            _barrier.sortingOrder = SORTING_ORDER - 1;
+            Color c = _barrierColor;
+            c.a *= alpha;
+            Shapes.SetColor(_barrier, c);
+            _barrier.enabled = true;
+        }
+
         /// <summary>오선 렌더러 오브젝트를 지운다. _staff를 비운다.</summary>
         private void DestroyStaff()
         {
+            // 스펙 015: 막힘 선도 함께 지운다
+            if (_barrier != null)
+            {
+                if (Application.isPlaying) Destroy(_barrier.gameObject);
+                else DestroyImmediate(_barrier.gameObject);
+                _barrier = null;
+            }
             if (_staff == null) return;
             foreach (LineRenderer l in _staff)
             {
