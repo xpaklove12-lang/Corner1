@@ -49,7 +49,8 @@ namespace EyeMaze.EditorTools
         public static readonly string[] DAY_COLUMNS =
         {
             "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring",
-            "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need",
+            // 스펙 015: 선택지의 감정 열 emotion 추가
+            "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need", "emotion",
         };
 
         private static readonly string[] STRINGS_COLUMNS = { "key", "text", "memo" };
@@ -71,7 +72,8 @@ namespace EyeMaze.EditorTools
             IdColumn = "id",
             BodyColumn = TEXT,
             GroupColumns = new[] { "situation", "back" },
-            ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "spring", "memo", "ending", "rest", "ending_need" },
+            // 스펙 015: 선택지 속성에 emotion 추가
+            ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "spring", "memo", "ending", "rest", "ending_need", "emotion" },
             NumberColumns = new[] { "trust", "dilation", "spring" },
         };
 

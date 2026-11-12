@@ -8,7 +8,7 @@ namespace EyeMaze
     /// <summary>
     /// 인물·회차 CSV(Data/Dialogue/인물_DayN.csv)에서 section=dialogue 행을 읽은 결과.
     /// 줄 하나가 선택지 하나이고, 같은 id 값을 가진 줄들이 한 장면이 된다. 첫 장면이 시작 장면이다.
-    /// 열: id, situation, text, response, need, set, trust, dilation, spring, goto, ending, back (그 밖의 열은 이 단계에서 무시).
+    /// 열: id, situation, text, response, need, set, trust, dilation, spring, goto, ending, back, rest, ending_need, emotion (그 밖의 열은 이 단계에서 무시).
     /// section 열이 없는 옛 형식 파일은 node 열을 장면 id로 읽는다.
     /// 자세한 규칙은 Data/README.md에 있다.
     /// </summary>
@@ -36,6 +36,8 @@ namespace EyeMaze
             public string[] EndingNeed = Array.Empty<string>();
             // 스펙 011: 내담자가 쉬자고 할 때의 대사 추가
             public string Rest;
+            // 스펙 015: 고른 뒤 내담자의 감정 추가 (비었거나 정해지지 않은 값이면 null)
+            public ClientEmotion? Emotion;
             public int Line;
         }
 
@@ -142,6 +144,8 @@ namespace EyeMaze
                     Ending = r["ending"],
                     EndingNeed = r.List("ending_need"),
                     Rest = Text(r["rest"]),
+                    // 스펙 015: emotion 칸을 감정으로 읽는다
+                    Emotion = ReadEmotion(r, s.Errors),
                     Line = r.Line,
                 });
             }
@@ -166,5 +170,18 @@ namespace EyeMaze
         /// s를 사용하며, 바뀐 글을 반환한다.
         /// </summary>
         private static string Text(string s) => s.Replace("\\n", "\n");
+
+        /// <summary>
+        /// 스펙 015: 선택지 행의 emotion 칸을 감정으로 읽는다. 정해지지 않은 값은 오류로 남기고 감정을 바꾸지 않는다.
+        /// r과 errors를 사용하며, 감정 또는 (비었거나 틀린 값이면) null을 반환한다.
+        /// </summary>
+        private static ClientEmotion? ReadEmotion(Csv.Row r, List<string> errors)
+        {
+            string v = r["emotion"];
+            if (v.Length == 0) return null;
+            if (ClientEmotionCsv.TryParse(v, out ClientEmotion e)) return e;
+            errors.Add($"{r.Line}행 emotion '{v}'는 정해진 값({ClientEmotionCsv.VALUES})이 아니다.");
+            return null;
+        }
     }
 }

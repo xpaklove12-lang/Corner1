@@ -94,8 +94,23 @@ namespace EyeMaze
         [NonSerialized] private MeshRenderer _tearRenderer;
         [NonSerialized] private Vector3[] _tearVertices;
         [NonSerialized] private Color[] _tearColors;
+        // 스펙 015: 감정 표현의 눈꺼풀 닫힘, 홍채 색조, 눈물 수위 추가
+        [NonSerialized] private float _emotionClosed;
+        [NonSerialized] private Color _emotionTint = Color.clear;
+        [NonSerialized] private float _emotionTearLevel;
 
         public float Focus { get => _focus; set => _focus = value; }
+
+        /// <summary>감정 표현의 눈꺼풀 닫힘 (0~1). 깜빡임과 함께 있으면 큰 쪽으로 그린다.</summary>
+        public float EmotionClosed { get => _emotionClosed; set => _emotionClosed = Mathf.Clamp01(value); }
+        /// <summary>감정 표현의 홍채 색조. 알파가 섞는 세기다.</summary>
+        public Color EmotionTint { get => _emotionTint; set => _emotionTint = value; }
+        /// <summary>감정 표현의 눈물 수위 (0~1). 휴식 신호 눈물과 함께 있으면 큰 쪽으로 그린다.</summary>
+        public float EmotionTearLevel { get => _emotionTearLevel; set => _emotionTearLevel = Mathf.Clamp01(value); }
+
+        // 스펙 015: 그릴 때 쓰는 눈꺼풀 닫힘과 눈물 수위 (기존 값과 감정 값 중 큰 쪽)
+        private float DrawnClosed => Mathf.Max(_closed, _emotionClosed);
+        private float DrawnTearLevel => Mathf.Max(_tearLevel, _emotionTearLevel);
 
         /// <summary>눈물 수위 (0 = 없음, 1 = 가득)</summary>
         public float TearLevel { get => _tearLevel; set => _tearLevel = Mathf.Clamp01(value); }
@@ -105,12 +120,13 @@ namespace EyeMaze
 
         /// <summary>
         /// 윗눈꺼풀이 지나는 점을 계산한다. 눈이 감길수록 가운데 선으로 내려온다.
-        /// t(0 = 왼쪽 눈꼬리, 1 = 오른쪽 눈꼬리)와 _closed를 사용하며, 로컬 좌표를 반환한다.
+        /// t(0 = 왼쪽 눈꼬리, 1 = 오른쪽 눈꼬리)와 _closed, _emotionClosed 중 큰 값을 사용하며, 로컬 좌표를 반환한다.
         /// </summary>
         public Vector3 UpperEdge(float t)
         {
             float x = Mathf.Lerp(-_scleraWidth * 0.5f, _scleraWidth * 0.5f, t);
-            float y = _scleraHeight * 0.5f * _lens.Evaluate(Mathf.Clamp01(t)) * (1f - _closed);
+            // 스펙 015: 깜빡임과 감정의 눈꺼풀 닫힘 중 큰 값으로 그림
+            float y = _scleraHeight * 0.5f * _lens.Evaluate(Mathf.Clamp01(t)) * (1f - DrawnClosed);
             return new Vector3(x, y, 0f);
         }
 
@@ -122,20 +138,24 @@ namespace EyeMaze
             // 스펙 011: 수면이 일렁이므로 눈 모양 캐시와 상관없이 매 프레임 그린다.
             DrawTear();
             float irisRadius = _maze != null ? _maze.OuterRadius : 3f;
+            // 스펙 015: 감정의 홍채 색조가 바뀌어도 다시 그림
             int key = HashCode.Combine(
                 HashCode.Combine(_scleraWidth, _scleraHeight, _scleraColor, _irisColor, _rimColor, irisRadius, _focus, _irisDiscPadding),
                 HashCode.Combine(_rimWidth, _lidColor, _lidWidth, _lidOvershoot, _lashCount, _lashLength, _lashWidth, _lashSpread),
-                _lashes != null ? _lashes.Length : 0);
+                _lashes != null ? _lashes.Length : 0, _emotionTint);
             // 스펙 006: 깜빡임 중에는 눈꺼풀 부분만 다시 그린다.
             bool shapeChanged = key != _drawnKey;
-            int lidKey = HashCode.Combine(key, _closed, _lidCoverColor);
+            // 스펙 015: 감정의 눈꺼풀 닫힘이 바뀌어도 눈꺼풀을 다시 그림
+            int lidKey = HashCode.Combine(key, _closed, _emotionClosed, _lidCoverColor);
             if (!shapeChanged && lidKey == _drawnLidKey) return;
             _drawnKey = key;
             _drawnLidKey = lidKey;
 
             float f = _focus * _focus * (3f - 2f * _focus);
             var dimSclera = Color.Lerp(_scleraColor * 0.45f, _scleraColor, f); dimSclera.a = _scleraColor.a;
-            var dimIris = Color.Lerp(new Color(0.22f, 0.2f, 0.19f, _irisColor.a), _irisColor, f);
+            // 스펙 015: 홍채 색에 감정 색조를 알파만큼 섞음
+            Color iris = Color.Lerp(_irisColor, new Color(_emotionTint.r, _emotionTint.g, _emotionTint.b, _irisColor.a), _emotionTint.a);
+            var dimIris = Color.Lerp(new Color(0.22f, 0.2f, 0.19f, _irisColor.a), iris, f);
             var softRim = _rimColor; softRim.a *= Mathf.Lerp(0.25f, 1f, f);
             var lid = Color.Lerp(_lidColor * 0.45f, _lidColor, f); lid.a = _lidColor.a;
 
@@ -216,18 +236,20 @@ namespace EyeMaze
 
         /// <summary>
         /// 위아래 눈꺼풀이 덮은 영역을 메시로 그린다. Play 중에만 그리고 눈을 뜨고 있으면 숨긴다.
-        /// _closed, 흰자 크기, _lidCoverColor를 사용하며, 덮개 메시의 정점과 표시 상태를 바꾼다.
+        /// _closed와 _emotionClosed 중 큰 값, 흰자 크기, _lidCoverColor를 사용하며, 덮개 메시의 정점과 표시 상태를 바꾼다.
         /// </summary>
         private void DrawCover()
         {
             if (!Application.isPlaying || _sclera == null) return;
             if (_coverMesh == null) CreateCover();
-            _coverRenderer.enabled = _closed > 0f;
+            // 스펙 015: 깜빡임과 감정의 눈꺼풀 닫힘 중 큰 값으로 덮음
+            float closed = DrawnClosed;
+            _coverRenderer.enabled = closed > 0f;
             if (!_coverRenderer.enabled) return;
 
             float halfWidth = _scleraWidth * 0.5f;
             float halfHeight = _scleraHeight * 0.5f;
-            float open = 1f - _closed;
+            float open = 1f - closed;
             for (int i = 0; i < COVER_COLUMNS; i++)
             {
                 float t = i / (COVER_COLUMNS - 1f);
@@ -284,28 +306,30 @@ namespace EyeMaze
 
         /// <summary>
         /// 눈 아래쪽부터 차오르는 눈물을 흰자 모양에 맞춰 메시로 그린다. Play 중에만 그리고 수위가 0이면 숨긴다.
-        /// _tearLevel, 흰자 크기, 눈물 설정값을 사용하며, 눈물 메시의 정점과 표시 상태를 바꾼다.
+        /// _tearLevel과 _emotionTearLevel 중 큰 값, 흰자 크기, 눈물 설정값을 사용하며, 눈물 메시의 정점과 표시 상태를 바꾼다.
         /// </summary>
         private void DrawTear()
         {
             if (!Application.isPlaying || _sclera == null) return;
+            // 스펙 015: 휴식 신호와 감정의 눈물 수위 중 큰 값으로 그림
+            float level = DrawnTearLevel;
             if (_tearMesh == null)
             {
-                if (_tearLevel <= 0f) return;
+                if (level <= 0f) return;
                 CreateTear();
             }
-            _tearRenderer.enabled = _tearLevel > 0f;
+            _tearRenderer.enabled = level > 0f;
             if (!_tearRenderer.enabled) return;
 
             float halfWidth = _scleraWidth * 0.5f;
             float halfHeight = _scleraHeight * 0.5f;
-            float surface = -halfHeight + _scleraHeight * _tearMaxHeight * _tearLevel;
+            float surface = -halfHeight + _scleraHeight * _tearMaxHeight * level;
             float phase = Time.time * _tearWaveSpeed;
             for (int i = 0; i < COVER_COLUMNS; i++)
             {
                 float t = i / (COVER_COLUMNS - 1f);
                 float edge = halfHeight * _lens.Evaluate(t);
-                float wave = Mathf.Sin(t * TEAR_WAVE_FREQUENCY + phase) * _tearWaveHeight * _tearLevel;
+                float wave = Mathf.Sin(t * TEAR_WAVE_FREQUENCY + phase) * _tearWaveHeight * level;
                 float x = Mathf.Lerp(-halfWidth, halfWidth, t);
                 _tearVertices[i * 2] = new Vector3(x, Mathf.Clamp(surface + wave, -edge, edge), 0f);
                 _tearVertices[i * 2 + 1] = new Vector3(x, -edge, 0f);

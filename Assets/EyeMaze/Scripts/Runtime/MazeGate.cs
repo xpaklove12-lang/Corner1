@@ -19,6 +19,11 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("requiredTrust")] private int _requiredTrust = 1;
         [Tooltip("필요한 동공 열림 0~1 (-1 = 조건 없음)")]
         [SerializeField, FormerlySerializedAs("requiredDilation")] private float _requiredDilation = -1f;
+        // 스펙 018: 선택지가 켜는 플래그로 여는 조건과 문 번호 추가
+        [Tooltip("이 문을 여는 플래그 (비우면 플래그 조건 없음). 적혀 있으면 신뢰는 보지 않는다")]
+        [SerializeField] private string _requiredFlag = "";
+        [Tooltip("바깥에서 몇 번째 층 문인지. 막혔을 때 문구를 고르는 데 쓴다")]
+        [SerializeField] private int _order = 1;
         [SerializeField, FormerlySerializedAs("lockedMessage"), TextArea] private string _lockedMessage = "잠겨 있다.";
 
         [Header("그림")]
@@ -38,14 +43,16 @@ namespace EyeMaze
         /// <summary>
         /// 막혔을 때 문구. Strings.csv의 gate.pupil(동공 문) / gate.first(첫 문) / gate.deep(그 안쪽 문)이 있으면 그걸 쓴다.
         /// </summary>
-        public string LockedMessage => Strings.Get(_requiredDilation >= 0f ? "gate.pupil" : _requiredTrust <= 1 ? "gate.first" : "gate.deep", _lockedMessage);
+        public string LockedMessage => Strings.Get(_requiredDilation >= 0f ? "gate.pupil" : _order <= 1 ? "gate.first" : "gate.deep", _lockedMessage);
 
         /// <summary>
         /// 새로 만든 문의 위치, 조건, 그림을 한 번에 설정한다.
-        /// ring, sector, requiredTrust, requiredDilation, lockedMessage, line을 사용하며, 이 문의 설정값을 바꾼다.
+        /// ring, sector, requiredTrust, requiredDilation, lockedMessage, line, requiredFlag, order를 사용하며, 이 문의 설정값을 바꾼다.
         /// </summary>
-        public void Setup(int ring, int sector, int requiredTrust, float requiredDilation, string lockedMessage, LineRenderer line)
+        public void Setup(int ring, int sector, int requiredTrust, float requiredDilation, string lockedMessage, LineRenderer line, string requiredFlag, int order)
         {
+            _requiredFlag = requiredFlag;
+            _order = order;
             _ring = ring;
             _sector = sector;
             _requiredTrust = requiredTrust;
@@ -57,13 +64,15 @@ namespace EyeMaze
 
         /// <summary>
         /// 상대의 지금 상태로 이 문을 지나갈 수 있는지 판단한다.
-        /// p의 신뢰와 동공 열림을 사용하며, 지나갈 수 있으면 true를 반환한다.
+        /// p의 신뢰와 동공 열림, _requiredFlag를 사용하며, 지나갈 수 있으면 true를 반환한다.
         /// </summary>
         public bool CanPass(Person p)
         {
             if (p == null) return true;
+            // 스펙 018: 여는 플래그가 적힌 문은 그 플래그로만 판단하고 신뢰는 보지 않는다.
+            bool byFlag = !string.IsNullOrEmpty(_requiredFlag);
             // 스펙 004: 안 좋은 말의 감점이 문을 막지 않도록 GateTrust로 판단
-            bool trustOk = _requiredTrust < 0 || p.GateTrust >= _requiredTrust;
+            bool trustOk = byFlag ? Flags.IsOn(_requiredFlag) : _requiredTrust < 0 || p.GateTrust >= _requiredTrust;
             bool dilOk = _requiredDilation < 0f || p.Dilation >= _requiredDilation;
             return trustOk && dilOk;
         }

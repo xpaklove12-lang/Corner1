@@ -68,7 +68,38 @@ namespace EyeMaze
         [NonSerialized] private string _highlightTitle;
         [NonSerialized] private Color _highlightColor;
 
+        // 스펙 019: 단서로 선택지가 열렸을 때 관찰 중지 버튼 글의 맥동 색과 주기 추가
+        [Header("단서 해금 안내")]
+        [Tooltip("관찰 중지 버튼 글이 맥동할 때 오가는 색")]
+        [SerializeField] private Color _gazePulseColor = new Color(0.85f, 0.35f, 0.1f, 1f);
+        [Tooltip("관찰 중지 버튼 글 색이 한 번 오가는 시간(초)")]
+        [SerializeField] private float _newTalkPulseSeconds = 1.2f;
+
+        [NonSerialized] private bool _baseColorSaved;
+        [NonSerialized] private Color _gazeLabelBaseColor;
+
+        // 스펙 019: 기억 목록을 줄마다 누를 수 있는 버튼으로 표시
+        [Header("기억 목록 줄")]
+        [Tooltip("주운 파편을 한 줄씩 보여 주는 버튼. 비우면 기억 목록 글 하나로 보여 준다")]
+        [SerializeField] private Button[] _memoryRows = new Button[0];
+        [SerializeField] private Text[] _memoryRowLabels = new Text[0];
+        [Tooltip("줄을 눌렀을 때 여는 파편 요약 패널")]
+        [SerializeField] private FragmentRecapUI _recap;
+
+        [NonSerialized] private readonly List<MemoryFragment> _rowFragments = new List<MemoryFragment>();
+
         // 스펙 006: 깜빡임 전체 화면 페이드 필드 제거
+
+        void Awake()
+        {
+            // 스펙 019: 줄 버튼 클릭은 Play를 시작할 때 한 번만 연결한다.
+            if (!Application.isPlaying) return;
+            for (int i = 0; i < _memoryRows.Length; i++)
+            {
+                int row = i;
+                _memoryRows[i].onClick.AddListener(() => OpenRecap(row));
+            }
+        }
 
         // 스펙 012: 파편 획득과 연출 정리 이벤트 구독
         void OnEnable()
@@ -111,6 +142,8 @@ namespace EyeMaze
                 sit = Strings.Get("ui.gaze_situation", "{name}의 눈 속 — {layer}", ("name", p != null ? p.DisplayName : ""), ("layer", layer != null ? layer.DisplayName : ""));
                 // 스펙 011: 신호 중 들여다보면 대화로 돌아오라는 온보딩 문구를 추가
                 if (d.RestRequested) sit += "\n" + Strings.Get("ui.rest_hint_gaze", "{name}가 하고 싶은 말이 있는 거 같다. 잠시 관찰을 멈춰보자.", ("name", p != null ? p.DisplayName : ""));
+                // 스펙 019 FR-002: 단서로 선택지가 열렸으면 대화로 돌아갈 이유를 알린다
+                if (d.NewTalkReady) sit += "\n" + Strings.Get("ui.new_talk_hint", "(새로 꺼낼 수 있는 이야기가 생겼다. 관찰을 멈춰보자.)");
             }
             // 스펙 011: 신호 중에는 장면 설명 자리에 쉬자는 대사를 표시
             // 스펙 011: 쉬게 해 줄 때임을 알리는 온보딩 문구를 대사 아래에 추가
@@ -121,7 +154,10 @@ namespace EyeMaze
             Set(_situation, string.IsNullOrEmpty(sit) ? "" : _situationPrefix + sit);
             Set(_message, Prefixed(d.Personalize(d.Message), _messagePrefix));
             // 스펙 012: 새로 얻은 파편 줄을 강조해 표시
-            Set(_memories, HighlightedSummary(d.CollectedSummary()));
+            // 스펙 019 FR-007: 줄 버튼이 있으면 머리글만 글로 쓰고 파편은 줄 버튼으로 보인다
+            if (_memoryRows.Length == 0) Set(_memories, HighlightedSummary(d.CollectedSummary()));
+            else UpdateMemoryRows(d);
+            if (!_baseColorSaved) SaveBaseColor();
 
             // 선택지 결과를 한 줄씩 넘기는 동안에는 선택지를 숨긴다.
             IReadOnlyList<EyeMazeDirector.ChoiceView> choices = d.CurrentMode == EyeMazeDirector.Mode.Talk && !d.IsReadingResponse
@@ -136,6 +172,7 @@ namespace EyeMaze
                 if (!show || i >= _optionLabels.Length) continue;
                 EyeMazeDirector.ChoiceView c = choices[i];
                 Set(_optionLabels[i], c.Available ? $"{i + 1}. {c.Text}" : $"{i + 1}. " + Strings.Get("ui.locked_choice", "??? (아직 모르는 이야기)"));
+
             }
 
             if (_burdenFill != null)
@@ -167,6 +204,7 @@ namespace EyeMaze
 
             // 스펙 004: 들어갈 때는 마음 읽기, 나올 때는 관찰 중지로 표시
             Set(_gazeButtonLabel, d.CurrentMode == EyeMazeDirector.Mode.Gaze ? Strings.Get("ui.gaze_button_gaze", "관찰 중지 (Space)") : Strings.Get("ui.gaze_button", "마음 읽기 (Space)"));
+            UpdateGazeLabelPulse(d);
             Set(_hint, d.IsReading
                 ? Strings.Get("hint.reading", "Space  계속")
                 : d.InAbyss
@@ -188,6 +226,73 @@ namespace EyeMaze
             _highlightTitle = fragment.Title;
             _highlightColor = fragment.Tint;
             _highlightT = _highlightSeconds;
+        }
+
+        /// <summary>
+        /// 스펙 019: 관찰 버튼 글의 씬 저장 색을 기억해 맥동이 끝났을 때 되돌릴 기준으로 삼는다.
+        /// _gazeButtonLabel을 사용하며, _gazeLabelBaseColor와 _baseColorSaved를 바꾼다.
+        /// </summary>
+        private void SaveBaseColor()
+        {
+            _baseColorSaved = true;
+            _gazeLabelBaseColor = _gazeButtonLabel.color;
+        }
+
+        /// <summary>
+        /// 스펙 019 FR-003: 해금 안내 중 들여다보는 동안 관찰 중지 버튼 글의 색을 원래 색과 강조 색 사이에서 오가게 하고, 아니면 원래 색으로 되돌린다.
+        /// d의 모드와 NewTalkReady, _gazePulseColor, _newTalkPulseSeconds를 사용하며, _gazeButtonLabel의 색을 바꾼다.
+        /// </summary>
+        private void UpdateGazeLabelPulse(EyeMazeDirector d)
+        {
+            Color color = _gazeLabelBaseColor;
+            if (Application.isPlaying && d.NewTalkReady && d.CurrentMode == EyeMazeDirector.Mode.Gaze)
+            {
+                // 패널이나 기록 창으로 시간이 멈춰도 맥동이 이어지도록 실제 시간을 쓴다.
+                float wave = 0.5f - 0.5f * Mathf.Cos(Time.unscaledTime / Mathf.Max(0.05f, _newTalkPulseSeconds) * Mathf.PI * 2f);
+                color = Color.Lerp(_gazeLabelBaseColor, _gazePulseColor, wave);
+            }
+            if (_gazeButtonLabel.color != color) _gazeButtonLabel.color = color;
+        }
+
+        /// <summary>
+        /// 스펙 019 FR-007: 기억 목록의 머리글을 쓰고, 주운 파편을 줄 버튼에 하나씩 채운 뒤 남는 줄을 숨긴다. 새로 얻은 파편의 줄은 색을 강조한다.
+        /// d의 파편 목록과 요약 글, _highlightT를 사용하며, _memories 글, 줄 버튼의 활성 상태와 글, 글 색, _rowFragments, _highlightT를 바꾼다.
+        /// </summary>
+        private void UpdateMemoryRows(EyeMazeDirector d)
+        {
+            _rowFragments.Clear();
+            foreach (MemoryFragment f in d.Fragments)
+                if (f.Collected && _rowFragments.Count < _memoryRows.Length) _rowFragments.Add(f);
+
+            // 주운 파편이 없으면 요약 글의 '아직 없음' 줄까지 그대로 쓴다.
+            string summary = d.CollectedSummary();
+            Set(_memories, _rowFragments.Count == 0 ? summary : summary.Substring(0, summary.IndexOf('\n')));
+
+            // 스펙 012 FR-004: 줄 색이 원래 색에서 파편 색으로 갔다가 돌아온다
+            if (_highlightT > 0f) _highlightT = Mathf.Max(0f, _highlightT - Time.deltaTime);
+            float progress = 1f - _highlightT / Mathf.Max(0.01f, _highlightSeconds);
+            Color highlight = Color.Lerp(_memories.color, _highlightColor, Mathf.Sin(progress * Mathf.PI));
+
+            for (int i = 0; i < _memoryRows.Length; i++)
+            {
+                bool show = i < _rowFragments.Count;
+                if (_memoryRows[i].gameObject.activeSelf != show) _memoryRows[i].gameObject.SetActive(show);
+                if (!show) continue;
+                string title = _rowFragments[i].Title;
+                string line = "· " + title;
+                if (_memoryRowLabels[i].text != line) _memoryRowLabels[i].text = line;
+                Color color = _highlightT > 0f && title == _highlightTitle ? highlight : _memories.color;
+                if (_memoryRowLabels[i].color != color) _memoryRowLabels[i].color = color;
+            }
+        }
+
+        /// <summary>
+        /// 스펙 019 FR-008: 눌린 줄의 파편으로 요약 패널을 연다.
+        /// row(줄 번호)와 _rowFragments를 사용하며, 요약 패널의 상태를 바꾼다.
+        /// </summary>
+        private void OpenRecap(int row)
+        {
+            if (row < _rowFragments.Count) _recap.Open(_rowFragments[row]);
         }
 
         /// <summary>

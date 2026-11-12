@@ -28,6 +28,19 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("fragmentGroups")] private List<GameObject> _fragmentGroups = new List<GameObject>();
         [Tooltip("미로 모양 (seed)")]
         [SerializeField, FormerlySerializedAs("mazeSeed")] private int _mazeSeed = 12345;
+        // 스펙 015: 이 인물의 미로 사물 묶음 추가
+        [Tooltip("이 인물의 미로 사물 묶음들 (층마다 하나, 해당 MazeLayer 아래)")]
+        [SerializeField] private List<GameObject> _propGroups = new List<GameObject>();
+        // 스펙 018: 층 문을 여는 플래그 목록 추가
+        [Tooltip("층 문을 여는 플래그. 0번이 1층으로 들어가는 문이다. 비우면 그 문은 신뢰로 열린다")]
+        [SerializeField] private string[] _gateFlags = new string[0];
+
+        // 스펙 015: 시작 감정과 감정별 눈 표현 추가
+        [Header("감정")]
+        [Tooltip("상담 시작 때의 감정")]
+        [SerializeField] private ClientEmotion _startEmotion = ClientEmotion.Calm;
+        [Tooltip("이 인물의 감정별 눈 표현. 없는 감정은 기본값(변화 없음)으로 그린다")]
+        [SerializeField] private EmotionLook[] _emotionLooks = new EmotionLook[0];
 
         [Header("문구")]
         [SerializeField, FormerlySerializedAs("introMessage"), TextArea(2, 4)] private string _introMessage;
@@ -50,6 +63,11 @@ namespace EyeMaze
         public EndingScript EndingData => EndingScript.Get(_dialogueCsv);
         public List<GameObject> FragmentGroups => _fragmentGroups;
         public int MazeSeed => _mazeSeed;
+        // 스펙 015: 사물 묶음과 시작 감정 공개
+        public List<GameObject> PropGroups => _propGroups;
+        // 스펙 018: 문 플래그 목록 공개
+        public string[] GateFlags => _gateFlags;
+        public ClientEmotion StartEmotion => _startEmotion;
         public string IntroMessage => EndingData?.Text(EndingScript.Intro) ?? _introMessage;
         public string IdleSituation => EndingData?.Text(EndingScript.Idle) ?? _idleSituation;
         public string AbyssMessage => EndingData?.Text(EndingScript.Abyss) ?? _abyssMessage;
@@ -83,6 +101,29 @@ namespace EyeMaze
             foreach (GameObject g in _fragmentGroups)
                 if (g != null) list.AddRange(g.GetComponentsInChildren<MemoryFragment>(true));
             return list;
+        }
+
+        /// <summary>
+        /// 스펙 015: 이 케이스의 사물 묶음 안에 있는 미로 사물을 모두 모은다 (꺼진 것 포함).
+        /// 입력값은 없으며, 사물 목록을 반환한다.
+        /// </summary>
+        public List<MazeProp> Props()
+        {
+            var list = new List<MazeProp>();
+            foreach (GameObject g in _propGroups)
+                if (g != null) list.AddRange(g.GetComponentsInChildren<MazeProp>(true));
+            return list;
+        }
+
+        /// <summary>
+        /// 스펙 015: 감정의 눈 표현을 찾는다.
+        /// emotion과 _emotionLooks를 사용하며, 처음 맞는 표현 또는 (없으면) null을 반환한다.
+        /// </summary>
+        public EmotionLook LookOf(ClientEmotion emotion)
+        {
+            foreach (EmotionLook l in _emotionLooks)
+                if (l != null && l.Emotion == emotion) return l;
+            return null;
         }
 
         /// <summary>

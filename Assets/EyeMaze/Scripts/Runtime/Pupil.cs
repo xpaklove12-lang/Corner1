@@ -36,10 +36,20 @@ namespace EyeMaze
         [NonSerialized] private float _tremble;
         [NonSerialized] private bool _trembling;
         [NonSerialized] private Vector3 _restPosition;
+        // 스펙 015: 감정 표현의 떨림 거리, 빠르기, 시선 피함 추가
+        [NonSerialized] private float _emotionTrembleDistance;
+        [NonSerialized] private float _emotionTrembleSpeed = 28f;
+        [NonSerialized] private Vector2 _emotionShift;
 
         public float Pulse { get => _pulse; set => _pulse = value; }
         /// <summary>동공 떨림 세기 (0~1). 0이면 원래 자리로 돌아온다.</summary>
         public float Tremble { get => _tremble; set => _tremble = Mathf.Clamp01(value); }
+        /// <summary>감정 표현의 동공 떨림 거리. 휴식 신호 떨림과 함께 있으면 큰 쪽을 쓴다.</summary>
+        public float EmotionTrembleDistance { get => _emotionTrembleDistance; set => _emotionTrembleDistance = Mathf.Max(0f, value); }
+        /// <summary>감정 표현의 동공 떨림 빠르기</summary>
+        public float EmotionTrembleSpeed { get => _emotionTrembleSpeed; set => _emotionTrembleSpeed = value; }
+        /// <summary>감정 표현의 시선 피함. 동공 위치에만 더하고 크기는 바꾸지 않는다.</summary>
+        public Vector2 EmotionShift { get => _emotionShift; set => _emotionShift = value; }
         public float TargetRadius => Mathf.Lerp(_minRadius, _maxRadius, _person != null ? _person.Dilation : 0.5f);
 
         void OnEnable() { _drawnKey = int.MinValue; }
@@ -76,11 +86,17 @@ namespace EyeMaze
 
         /// <summary>
         /// 떨림 세기에 맞춰 동공을 원래 자리 주변으로 흔든다. 떨림이 끝나면 원래 자리로 되돌린다.
-        /// _tremble, _trembleDistance, _trembleSpeed를 사용하며, Transform 위치와 _restPosition을 바꾼다.
+        /// 휴식 신호 떨림과 감정 떨림 중 거리가 큰 쪽으로 흔들고, 감정의 시선 피함만큼 비켜 둔다.
+        /// _tremble, _trembleDistance, _trembleSpeed, 감정 표현 값을 사용하며, Transform 위치와 _restPosition을 바꾼다.
         /// </summary>
         private void ApplyTremble()
         {
-            if (_tremble <= 0f)
+            // 스펙 015: 휴식 신호 떨림과 감정 떨림 중 큰 쪽을 쓰고 시선 피함을 더한다
+            float tearDistance = _trembleDistance * _tremble;
+            bool emotionWins = _emotionTrembleDistance > tearDistance;
+            float distance = emotionWins ? _emotionTrembleDistance : tearDistance;
+            float speed = emotionWins ? _emotionTrembleSpeed : _trembleSpeed;
+            if (distance <= 0f && _emotionShift == Vector2.zero)
             {
                 if (_trembling) transform.localPosition = _restPosition;
                 _trembling = false;
@@ -91,9 +107,10 @@ namespace EyeMaze
                 _restPosition = transform.localPosition;
                 _trembling = true;
             }
-            float t = Time.time * _trembleSpeed;
-            var offset = new Vector3(Mathf.PerlinNoise(t, 0f) - 0.5f, Mathf.PerlinNoise(0f, t) - 0.5f, 0f) * (2f * _trembleDistance * _tremble);
-            transform.localPosition = _restPosition + offset;
+            // 스펙 015: 떨림 거리와 빠르기를 큰 쪽 값으로 바꾸고 시선 피함을 더함
+            float t = Time.time * speed;
+            var offset = new Vector3(Mathf.PerlinNoise(t, 0f) - 0.5f, Mathf.PerlinNoise(0f, t) - 0.5f, 0f) * (2f * distance);
+            transform.localPosition = _restPosition + offset + (Vector3)_emotionShift;
         }
     }
 }

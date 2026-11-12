@@ -109,8 +109,10 @@ namespace EyeMaze
             bool leave = false;
             Vector2 move = Vector2.zero;
             // 스펙 007: 대화 기록 창이 열려 있으면 키 입력을 처리하지 않는다.
-            Keyboard kb = DialogueLog.BlocksInput ? null : Keyboard.current;
-            Gamepad pad = DialogueLog.BlocksInput ? null : Gamepad.current;
+            // 스펙 019: 파편 요약 패널이 열려 있어도 키 입력을 처리하지 않는다.
+            bool blocked = DialogueLog.BlocksInput || FragmentRecapUI.BlocksInput;
+            Keyboard kb = blocked ? null : Keyboard.current;
+            Gamepad pad = blocked ? null : Gamepad.current;
             if (kb != null)
             {
                 // 상호작용과 대사 넘기기는 Space로 한다. 만남 화면의 Space는 시선 조작이라 엔딩 대사, 선택지 결과 줄 넘기기, 파편 읽기에서만 넘기기로 쓴다.
@@ -135,7 +137,11 @@ namespace EyeMaze
                 // 선택지 결과 줄은 패드 아래 버튼으로도 넘긴다.
                 if (_state == State.Encounter && _director != null && _director.IsReadingResponse && pad.buttonSouth.wasPressedThisFrame) interact = true;
                 if (pad.buttonEast.wasPressedThisFrame) leave = true;
+                // 수정(016): 패드로는 회상 글이 다 찍힐 때까지 기다려야 하던 것을 아래 버튼으로 줄 전체를 바로 보이게 바꿨다.
+                if (FlashbackPlayer.IsPlaying && pad.buttonSouth.wasPressedThisFrame && Typewriter.AnyTyping) Typewriter.SkipAll();
             }
+            // 스펙 016: 회상이 재생되는 동안에는 Q(자리 떠나기)를 처리하지 않는다
+            if (FlashbackPlayer.IsPlaying) leave = false;
 
             switch (_state)
             {
