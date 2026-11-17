@@ -162,10 +162,11 @@ using Game.System;
 
 ## 10. Spec-Driven Development (SDD)
 
-- 기능 구현 전에 `docs/README.md`를 먼저 읽고, 그 안의 규칙과 절차를 따른다.
-- 스펙 없이 기능 구현을 시작하지 않는다. 기능 스펙은 `docs/specs/NNN-*.md`이며 작성 규칙·절차·목록은 `docs/README.md`, 양식은 `docs/spec-template.md`를 따른다.
-- 구현은 승인된 스펙의 `FR-xxx` 단위로 하고, 끝나면 FR별 충족 코드를 보고한다.
-- 커밋 메세지 제안 시 스펙 작업은 스펙 번호를 범위로 쓰고(예: `feat(001): 플레이어 이동 가속도 적용`), 스펙 없는 정리 작업은 범위 없이 쓴다(예: `chore: 사용하지 않는 에셋 정리`).
+- 기능 구현 전에 `docs/CONTRIBUTING.md`를 먼저 읽고, 그 안의 규칙과 절차를 따른다.
+- 스펙 없이 기능 구현을 시작하지 않는다. 기능 스펙은 번호 없는 영역 파일 `docs/specs/영역-이름.md`이며, 어느 스펙인지는 `docs/specs/ROUTER.md`, 작성 규칙·절차는 `docs/CONTRIBUTING.md`, 목록은 `docs/specs/README.md`, 양식은 `docs/specs/_TEMPLATE.md`를 따른다.
+- 같은 기능에 새 스펙 파일을 만들지 않고 그 영역 스펙에 요구사항을 더한다. 요구사항 ID(`BLINK-03` 등)는 다른 의미로 다시 쓰지 않는다.
+- 구현은 승인된 요구사항 ID 단위로 하고, 끝나면 ID별 충족 코드를 보고한다.
+- 커밋 메세지 제안 시 스펙 작업은 요구사항 ID를 범위로 쓰고(예: `feat(BLINK-03,MEM-12): 깜빡임 뒤 파편 강조 추가`), 스펙 없는 정리 작업은 범위 없이 쓴다(예: `chore: 사용하지 않는 에셋 정리`).
 
 ## 11. 이 프로젝트
 
