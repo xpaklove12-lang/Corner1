@@ -1,1 +1,2 @@
 @AGENTS.md
+@docs/GAME_OVERVIEW.md
