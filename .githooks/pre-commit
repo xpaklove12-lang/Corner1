@@ -1,0 +1,5 @@
+#!/bin/sh
+# 커밋 직전 스펙 규칙 검사(Tools/check-specs.ps1). 처음 한 번 git config core.hooksPath .githooks 로 켠다.
+root=$(git rev-parse --show-toplevel)
+if command -v pwsh >/dev/null 2>&1; then ps=pwsh; else ps=powershell.exe; fi
+exec "$ps" -NoProfile -ExecutionPolicy Bypass -File "$root/Tools/check-specs.ps1"

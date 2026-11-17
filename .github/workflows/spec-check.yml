@@ -1,0 +1,21 @@
+# 스펙 규칙 검사: dev·master 푸시와 PR마다 Tools/check-specs.ps1을 돌린다(docs/CONTRIBUTING.md 4절).
+name: spec-check
+
+on:
+  push:
+    branches: [dev, master]
+  pull_request:
+    branches: [dev, master]
+
+jobs:
+  spec-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            docs
+            Tools
+      - name: 스펙 규칙 검사
+        shell: pwsh
+        run: ./Tools/check-specs.ps1
