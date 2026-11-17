@@ -1,0 +1,2 @@
+# 커밋 훅은 sh로 실행되므로 Windows에서 받아도 LF 줄바꿈을 유지한다.
+* text eol=lf
