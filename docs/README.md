@@ -55,3 +55,20 @@ SDD 작업을 시작할 때 이 파일을 가장 먼저 읽는다.
 | 012 | `specs/012-fragment-visibility-feedback.md` | 줍지 않은 파편을 맥동과 빛으로 눈에 띄게 하고, 주운 순간 고리와 목록 강조로 알린다 | 구현완료 |
 | 013 | `specs/009-cutscene-fast-forward.md` | 조작 없는 컷신·대사 구간을 키를 누르는 동안 빨리감기 | 구현완료 |
 | 014 | `specs/014-dialogue-editor.md` | 인물·회차별 통합 CSV의 전체 대사 흐름을 텍스트와 노드 뷰에서 편집 | 승인 |
+| 015 | `specs/015-gunner-pooled-bullets.md` | Gunner 고정 방향 예고 발사와 탄환 프리팹 풀링 | 구현완료 |
+| 016 | `specs/016-debug-enter-gaze.md` | F2 개발자키로 눈동자 미로 조작 화면 즉시 진입 | 구현완료 |
+| 017 | `specs/017-spline-crossfire.md` | 기존 Knot 경로 양 끝에서 빈틈을 남기고 다가오는 풀링 탄막 | 구현완료 |
+| 018 | `specs/018-line-obstacle-knot.md` | OriginPos 로컬 Y축으로 0.5초 선 그리기 후 0.5초 이동 | 구현완료 |
+| 019 | `specs/019-fragment-layer-portals.md` | 층 개방 시 수집 파편 근처에서 해당 층 목적지로 이동하는 포탈 | 구현완료 |
+| 020 | `specs/020-moving-obstacle-layer-rotation.md` | 왕복 장애물의 부모 로컬 좌표 이동으로 층 회전 추종 | 구현완료 |
+| 021 | `specs/021-fragment-feedback-lifetime.md` | 파괴된 파편을 참조하는 시각 피드백의 반복 MissingReferenceException 방지 | 구현완료 |
+| 022 | `specs/022-inner-layer-obstacle-layout.md` | 2·3층 장애물 프리팹 배치와 포탈 목적지 연결 | 구현완료 |
+| 023 | `specs/023-clockwise-obstacle-rotation.md` | 장애물 시계방향 90도 회전과 Inspector 대기 시간 반복 | 구현완료 |
+| 024 | `specs/024-three-way-turret.md` | 45도·90도·135도 세 방향 동시 주기 발사 포탑 | 구현완료 |
+| 025 | `specs/025-rotating-obstacle-parent.md` | 파편 아래 장애물 묶음을 층 아래로 옮겨 미로 회전 추종 복구 | 구현완료 |
+| 026 | `specs/026-play-mode-values.md` | 여러 컴포넌트의 Play Mode Inspector 값 보관과 Edit Mode 일괄 적용 | 구현완료 |
+| 027 | `specs/027-remove-portals-turret-parent.md` | 현재 씬 포탈 제거와 세 방향 포탑의 미로 회전 추종 | 구현완료 |
+| 028 | `specs/028-musical-note-bullets.md` | 공용 포탑 탄환을 팔분음표 외형으로 변경 | 구현완료 |
+| 029 | `specs/029-three-way-note-burst.md` | 세 방향 음표 3회 연속 발사와 Inspector 간격·휴식 설정 | 구현완료 |
+| 030 | `specs/030-imperfect-piano-loop.md` | 은재 1층에서 불완전한 연주를 멈추고 틈으로 전진하는 건반 기믹 | 작성중 |
+| 031 | `specs/031-encounter-layout-rearrange.md` | 상담 화면 눈 확대와 상태·부담감·파편 칸 좌우 재배치 | 구현완료 |

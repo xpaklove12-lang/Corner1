@@ -38,6 +38,7 @@ namespace EyeMaze
         private readonly Dictionary<MemoryFragment, LineRenderer> _glows = new Dictionary<MemoryFragment, LineRenderer>();
         private readonly Dictionary<MemoryFragment, LineRenderer> _outerGlows = new Dictionary<MemoryFragment, LineRenderer>();
         private readonly List<ActiveRing> _activeRings = new List<ActiveRing>();
+        private readonly List<MemoryFragment> _staleFragments = new List<MemoryFragment>();
 
         void OnEnable()
         {
@@ -86,11 +87,23 @@ namespace EyeMaze
         /// </summary>
         private void UpdateGlows()
         {
+            _staleFragments.Clear();
             foreach (KeyValuePair<MemoryFragment, LineRenderer> pair in _glows)
             {
+                if (pair.Key == null || pair.Value == null || !_outerGlows.TryGetValue(pair.Key, out LineRenderer outerGlow) || outerGlow == null)
+                {
+                    _staleFragments.Add(pair.Key);
+                    continue;
+                }
                 if (!pair.Key.isActiveAndEnabled) continue;
                 UpdateGlow(pair.Key, pair.Value, _glowSizeRatio, _glowAlpha);
-                UpdateGlow(pair.Key, _outerGlows[pair.Key], _outerGlowSizeRatio, _outerGlowAlpha);
+                UpdateGlow(pair.Key, outerGlow, _outerGlowSizeRatio, _outerGlowAlpha);
+            }
+
+            foreach (MemoryFragment fragment in _staleFragments)
+            {
+                _glows.Remove(fragment);
+                _outerGlows.Remove(fragment);
             }
         }
 
@@ -116,13 +129,16 @@ namespace EyeMaze
         /// </summary>
         private void PlayRing(MemoryFragment fragment)
         {
+            if (fragment == null) return;
+            MazeLayer layer = fragment.Layer;
+            if (layer == null) return;
             var go = new GameObject("획득 고리");
-            go.transform.SetParent(fragment.Layer.transform, false);
+            go.transform.SetParent(layer.transform, false);
             go.transform.position = fragment.transform.position;
             LineRenderer line = Shapes.Ensure(go, _maze.LineMaterial, 0);
             line.sortingOrder = RING_SORTING_ORDER;
             line.widthMultiplier = _maze.WallWidthNow;
-            var ring = new ActiveRing(fragment, line);
+            var ring = new ActiveRing(fragment.BodyDiameter, fragment.MazeColor, line);
             _activeRings.Add(ring);
             DrawRing(ring, 0f);
         }
@@ -137,6 +153,11 @@ namespace EyeMaze
             for (int i = _activeRings.Count - 1; i >= 0; i--)
             {
                 ActiveRing ring = _activeRings[i];
+                if (ring.Line == null)
+                {
+                    _activeRings.RemoveAt(i);
+                    continue;
+                }
                 ring.Elapsed += dt;
                 if (ring.Elapsed < duration)
                 {
@@ -155,9 +176,9 @@ namespace EyeMaze
         private void DrawRing(ActiveRing ring, float progress)
         {
             float eased = 1f - (1f - progress) * (1f - progress);
-            float diameter = Mathf.Lerp(ring.Fragment.BodyDiameter, _maze.RingWidth * _ringEndRatio, eased);
+            float diameter = Mathf.Lerp(ring.StartDiameter, _maze.RingWidth * _ringEndRatio, eased);
             Shapes.SetCircle(ring.Line, diameter * 0.5f, RING_SEGMENTS);
-            Color color = ring.Fragment.MazeColor;
+            Color color = ring.Color;
             color.a *= 1f - progress;
             Shapes.SetColor(ring.Line, color);
         }
@@ -168,24 +189,27 @@ namespace EyeMaze
         /// </summary>
         private void ClearRings()
         {
-            foreach (ActiveRing ring in _activeRings) Destroy(ring.Line.gameObject);
+            foreach (ActiveRing ring in _activeRings)
+                if (ring.Line != null) Destroy(ring.Line.gameObject);
             _activeRings.Clear();
         }
 
         /// <summary>재생 중인 획득 고리 하나의 상태.</summary>
         private sealed class ActiveRing
         {
-            public MemoryFragment Fragment { get; }
+            public float StartDiameter { get; }
+            public Color Color { get; }
             public LineRenderer Line { get; }
             public float Elapsed { get; set; }
 
             /// <summary>
             /// 재생할 고리 하나의 상태를 만든다.
-            /// fragment와 line을 사용하며, Fragment와 Line을 저장한다.
+            /// startDiameter, color, line을 사용하며, 파편과 독립된 재생 상태를 저장한다.
             /// </summary>
-            public ActiveRing(MemoryFragment fragment, LineRenderer line)
+            public ActiveRing(float startDiameter, Color color, LineRenderer line)
             {
-                Fragment = fragment;
+                StartDiameter = startDiameter;
+                Color = color;
                 Line = line;
             }
         }

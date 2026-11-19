@@ -193,6 +193,18 @@ namespace EyeMaze
             SetGroup(0f, false);
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>
+        /// 개발자 즉시 진입을 위해 독백과 암전 화면을 끝낸다.
+        /// 입력값은 없으며, 독백 재생과 마무리 상태를 해제한다.
+        /// </summary>
+        public void DebugSkip()
+        {
+            _finishing = false;
+            Hide();
+        }
+#endif
+
         /// <summary>
         /// 독백 화면의 투명도와 입력 차단을 정한다.
         /// alpha, block을 사용하며, CanvasGroup 상태를 바꾼다.

@@ -97,6 +97,13 @@ namespace EyeMaze
         void Update()
         {
             if (!Application.isPlaying) return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (Keyboard.current != null && Keyboard.current.f2Key.wasPressedThisFrame)
+            {
+                DebugEnterGaze();
+                return;
+            }
+#endif
             float dt = Time.deltaTime;
             if (OpeningMonologue.IsPlaying)
             {
@@ -352,6 +359,50 @@ namespace EyeMaze
             if (_director != null && Application.isPlaying) _director.ShowEncounterGuide(first);
             _fadeTarget = 0f;
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>
+        /// 현재 상대 또는 첫 유효 상담 케이스를 사용해 눈동자 조작 화면으로 즉시 진입한다.
+        /// 입력값은 없으며, 개발용으로 독백과 컷신, 대화와 암전을 정리하고 만남 상태를 변경한다.
+        /// </summary>
+        public void DebugEnterGaze()
+        {
+            if (_state == State.Encounter && _director.CurrentMode == EyeMazeDirector.Mode.Gaze) return;
+            if (_currentNpc == null)
+            {
+                foreach (ClientCase client in FindObjectsByType<ClientCase>(FindObjectsInactive.Include, FindObjectsSortMode.InstanceID))
+                {
+                    if (client.Npc == null) continue;
+                    _currentNpc = client.Npc;
+                    break;
+                }
+            }
+            if (_currentNpc == null)
+            {
+                Debug.LogWarning("F2: 눈동자 미로에 진입할 유효한 내담자가 없습니다.", this);
+                return;
+            }
+
+            foreach (OpeningMonologue opening in FindObjectsByType<OpeningMonologue>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                opening.DebugSkip();
+            foreach (FieldCutscene cutscene in FindObjectsByType<FieldCutscene>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                cutscene.enabled = false;
+            foreach (DialogueLogUI log in FindObjectsByType<DialogueLogUI>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                log.Close();
+            _player.Stop();
+            _showingText = false;
+            _fieldText = "";
+            _convLines = null;
+            _convDone = null;
+            Nearest = null;
+            _timer = 0f;
+            _returnResolved = false;
+            EnterEncounterNow();
+            _fade = 0f;
+            _fadeTarget = 0f;
+            _director.DebugStartGaze();
+        }
+#endif
 
         /// <summary>
         /// 필드의 사람에 해당하는 상담 케이스를 찾는다.

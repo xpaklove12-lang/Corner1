@@ -57,6 +57,18 @@ namespace EyeMaze
             Apply();
         }
 
+        /// <summary>
+        /// worldPosition을 미로 로컬 좌표로 변환해 시선을 해당 위치로 즉시 옮긴다.
+        /// 반지름과 각도를 변경하고 Transform 및 적용 기록을 갱신한다.
+        /// </summary>
+        public void MoveToWorld(Vector3 worldPosition)
+        {
+            Vector3 local = Maze.transform.InverseTransformPoint(worldPosition);
+            _radius = new Vector2(local.x, local.y).magnitude;
+            _angle = Mathf.Atan2(local.y, local.x) * Mathf.Rad2Deg;
+            Apply();
+        }
+
         void OnEnable() { _drawnKey = int.MinValue; }
         void OnValidate() { _drawnKey = int.MinValue; EyeHooks.Repaint(); }
 

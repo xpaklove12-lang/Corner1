@@ -86,6 +86,7 @@ namespace EyeMaze.EditorTools
             _graph.SizeSaver = SaveNodeSize;
             _graph.FragmentTextSaver = SaveFragmentText;
             _graph.FragmentCreator = CreateFragment;
+            _graph.FragmentDeleter = DeleteFragment;
             _graph.FlagCreator = AddFlag;
             RefreshPaths();
             if (!string.IsNullOrEmpty(_openPath)) OpenPath(_openPath);
@@ -611,6 +612,65 @@ namespace EyeMaze.EditorTools
             _savedAt = System.DateTime.Now.ToString("HH:mm:ss");
             Repaint();
             return (true, "", created);
+        }
+
+        /// <summary>
+        /// 기억 파편을 지운다. 조건을 뺀 문서가 검사를 통과하면 Flags.csv에서 파편 줄을 지우고, 씬 오브젝트를 Unity 실행 취소가 되는 방식으로 지운다.
+        /// fragment와 stripped(그 Flag ID를 조건에서 뺀 문서)를 사용하며, 성공 여부와 오류를 반환하고 Flags.csv와 씬을 바꾼다.
+        /// 문서 저장과 실행 취소 기록은 노드 뷰가 stripped를 돌려준 뒤 ApplyGraphEdit가 맡는다.
+        /// </summary>
+        private (bool ok, string error) DeleteFragment(MemoryFragment fragment, DialogueEditorDocument stripped)
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) return (false, "Play Mode 중에는 파편을 지울 수 없다.");
+
+            // 파일을 건드리기 전에 조건을 뺀 문서가 저장 가능한지 먼저 본다.
+            var issues = new List<DialogueEditorFormat.Issue>();
+            DialogueEditorDocument parsed = DialogueEditorFormat.ParseText(DialogueEditorFormat.WriteText(stripped), stripped.Kind, stripped.AssetPath, issues);
+            if (!HasError(issues)) DialogueEditorFormat.Validate(parsed, issues);
+            foreach (DialogueEditorFormat.Issue i in issues) if (i.Error) return (false, "파편을 지우지 못했다: " + i.Message);
+
+            string flag = fragment.Flag != null ? fragment.Flag.Trim() : "";
+            if (flag.Length > 0)
+            {
+                string before = ReadFlagsSource();
+                if (before == null) return (false, "Flags.csv를 UTF-8로 읽지 못했다.");
+                if (_historyIndex >= 0 && _history[_historyIndex].FlagsCsv != before)
+                    return (false, "Flags.csv가 창 밖에서 바뀌었다. 파일을 다시 열고 지운다.");
+                if (!TryRemoveFlagRow(before, flag, out string after, out string error)) return (false, error);
+                if (after != before && !WriteFlagsSource(after, out error)) return (false, error);
+            }
+
+            GameObject go = fragment.gameObject;
+            UnityEngine.SceneManagement.Scene scene = go.scene;
+            Undo.DestroyObjectImmediate(go);
+            EditorSceneManager.MarkSceneDirty(scene);
+            return (true, "");
+        }
+
+        /// <summary>
+        /// 지정한 Flag ID의 행을 Flags.csv 원문에서 지운다. 다른 행은 그대로 둔다. 그 행이 없으면 원문을 그대로 돌려준다.
+        /// source와 flag를 사용하며, 바뀐 원문과 오류를 내보내고 성공 여부를 반환한다.
+        /// </summary>
+        private static bool TryRemoveFlagRow(string source, string flag, out string changed, out string error)
+        {
+            changed = source;
+            error = "";
+            List<List<CellRange>> rows = ReadCellRanges(source, out bool closed);
+            if (!closed) { error = "Flags.csv의 따옴표가 닫히지 않았다."; return false; }
+            int matches = 0;
+            int start = -1, end = -1;
+            foreach (List<CellRange> row in rows)
+            {
+                if (row.Count == 0 || row[0].Value.Trim() != flag) continue;
+                matches++;
+                start = row[0].Start;
+                // 행 끝의 줄바꿈까지 함께 지운다. 마지막 행이면 파일 끝까지다.
+                end = Mathf.Min(row[row.Count - 1].End + 1, source.Length);
+            }
+            if (matches == 0) return true;
+            if (matches > 1) { error = "Flags.csv에 파편 플래그 '" + flag + "'가 중복돼 있다."; return false; }
+            changed = source.Substring(0, start) + source.Substring(end);
+            return true;
         }
 
         /// <summary>

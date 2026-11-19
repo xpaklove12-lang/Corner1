@@ -112,6 +112,7 @@ flowchart TD
     C --> AG[노드 선택 후 Delete로 제거 - FR-036]
     Z --> AH[조건의 수치 계산 플래그 비교·수치 편집 - FR-037]
     Z --> AI[선택지 결과 분기 조건 ending_need - FR-038]
+    AE --> AJ[파편 카드 선택 후 Delete로 파편 삭제 - FR-039]
 ```
 
 ## 6. 요구사항
@@ -154,6 +155,7 @@ flowchart TD
 - FR-036: 노드 뷰에서 노드를 선택하고 Delete를 누르면 그 노드를 제거한다. 그룹 노드는 그룹 전체를, 결과 카드는 그 선택지의 `response`를, after 카드는 그 엔딩의 `after`를 지운다.
 - FR-037: 직접 엔딩 조건에 든 수치 계산 플래그(예: `trust_3`)를 클릭하면 비교와 수치를 인라인으로 고친다. 우클릭 메뉴에서는 비교만 바꿀 수 있다. 고친 결과는 이 선택지의 조건만 그 비교·수치의 계산 플래그로 바꾸며, Flags.csv의 원래 플래그는 바꾸지 않는다.
 - FR-038: 선택지에 `ending_need`(결과 분기 조건)를 둔다. `need`는 선택지가 열리는 조건이고, `ending_need`는 고른 뒤 `ending`으로 갈지 가르는 조건이다. `ending_need`가 모두 켜져 있으면 `ending`으로 가고, 아니면 `ending`이 없는 선택지처럼 결과와 `goto`로 진행한다. 트리의 엔딩 진입선은 `해금`(need)과 `엔딩 조건`(ending_need)을 따로 보이고, 두 조건 모두 FR-025·FR-035·FR-037 방식으로 고친다.
+- FR-039: 노드 뷰에서 기억 파편 카드를 선택하고 Delete를 누르면 Flags.csv에서 그 파편 Flag ID 줄을 지우고, 열린 씬에서 그 `MemoryFragment` 오브젝트를 지운다. 이 회차 CSV의 `need`·`ending_need`·`set`과 `truth`의 `key_flag`에서 그 Flag ID(`!` 부정 포함)를 함께 뺀다. Play Mode 중이거나 텍스트 오류·검사 대기 중이면 거절한다. 같은 창의 Ctrl+Z는 Flags.csv 줄과 조건을 되돌리고, 씬 오브젝트는 Unity의 실행 취소(Edit > Undo)로 되돌린다.
 
 ### 상태와 데이터
 
@@ -261,6 +263,7 @@ flowchart TD
 - FR-036: 새로 추가한 상담 장면을 다른 선택지의 `goto`로 이은 뒤 선택해 Delete를 누르면 텍스트와 CSV에서 그 장면이 사라지고 그 `goto`가 비며, Ctrl+Z 한 번으로 돌아온다. 결과 카드와 after 카드를 Delete로 지우면 각 칸이 빈다. `truth` 엔딩에서는 Delete가 거절된다.
 - FR-037: 은재 `red_eyes`의 직접 엔딩 조건에 `trust_3`이 있을 때 `trust_3`을 클릭해 `>=5`를 입력하면 그 선택지 need의 `trust_3`이 `trust_5`로 바뀌고, Flags.csv에 `trust_5,신뢰 5 이상,계산,trust>=5` 줄이 생기며 `trust_3` 줄은 그대로다. 우클릭에서 `trust_5 비교/<=`를 고르면 `trust_le_5`로 바뀐다. `>=0.5`처럼 이미 있는 조건(`pupil_open`과 같은 `dilation>=0.5`)이면 새 줄 없이 그 플래그를 쓴다.
 - FR-038: 은재 `red_eyes`의 음성 메시지 선택지를 `need=eunjae_voicemail`, `ending_need=trust_le_m3`로 두면 파편만 주워도 선택지가 열린다. Play Mode에서 신뢰가 -3 이하일 때 고르면 `delete` 엔딩으로, 아니면 결과를 보이고 장면에 머문다. 트리 진입선에 `해금 eunjae_voicemail`과 `엔딩 조건 trust_le_m3`가 따로 보이고 각각 고칠 수 있다.
+- FR-039: 은재 트리에서 `기억 파편 추가/<층>`으로 새 파편을 만들고 어떤 선택지의 `need`에 그 Flag ID를 더한 뒤, 파편 카드를 선택해 Delete를 누르면 파편 카드와 씬 오브젝트가 사라지고 Flags.csv에서 그 줄이 지워지며 선택지 `need`에서도 빠진다. 같은 창에서 Ctrl+Z를 누르면 Flags.csv 줄과 `need`가 돌아온다.
 
 ## 9. 미결 사항
 

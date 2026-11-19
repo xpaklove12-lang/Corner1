@@ -154,6 +154,9 @@ namespace EyeMaze
         [Tooltip("초당 초점이 튀는 횟수")]
         [SerializeField] private float _glitchRate = 20f;
 
+        [Header("장애물 피격")]
+        [SerializeField, Min(0f)] private float _hazardInvulnerabilitySeconds = 0.5f;
+
         [Header("연출")]
         [SerializeField, FormerlySerializedAs("talkWallAlpha"), Range(0f, 1f)] private float _talkWallAlpha = 0.22f;
         [SerializeField, FormerlySerializedAs("startRing")] private int _startRing;
@@ -229,6 +232,9 @@ namespace EyeMaze
 
         public IrisMaze Maze => _maze;
         public GazeCursor Cursor => _cursor;
+        public bool CanRunHazards => isActiveAndEnabled && _acceptInput && _mode == Mode.Gaze && !_reading
+            && !_inAbyss && _blinkPhase < 0f && _blinkRecoverT <= 0f && !_blinkTurning
+            && !_wallChange.IsPlaying && !DialogueLog.BlocksInput;
         public Person Person => _person;
         public Mode CurrentMode => _mode;
         public bool AcceptInput { get => _acceptInput; set => _acceptInput = value; }
@@ -499,6 +505,36 @@ namespace EyeMaze
         }
 
         /// <summary>
+        /// 조작 가능한 관찰 중 destination의 월드 위치로 시선을 옮긴다.
+        /// 속도와 밀려남을 정리하고 이동 후 층·파편 상태를 갱신하며 이동 성공 여부를 반환한다.
+        /// </summary>
+        public bool TravelThroughPortal(Transform destination)
+        {
+            if (!CanRunHazards || destination == null) return false;
+            _velocity = Vector2.zero;
+            StopBump();
+            _cursor.MoveToWorld(destination.position);
+            OnMoved();
+            return true;
+        }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>
+        /// 개발자 진입에서 종료 상태를 초기화하고 읽기나 응답 대기를 정리해 시선 조작을 시작한다.
+        /// 입력값은 없으며, 모드와 입력 허용 상태, 읽기와 응답 상태를 변경한다.
+        /// </summary>
+        public void DebugStartGaze()
+        {
+            if (_mode == Mode.Gaze) return;
+            if (_mode == Mode.Ending) ResetAll();
+            _reading = false;
+            _responseLines.Clear();
+            _acceptInput = true;
+            ToggleGaze();
+        }
+#endif
+
+        /// <summary>
         /// 시선을 거두고 대화로 돌아온다.
         /// why(보여줄 문구)를 사용하며, 모드와 시선 표시, 읽기 상태를 바꾼다.
         /// </summary>
@@ -585,6 +621,37 @@ namespace EyeMaze
         }
 
         /// <summary>
+        /// 탄환의 월드 진행 방향을 미로의 방사·접선 방향으로 바꾸어 피격을 적용한다.
+        /// worldDirection을 사용하며, 밀려남과 초점 요동, 부담감을 변경한다.
+        /// </summary>
+        public void HitByBullet(Vector2 worldDirection)
+        {
+            TryApplyHazardHit(worldDirection, _bumpBurden);
+        }
+
+        /// <summary>
+        /// worldDirection과 burden을 사용해 탄환·라인 공통 피격을 적용한다.
+        /// 무적 중이면 false를 반환하며 적용 시 밀려남, 점멸, 초점 요동, 부담감과 무적 시간을 변경한다.
+        /// </summary>
+        private bool TryApplyHazardHit(Vector2 worldDirection, float burden)
+        {
+            if (!CanRunHazards || _bumpCooldownT > 0f) return false;
+            Vector3 local = _maze.transform.InverseTransformVector(worldDirection);
+            float rad = _cursor.Angle * Mathf.Deg2Rad;
+            Vector2 radial = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+            Vector2 tangent = new Vector2(-radial.y, radial.x);
+            _knockbackDir = new Vector2(Vector2.Dot(local, radial), Vector2.Dot(local, tangent)).normalized;
+            _knockbackT = 0f;
+            _bumpCooldownT = _hazardInvulnerabilitySeconds;
+            _velocity = Vector2.zero;
+            _bumpFlash = Mathf.Max(_bumpFlash, 0.6f);
+            StartGlitch();
+            _burden = Mathf.Clamp01(_burden + Mathf.Max(0f, burden));
+            if (_burden >= 1f) EndByBurden();
+            return true;
+        }
+
+        /// <summary>
         /// 요동 중이면 남은 비율과 무작위 값으로 미로 초점을 낮추고, 시간이 끝나면 기준값으로 되돌린다.
         /// dt, _glitchStrength, _glitchRate, _glitchBaseFocus를 사용하며, 미로 초점과 요동 상태를 바꾼다.
         /// </summary>
@@ -603,6 +670,15 @@ namespace EyeMaze
             }
             float remain = _glitchT / Mathf.Max(0.01f, _glitchSeconds);
             _maze.Focus = Mathf.Clamp01(_glitchBaseFocus - _glitchStrength * remain * _glitchNoise);
+        }
+
+        /// <summary>
+        /// 라인 접촉의 amount와 worldDirection을 사용해 탄환과 같은 피격을 요청한다.
+        /// 피격이 적용되면 true를 반환하며 부담감, 연출과 공유 무적 상태를 변경한다.
+        /// </summary>
+        public bool AddObstacleBurden(float amount, Vector2 worldDirection)
+        {
+            return amount > 0f && TryApplyHazardHit(worldDirection, amount);
         }
 
         /// <summary>

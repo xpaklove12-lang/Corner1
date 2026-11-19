@@ -18,3 +18,4 @@ pupil_open,동공이 절반 이상 열림,계산,dilation>=0.5,,,예시
 eunjae_piano_ready,신뢰 2 이상 + 악보를 봄,계산,trust>=2 & clue_sheet_music,,,예시 · 플래그와 수치를 & 로 묶기
 trust_le_m3,신뢰 -3 이하,계산,trust<=-3,,,
 trust_le_m2,신뢰 -2 이하,계산,trust<=-2,,,
+eunjae_fragment_1,은재 · 새 기억,파편,,새 기억,새 기억 글,

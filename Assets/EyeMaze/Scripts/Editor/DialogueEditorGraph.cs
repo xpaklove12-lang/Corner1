@@ -210,6 +210,8 @@ namespace EyeMaze.EditorTools
         public System.Func<string, string, (bool ok, string error)> FragmentTextSaver { get; set; }
         /// <summary>손님과 층 파편 묶음을 받아 새 기억 파편을 만드는 창의 함수. 결과로 성공 여부, 오류, 새 파편을 돌려준다.</summary>
         public System.Func<ClientCase, GameObject, (bool ok, string error, MemoryFragment fragment)> FragmentCreator { get; set; }
+        /// <summary>지울 파편과 그 Flag ID를 뺀 문서를 받아 Flags.csv 줄과 씬 오브젝트를 지우는 창의 함수. 결과로 성공 여부와 오류를 돌려준다.</summary>
+        public System.Func<MemoryFragment, DialogueEditorDocument, (bool ok, string error)> FragmentDeleter { get; set; }
         /// <summary>Flag ID를 받아 Flags.csv에 새 플래그 줄을 넣는 창의 함수. 결과로 성공 여부와 오류를 돌려준다.</summary>
         public System.Func<string, string, string, string, (bool ok, string error)> FlagCreator { get; set; }
 
@@ -1504,11 +1506,12 @@ namespace EyeMaze.EditorTools
             // 에디터는 Delete 키를 Delete·SoftDelete 명령으로도 보낸다. 노드 뷰가 노드를 골랐을 때만 받는다.
             bool deleteCommand = (e.type == EventType.ValidateCommand || e.type == EventType.ExecuteCommand)
                 && (e.commandName == "Delete" || e.commandName == "SoftDelete");
-            if (deleteCommand && _inline == InlineKind.None && _focused && _selKey != null)
+            if (deleteCommand && _inline == InlineKind.None && _focused && (_selKey != null || _selFragment != null))
             {
                 bool execute = e.type == EventType.ExecuteCommand;
                 e.Use();
-                return execute ? DeleteSelected(doc, editable) : null;
+                if (!execute) return null;
+                return _selFragment != null ? DeleteFragment(doc, editable) : DeleteSelected(doc, editable);
             }
             if (e.type != EventType.KeyDown) return null;
             bool enter = e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter;
@@ -1524,6 +1527,8 @@ namespace EyeMaze.EditorTools
             if (_selFragment != null)
             {
                 if (enter) { e.Use(); StartFragmentEdit(editable); }
+                // 스펙 014 FR-039: 선택한 파편 카드를 Delete로 지운다.
+                else if (e.keyCode == KeyCode.Delete) { e.Use(); return DeleteFragment(doc, editable); }
                 return null;
             }
             if (_selKey == null) return null;
@@ -2792,6 +2797,62 @@ namespace EyeMaze.EditorTools
             _selectionLine = 0;
             _focused = true;
             StartFragmentEdit(true);
+        }
+
+        /// <summary>
+        /// 선택한 기억 파편을 지운다. 이 회차 조건에서 그 Flag ID를 뺀 문서를 만들고, 창에 Flags.csv 줄과 씬 오브젝트를 지우게 한다.
+        /// doc과 editable을 사용하며, 성공하면 조건을 뺀 새 문서를 반환하고 선택을 비운다. 실패하면 이유를 보이고 null을 반환한다.
+        /// </summary>
+        private DialogueEditorDocument DeleteFragment(DialogueEditorDocument doc, bool editable)
+        {
+            if (!editable || FragmentDeleter == null) { Notify("텍스트 오류를 고치거나 검사가 끝난 뒤 지울 수 있다."); return null; }
+            MemoryFragment fragment = _selFragment;
+            DialogueEditorDocument copy = string.IsNullOrEmpty(fragment.Flag) ? doc.Clone() : WithoutFlag(doc, fragment.Flag.Trim());
+            (bool ok, string error) = FragmentDeleter(fragment, copy);
+            if (!ok) { Notify(error); return null; }
+            _selFragment = null;
+            _selectionLine = 0;
+            return copy;
+        }
+
+        /// <summary>
+        /// 문서의 조건 칸(need, ending_need, set)과 key_flag에서 지정한 Flag ID와 그 부정(!)을 뺀 복사본을 만든다.
+        /// doc과 flag를 사용하며, 새 문서를 반환한다.
+        /// </summary>
+        private static DialogueEditorDocument WithoutFlag(DialogueEditorDocument doc, string flag)
+        {
+            DialogueEditorDocument copy = doc.Clone();
+            foreach (DialogueEditorDocument.Group g in copy.Groups)
+            {
+                RemoveFlagFrom(g.Fields, flag);
+                if (g.Get(EndingScript.KEY_FLAG).Trim() == flag) g.Fields.Remove(EndingScript.KEY_FLAG);
+                foreach (DialogueEditorDocument.Item i in g.Items) RemoveFlagFrom(i.Fields, flag);
+            }
+            return copy;
+        }
+
+        /// <summary>
+        /// 칸 사전의 need, ending_need, set 목록에서 지정한 Flag ID와 그 부정(!)을 뺀다. 목록이 비면 칸을 지운다.
+        /// fields와 flag를 사용하며, fields를 바꾼다.
+        /// </summary>
+        private static void RemoveFlagFrom(Dictionary<string, string> fields, string flag)
+        {
+            foreach (string column in new[] { "need", "ending_need", "set" })
+            {
+                if (!fields.TryGetValue(column, out string value)) continue;
+                var kept = new List<string>();
+                bool removed = false;
+                foreach (string part in value.Split('|'))
+                {
+                    string t = part.Trim();
+                    if (t.Length == 0) continue;
+                    if (t == flag || (t.StartsWith("!") && t.Substring(1).Trim() == flag)) { removed = true; continue; }
+                    kept.Add(t);
+                }
+                if (!removed) continue;
+                if (kept.Count == 0) fields.Remove(column);
+                else fields[column] = string.Join("|", kept);
+            }
         }
 
         /// <summary>
