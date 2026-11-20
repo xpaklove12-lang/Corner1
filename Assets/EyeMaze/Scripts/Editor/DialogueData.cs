@@ -265,18 +265,6 @@ namespace EyeMaze.EditorTools
                 if (string.IsNullOrEmpty(f.Flag)) Warn($"파편 '{f.Title}'에 플래그가 없다.", f);
                 else if (!known.Contains(f.Flag)) Err($"파편 '{f.Title}'의 플래그 '{f.Flag}'가 Flags.csv에 없다.", f);
             }
-            // 스펙 015: 막음 사물과 같은 칸에 놓인 파편을 오류로 알린다
-            foreach (ClientCase c in cases)
-            {
-                List<MemoryFragment> fragments = c.Fragments();
-                foreach (MazeProp p in c.Props())
-                {
-                    if (p.Kind != MazePropKind.Block) continue;
-                    foreach (MemoryFragment f in fragments)
-                        if (f.Layer == p.Layer && f.Ring == p.Ring && f.Sector == p.Sector)
-                            Err($"손님 '{c.PersonName}'의 막음 사물 '{p.name}'이 파편 '{f.Title}'과 같은 칸(ring {p.Ring}, sector {p.Sector})에 있다.", p);
-                }
-            }
             foreach (FieldClue c in Object.FindObjectsByType<FieldClue>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 if (string.IsNullOrEmpty(c.Flag)) Warn($"단서 '{c.DisplayName}'에 플래그가 없다.", c);

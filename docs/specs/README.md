@@ -11,7 +11,7 @@
 | `BLINK` | [`blink-maze.md`](blink-maze.md) | 눈 깜빡임 조건, 깜빡임 착시 회전, 눈을 뜨며 보이는 미로 회전, 파문을 따라 바뀌는 벽 |
 | `BURDEN` | [`burden.md`](burden.md) | 부담감 게이지, 벽·잠긴 문 부딪힘과 밀려남, 내담자의 휴식 신호와 쉬어 주기 |
 | `DLG` | [`dialogue.md`](dialogue.md) | 만남 시작과 들여다보기, 처음 이야기로 돌아가는 선택지, 대화 기록 창, 컷신 빨리감기, 선택지로 여는 층 문 |
-| `EMO` | [`emotion-maze.md`](emotion-maze.md) | 내담자 감정 상태와 눈 표현, 감정에 따라 미로에 나타나는 사물과 장애물 |
+| `EMO` | [`emotion-maze.md`](emotion-maze.md) | 내담자 감정 상태와 눈 표현, 폐기된 감정 미로 사물 |
 | `MEM` | [`memory-fragments.md`](memory-fragments.md) | 파편 가시성과 획득 알림, 파편 회상 재연과 추가 파편, 단서 해금 알림과 다시 보기, 폐기된 기억 잇기 |
 | `EDITOR` | [`dialogue-editor.md`](dialogue-editor.md) | 인물·회차별 통합 CSV 대사를 텍스트와 노드 뷰에서 편집하는 도구 |
 | `OPEN` | [`opening.md`](opening.md) | 시작 독백과 첫 손님 입장 |
