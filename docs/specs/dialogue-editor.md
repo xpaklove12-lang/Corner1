@@ -193,7 +193,7 @@ flowchart TD
 
 ### 인물·회차 CSV 형식
 
-- 경로는 `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`, `Jisu_Day1.csv`처럼 정한다. 공통 머리글은 `section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest,ending_need,emotion`다. `emotion`은 dialogue 행에서 그 선택지를 고른 뒤 내담자의 감정이며 값과 동작은 `EMO-01`~`EMO-20`(`emotion-maze.md`)을 따른다.
+- 경로는 `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`, `Jisu_Day1.csv`처럼 정한다. 공통 머리글은 `section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest,ending_need,emotion`다. `emotion`은 dialogue 행에서 그 선택지를 고른 뒤 내담자의 감정이며 값과 동작은 `EMO-01`~`EMO-03`, `EMO-10`~`EMO-12`, `EMO-15`(`emotion-maze.md`)를 따른다.
 - `section=talk`: `actor`는 대사를 실행하는 FieldNPC의 안정적인 ID(`EunjaeMom`, `Eunjae`, `Jisu`), `id`는 기존 `group`, `text`는 기존 대사다. `speaker`, `need`, `set`, `memo`는 기존 의미를 유지한다. 같은 actor 안에서 그룹의 첫 등장 순서가 `TalkScript.Pick()` 우선순위다.
 - `section=dialogue`: `actor`는 상담 인물 ID, `id`는 기존 `node`, `text`는 선택지다. `situation`, `response`, `need`, `set`, 수치, `goto`, `ending`, `back`, `memo`는 기존 의미를 유지한다. `rest`는 그 선택지를 고르면 내담자가 쉬자고 청하는 대사다(`BURDEN-23`(`burden.md`)). `ending_need`는 `ending`이 있는 선택지에만 쓰는 결과 분기 조건이다(EDITOR-38). 첫 dialogue 노드가 상담 시작 노드다.
 - `section=ending`: `actor`는 상담 인물 ID, `id`는 기존 엔딩 id 또는 `@intro`·`@idle`·`@abyss`, `text`는 기존 `line`이다. `title`, `situation`, `after`, `memo`는 기존 의미를 유지한다. `truth` 첫 행에는 정수 `truth_trust`와 파편의 Flag ID `key_flag`, `leave` 첫 행에는 정수 `leave_trust`와 0 초과 1 이하의 실수 `burden_limit`을 기록한다. `half` 조건은 `truth`의 반대로 계산하므로 별도 열을 갖지 않는다. 빈 `key_flag`는 파편 조건이 없다는 뜻이다.
@@ -253,7 +253,7 @@ flowchart TD
 
 - **부르는 것**: 기존 `Csv`, `DialogueScript`, `TalkScript`, `EndingScript`, `Strings`, `DialogueData`, 열린 씬의 `ClientCase`·`MemoryFragment`, `Flags.csv`
 - **불리는 것**: 회차 CSV를 읽는 `ClientCase`, `FieldNPC`, `EyeMazeDirector`(dialogue)가 이 스펙의 CSV 형식을 따른다.
-- **다른 스펙의 데이터**: `emotion` 열은 `EMO-01`~`EMO-20`(`emotion-maze.md`), `rest` 열과 Talk `rest` 그룹은 `BURDEN-23`~`BURDEN-36`(`burden.md`)을 따른다. 기억 파편 노드는 `MEM-06`~`MEM-24`(`memory-fragments.md`)의 파편을 읽는다.
+- **다른 스펙의 데이터**: `emotion` 열은 `EMO-01`~`EMO-03`, `EMO-10`~`EMO-12`, `EMO-15`(`emotion-maze.md`), `rest` 열과 Talk `rest` 그룹은 `BURDEN-23`~`BURDEN-36`(`burden.md`)을 따른다. 기억 파편 노드는 `MEM-06`~`MEM-24`(`memory-fragments.md`)의 파편을 읽는다.
 
 ## 7. 검증 방법
 

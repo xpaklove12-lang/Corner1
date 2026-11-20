@@ -193,12 +193,6 @@ namespace EyeMaze
         [SerializeField] private ClientEmotion _emotion = ClientEmotion.Calm;
         [Tooltip("눈 표현이 바뀌는 시간(초)")]
         [SerializeField] private float _emotionEyeSeconds = 1f;
-        [Tooltip("눈이 변하기 시작한 뒤 미로 사물이 바뀌기까지의 시간(초)")]
-        [SerializeField] private float _emotionMazeDelay = 1f;
-        [Tooltip("사물이 나타나고 사라지는 시간(초)")]
-        [SerializeField] private float _propFadeSeconds = 0.6f;
-        [Tooltip("사물이 바뀐 뒤 미로의 흐려짐과 무관하게 선명하게 보이는 시간(초)")]
-        [SerializeField] private float _propRevealSeconds = 1.5f;
         [Tooltip("시선 피함으로 동공이 비켜날 수 있는 최대 거리")]
         [SerializeField] private float _gazeShiftMax = 0.05f;
 
@@ -278,13 +272,8 @@ namespace EyeMaze
         [NonSerialized] private readonly EmotionLook _lookTo = new EmotionLook();
         [NonSerialized] private readonly EmotionLook _lookNow = new EmotionLook();
         [NonSerialized] private float _lookT = -1f;
-        // 스펙 015: 사물 표시를 바꾸기까지 남은 시간(음수면 기다리지 않음), 시선 피함 적용 비율, 지금 손님의 사물 목록
-        [NonSerialized] private float _propDelayT = -1f;
+        // 스펙 015: 시선 피함 적용 비율
         [NonSerialized] private float _gazeShiftWeight = 1f;
-        [NonSerialized] private readonly List<MazeProp> _props = new List<MazeProp>();
-        // 스펙 015: 어지러움 연출로 흔들고 있는 벽과 이번 프레임에 흔들 벽
-        [NonSerialized] private readonly List<MazeWall> _wobbling = new List<MazeWall>();
-        [NonSerialized] private readonly Dictionary<MazeWall, (float amp, float speed)> _wobbleNow = new Dictionary<MazeWall, (float amp, float speed)>();
         // 스펙 016: 회상 중인 파편, 시선이 칸을 벗어날 때까지 줍지 않는 새로 나타난 파편
         [NonSerialized] private MemoryFragment _flashbackFragment;
         [NonSerialized] private readonly List<MemoryFragment> _pickupWait = new List<MemoryFragment>();
@@ -424,19 +413,18 @@ namespace EyeMaze
             if (Application.isPlaying) _cursor.SnapTo(_startRing, _startSector);
             // 스펙 015: 씬에 저장된 상담은 LoadCase를 거치지 않으므로 Play 시작 때 그 상담의 시작 감정으로 맞춘다.
             if (Application.isPlaying) ResetEmotion();
-            // 스펙 015: 씬에 저장된 상담으로 시작해도 사물 칸을 피한 미로로 새로 만든다.
+            // 스펙 018: 씬에 저장된 상담으로 시작해도 층 문 플래그가 들어간 미로로 새로 만든다.
             if (Application.isPlaying && _activeCase != null) RebuildMaze(_activeCase, true);
         }
 
         /// <summary>
-        /// 스펙 015: 손님의 막음, 밀어냄 사물 칸(감정과 무관)을 미로에 알리고, generate가 켜져 있으면 그 손님의 시드로 미로를 새로 만든다.
-        /// c(손님)와 generate를 사용하며, 미로의 사물 칸 목록과 벽을 바꾼다.
+        /// 손님의 층 문 플래그를 미로에 알리고, generate가 켜져 있으면 그 손님의 시드로 미로를 새로 만든다.
+        /// c(손님)와 generate를 사용하며, 미로의 문 플래그 목록과 벽을 바꾼다.
         /// </summary>
         private void RebuildMaze(ClientCase c, bool generate)
         {
             // 스펙 018: 이 손님의 층 문을 여는 플래그를 미로에 알린다.
             _maze.SetGateFlags(c.GateFlags);
-            _maze.SetLayoutProps(c.Props());
             if (generate) _maze.Generate(c.MazeSeed);
         }
 
@@ -502,8 +490,6 @@ namespace EyeMaze
             _tearCue.Tick(dt, _mode != Mode.Ending && (_restRequested || _restAccepted), _maze, _eye, _pupil);
             // 스펙 015: 휴식 신호 뒤에 감정 전환을 진행하고 눈 표현을 전달한다.
             TickEmotion(dt);
-            // 스펙 015: 시선이 다가오면 휴대폰이 뒤집히고, 피아노 둘레 벽이 흔들린다.
-            TickPropReactions();
 
             // 스펙 007: 벽에 부딪힌 뒤 밀려남, 대기 시간, 초점 요동을 진행한다.
             TickKnockback(dt);
@@ -567,10 +553,6 @@ namespace EyeMaze
             foreach (ClientCase other in all)
                 foreach (GameObject g in other.FragmentGroups)
                     if (g != null && g.activeSelf != (other == c)) g.SetActive(other == c);
-            // 스펙 015: 불러온 손님의 사물 묶음만 켜고 다른 손님의 사물 묶음은 끈다
-            foreach (ClientCase other in all)
-                foreach (GameObject g in other.PropGroups)
-                    if (g != null && g.activeSelf != (other == c)) g.SetActive(other == c);
 
             if (_maze != null) RebuildMaze(c, Application.isPlaying || _maze.Seed != c.MazeSeed);
             ResetAll();
@@ -617,8 +599,6 @@ namespace EyeMaze
             _velocity = Vector2.zero;
             if (_cursor != null) _cursor.Visible = true;
             _lastLayer = _maze != null && _cursor != null ? _maze.LayerOfRing(_cursor.Ring) : -1;
-            // 스펙 015: 지금 손님의 사물을 모으고 지금 감정에 맞춰 표시를 정한다.
-            SyncProps();
             _message = Strings.Get("msg.gaze_on", "{name}의 눈을 들여다본다.", ("name", Name));
         }
 
@@ -667,16 +647,14 @@ namespace EyeMaze
         /// <summary>
         /// 이번 이동에서 막힌 축의 벽 쪽 속도가 충분하면 부딪힘을 시작한다. 막힌 축의 반대 방향을 밀려나는 방향으로 정한다.
         /// mazeVelocity(미로 기준 속도), _hitRadial, _hitTangent를 사용하며, _knockbackDir, _knockbackT, _bumpCooldownT, _velocity를 바꾼다.
-        /// 부딪히면 _bumpFlash도 올린다. 같은 프레임에 밀어냄 사물로 밀려나기 시작했으면 다른 축의 벽 방향만 더해 정규화한다. _bumpEnabled가 꺼져 있으면 아무것도 하지 않는다.
+        /// 부딪히면 _bumpFlash도 올린다. _bumpEnabled가 꺼져 있으면 아무것도 하지 않는다.
         /// </summary>
         private void TryStartBump(Vector2 mazeVelocity)
         {
             if (!_bumpEnabled) return;
             // 스펙 007: 파편을 읽기 시작한 프레임에는 밀려남을 시작하지 않는다.
             if (_mode != Mode.Gaze || _inAbyss || _reading) return;
-            // 수정(015 FR-007): 같은 프레임에 밀어냄 사물로 밀려나기 시작했으면 벽 부딪힘을 건너뛰던 것을 다른 축의 벽 방향을 더해 정규화하게 바꿨다.
-            bool propPushNow = _knockbackT == 0f;
-            if (!propPushNow && (_bumpCooldownT > 0f || _knockbackT >= 0f)) return;
+            if (_bumpCooldownT > 0f || _knockbackT >= 0f) return;
             if (_hitRadial == 0 && _hitTangent == 0) return;
 
             float rad = _cursor.Angle * Mathf.Deg2Rad;
@@ -687,13 +665,6 @@ namespace EyeMaze
             // 벽을 따라 미끄러지거나 살짝 닿은 축은 거르고, 세게 막힌 축만 반대로 밀어낸다.
             if (_hitRadial != 0 && Mathf.Abs(Vector2.Dot(mazeVelocity, radialU)) >= _bumpMinSpeed) dir.x = -_hitRadial;
             if (_hitTangent != 0 && Mathf.Abs(Vector2.Dot(mazeVelocity, tangentU)) >= _bumpMinSpeed) dir.y = -_hitTangent;
-            // 사물이 이미 민 축은 빼고, 남은 벽 축이 있을 때만 사물 방향과 합친다.
-            if (propPushNow)
-            {
-                if (_knockbackDir.x != 0f) dir.x = 0f;
-                if (_knockbackDir.y != 0f) dir.y = 0f;
-                if (dir != Vector2.zero) dir += new Vector2(Mathf.Sign(_knockbackDir.x) * (_knockbackDir.x != 0f ? 1f : 0f), Mathf.Sign(_knockbackDir.y) * (_knockbackDir.y != 0f ? 1f : 0f));
-            }
             if (dir == Vector2.zero) return;
 
             _knockbackDir = dir.normalized;
@@ -1446,9 +1417,9 @@ namespace EyeMaze
         // 감정
 
         /// <summary>
-        /// 스펙 015: 감정을 바꾸고 눈 표현 전환을 시작한다. 사물 표시는 _emotionMazeDelay초 뒤에 바꾼다.
+        /// 스펙 015: 감정을 바꾸고 눈 표현 전환을 시작한다.
         /// 전환 중에 다시 바뀌면 진행 중인 전환을 끝 상태로 건너뛴다. 같은 감정이거나 에디트 모드면 아무것도 하지 않는다.
-        /// emotion을 사용하며, _emotion과 눈 표현 전환 상태, 사물 표시를 바꾼다.
+        /// emotion을 사용하며, _emotion과 눈 표현 전환 상태를 바꾼다.
         /// </summary>
         private void ChangeEmotion(ClientEmotion emotion)
         {
@@ -1458,24 +1429,17 @@ namespace EyeMaze
                 _lookNow.CopyFrom(_lookTo);
                 _lookT = -1f;
             }
-            if (_propDelayT >= 0f)
-            {
-                _propDelayT = -1f;
-                FadeProps();
-            }
-            foreach (MazeProp p in _props) p.Finish();
 
             _emotion = emotion;
             _lookFrom.CopyFrom(_lookNow);
             _lookTo.CopyFrom(LookOf(emotion));
             _lookT = 0f;
-            _propDelayT = Mathf.Max(0f, _emotionMazeDelay);
         }
 
         /// <summary>
-        /// 스펙 015: 감정 전환을 한 프레임 진행하고 눈 표현을 눈 그림과 동공에 전달한다. 기다린 시간이 지나면 사물 표시를 바꾼다.
+        /// 스펙 015: 감정 전환을 한 프레임 진행하고 눈 표현을 눈 그림과 동공에 전달한다.
         /// 들여다보는 동안은 시선 피함을 0으로 두고, 대화로 돌아오면 _emotionEyeSeconds초에 걸쳐 되돌린다.
-        /// dt와 전환 상태를 사용하며, _lookNow, _lookT, _propDelayT, _gazeShiftWeight와 눈 그림, 동공의 감정 값을 바꾼다.
+        /// dt와 전환 상태를 사용하며, _lookNow, _lookT, _gazeShiftWeight와 눈 그림, 동공의 감정 값을 바꾼다.
         /// </summary>
         private void TickEmotion(float dt)
         {
@@ -1486,15 +1450,6 @@ namespace EyeMaze
                 float t = Mathf.Clamp01(_lookT / eyeSeconds);
                 _lookNow.Lerp(_lookFrom, _lookTo, Mathf.SmoothStep(0f, 1f, t));
                 if (t >= 1f) _lookT = -1f;
-            }
-            if (_propDelayT >= 0f)
-            {
-                _propDelayT -= dt;
-                if (_propDelayT <= 0f)
-                {
-                    _propDelayT = -1f;
-                    FadeProps();
-                }
             }
             _gazeShiftWeight = _mode == Mode.Gaze ? 0f : Mathf.MoveTowards(_gazeShiftWeight, 1f, dt / eyeSeconds);
             ApplyEmotionLook();
@@ -1516,50 +1471,16 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 감정을 지금 손님의 시작 감정으로 되돌리고, 눈 표현과 사물 표시를 연출 없이 그 감정에 맞춘다.
-        /// _activeCase를 사용하며, _emotion, 전환 상태, _props와 사물 표시, 눈 그림과 동공의 감정 값을 바꾼다.
+        /// 스펙 015: 감정을 지금 손님의 시작 감정으로 되돌리고, 눈 표현을 연출 없이 그 감정에 맞춘다.
+        /// _activeCase를 사용하며, _emotion, 전환 상태, 눈 그림과 동공의 감정 값을 바꾼다.
         /// </summary>
         private void ResetEmotion()
         {
             if (_activeCase != null) _emotion = _activeCase.StartEmotion;
             _lookT = -1f;
-            _propDelayT = -1f;
             _gazeShiftWeight = 1f;
             _lookNow.CopyFrom(LookOf(_emotion));
-            CollectProps();
-            foreach (MazeProp p in _props) p.SetShown(p.ShowsIn(_emotion));
             ApplyEmotionLook();
-        }
-
-        /// <summary>
-        /// 스펙 015: 지금 손님의 사물을 다시 모으고, 사물 표시를 기다리는 중이 아니면 지금 감정과 다른 사물만 연출 없이 맞춘다.
-        /// _activeCase, _emotion, _propDelayT를 사용하며, _props와 사물 표시를 바꾼다.
-        /// </summary>
-        private void SyncProps()
-        {
-            CollectProps();
-            if (_propDelayT >= 0f) return;
-            foreach (MazeProp p in _props)
-                if (p.Visible != p.ShowsIn(_emotion)) p.SetShown(p.ShowsIn(_emotion));
-        }
-
-        /// <summary>
-        /// 스펙 015: 각 사물을 지금 감정에서 보일지에 따라 _propFadeSeconds초에 걸쳐 나타내거나 사라지게 한다.
-        /// _emotion, _propFadeSeconds, _propRevealSeconds를 사용하며, 사물의 표시 상태를 바꾼다.
-        /// </summary>
-        private void FadeProps()
-        {
-            foreach (MazeProp p in _props) p.FadeTo(p.ShowsIn(_emotion), _propFadeSeconds, _propRevealSeconds);
-        }
-
-        /// <summary>
-        /// 스펙 015: 지금 손님의 사물 묶음에서 사물을 모은다.
-        /// _activeCase를 사용하며, _props를 다시 채운다.
-        /// </summary>
-        private void CollectProps()
-        {
-            _props.Clear();
-            if (_activeCase != null) _props.AddRange(_activeCase.Props());
         }
 
         /// <summary>
@@ -1682,8 +1603,7 @@ namespace EyeMaze
             {
                 // 반시계 방향으로 움직인다.
                 if (target <= d - mDeg) { a += dDeg; return; }
-                // 스펙 015: 사물이 막은 칸막이 길목은 지나지 않음
-                if (CanCrossRadial(ring, s, 1)) { KeepInBand(ref r, ring); a += dDeg; return; }
+                if (_maze.IsRadialOpen(ring, s)) { KeepInBand(ref r, ring); a += dDeg; return; }
                 a = s * d + Mathf.Max(local, d - mDeg);
                 // 스펙 007: 반시계 방향으로 가다 막혔음을 기록한다.
                 _hitTangent = 1;
@@ -1692,8 +1612,7 @@ namespace EyeMaze
             {
                 // 시계 방향으로 움직인다.
                 if (target >= mDeg) { a += dDeg; return; }
-                // 스펙 015: 사물이 막은 칸막이 길목은 지나지 않음
-                if (CanCrossRadial(ring, s, -1)) { KeepInBand(ref r, ring); a += dDeg; return; }
+                if (_maze.IsRadialOpen(ring, _maze.Mod(s - 1))) { KeepInBand(ref r, ring); a += dDeg; return; }
                 a = s * d + Mathf.Min(local, mDeg);
                 // 스펙 007: 시계 방향으로 가다 막혔음을 기록한다.
                 _hitTangent = -1;
@@ -1703,16 +1622,11 @@ namespace EyeMaze
         /// <summary>
         /// 원호 통로를 지날 수 있는지 판단한다. 통로 가장자리에 걸쳐 있으면 살짝 가운데로 끌어당긴다.
         /// arcRing, sector, r, a(참조)를 사용하며, 지날 수 있으면 true를 반환하고 a를 보정한다.
-        /// 스펙 015: 이 원호 길목을 사물이 막고 있으면 지나지 않는다.
         /// </summary>
         private bool CanCrossArc(int arcRing, int sector, float r, ref float a)
         {
             if (!_maze.IsArcOpen(arcRing, sector, out MazeGate gate)) return false;
             if (gate != null && !gate.CanPass(_person)) { GateBlocked(gate); return false; }
-            // 스펙 015: 이 원호 길목을 사물이 막고 있으면 지나지 않음. 사물 판정은 GateBlocked를 부르지 않는다.
-            int from = _maze.RingAt(r);
-            int to = from == arcRing ? arcRing + 1 : arcRing;
-            if (PropBlocksFace(MazeWall.Kind.Arc, arcRing, sector, new Vector2(to < from ? -1f : 1f, 0f))) return false;
 
             float d = _maze.SectorDeg;
             float mDeg = _wallMargin / Mathf.Max(0.2f, r) * Mathf.Rad2Deg;
@@ -1730,116 +1644,6 @@ namespace EyeMaze
         {
             float m = _wallMargin;
             r = Mathf.Clamp(r, _maze.RingInner(ring) + m, _maze.RingOuter(ring) - m);
-        }
-
-        /// <summary>
-        /// 스펙 015: 칸막이 벽을 넘어 옆 칸으로 갈 수 있는지 판단한다. 칸막이 길목을 사물이 막고 있으면 지나지 않는다.
-        /// ring, sector(지금 칸), dir(+1 반시계, -1 시계)을 사용하며, 지날 수 있으면 true를 반환한다. 밀어냄 사물이면 밀려남을 시작한다.
-        /// </summary>
-        private bool CanCrossRadial(int ring, int sector, int dir)
-        {
-            int boundary = _maze.Mod(dir > 0 ? sector : sector - 1);
-            if (!_maze.IsRadialOpen(ring, boundary)) return false;
-            // 스펙 015: 이 칸막이 길목을 사물이 막고 있으면 지나지 않음
-            return !PropBlocksFace(MazeWall.Kind.Radial, ring, boundary, new Vector2(0f, -dir));
-        }
-
-        /// <summary>
-        /// 스펙 015: 지나려는 길목을 막고 있는 사물이 있으면 막는다. 밀어냄 사물이면 밀려남을 시작한다.
-        /// kind, ring, worldSector(화면 기준 면), pushDir(밀려나는 방향, x 바깥쪽, y 반시계)을 사용하며, 막았으면 true를 반환한다.
-        /// </summary>
-        private bool PropBlocksFace(MazeWall.Kind kind, int ring, int worldSector, Vector2 pushDir)
-        {
-            foreach (MazeProp p in _props)
-            {
-                if (!p.Blocks || p.PassageKind != kind || p.PassageRing != ring || p.WorldPassageSector != worldSector) continue;
-                if (p.Kind == MazePropKind.Push) StartPropPush(pushDir);
-                // 스펙 015 FR-020: 막은 사물이 무엇이고 왜 막는지 적은 글을 보인다
-                ShowPropBlockedText(p);
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 스펙 015: 들여다보는 동안 사물의 반응을 처리한다. 시선이 다가오면 다가가면 막음 사물을 뒤집고, 어지러움 사물 주변 벽을 흔든다.
-        /// _mode, _reading, _cursor, _props, _maze를 사용하며, 사물의 뒤집힘 상태와 벽 흔들림을 바꾼다. 들여다보지 않으면 흔들림을 모두 멈춘다.
-        /// </summary>
-        private void TickPropReactions()
-        {
-            bool gazing = _mode == Mode.Gaze && !_reading && _cursor != null && _maze != null;
-            _wobbleNow.Clear();
-            if (gazing)
-            {
-                Vector3 gaze = _cursor.transform.position;
-                foreach (MazeProp p in _props)
-                {
-                    if (p.CanFlip && Vector2.Distance(gaze, p.PassageCenterWorld) <= p.FlipDistance) p.Flip();
-                    if (p.DizzyRadius > 0f && p.Visible) CollectWobble(p, gaze);
-                }
-            }
-            foreach (MazeWall w in _wobbling)
-                if (w != null && !_wobbleNow.ContainsKey(w)) w.SetWobble(0f, 0f);
-            _wobbling.Clear();
-            foreach (KeyValuePair<MazeWall, (float amp, float speed)> pair in _wobbleNow)
-            {
-                pair.Key.SetWobble(pair.Value.amp, pair.Value.speed);
-                _wobbling.Add(pair.Key);
-            }
-        }
-
-        /// <summary>
-        /// 스펙 015: 시선이 어지러움 사물에 가까우면 그 사물 둘레의 벽마다 흔들림 폭을 정한다. 시선이 사물에 가까울수록, 벽이 사물에 가까울수록 크다.
-        /// p(사물), gaze(시선 월드 위치), _maze의 벽을 사용하며, _wobbleNow에 벽별 가장 큰 폭과 빠르기를 기록한다.
-        /// </summary>
-        private void CollectWobble(MazeProp p, Vector3 gaze)
-        {
-            Vector3 center = p.PassageCenterWorld;
-            float near = 1f - Vector2.Distance(gaze, center) / p.DizzyRadius;
-            if (near <= 0f) return;
-            foreach (MazeWall w in _maze.GetComponentsInChildren<MazeWall>())
-            {
-                float wd = Vector2.Distance(w.transform.TransformPoint(w.MidLocal), center);
-                if (wd > p.DizzyRadius) continue;
-                float amp = p.DizzyAmplitude * near * (1f - wd / p.DizzyRadius);
-                if (!_wobbleNow.TryGetValue(w, out (float amp, float speed) old) || old.amp < amp) _wobbleNow[w] = (amp, p.DizzySpeed);
-            }
-        }
-
-        /// <summary>
-        /// 스펙 015: 밀어냄 사물에 닿아 밀려남과 번쩍임을 시작한다. _bumpEnabled와 무관하며 부담감과 초점 요동은 바꾸지 않는다.
-        /// dir(밀려나는 방향, x 바깥쪽, y 반시계)과 _bumpCooldown을 사용하며, _knockbackDir, _knockbackT, _bumpCooldownT, _velocity, _bumpFlash를 바꾼다.
-        /// </summary>
-        private void StartPropPush(Vector2 dir)
-        {
-            // 밀려나는 중에는 새로 밀어내지 않는다. 대기 시간을 채워 같은 프레임의 벽 부딪힘이 겹치지 않게 한다.
-            if (!Application.isPlaying || _mode != Mode.Gaze || _inAbyss || _reading) return;
-            // 수정(015 FR-007): 먼저 막힌 축 하나로만 밀던 것을 같은 프레임에 두 축이 막히면 두 방향을 더해 정규화하게 바꿨다.
-            if (_knockbackT == 0f)
-            {
-                float x = dir.x != 0f ? dir.x : Mathf.Sign(_knockbackDir.x) * (_knockbackDir.x != 0f ? 1f : 0f);
-                float y = dir.y != 0f ? dir.y : Mathf.Sign(_knockbackDir.y) * (_knockbackDir.y != 0f ? 1f : 0f);
-                _knockbackDir = new Vector2(x, y).normalized;
-                return;
-            }
-            if (_knockbackT >= 0f) return;
-            _knockbackDir = dir;
-            _knockbackT = 0f;
-            _bumpCooldownT = _bumpCooldown;
-            _velocity = Vector2.zero;
-            _bumpFlash = Mathf.Max(_bumpFlash, 0.6f);
-        }
-
-        /// <summary>
-        /// 스펙 015 FR-020: 사물에 막혔을 때 그 사물의 글을 문구로 보인다. key가 비었거나 글이 없으면 아무것도 하지 않는다.
-        /// prop의 BlockedKey와 Strings.csv를 사용하며, 문구를 바꾼다.
-        /// </summary>
-        private void ShowPropBlockedText(MazeProp prop)
-        {
-            if (!Application.isPlaying || string.IsNullOrEmpty(prop.BlockedKey)) return;
-            string text = Personalize(Strings.Get(prop.BlockedKey, ""));
-            // 같은 글이 이미 보이면 다시 쓰지 않아 글자가 처음부터 다시 찍히지 않게 한다.
-            if (text.Length > 0 && _message != text) _message = text;
         }
 
         /// <summary>

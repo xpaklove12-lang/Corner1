@@ -123,7 +123,7 @@
 - `_knockbackDistance`가 0: 밀려나지 않고 연출만 적용된다.
 - 잠긴 문에 붙어 계속 누르고 있음: 막힌 상태가 이어지는 동안은 접촉 1회로 센다. `_gatePushGap`초 이상 떨어졌다 다시 막혀야 다음 1회다.
 - 서로 다른 잠긴 문에 번갈아 부딪힘: 문을 구분하지 않고 합쳐서 센다.
-- 일반 벽과 감정 미로 사물(`EMO-01`~`EMO-20`(`emotion-maze.md`))에 닿음: 접촉 횟수에 넣지 않는다.
+- 일반 벽에 닿음: 접촉 횟수에 넣지 않는다.
 - 시선을 거두거나 `ResetAll()`이 호출됨: 접촉 횟수를 0으로 되돌린다.
 - 에디트 모드: 부딪힘을 시작하지 않는다.
 - 초점이 요동하는 동안 벽, 문, 파편이 매 프레임 다시 그려진다 (현재 씬 벽 약 190개). 연출 시간 동안만 일어난다.
@@ -371,7 +371,7 @@ flowchart TD
 
 - **부르는 것**: `IrisMaze.Focus`, `MazeGate.CanPass`, `EyeVisual.Focus`, `EyeVisual.TearLevel`, `Pupil.Tremble`, `FieldNPC.TryTalk()`, `StartEnding()` (leave 엔딩)
 - **불리는 것**: `EyeMazeDirector.AcceptRest()` ← `GameFlow.Update()`의 Q 처리, `EyeMazeDirector.ShowEncounterGuide()` ← 만남 시작
-- **영향을 받는 것**: 깜빡임 회전과 벽 변화 연출 중에는 부담감이 차지 않는다 (`BURDEN-01` ↔ `BLINK-21`, `BLINK-40`(`blink-maze.md`)). 깜빡일 때 부담감 막대와 글이 함께 가려진다 (`BURDEN-05` ↔ `BLINK-16`(`blink-maze.md`)). 안 좋은 말이 목록에서 빠지는 규칙은 `DLG-16`(`dialogue.md`)을 따른다. 잠긴 문 접촉 횟수에서 감정 미로 사물(`EMO-01`~`EMO-20`(`emotion-maze.md`))은 뺀다.
+- **영향을 받는 것**: 깜빡임 회전과 벽 변화 연출 중에는 부담감이 차지 않는다 (`BURDEN-01` ↔ `BLINK-21`, `BLINK-40`(`blink-maze.md`)). 깜빡일 때 부담감 막대와 글이 함께 가려진다 (`BURDEN-05` ↔ `BLINK-16`(`blink-maze.md`)). 안 좋은 말이 목록에서 빠지는 규칙은 `DLG-16`(`dialogue.md`)을 따른다.
 
 ## 7. 검증 방법
 
