@@ -72,3 +72,4 @@ SDD 작업을 시작할 때 이 파일을 가장 먼저 읽는다.
 | 029 | `specs/029-three-way-note-burst.md` | 세 방향 음표 3회 연속 발사와 Inspector 간격·휴식 설정 | 구현완료 |
 | 030 | `specs/030-imperfect-piano-loop.md` | 은재 1층에서 불완전한 연주를 멈추고 틈으로 전진하는 건반 기믹 | 작성중 |
 | 031 | `specs/031-encounter-layout-rearrange.md` | 상담 화면 눈 확대와 상태·부담감·파편 칸 좌우 재배치 | 구현완료 |
+| 032 | `specs/032-aggression-half-turn.md` | 공격성 오브젝트를 주기마다 Y축 반바퀴 돌렸다가 원점으로 복귀 | 구현완료 |
