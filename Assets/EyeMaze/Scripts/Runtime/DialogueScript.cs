@@ -36,6 +36,9 @@ namespace EyeMaze
             public string[] EndingNeed = Array.Empty<string>();
             // 스펙 011: 내담자가 쉬자고 할 때의 대사 추가
             public string Rest;
+            // 스펙 046: 고르면 바뀌는 감정(guard, stir, sad, hope)과 화제 목록에 보일 글 추가
+            public string Emotion;
+            public string Topic;
             public int Line;
         }
 
@@ -142,6 +145,8 @@ namespace EyeMaze
                     Ending = r["ending"],
                     EndingNeed = r.List("ending_need"),
                     Rest = Text(r["rest"]),
+                    Emotion = r["emotion"],
+                    Topic = Text(r["topic"]),
                     Line = r.Line,
                 });
             }
@@ -156,6 +161,9 @@ namespace EyeMaze
                     // 결과 분기 조건이 있으면 조건이 맞지 않을 때 goto로 가므로 함께 쓸 수 있다.
                     if (c.Goto.Length > 0 && c.Ending.Length > 0 && c.EndingNeed.Length == 0) s.Errors.Add($"{c.Line}행 goto와 ending을 함께 쓸 수 없다 (ending이 먼저 실행된다). 함께 쓰려면 ending_need를 채운다.");
                     if (c.EndingNeed.Length > 0 && c.Ending.Length == 0) s.Errors.Add($"{c.Line}행 ending_need는 ending이 있는 선택지에만 쓴다.");
+                    // 스펙 046: emotion 칸의 값과 topic 칸의 짝을 검사
+                    if (c.Emotion.Length > 0 && !EmotionControl.TryParse(c.Emotion, out _)) s.Errors.Add($"{c.Line}행 emotion '{c.Emotion}'은 guard, stir, sad, hope 가운데 하나여야 한다.");
+                    if (c.Topic.Length > 0 && c.Emotion.Length == 0) s.Errors.Add($"{c.Line}행 topic은 emotion이 있는 선택지에만 쓴다.");
                 }
             }
             return s;

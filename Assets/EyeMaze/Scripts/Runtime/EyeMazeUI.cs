@@ -25,6 +25,13 @@ namespace EyeMaze
         [Tooltip("대화(반응) 앞에 붙는 표시")]
         [SerializeField, FormerlySerializedAs("messagePrefix")] private string _messagePrefix = "* ";
 
+        // 스펙 046: 감정 글과 화제 목록 글 추가
+        [Header("감정")]
+        [Tooltip("지금 감정의 이름을 보여 줄 글")]
+        [SerializeField] private Text _emotionLabel;
+        [Tooltip("들여다보는 동안 짚을 수 있는 화제를 한 줄씩 보여 줄 글")]
+        [SerializeField] private Text[] _topicLabels = new Text[EmotionControl.VISIBLE_TOPICS];
+
         [Header("선택지")]
         [SerializeField, FormerlySerializedAs("optionButtons")] private Button[] _optionButtons = new Button[3];
         [SerializeField, FormerlySerializedAs("optionLabels")] private Text[] _optionLabels = new Text[3];
@@ -122,6 +129,16 @@ namespace EyeMaze
             Set(_message, Prefixed(d.Personalize(d.Message), _messagePrefix));
             // 스펙 012: 새로 얻은 파편 줄을 강조해 표시
             Set(_memories, HighlightedSummary(d.CollectedSummary()));
+
+            // 스펙 046: 감정 이름을 보여 주고, 들여다보는 동안에만 화제 목록을 번호와 함께 보여 준다.
+            EmotionControl emotion = d.EmotionControl;
+            Set(_emotionLabel, emotion.DisplayName);
+            bool showTopics = d.CurrentMode == EyeMazeDirector.Mode.Gaze && !d.InAbyss;
+            for (int i = 0; i < _topicLabels.Length; i++)
+            {
+                bool has = showTopics && i < emotion.Topics.Count;
+                Set(_topicLabels[i], has ? $"{i + 1}. {emotion.Topics[i].Text} ({EmotionControl.NameOf(emotion.Topics[i].Emotion, 1)})" : "");
+            }
 
             // 선택지 결과를 한 줄씩 넘기는 동안에는 선택지를 숨긴다.
             IReadOnlyList<EyeMazeDirector.ChoiceView> choices = d.CurrentMode == EyeMazeDirector.Mode.Talk && !d.IsReadingResponse

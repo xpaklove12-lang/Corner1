@@ -28,6 +28,9 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("fragmentGroups")] private List<GameObject> _fragmentGroups = new List<GameObject>();
         [Tooltip("미로 모양 (seed)")]
         [SerializeField, FormerlySerializedAs("mazeSeed")] private int _mazeSeed = 12345;
+        // 스펙 046: 문의 열쇠 플래그 추가
+        [Tooltip("층 순서대로 문의 열쇠 플래그. 마지막은 동공의 문이다. 비운 문은 신뢰와 동공 조건을 쓴다")]
+        [SerializeField] private string[] _gateKeyFlags = new string[0];
 
         [Header("문구")]
         [SerializeField, FormerlySerializedAs("introMessage"), TextArea(2, 4)] private string _introMessage;
@@ -50,6 +53,7 @@ namespace EyeMaze
         public EndingScript EndingData => EndingScript.Get(_dialogueCsv);
         public List<GameObject> FragmentGroups => _fragmentGroups;
         public int MazeSeed => _mazeSeed;
+        public string[] GateKeyFlags => _gateKeyFlags;
         public string IntroMessage => EndingData?.Text(EndingScript.Intro) ?? _introMessage;
         public string IdleSituation => EndingData?.Text(EndingScript.Idle) ?? _idleSituation;
         public string AbyssMessage => EndingData?.Text(EndingScript.Abyss) ?? _abyssMessage;

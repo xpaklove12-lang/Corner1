@@ -50,6 +50,8 @@ namespace EyeMaze.EditorTools
         {
             "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring",
             "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need",
+            // 스펙 046 FR-031: 저장할 때 감정과 화제 열이 사라지지 않게 추가
+            "emotion", "topic",
         };
 
         private static readonly string[] STRINGS_COLUMNS = { "key", "text", "memo" };
@@ -71,7 +73,8 @@ namespace EyeMaze.EditorTools
             IdColumn = "id",
             BodyColumn = TEXT,
             GroupColumns = new[] { "situation", "back" },
-            ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "spring", "memo", "ending", "rest", "ending_need" },
+            // 스펙 046 FR-031: 대화 선택지 속성에 emotion, topic 추가
+            ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "spring", "memo", "ending", "rest", "ending_need", "emotion", "topic" },
             NumberColumns = new[] { "trust", "dilation", "spring" },
         };
 

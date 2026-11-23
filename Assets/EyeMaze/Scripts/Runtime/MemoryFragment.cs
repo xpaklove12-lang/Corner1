@@ -34,6 +34,15 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("collected")] private bool _collected;
         [Tooltip("주우면 켜지는 플래그 id (Data/Flags.csv에 적힌 것). 대화 CSV의 need 칸에서 쓴다")]
         [SerializeField] private string _flag;
+        // 스펙 046: 숨긴 채로 시작하는 설정과 숨김, 들은 말, 처음 자리 상태 추가
+        [Tooltip("켜면 숨긴 채로 시작한다. 반감이 되어야 드러난다")]
+        [SerializeField] private bool _hiddenAtStart;
+        private bool _hidden;
+        private int _leakHeard;
+        private bool _pulled;
+        private bool _startSaved;
+        private int _startRing;
+        private int _startSector;
 
         [Header("그림")]
         [SerializeField, FormerlySerializedAs("color")] private Color _color = new Color(0.6f, 0.95f, 1f, 1f);
@@ -56,6 +65,12 @@ namespace EyeMaze
         public int Ring { get => _ring; set => _ring = value; }
         public int Sector { get => _sector; set => _sector = value; }
         public string Flag => _flag;
+        /// <summary>스펙 046: 숨긴 상태인지. 숨긴 파편은 그려지지 않고 닿아도 아무 일도 없다. 에디트 모드에서는 늘 보인다.</summary>
+        public bool Hidden => Application.isPlaying && _hidden;
+        /// <summary>스펙 046: 새어 나오는 말을 들은 단계(0, 1, 2)</summary>
+        /// <summary>스펙 046: 열망으로 한 번이라도 끌려왔는지. 끌려온 파편은 시선이 칸 가장자리에 있어도 닿은 것으로 본다.</summary>
+        public bool Pulled => _pulled;
+        public int LeakHeard { get => _leakHeard; set => _leakHeard = Mathf.Clamp(value, 0, 2); }
 
         /// <summary>주웠는지. 바꾸면 플래그도 함께 켜지고 꺼진다.</summary>
         public bool Collected
@@ -115,6 +130,12 @@ namespace EyeMaze
             _drawnKey = int.MinValue;
             // 스펙 012: 켜진 프레임의 후광 갱신이 첫 Update보다 먼저 돌아도 미로를 쓸 수 있게 여기서 찾음
             _maze = GetComponentInParent<IrisMaze>();
+            // 스펙 046: Play에서 처음 켜질 때 처음 자리를 기억하고 숨김 설정을 적용한다.
+            if (!Application.isPlaying || _startSaved) return;
+            _startSaved = true;
+            _startRing = _ring;
+            _startSector = _sector;
+            _hidden = _hiddenAtStart;
         }
         void OnValidate() { _drawnKey = int.MinValue; EyeHooks.Repaint(); }
 
@@ -128,7 +149,7 @@ namespace EyeMaze
         {
             if (_maze == null) _maze = GetComponentInParent<IrisMaze>();
             if (_maze == null || _line == null) return;
-            int key = HashCode.Combine(_ring, _sector, _maze.GeometryKey, _collected, _color, _maze.WallAlpha, _maze.Focus);
+            int key = HashCode.Combine(_ring, _sector, _maze.GeometryKey, _collected, _color, _maze.WallAlpha, _maze.Focus, Hidden);
             if (key == _drawnKey)
             {
                 // 스펙 012: 그림이 그대로여도 Play 중에는 맥동 색을 매 프레임 갱신
@@ -145,7 +166,8 @@ namespace EyeMaze
             DrawDiamond(_line, BodyDiameter);
             Shapes.SetColor(_line, DrawColor);
             _line.sortingOrder = 7;
-            _line.enabled = !_collected;
+            // 스펙 046: 숨긴 파편은 그리지 않음
+            _line.enabled = !_collected && !Hidden;
         }
 
         // 스펙 012: 층이 돌아도 마름모가 같은 모양으로 찍히도록 Play 중 회전과 화면 픽셀 위치를 고정
@@ -154,6 +176,45 @@ namespace EyeMaze
             if (!Application.isPlaying || _maze == null) return;
             Vector3 world = transform.parent.TransformPoint(_maze.CellLocal(_ring, _sector));
             transform.SetPositionAndRotation(SnapToScreenPixel(world), Quaternion.identity);
+        }
+
+        /// <summary>
+        /// 스펙 046: 숨긴 파편을 드러낸다. 한 번 드러나면 감정이 바뀌어도 드러난 채로 있다.
+        /// 입력값은 없으며, _hidden을 끄고 다시 그리게 한다.
+        /// </summary>
+        public void Reveal()
+        {
+            _hidden = false;
+            _drawnKey = int.MinValue;
+        }
+
+        /// <summary>
+        /// 스펙 046: 숨김, 들은 말, 자리를 처음 상태로 되돌린다. 인물을 불러오거나 만남을 다시 시작할 때 부른다.
+        /// _hiddenAtStart와 처음 자리를 사용하며, _hidden, _leakHeard, _pulled, _ring, _sector를 바꾼다.
+        /// </summary>
+        public void ResetState()
+        {
+            _hidden = _hiddenAtStart;
+            _leakHeard = 0;
+            _pulled = false;
+            if (_startSaved)
+            {
+                _ring = _startRing;
+                _sector = _startSector;
+            }
+            _drawnKey = int.MinValue;
+        }
+
+        /// <summary>
+        /// 스펙 046: 파편을 같은 층의 다른 칸으로 옮긴다. 열망에서 시선 쪽으로 끌려올 때 쓴다.
+        /// ring과 sector(자기 층 기준)를 사용하며, _ring, _sector, _pulled를 바꾸고 다시 그리게 한다.
+        /// </summary>
+        public void MoveToCell(int ring, int sector)
+        {
+            _ring = ring;
+            _sector = sector;
+            _pulled = true;
+            _drawnKey = int.MinValue;
         }
 
         /// <summary>

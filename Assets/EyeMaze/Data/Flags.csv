@@ -19,3 +19,6 @@ eunjae_piano_ready,신뢰 2 이상 + 악보를 봄,계산,trust>=2 & clue_sheet_
 trust_le_m3,신뢰 -3 이하,계산,trust<=-3,,,
 trust_le_m2,신뢰 -2 이하,계산,trust<=-2,,,
 eunjae_fragment_1,은재 · 새 기억,파편,,새 기억,새 기억 글,
+eunjae_key_gate1,은재 · 첫째 문 열쇠,대화 선택지,,,,스펙 046 · 건반 치는 손가락에서 찾은 말을 건네면 켜짐
+eunjae_key_gate2,은재 · 둘째 문 열쇠,대화 선택지,,,,스펙 046 · 대기실의 빨간 버튼에서 찾은 말을 건네면 켜짐
+eunjae_key_pupil,은재 · 동공의 문 열쇠,대화 선택지,,,,스펙 046 · 맨 뒷줄의 빈자리에서 찾은 말을 건네면 켜짐

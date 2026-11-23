@@ -42,6 +42,11 @@ namespace EyeMaze
         [Header("연결")]
         [SerializeField, FormerlySerializedAs("person")] private Person _person;
 
+        // 스펙 046: 층 순서대로의 문 열쇠 플래그와 이미 지나간 문의 고리 추가
+        [NonSerialized] private string[] _gateKeyFlags = Array.Empty<string>();
+        private readonly HashSet<int> _passedGateRings = new HashSet<int>();
+        private readonly Queue<(int ring, int sector)> _searchQueue = new Queue<(int ring, int sector)>();
+
         public int Rings => _rings;
         public int Sectors => _sectors;
         public float OuterRadius => _outerRadius;
@@ -199,6 +204,158 @@ namespace EyeMaze
             return w == null || !w.gameObject.activeSelf;
         }
 
+        /// <summary>
+        /// 스펙 046: 맞닿은 두 칸 사이를 지금 지날 수 있는지 판단한다. 맞닿지 않은 칸이면 지날 수 없는 것으로 본다.
+        /// 두 칸의 고리와 화면 기준 섹터를 사용하며, 벽이 열려 있으면 true를 반환한다.
+        /// </summary>
+        public bool IsStepOpen(int ringA, int sectorA, int ringB, int sectorB)
+        {
+            if (ringA == ringB)
+            {
+                if (sectorB == Mod(sectorA + 1)) return IsRadialOpen(ringA, sectorA);
+                if (sectorA == Mod(sectorB + 1)) return IsRadialOpen(ringA, sectorB);
+                return false;
+            }
+            if (Mathf.Abs(ringA - ringB) != 1 || sectorA != sectorB) return false;
+            // 잠긴 문이 있는 자리는 벽이 꺼져 있어도 지날 수 없는 것으로 본다.
+            return IsArcOpen(Mathf.Min(ringA, ringB), sectorA, out MazeGate gate) && (gate == null || gate.CanPass(_person));
+        }
+
+        /// <summary>
+        /// 스펙 046: 미로 기준 두 점을 잇는 곧은 길이 닫힌 벽이나 미로 바깥에 막히는지 판단한다.
+        /// from과 to(미로 로컬 좌표)를 사용하며, 막히면 true를 반환한다.
+        /// </summary>
+        public bool IsPathBlocked(Vector2 from, Vector2 to)
+        {
+            const float STEP = 0.03f;
+            int steps = Mathf.Max(1, Mathf.CeilToInt((to - from).magnitude / STEP));
+            int ring = RingAt(from.magnitude);
+            int sector = SectorAt(Mathf.Atan2(from.y, from.x) * Mathf.Rad2Deg);
+            for (int i = 1; i <= steps; i++)
+            {
+                Vector2 point = Vector2.Lerp(from, to, i / (float)steps);
+                float radius = point.magnitude;
+                if (radius > _outerRadius || radius < _innerRadius) return true;
+                int nextRing = RingAt(radius);
+                int nextSector = SectorAt(Mathf.Atan2(point.y, point.x) * Mathf.Rad2Deg);
+                if (nextRing == ring && nextSector == sector) continue;
+                // 한 걸음에 고리와 섹터 경계를 함께 넘으면 두 경계를 차례로 넘는 두 길 가운데 하나라도 열려 있는지 본다.
+                bool diagonal = nextRing != ring && nextSector != sector;
+                bool open = diagonal
+                    ? (IsStepOpen(ring, sector, nextRing, sector) && IsStepOpen(nextRing, sector, nextRing, nextSector))
+                        || (IsStepOpen(ring, sector, ring, nextSector) && IsStepOpen(ring, nextSector, nextRing, nextSector))
+                    : IsStepOpen(ring, sector, nextRing, nextSector);
+                if (!open) return true;
+                ring = nextRing;
+                sector = nextSector;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 스펙 046: 한 층 안에서 열린 칸만 지나 목표 칸으로 가는 가장 짧은 길의 첫 걸음을 찾는다.
+        /// 출발 칸과 목표 칸의 고리와 화면 기준 섹터를 사용하며, 길이 있으면 true를 반환하고 다음 칸을 nextRing, nextSector에 쓴다.
+        /// 두 칸이 다른 층이거나 같은 칸이거나 길이 없으면 false를 반환한다.
+        /// </summary>
+        public bool NextStepToward(int fromRing, int fromSector, int toRing, int toSector, out int nextRing, out int nextSector)
+        {
+            nextRing = fromRing;
+            nextSector = fromSector;
+            int layer = LayerOfRing(fromRing);
+            if (layer != LayerOfRing(toRing) || (fromRing == toRing && fromSector == toSector)) return false;
+
+            int firstRing = layer * _ringsPerLayer;
+            int ringCount = Mathf.Min(_rings - 1, firstRing + _ringsPerLayer - 1) - firstRing + 1;
+            // 목표 칸에서부터 거리를 채워 나가면 출발 칸의 이웃 가운데 거리가 가장 짧은 칸이 첫 걸음이다.
+            int[,] distance = new int[ringCount, _sectors];
+            for (int r = 0; r < ringCount; r++)
+                for (int s = 0; s < _sectors; s++) distance[r, s] = -1;
+            distance[toRing - firstRing, toSector] = 0;
+            _searchQueue.Clear();
+            _searchQueue.Enqueue((toRing, toSector));
+            while (_searchQueue.Count > 0)
+            {
+                (int ring, int sector) = _searchQueue.Dequeue();
+                int step = distance[ring - firstRing, sector] + 1;
+                for (int n = 0; n < 4; n++)
+                {
+                    int neighborRing = ring + (n == 2 ? 1 : n == 3 ? -1 : 0);
+                    int neighborSector = Mod(sector + (n == 0 ? 1 : n == 1 ? -1 : 0));
+                    if (neighborRing < firstRing || neighborRing >= firstRing + ringCount) continue;
+                    if (distance[neighborRing - firstRing, neighborSector] >= 0) continue;
+                    if (!IsStepOpen(ring, sector, neighborRing, neighborSector)) continue;
+                    distance[neighborRing - firstRing, neighborSector] = step;
+                    _searchQueue.Enqueue((neighborRing, neighborSector));
+                }
+            }
+
+            int best = distance[fromRing - firstRing, fromSector];
+            if (best <= 0) return false;
+            for (int n = 0; n < 4; n++)
+            {
+                int neighborRing = fromRing + (n == 2 ? 1 : n == 3 ? -1 : 0);
+                int neighborSector = Mod(fromSector + (n == 0 ? 1 : n == 1 ? -1 : 0));
+                if (neighborRing < firstRing || neighborRing >= firstRing + ringCount) continue;
+                int d = distance[neighborRing - firstRing, neighborSector];
+                if (d < 0 || d >= best || !IsStepOpen(fromRing, fromSector, neighborRing, neighborSector)) continue;
+                best = d;
+                nextRing = neighborRing;
+                nextSector = neighborSector;
+            }
+            return nextRing != fromRing || nextSector != fromSector;
+        }
+
+        // 문 열쇠
+
+        /// <summary>
+        /// 스펙 046: 층 순서대로의 문 열쇠 플래그를 받아 지금 있는 문과 앞으로 만들 문에 적용한다.
+        /// flags(층 사이 문 순서, 마지막은 동공의 문)를 사용하며, _gateKeyFlags와 모든 문의 열쇠 플래그를 바꾼다.
+        /// </summary>
+        public void SetGateKeyFlags(string[] flags)
+        {
+            _gateKeyFlags = flags ?? Array.Empty<string>();
+            foreach (MazeGate gate in GetComponentsInChildren<MazeGate>(true)) gate.KeyFlag = KeyFlagOfGate(gate.Ring);
+        }
+
+        /// <summary>
+        /// 스펙 046: 문이 있는 고리로 그 문의 열쇠 플래그를 찾는다. 가장 안쪽 고리의 문은 동공의 문이다.
+        /// 고리 번호 ring과 _gateKeyFlags를 사용하며, 열쇠 플래그 또는 (정해지지 않았으면) 빈 글을 반환한다.
+        /// </summary>
+        public string KeyFlagOfGate(int ring)
+        {
+            int index = ring >= _rings - 1 ? LayerCount - 1 : ArcOwner(ring) - 1;
+            return index >= 0 && index < _gateKeyFlags.Length ? _gateKeyFlags[index] ?? "" : "";
+        }
+
+        /// <summary>
+        /// 스펙 046: 시선이 지나간 문을 기억한다. 벽을 다시 만들어 문 오브젝트가 바뀌어도 고리로 기억한다.
+        /// 문이 있는 고리 ring을 사용하며, _passedGateRings를 바꾼다.
+        /// </summary>
+        public void MarkGatePassed(int ring) => _passedGateRings.Add(ring);
+
+        /// <summary>
+        /// 스펙 046: 그 고리의 안쪽 경계에 문이 있는지 판단한다.
+        /// 고리 번호 ring을 사용하며, 켜져 있는 문이 있으면 true를 반환한다.
+        /// </summary>
+        public bool HasGateOnRing(int ring)
+        {
+            foreach (MazeGate gate in GetComponentsInChildren<MazeGate>(false))
+                if (gate.Ring == ring) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// 스펙 046: 그 고리의 문을 이미 지나갔는지 판단한다.
+        /// 문이 있는 고리 ring을 사용하며, 지나갔으면 true를 반환한다.
+        /// </summary>
+        public bool IsGatePassed(int ring) => _passedGateRings.Contains(ring);
+
+        /// <summary>
+        /// 스펙 046: 지나간 문 기록을 지운다. 만남을 처음부터 다시 시작할 때 부른다.
+        /// 입력값은 없으며, _passedGateRings를 비운다.
+        /// </summary>
+        public void ClearPassedGates() => _passedGateRings.Clear();
+
         // 생성
 
         /// <summary>
@@ -327,6 +484,8 @@ namespace EyeMaze
             go.transform.SetParent(parent, false);
             MazeGate g = go.AddComponent<MazeGate>();
             g.Setup(r, s, requiredTrust, requiredDilation, lockedMessage, Shapes.Ensure(go, _lineMaterial, 4));
+            // 스펙 046: 새로 만든 문에도 그 자리의 열쇠 플래그를 넣음
+            g.KeyFlag = KeyFlagOfGate(r);
             return g;
         }
     }

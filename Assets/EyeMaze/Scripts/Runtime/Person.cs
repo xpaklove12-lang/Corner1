@@ -12,6 +12,11 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("trust")] private int _trust;
         [Tooltip("동공 크기. 높을수록 마음이 열려 있음")]
         [SerializeField, FormerlySerializedAs("dilation"), Range(0f, 1f)] private float _dilation = 0.2f;
+        // 스펙 046: 감정과 단계 추가
+        [Tooltip("지금 감정")]
+        [SerializeField] private Emotion _emotion;
+        [Tooltip("감정 단계. 평온은 0, 그 밖의 감정은 1 또는 2")]
+        [SerializeField, Range(0, 2)] private int _emotionStage;
         // 스펙 004: 옳은 대답으로 얻은 신뢰 누적값 추가
         [System.NonSerialized] private int _earnedTrust;
 
@@ -22,6 +27,10 @@ namespace EyeMaze
         /// <summary>문을 여는 데 쓰는 신뢰. Inspector에서 올린 Trust로도 문을 시험할 수 있다.</summary>
         public int GateTrust => Mathf.Max(_trust, _earnedTrust);
         public float Dilation { get => _dilation; set => _dilation = Mathf.Clamp01(value); }
+        /// <summary>지금 감정. 바꾸는 규칙은 EmotionControl이 맡는다.</summary>
+        public Emotion Emotion { get => _emotion; set => _emotion = value; }
+        /// <summary>감정 단계. 평온은 0, 그 밖의 감정은 1 또는 2다.</summary>
+        public int EmotionStage { get => _emotionStage; set => _emotionStage = Mathf.Clamp(value, 0, 2); }
 
         void OnValidate() => EyeHooks.Repaint();
     }

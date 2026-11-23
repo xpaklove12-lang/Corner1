@@ -113,7 +113,8 @@ namespace EyeMaze
         /// </summary>
         private void UpdateGlow(MemoryFragment fragment, LineRenderer line, float sizeRatio, float alpha)
         {
-            line.enabled = !fragment.Collected;
+            // 스펙 046: 숨긴 파편의 후광도 끔
+            line.enabled = !fragment.Collected && !fragment.Hidden;
             if (!line.enabled) return;
             float wave = fragment.PulseWave;
             float diagonal = _maze.RingWidth * sizeRatio * Mathf.Lerp(_glowPulseMinScale, 1f, wave);
