@@ -72,4 +72,17 @@ SDD 작업을 시작할 때 이 파일을 가장 먼저 읽는다.
 | 029 | `specs/029-three-way-note-burst.md` | 세 방향 음표 3회 연속 발사와 Inspector 간격·휴식 설정 | 구현완료 |
 | 030 | `specs/030-imperfect-piano-loop.md` | 은재 1층에서 불완전한 연주를 멈추고 틈으로 전진하는 건반 기믹 | 작성중 |
 | 031 | `specs/031-encounter-layout-rearrange.md` | 상담 화면 눈 확대와 상태·부담감·파편 칸 좌우 재배치 | 구현완료 |
-| 032 | `specs/032-aggression-half-turn.md` | 공격성 오브젝트를 주기마다 Y축 반바퀴 돌렸다가 원점으로 복귀 | 구현완료 |
+| 032 | `specs/032-aggression-half-turn.md` | 공격성 오브젝트를 주기마다 Z축 반바퀴 돌렸다가 원점으로 복귀 | 구현완료 |
+| 033 | `specs/033-aggression-gunner.md` | 공격성 오브젝트가 회전한 방향으로 주기마다 풀링 탄환 발사 | 구현완료 |
+| 034 | `specs/034-aggression-sequential-circle-bullets.md` | 공격성 포대 각도 순차 발사, 원형 탄환, 흰자 직전 소멸 | 구현완료 |
+| 035 | `specs/035-aggression-sine-sweep.md` | 공격성 포대 사인파 흔들기 3갈래 탄막 패턴 | 구현완료 |
+| 036 | `specs/036-gunner-mirror-angles.md` | 포대 발사 각도마다 정반대(180도 뒤) 방향도 함께 발사 | 구현완료 |
+| 037 | `specs/037-fragment-line-puzzle.md` | 파편을 열 때 조각 자리를 바꿔 길을 잇고 말을 걸려 단서에 닿아야 획득 | 구현완료 |
+| 038 | `specs/038-eunjae-wary-portrait.md` | 대화 상자 은재 초상화가 흘끔거리고 움츠리는 경계 루프 동작 | 구현완료 |
+| 039 | `specs/039-field-perspective-camera.md` | 필드를 살짝 내려다보는 원근 카메라로 보여 주는 2.5D 화면 | 구현완료 |
+| 040 | `specs/040-spline-line.md` | 스플라인을 따라 LineRenderer 선을 그리고 에디트 모드에서도 따라오게 함 | 구현완료 |
+| 041 | `specs/041-eunjae-wary-sprite-animation.md` | 은재 초상화로 만든 경계 동작 스프라이트 시트와 반복 애니메이션 에셋 (에셋 삭제됨) | 구현완료 |
+| 042 | `specs/042-encounter-portrait-panel.md` | 만남 화면 상황 칸 글을 숨기고 흰 테두리를 두른 큰 은재 정지 초상화 표시 | 구현완료 |
+| 043 | `specs/043-eunjae-idle-portrait-animation.md` | 눈 미로 시작 화면 은재 초상화를 숨쉬기·머리카락·깜빡임 아이들 애니메이션으로 교체 | 구현완료 |
+| 044 | `specs/044-eunjae-to-wary-transition.md` | 일반 은재에서 경계하는 은재로 넘어가는 8프레임 모핑 전환 애니메이션 에셋 | 구현완료 |
+| 045 | `specs/045-wary-stance-toggle.md` | 임시 버튼으로 경계태세 전환: 은재 경계 애니메이션 재생과 눈 가운데 공격성 포대 켜기 | 구현완료 |

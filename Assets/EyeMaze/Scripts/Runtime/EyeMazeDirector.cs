@@ -111,6 +111,11 @@ namespace EyeMaze
         [Tooltip("눈을 뜬 직후 이동 입력을 받지 않는 시간(초)")]
         [SerializeField] private float _blinkRecoverSeconds = 0.2f;
 
+        // 스펙 037: 파편을 열 때 푸는 조각 맞추기 미로
+        [Header("파편 퍼즐")]
+        [Tooltip("파편에 닿으면 열 퍼즐. 비우면 기존처럼 바로 줍는다")]
+        [SerializeField] private FragmentPuzzle _puzzle;
+
         [Header("파편 읽은 뒤")]
         [Tooltip("파편을 다 읽고 나면 지금 층을 뺀 나머지 층의 벽을 무작위로 다시 만든다 (멈춰 있는 동안 길을 외우지 못하게)")]
         [SerializeField, FormerlySerializedAs("respawnMazeAfterReading")] private bool _respawnMazeAfterReading = true;
@@ -219,6 +224,9 @@ namespace EyeMaze
         [NonSerialized] private Pupil _pupil;
         // 스펙 007: 마지막으로 상황 문구를 대화 기록에 남긴 장면 추가
         [NonSerialized] private DialogueScript.Node _loggedNode;
+        // 스펙 037: 퍼즐로 여는 중인 파편과, 포기한 뒤 칸을 벗어나기 전까지 다시 열지 않을 파편
+        [NonSerialized] private MemoryFragment _puzzleFragment;
+        [NonSerialized] private MemoryFragment _declinedFragment;
 
         /// <summary>화면에 보여줄 선택지 하나 (뒤로가기 포함)</summary>
         public struct ChoiceView
@@ -233,7 +241,7 @@ namespace EyeMaze
         public IrisMaze Maze => _maze;
         public GazeCursor Cursor => _cursor;
         public bool CanRunHazards => isActiveAndEnabled && _acceptInput && _mode == Mode.Gaze && !_reading
-            && !_inAbyss && _blinkPhase < 0f && _blinkRecoverT <= 0f && !_blinkTurning
+            && !IsSolvingPuzzle && !_inAbyss && _blinkPhase < 0f && _blinkRecoverT <= 0f && !_blinkTurning
             && !_wallChange.IsPlaying && !DialogueLog.BlocksInput;
         public Person Person => _person;
         public Mode CurrentMode => _mode;
@@ -277,6 +285,8 @@ namespace EyeMaze
 
         /// <summary>파편을 읽는 중이면 시선이 멈춘다.</summary>
         public bool IsReading => _mode == Mode.Gaze && _reading;
+        // 스펙 037: 파편 퍼즐이 열려 있는지
+        public bool IsSolvingPuzzle => _puzzle != null && _puzzle.IsOpen;
 
         /// <summary>선택지 결과를 한 줄씩 넘기는 중인지. 이때는 선택지와 들여다보기 전환을 받지 않는다.</summary>
         public bool IsReadingResponse => _mode == Mode.Talk && _responseLines.Count > 0;
@@ -348,6 +358,20 @@ namespace EyeMaze
             Strings.Load(_stringsCsv);
             Flags.Values = FlagValue;
             Flags.LoadDefinitions(_flagsCsv);
+            if (_puzzle != null)
+            {
+                _puzzle.Solved += OnPuzzleSolved;
+                _puzzle.Cancelled += OnPuzzleCancelled;
+                _puzzle.Caught += OnPuzzleCaught;
+            }
+        }
+
+        void OnDisable()
+        {
+            if (_puzzle == null) return;
+            _puzzle.Solved -= OnPuzzleSolved;
+            _puzzle.Cancelled -= OnPuzzleCancelled;
+            _puzzle.Caught -= OnPuzzleCaught;
         }
 
         /// <summary>
@@ -403,8 +427,11 @@ namespace EyeMaze
             TickKnockback(dt);
             TickGlitch(dt);
 
-            // 들여다보는 동안 정해진 시간마다 눈을 깜빡이고, 부담감이 차오른다.
-            if (_mode == Mode.Gaze && !_inAbyss && !_reading)
+            // 스펙 037: 들여다보기가 끝나면 열려 있던 퍼즐을 닫는다.
+            if (IsSolvingPuzzle && _mode != Mode.Gaze) ClosePuzzle();
+
+            // 들여다보는 동안 정해진 시간마다 눈을 깜빡이고, 부담감이 차오른다. 퍼즐 중에는 멈춘다.
+            if (_mode == Mode.Gaze && !_inAbyss && !_reading && !IsSolvingPuzzle)
             {
                 TickBlink(dt);
                 // 스펙 010: 깜빡임 회전과 벽 변화 연출 중에는 부담감을 채우지 않음
@@ -1268,6 +1295,12 @@ namespace EyeMaze
                 Steer(Vector2.zero, dt);
                 return;
             }
+            // 스펙 037: 퍼즐 중에는 퍼즐이 입력을 받고 시선 이동과 다른 키는 받지 않는다.
+            if (IsSolvingPuzzle)
+            {
+                Steer(Vector2.zero, dt);
+                return;
+            }
             if (kb != null)
             {
                 if (kb.wKey.isPressed || kb.upArrowKey.isPressed) move.y += 1f;
@@ -1433,15 +1466,90 @@ namespace EyeMaze
         /// </summary>
         private void CheckFragment()
         {
+            // 스펙 037: 포기한 파편은 시선이 그 칸을 벗어나야 다시 열린다.
+            if (_declinedFragment != null && (_declinedFragment.Ring != _cursor.Ring || _declinedFragment.WorldSector != _cursor.Sector))
+                _declinedFragment = null;
+            if (IsSolvingPuzzle) return;
+
             Vector3 pos = _cursor.LocalPos;
             foreach (MemoryFragment f in Fragments)
             {
-                if (f.Collected || f.Ring != _cursor.Ring || f.WorldSector != _cursor.Sector) continue;
+                if (f.Collected || f == _declinedFragment || f.Ring != _cursor.Ring || f.WorldSector != _cursor.Sector) continue;
                 if (Vector3.Distance(pos, _maze.CellLocal(f.Ring, f.WorldSector)) > _maze.RingWidth * 0.55f) continue;
-                f.Collected = true;
-                _message = Strings.Get("msg.fragment", "파편 — {title}\n{text}", ("title", f.Title), ("text", f.Text));
-                if (Application.isPlaying) { _reading = true; _readT = 0f; _velocity = Vector2.zero; StopBump(); }
+                if (_puzzle != null && Application.isPlaying)
+                {
+                    OpenPuzzle(f);
+                    return;
+                }
+                CollectFragment(f);
             }
+        }
+
+        /// <summary>
+        /// 파편 f를 줍고 글을 보여 준다. Play 모드에서는 읽는 동안 멈춘다.
+        /// f를 사용하며, 파편의 수집 상태와 문구, 읽기 상태를 바꾼다.
+        /// </summary>
+        private void CollectFragment(MemoryFragment f)
+        {
+            f.Collected = true;
+            _message = Strings.Get("msg.fragment", "파편 — {title}\n{text}", ("title", f.Title), ("text", f.Text));
+            if (Application.isPlaying) { _reading = true; _readT = 0f; _velocity = Vector2.zero; StopBump(); }
+        }
+
+        /// <summary>
+        /// 스펙 037: 파편 f의 층 크기로 조각 맞추기 미로를 열고 미로를 멈춘다.
+        /// f와 미로 층 정보를 사용하며, _puzzleFragment, 속도, 밀려남, 문구를 바꾼다.
+        /// </summary>
+        private void OpenPuzzle(MemoryFragment f)
+        {
+            _puzzleFragment = f;
+            _velocity = Vector2.zero;
+            StopBump();
+            _puzzle.Open(_maze.LayerOfRing(f.Ring), UnityEngine.Random.Range(int.MinValue, int.MaxValue));
+            _message = Strings.Get("msg.puzzle_open", "파편이 조각나 있다. 조각을 바꿔 길을 잇고 단서까지 걸어가야 열린다.\n(방향키·Space 조각 바꾸기 · R 돌리기 · WASD 걷기 · Esc 그만두기)");
+        }
+
+        /// <summary>
+        /// 스펙 037: 열린 퍼즐을 닫고 여는 중이던 파편을 잊는다.
+        /// 입력값은 없으며, 퍼즐 열림 상태와 _puzzleFragment를 바꾼다.
+        /// </summary>
+        private void ClosePuzzle()
+        {
+            _puzzle.Close();
+            _puzzleFragment = null;
+        }
+
+        /// <summary>
+        /// 스펙 037: 퍼즐을 풀면 여는 중이던 파편을 줍는다.
+        /// _puzzleFragment를 사용하며, 파편 수집 상태와 읽기 상태를 바꾼다.
+        /// </summary>
+        private void OnPuzzleSolved()
+        {
+            MemoryFragment f = _puzzleFragment;
+            _puzzleFragment = null;
+            if (f != null) CollectFragment(f);
+        }
+
+        /// <summary>
+        /// 스펙 037: 퍼즐을 그만두면 파편을 남겨 두고, 칸을 벗어나기 전까지 다시 열지 않는다.
+        /// _puzzleFragment를 사용하며, _declinedFragment와 문구를 바꾼다.
+        /// </summary>
+        private void OnPuzzleCancelled()
+        {
+            _declinedFragment = _puzzleFragment;
+            _puzzleFragment = null;
+            _message = Strings.Get("msg.puzzle_cancel", "파편에서 잠시 물러났다. 칸을 벗어났다 돌아오면 다시 열 수 있다.");
+        }
+
+        /// <summary>
+        /// 스펙 037: 퍼즐 안의 적에게 붙잡히면 퍼즐 밖으로 밀려나고, 칸을 벗어났다 돌아와야 다시 도전할 수 있다.
+        /// _puzzleFragment를 사용하며, _declinedFragment와 문구를 바꾼다.
+        /// </summary>
+        private void OnPuzzleCaught()
+        {
+            _declinedFragment = _puzzleFragment;
+            _puzzleFragment = null;
+            _message = Strings.Get("msg.puzzle_caught", "무언가에 붙잡혀 파편에서 밀려났다. 칸을 벗어났다 돌아오면 다시 도전할 수 있다.");
         }
 
         /// <summary>

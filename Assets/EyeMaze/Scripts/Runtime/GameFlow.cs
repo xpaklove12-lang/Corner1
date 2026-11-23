@@ -45,6 +45,11 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("zoomDuration")] private float _zoomDuration = 0.7f;
         [SerializeField, FormerlySerializedAs("fadeSpeed")] private float _fadeSpeed = 3f;
 
+        // 스펙 039: 필드는 씬에 잡아 둔 카메라(원근이면 원근 그대로)로 보고, 눈 화면만 직교로 바꾼다.
+        [Header("필드 원근 (2.5D)")]
+        [Tooltip("필드 카메라가 원근일 때, 눈 화면(직교)으로 바꿀 때 쓰는 카메라 z 위치")]
+        [SerializeField] private float _orthoCamZ = -10f;
+
         [Header("연출")]
         [SerializeField, FormerlySerializedAs("fade"), Range(0f, 1f)] private float _fade;
 
@@ -56,6 +61,12 @@ namespace EyeMaze
         [NonSerialized] private float _fadeTarget;
         [NonSerialized] private Vector3 _zoomFrom;
         [NonSerialized] private float _zoomFromSize;
+        [NonSerialized] private Vector3 _zoomFromLook;
+        [NonSerialized] private bool _fieldPoseSaved;
+        [NonSerialized] private bool _fieldPerspective;
+        [NonSerialized] private float _fieldFov;
+        [NonSerialized] private Quaternion _fieldRotation;
+        [NonSerialized] private Vector3 _fieldOffset;
         [NonSerialized] private bool _returnResolved;
         [NonSerialized] private List<string> _convLines;
         [NonSerialized] private string _convSpeaker;
@@ -91,7 +102,10 @@ namespace EyeMaze
         {
             if (!Application.isPlaying) return;
             if (_director != null) _director.AcceptInput = _state == State.Encounter;
-            if (_state == State.Field) PlaceCamera(FieldCamTarget, _fieldCamSize);
+            if (_state != State.Field) return;
+            // 씬에 잡아 둔 카메라를 그대로 필드 기준 자세로 삼는다. 원근이면 시작할 때 카메라를 옮기지 않는다.
+            SaveFieldPose();
+            if (!_fieldPerspective) PlaceFieldCamera(FieldCamTarget, _fieldCamSize);
         }
 
         void Update()
@@ -165,7 +179,13 @@ namespace EyeMaze
                         Nearest = FindNearest();
                         if (interact && Nearest != null) Nearest.Interact(this);
                     }
-                    if (_cam != null)
+                    if (_cam != null && _fieldPoseSaved && _fieldPerspective)
+                    {
+                        // 원근일 때는 잡아 둔 카메라와 따라가기 목표의 간격을 유지하며 같은 부드러움으로 따라간다.
+                        Vector3 goal = FieldCamTarget + _fieldOffset;
+                        _cam.transform.position = Vector3.Lerp(_cam.transform.position, goal, 1f - Mathf.Exp(-6f * dt));
+                    }
+                    else if (_cam != null)
                     {
                         Vector3 t = FieldCamTarget;
                         Vector3 cp = Vector3.Lerp(_cam.transform.position, new Vector3(t.x, t.y, _cam.transform.position.z), 1f - Mathf.Exp(-6f * dt));
@@ -177,7 +197,14 @@ namespace EyeMaze
                 case State.ZoomIn:
                     _timer += dt / Mathf.Max(0.05f, _zoomDuration);
                     float e = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(_timer));
-                    if (_cam != null && _currentNpc != null)
+                    if (_cam != null && _currentNpc != null && _fieldPoseSaved && _fieldPerspective)
+                    {
+                        // 바라보는 방향은 그대로 두고, 간격을 크기 비율만큼 줄여 상대에게 다가간다.
+                        Vector3 look = Vector3.Lerp(_zoomFromLook, _currentNpc.transform.position, e);
+                        float scale = Mathf.Lerp(1f, _zoomInSize / Mathf.Max(0.01f, _fieldCamSize), e);
+                        _cam.transform.position = new Vector3(look.x, look.y, 0f) + _fieldOffset * scale;
+                    }
+                    else if (_cam != null && _currentNpc != null)
                     {
                         Vector3 target = _currentNpc.transform.position;
                         _cam.transform.position = Vector3.Lerp(_zoomFrom, new Vector3(target.x, target.y, _zoomFrom.z), e);
@@ -327,11 +354,18 @@ namespace EyeMaze
             _currentNpc = npc;
             if (_player != null) _player.Stop();
             CloseText();
-            if (!Application.isPlaying) { EnterEncounterNow(); return; }
+            if (!Application.isPlaying)
+            {
+                // 에디트 모드에서는 눈 화면으로 바꾸기 전에 잡아 둔 필드 카메라를 기억해, 필드로 돌아올 때 되살린다.
+                SaveFieldPose();
+                EnterEncounterNow();
+                return;
+            }
             _state = State.ZoomIn;
             _timer = 0f;
             _zoomFrom = _cam != null ? _cam.transform.position : Vector3.zero;
-            _zoomFromSize = _cam != null ? _cam.orthographicSize : _fieldCamSize;
+            _zoomFromSize = _cam != null && _cam.orthographic ? _cam.orthographicSize : _fieldCamSize;
+            _zoomFromLook = _cam != null ? _cam.transform.position - _fieldOffset : FieldCamTarget;
         }
 
         /// <summary>
@@ -442,7 +476,7 @@ namespace EyeMaze
                 _director.AcceptInput = false;
                 if (_director.CurrentMode == EyeMazeDirector.Mode.Gaze) _director.ExitGaze("");
             }
-            PlaceCamera(FieldCamTarget, _fieldCamSize);
+            PlaceFieldCamera(FieldCamTarget, _fieldCamSize);
             if (_cam != null) _cam.backgroundColor = _fieldBackground;
             _fadeTarget = 0f;
             if (_returnResolved && _currentNpc != null)
@@ -474,13 +508,52 @@ namespace EyeMaze
 
         /// <summary>
         /// 카메라 위치와 크기를 정한다.
-        /// pos, size를 사용하며, 카메라 Transform과 orthographicSize를 바꾼다.
+        /// pos, size를 사용하며, 카메라 Transform과 orthographicSize를 바꾼다. 원근이었으면 직교, 회전 없음, _orthoCamZ로 되돌린다.
         /// </summary>
         private void PlaceCamera(Vector3 pos, float size)
         {
             if (_cam == null) return;
-            _cam.transform.position = new Vector3(pos.x, pos.y, _cam.transform.position.z);
+            float z = _cam.transform.position.z;
+            if (!_cam.orthographic)
+            {
+                _cam.orthographic = true;
+                _cam.transform.rotation = Quaternion.identity;
+                z = _orthoCamZ;
+            }
+            _cam.transform.position = new Vector3(pos.x, pos.y, z);
             _cam.orthographicSize = size;
+        }
+
+        /// <summary>
+        /// 스펙 039: 지금 카메라를 필드 기준 자세로 기억한다. 원근 여부, 시야각, 회전과 따라가기 목표에서 카메라까지의 간격을 저장한다.
+        /// _cam과 따라가기 목표를 사용하며, _fieldPoseSaved, _fieldPerspective, _fieldFov, _fieldRotation, _fieldOffset을 바꾼다.
+        /// </summary>
+        private void SaveFieldPose()
+        {
+            if (_cam == null) return;
+            _fieldPoseSaved = true;
+            _fieldPerspective = !_cam.orthographic;
+            _fieldFov = _cam.fieldOfView;
+            _fieldRotation = _cam.transform.rotation;
+            _fieldOffset = _cam.transform.position - FieldCamTarget;
+        }
+
+        /// <summary>
+        /// 스펙 039: 필드 카메라를 놓는다. 기억한 필드 자세가 원근이면 그 투영·시야각·회전과 간격으로, 아니면 기존 직교로 놓는다.
+        /// target, size와 기억한 필드 자세를 사용하며, 카메라 투영, 회전, 위치를 바꾼다.
+        /// </summary>
+        private void PlaceFieldCamera(Vector3 target, float size)
+        {
+            if (_cam == null) return;
+            if (!_fieldPoseSaved || !_fieldPerspective)
+            {
+                PlaceCamera(target, size);
+                return;
+            }
+            _cam.orthographic = false;
+            _cam.fieldOfView = _fieldFov;
+            _cam.transform.rotation = _fieldRotation;
+            _cam.transform.position = new Vector3(target.x, target.y, 0f) + _fieldOffset;
         }
     }
 }

@@ -34,7 +34,8 @@ namespace EyeMaze
             if (!_owner.CanFire) { ReturnToPool(); return; }
 
             float dt = Mathf.Min(Time.deltaTime, Mathf.Max(0f, _owner.BulletLifetime - _age));
-            float distance = Mathf.Min(_owner.BulletSpeed * dt, Mathf.Max(0f, _owner.Range - _travelled));
+            float distance = _owner.BulletSpeed * dt;
+            if (!_owner.DespawnAtIrisEdge) distance = Mathf.Min(distance, Mathf.Max(0f, _owner.Range - _travelled));
             Vector2 start = transform.position;
             Vector2 end = start + _direction * distance;
             Vector2 segment = end - start;
@@ -50,7 +51,11 @@ namespace EyeMaze
             transform.position = new Vector3(end.x, end.y, transform.position.z);
             _travelled += distance;
             _age += Time.deltaTime;
-            if (_travelled >= _owner.Range || _age >= _owner.BulletLifetime) ReturnToPool();
+            // 흰자 직전 소멸을 쓰는 포대는 사거리 대신 홍채 바깥 경계까지의 거리로 판단한다.
+            bool outOfRange = _owner.DespawnAtIrisEdge
+                ? (end - _owner.IrisCenter).sqrMagnitude >= _owner.IrisEdgeRadius * _owner.IrisEdgeRadius
+                : _travelled >= _owner.Range;
+            if (outOfRange || _age >= _owner.BulletLifetime) ReturnToPool();
         }
 
         /// <summary>

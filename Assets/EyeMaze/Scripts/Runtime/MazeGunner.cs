@@ -9,7 +9,7 @@ namespace EyeMaze
     {
         private const int BURST_SHOTS = 3;
 
-        private enum FirePhase { Waiting, Warning, Reloading, BurstInterval, BurstRest }
+        private enum FirePhase { Waiting, Warning, Reloading, BurstInterval, BurstRest, Sequencing }
 
         [Header("연결")]
         [SerializeField] private EyeMazeDirector _director;
@@ -23,6 +23,8 @@ namespace EyeMaze
         [Header("발사")]
         [Tooltip("Muzzle 로컬 오른쪽 기준 반시계방향 각도")]
         [SerializeField] private float[] _fireAngles = { 0f };
+        [Tooltip("켜면 각도마다 정반대(180도 뒤) 방향으로도 함께 발사한다. 같은 방향이 이미 있으면 추가하지 않는다")]
+        [SerializeField] private bool _fireOpposite;
         [SerializeField, Min(0.01f)] private float _warningSeconds = 0.8f;
         [Tooltip("연속 발사를 사용하지 않을 때의 재장전 시간")]
         [SerializeField, Min(0.01f)] private float _reloadSeconds = 1.5f;
@@ -31,6 +33,16 @@ namespace EyeMaze
         [SerializeField, Min(0.01f)] private float _bulletLifetime = 3f;
         [SerializeField, Min(0.001f)] private float _hitRadius = 0.08f;
         [SerializeField, Min(1)] private int _initialPoolSize = 8;
+
+        [Header("순차 발사")]
+        [Tooltip("각도 목록을 한 발씩 쏘는 간격(초). 0이면 모든 각도를 동시에 발사")]
+        [SerializeField, Min(0f)] private float _shotInterval;
+
+        [Header("흰자 직전 소멸")]
+        [Tooltip("켜면 사거리 대신 홍채 바깥 테두리 직전에서 탄환이 사라진다")]
+        [SerializeField] private bool _despawnAtIrisEdge;
+        [Tooltip("홍채 바깥 반지름에서 뺄 여유 거리")]
+        [SerializeField, Min(0f)] private float _irisEdgeMargin = 0.05f;
 
         [Header("3회 연속 발사")]
         [SerializeField] private bool _burstFire;
@@ -44,6 +56,8 @@ namespace EyeMaze
         private FirePhase _phase;
         private float _timer;
         private int _burstShotsFired;
+        private int _nextShotIndex;
+        private float[] _shotAngles = { 0f };
 
         public EyeMazeDirector Director => _director;
         public GazeCursor Cursor => _cursor;
@@ -52,10 +66,14 @@ namespace EyeMaze
         public float Range => _range;
         public float BulletLifetime => _bulletLifetime;
         public float HitRadius => _hitRadius;
-        private int ShotCount => _fireAngles == null || _fireAngles.Length == 0 ? 1 : _fireAngles.Length;
+        public bool DespawnAtIrisEdge => _despawnAtIrisEdge;
+        public Vector2 IrisCenter => _director.Maze.transform.position;
+        public float IrisEdgeRadius => _director.Maze.OuterRadius * _director.Maze.transform.lossyScale.x - _irisEdgeMargin;
+        private int ShotCount => _shotAngles.Length;
 
         void Awake()
         {
+            BuildShotAngles();
             if (!ResolveContext())
             {
                 Debug.LogWarning("Gunner: 같은 미로의 진행 제어를 찾을 수 없습니다. Director를 지정하세요.", this);
@@ -94,6 +112,10 @@ namespace EyeMaze
                 _burstShotsFired = 0;
                 FireVolley();
             }
+            else if (_phase == FirePhase.Sequencing)
+            {
+                if (_timer >= _shotInterval) FireNextShot();
+            }
             else if (_phase == FirePhase.Reloading && _timer >= _reloadSeconds) BeginWarning();
         }
 
@@ -116,21 +138,86 @@ namespace EyeMaze
             _initialPoolSize = Mathf.Max(1, _initialPoolSize);
             _burstInterval = Mathf.Max(0.01f, _burstInterval);
             _burstRestSeconds = Mathf.Max(0.01f, _burstRestSeconds);
+            BuildShotAngles();
         }
 
         /// <summary>
-        /// 현재 Muzzle과 각도 목록으로 탄환을 동시에 대여해 발사한다.
-        /// 연속 발사 설정과 완료 횟수에 따라 간격 대기, 휴식 또는 단발 재장전으로 전환한다.
+        /// _fireAngles와 _fireOpposite로 실제 발사 각도 목록을 만든다.
+        /// 각도가 없으면 0도 하나를 쓰고, 반대 방향 발사가 켜져 있으면 겹치지 않는 180도 뒤 각도를 덧붙여 _shotAngles에 저장한다.
+        /// </summary>
+        private void BuildShotAngles()
+        {
+            if (_fireAngles == null || _fireAngles.Length == 0)
+            {
+                _shotAngles = new[] { 0f };
+                return;
+            }
+            var angles = new List<float>(_fireAngles);
+            if (_fireOpposite)
+            {
+                foreach (float angle in _fireAngles)
+                {
+                    float opposite = angle + 180f;
+                    // 이미 같은 방향이 있으면 두 번 쏘지 않는다.
+                    if (angles.Exists(a => Mathf.Abs(Mathf.DeltaAngle(a, opposite)) < 0.01f)) continue;
+                    angles.Add(opposite);
+                }
+            }
+            _shotAngles = angles.ToArray();
+        }
+
+        /// <summary>
+        /// 현재 Muzzle과 각도 목록으로 탄환을 대여해 발사한다.
+        /// _shotInterval이 0이면 모두 동시에 쏘고 다음 단계로 넘어가며, 0보다 크면 첫 발을 쏘고 순차 발사 단계로 바꾼다.
         /// </summary>
         private void FireVolley()
         {
-            for (int i = 0; i < ShotCount; i++)
-            {
-                MazeBullet bullet = _pool.Get();
-                _activeBullets.Add(bullet);
-                bullet.Launch(this, _muzzle.position, GetFireDirection(i));
-            }
             UpdateWarningLines(false);
+            if (_shotInterval > 0f)
+            {
+                _nextShotIndex = 0;
+                FireNextShot();
+                return;
+            }
+            for (int i = 0; i < ShotCount; i++) LaunchBullet(i);
+            FinishVolley();
+        }
+
+        /// <summary>
+        /// _nextShotIndex 각도로 한 발을 쏘고 번호를 올린다.
+        /// 남은 각도가 있으면 순차 발사 단계와 타이머를 갱신하고, 없으면 발사 마무리 단계로 넘어간다.
+        /// </summary>
+        private void FireNextShot()
+        {
+            LaunchBullet(_nextShotIndex);
+            _nextShotIndex++;
+            _timer = 0f;
+            if (_nextShotIndex < ShotCount)
+            {
+                _phase = FirePhase.Sequencing;
+                return;
+            }
+            _nextShotIndex = 0;
+            FinishVolley();
+        }
+
+        /// <summary>
+        /// index 각도와 현재 Muzzle 회전으로 풀에서 탄환 하나를 대여해 발사한다.
+        /// 발사한 탄환을 _activeBullets에 추가한다.
+        /// </summary>
+        private void LaunchBullet(int index)
+        {
+            MazeBullet bullet = _pool.Get();
+            _activeBullets.Add(bullet);
+            bullet.Launch(this, _muzzle.position, GetFireDirection(index));
+        }
+
+        /// <summary>
+        /// 한 번의 발사를 마친 뒤 연속 발사 설정과 완료 횟수에 따라 간격 대기, 휴식 또는 단발 재장전으로 전환한다.
+        /// _timer, _burstShotsFired, _phase를 변경한다.
+        /// </summary>
+        private void FinishVolley()
+        {
             _timer = 0f;
             if (!_burstFire)
             {
@@ -159,7 +246,7 @@ namespace EyeMaze
         /// </summary>
         private Vector3 GetFireDirection(int index)
         {
-            float angle = _fireAngles == null || _fireAngles.Length == 0 ? 0f : _fireAngles[index];
+            float angle = _shotAngles[index];
             return _muzzle.rotation * Quaternion.AngleAxis(angle, Vector3.forward) * Vector3.right;
         }
 
@@ -258,6 +345,7 @@ namespace EyeMaze
             _phase = FirePhase.Waiting;
             _timer = 0f;
             _burstShotsFired = 0;
+            _nextShotIndex = 0;
         }
     }
 }
