@@ -18,6 +18,8 @@ public class MoveObstaclesBasic : MonoBehaviour
     // 스펙 046: 감정별 값을 받는 컴포넌트와 왕복 시작 위치 추가
     private MazeObstacleBody _body;
     private Vector3 _startPos;
+    // 스펙 046 FR-040: 이미 피격을 준 접촉이 이어지는 중인지 기억
+    private bool _touching;
 
     void Start()
     {
@@ -91,20 +93,20 @@ public class MoveObstaclesBasic : MonoBehaviour
     private void CheckContact()
     {
         if (!_director.CanRunHazards) return;
-        // 스펙 046: 슬픔과 침잠에서는 닿아도 피격하지 않음
-        if (_body != null && _body.Passable) return;
-
         Vector2 direction =
             _director.Cursor.transform.position - transform.position;
 
-        if (direction.sqrMagnitude > _hitRadius * _hitRadius) return;
+        // 스펙 046 FR-040: 시선이 벗어났다가 다시 닿아야 또 피격을 줌
+        if (direction.sqrMagnitude > _hitRadius * _hitRadius) { _touching = false; return; }
+        // 스펙 046: 슬픔과 침잠에서는 닿아도 피격하지 않음
+        if (_touching || (_body != null && _body.Passable)) return;
 
         if (direction.sqrMagnitude < 0.000001f)
         {
             direction = transform.up;
         }
 
-        _director.AddObstacleBurden(
+        _touching = _director.AddObstacleBurden(
             _burdenAmount,
             direction.normalized);
     }

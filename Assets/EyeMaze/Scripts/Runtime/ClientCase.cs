@@ -31,6 +31,8 @@ namespace EyeMaze
         // 스펙 046: 문의 열쇠 플래그 추가
         [Tooltip("층 순서대로 문의 열쇠 플래그. 마지막은 동공의 문이다. 비운 문은 신뢰와 동공 조건을 쓴다")]
         [SerializeField] private string[] _gateKeyFlags = new string[0];
+        [Tooltip("이 인물과의 만남이 시작될 때의 감정. 평온이 아니면 그 감정의 화제를 처음부터 가진다")]
+        [SerializeField] private Emotion _startEmotion = Emotion.Calm;
 
         [Header("문구")]
         [SerializeField, FormerlySerializedAs("introMessage"), TextArea(2, 4)] private string _introMessage;
@@ -54,6 +56,8 @@ namespace EyeMaze
         public List<GameObject> FragmentGroups => _fragmentGroups;
         public int MazeSeed => _mazeSeed;
         public string[] GateKeyFlags => _gateKeyFlags;
+        /// <summary>스펙 046 FR-001: 만남이 시작될 때의 감정</summary>
+        public Emotion StartEmotion => _startEmotion;
         public string IntroMessage => EndingData?.Text(EndingScript.Intro) ?? _introMessage;
         public string IdleSituation => EndingData?.Text(EndingScript.Idle) ?? _idleSituation;
         public string AbyssMessage => EndingData?.Text(EndingScript.Abyss) ?? _abyssMessage;

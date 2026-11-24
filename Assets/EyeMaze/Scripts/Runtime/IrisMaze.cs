@@ -45,6 +45,8 @@ namespace EyeMaze
         // 스펙 046: 층 순서대로의 문 열쇠 플래그와 이미 지나간 문의 고리 추가
         [NonSerialized] private string[] _gateKeyFlags = Array.Empty<string>();
         private readonly HashSet<int> _passedGateRings = new HashSet<int>();
+        // 스펙 046 FR-045: 열쇠로 열어 선이 사라진 문의 고리
+        private readonly HashSet<int> _unlockedGateRings = new HashSet<int>();
         private readonly Queue<(int ring, int sector)> _searchQueue = new Queue<(int ring, int sector)>();
 
         public int Rings => _rings;
@@ -352,9 +354,25 @@ namespace EyeMaze
 
         /// <summary>
         /// 스펙 046: 지나간 문 기록을 지운다. 만남을 처음부터 다시 시작할 때 부른다.
-        /// 입력값은 없으며, _passedGateRings를 비운다.
+        /// 입력값은 없으며, _passedGateRings와 _unlockedGateRings를 비운다.
         /// </summary>
-        public void ClearPassedGates() => _passedGateRings.Clear();
+        public void ClearPassedGates()
+        {
+            _passedGateRings.Clear();
+            _unlockedGateRings.Clear();
+        }
+
+        /// <summary>
+        /// 스펙 046 FR-045: 열쇠로 연 문을 기억한다. 벽을 다시 만들어 문 오브젝트가 바뀌어도 고리로 기억한다.
+        /// 문이 있는 고리 ring을 사용하며, _unlockedGateRings를 바꾼다.
+        /// </summary>
+        public void MarkGateUnlocked(int ring) => _unlockedGateRings.Add(ring);
+
+        /// <summary>
+        /// 스펙 046 FR-045: 그 고리의 문을 이미 열쇠로 열었는지 판단한다.
+        /// 문이 있는 고리 ring을 사용하며, 열었으면 true를 반환한다.
+        /// </summary>
+        public bool IsGateUnlocked(int ring) => _unlockedGateRings.Contains(ring);
 
         // 생성
 

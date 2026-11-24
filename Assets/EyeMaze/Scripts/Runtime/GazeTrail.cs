@@ -13,7 +13,8 @@ namespace EyeMaze
     {
         private const float WALL_CHECK_INTERVAL = 0.2f;
         private const float WIDTH_RATIO = 0.8f;
-        private const int SORTING_ORDER = 4;
+        // 스펙 046 FR-046: 슬픔의 안개(17) 위에 그려 흔적이 길잡이가 되게 한다.
+        private const int SORTING_ORDER = 18;
 
         [Header("연결")]
         [Tooltip("시선, 미로, 감정을 읽을 디렉터")]
@@ -36,8 +37,8 @@ namespace EyeMaze
         /// <summary>지나온 칸 하나. 섹터는 그 칸이 속한 층 기준이다.</summary>
         private struct Cell
         {
-            public int Ring;
-            public int Sector;
+            public int Ring { get; set; }
+            public int Sector { get; set; }
         }
 
         private int Capacity => Mathf.Max(_sadTrailCells, _deepTrailCells);

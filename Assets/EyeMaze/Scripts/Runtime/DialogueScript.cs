@@ -37,8 +37,8 @@ namespace EyeMaze
             // 스펙 011: 내담자가 쉬자고 할 때의 대사 추가
             public string Rest;
             // 스펙 046: 고르면 바뀌는 감정(guard, stir, sad, hope)과 화제 목록에 보일 글 추가
-            public string Emotion;
-            public string Topic;
+            public string Emotion { get; set; }
+            public string Topic { get; set; }
             public int Line;
         }
 

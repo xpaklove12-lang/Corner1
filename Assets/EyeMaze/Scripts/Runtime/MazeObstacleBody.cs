@@ -15,6 +15,10 @@ namespace EyeMaze
         [Header("그림")]
         [Tooltip("투명도를 바꿀 그림")]
         [SerializeField] private Renderer[] _renderers = new Renderer[0];
+        // 스펙 046 FR-048: 희망에서 비켜 주는 중임을 보여 주는 색
+        [Tooltip("희망과 열망에서 비켜 주는 동안 섞이는 색")]
+        [SerializeField] private Color _yieldColor = new Color(0.65f, 0.95f, 0.55f, 1f);
+        private bool _yielding;
 
         private Color[] _baseColors;
         private float _alpha = 1f;
@@ -33,6 +37,18 @@ namespace EyeMaze
         public bool Passable { get; set; }
         /// <summary>제자리에서의 치우침(월드 거리)</summary>
         public Vector3 Offset { get; set; }
+
+        /// <summary>스펙 046 FR-048: 비켜 주는 중인지. 값이 바뀔 때만 그림 색에 반영한다.</summary>
+        public bool Yielding
+        {
+            get => _yielding;
+            set
+            {
+                if (_yielding == value) return;
+                _yielding = value;
+                ApplyAlpha();
+            }
+        }
 
         /// <summary>그림 투명도. 값이 바뀔 때만 그림에 반영한다.</summary>
         public float Alpha
@@ -67,8 +83,8 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 연결된 그림들의 원래 색에 지금 투명도를 곱해 칠한다.
-        /// _baseColors와 _alpha를 사용하며, 그림의 색을 바꾼다.
+        /// 연결된 그림들의 원래 색에 비켜 주는 색을 섞고 지금 투명도를 곱해 칠한다.
+        /// _baseColors, _yielding, _yieldColor, _alpha를 사용하며, 그림의 색을 바꾼다.
         /// </summary>
         private void ApplyAlpha()
         {
@@ -77,6 +93,8 @@ namespace EyeMaze
             for (int i = 0; i < _renderers.Length; i++)
             {
                 Color color = _baseColors[i];
+                // 비켜 주는 동안에는 원래 색에 비켜 주는 색을 섞는다.
+                if (_yielding) color = Color.Lerp(color, new Color(_yieldColor.r, _yieldColor.g, _yieldColor.b, color.a), 0.75f);
                 color.a *= _alpha;
                 SetColor(_renderers[i], color);
             }

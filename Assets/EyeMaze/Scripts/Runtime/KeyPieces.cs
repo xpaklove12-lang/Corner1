@@ -21,9 +21,9 @@ namespace EyeMaze
         /// <summary>기억 하나의 열쇠 조각과 새어 나오는 말</summary>
         public class Entry
         {
-            public string[] Pieces = Array.Empty<string>();
-            public string Leak1 = "";
-            public string Leak2 = "";
+            public string[] Pieces { get; set; } = Array.Empty<string>();
+            public string Leak1 { get; set; } = "";
+            public string Leak2 { get; set; } = "";
         }
 
         /// <summary>

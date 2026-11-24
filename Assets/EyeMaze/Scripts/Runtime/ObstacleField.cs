@@ -17,6 +17,20 @@ namespace EyeMaze
         [Header("공통")]
         [Tooltip("치우침과 왕복 폭이 목표를 따라가는 속도")]
         [SerializeField, Min(0.01f)] private float _offsetLerpSpeed = 1.2f;
+        private MazeObstacleBody[] _bodies = new MazeObstacleBody[0];
+        private int[] _layers = new int[0];
+        private Vector2[] _positions = new Vector2[0];
+        private Vector2[] _clashOffsets = new Vector2[0];
+        private Vector2[] _offsets = new Vector2[0];
+        private float[] _speeds = new float[0];
+        private bool[] _guards = new bool[0];
+        private float[] _clashTimes = new float[0];
+        private float _speed = 1f;
+        private float _swing = 1f;
+        // 지킬 기억과, 장애물마다 그 기억 둘레에서 설 자리 번호(지키지 않으면 -1)
+        private MemoryFragment _guardTarget;
+        private int[] _guardSlots = new int[0];
+        private int _guardCount;
 
         [Header("평온")]
         [Tooltip("평온의 장애물 속도 배율")]
@@ -31,6 +45,8 @@ namespace EyeMaze
         [SerializeField, Range(0f, 180f)] private float _guardGapDegrees = 70f;
         [Tooltip("기억을 둘러싸고 선 장애물의 왕복 폭 배율. 작을수록 원 모양과 틈이 유지된다")]
         [SerializeField, Min(0f)] private float _guardSwingScale = 0.15f;
+        [Tooltip("기억을 지키러 모이는 장애물 수. 나머지는 제자리에서 길을 지킨다")]
+        [SerializeField, Min(1)] private int _guardMaxCount = 3;
 
         [Header("동요와 격동")]
         [Tooltip("동요의 속도 배율")]
@@ -62,22 +78,11 @@ namespace EyeMaze
         [Tooltip("시선이 이 거리 안에 오면 비켜 주기 시작한다")]
         [SerializeField, Min(0f)] private float _yieldRadius = 0.3f;
         [Tooltip("비켜 주는 거리")]
-        [SerializeField, Min(0f)] private float _yieldDistance = 0.18f;
+        [SerializeField, Min(0f)] private float _yieldDistance = 0.3f;
         [Tooltip("물러날 자리에 필요한 빈 거리. 이 안에 다른 장애물이 있으면 비켜 주지 않는다")]
         [SerializeField, Min(0f)] private float _yieldClearance = 0.12f;
         [Tooltip("물러나는 속도")]
-        [SerializeField, Min(0f)] private float _yieldSpeed = 0.25f;
-
-        private MazeObstacleBody[] _bodies = new MazeObstacleBody[0];
-        private int[] _layers = new int[0];
-        private Vector2[] _positions = new Vector2[0];
-        private Vector2[] _clashOffsets = new Vector2[0];
-        private Vector2[] _offsets = new Vector2[0];
-        private float[] _speeds = new float[0];
-        private bool[] _guards = new bool[0];
-        private float[] _clashTimes = new float[0];
-        private float _speed = 1f;
-        private float _swing = 1f;
+        [SerializeField, Min(0f)] private float _yieldSpeed = 0.6f;
 
         void OnEnable() => _emotion.Changed += Apply;
 
@@ -93,6 +98,7 @@ namespace EyeMaze
             _speeds = new float[_bodies.Length];
             _guards = new bool[_bodies.Length];
             _clashTimes = new float[_bodies.Length];
+            _guardSlots = new int[_bodies.Length];
             for (int i = 0; i < _bodies.Length; i++)
             {
                 MazeLayer layer = _bodies[i].GetComponentInParent<MazeLayer>(true);
@@ -131,9 +137,7 @@ namespace EyeMaze
             if (emotion == Emotion.Stir) TickClash(dt, stage2);
 
             Vector2 center = Vector2.zero;
-            bool guarding = emotion == Emotion.Guard && TryFindGuardCenter(stage2, gazeLayer, gaze, out center);
-            int guardCount = guarding ? CountActive(gazeLayer) : 0;
-            int guardSlot = 0;
+            bool guarding = emotion == Emotion.Guard && TryFindGuardCenter(gazeLayer, gaze, out center);
 
             for (int i = 0; i < _bodies.Length; i++)
             {
@@ -144,12 +148,14 @@ namespace EyeMaze
                 // 속도도 감정이 바뀔 때 천천히 따라간다. 부딪혀 머무는 동안에만 바로 멈춘다.
                 _speeds[i] = Mathf.MoveTowards(_speeds[i], _speed, _offsetLerpSpeed * dt);
                 float speed = _speeds[i];
-                _guards[i] = guarding && _layers[i] == gazeLayer;
+                _guards[i] = guarding && _guardSlots[i] >= 0;
                 Vector2 next;
                 if (emotion == Emotion.Hope)
                 {
                     target = YieldTarget(i, current, gaze, maze);
                     next = Vector2.MoveTowards(current, target, _yieldSpeed * dt);
+                    // 스펙 046 FR-048: 비켜 주는 장애물은 색으로 알아볼 수 있게 한다.
+                    body.Yielding = target != Vector2.zero;
                 }
                 else
                 {
@@ -157,7 +163,7 @@ namespace EyeMaze
                     if (_guards[i])
                     {
                         Vector2 home = mazeTransform.InverseTransformPoint(body.HomeWorld);
-                        target = GuardPoint(center, gaze, stage2, guardSlot++, guardCount) - home;
+                        target = GuardPoint(center, gaze, stage2, _guardSlots[i], _guardCount) - home;
                     }
                     else if (emotion == Emotion.Stir)
                     {
@@ -230,6 +236,28 @@ namespace EyeMaze
                 // 동요를 벗어나면 물러나 머물던 상태를 푼다.
                 if (emotion != Emotion.Stir) _clashTimes[i] = float.MinValue;
                 if (emotion != Emotion.Guard) _guards[i] = false;
+                if (emotion != Emotion.Hope) body.Yielding = false;
+            }
+            // 경계를 벗어나면 지키던 기억을 잊어, 다음 경계에서 다시 고른다.
+            if (emotion != Emotion.Guard) _guardTarget = null;
+        }
+
+        /// <summary>
+        /// 장애물의 치우침, 부딪힘, 지키기 상태를 처음으로 되돌린다. 만남을 처음부터 다시 시작할 때 부른다.
+        /// 입력값은 없으며, _offsets, _clashOffsets, _clashTimes, _speeds, _guards, _guardTarget과 각 장애물의 치우침을 바꾼다.
+        /// </summary>
+        public void ResetOffsets()
+        {
+            _guardTarget = null;
+            for (int i = 0; i < _bodies.Length; i++)
+            {
+                _offsets[i] = Vector2.zero;
+                _clashOffsets[i] = Vector2.zero;
+                _clashTimes[i] = float.MinValue;
+                _speeds[i] = _speed;
+                _guards[i] = false;
+                _guardSlots[i] = -1;
+                _bodies[i].Offset = Vector3.zero;
             }
         }
 
@@ -292,24 +320,61 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 경계와 반감에서 장애물이 둘러쌀 기억의 자리를 찾는다. 경계는 숨긴 기억, 반감은 드러났지만 얻지 못한 기억 가운데 시선에 가장 가까운 것이다.
-        /// stage2, 시선이 있는 층 layer, gaze(미로 기준 시선 위치)를 사용하며, 찾으면 true를 반환하고 미로 기준 자리를 center에 쓴다.
+        /// 경계와 반감에서 장애물이 지킬 기억의 자리를 찾는다. 한 번 정한 기억은 얻거나 시선이 다른 층으로 갈 때까지 바꾸지 않는다.
+        /// 시선이 있는 층 layer, gaze(미로 기준 시선 위치)를 사용하며, _guardTarget과 지킬 장애물을 정하고 찾으면 true를 반환하며 미로 기준 자리를 center에 쓴다.
         /// </summary>
-        private bool TryFindGuardCenter(bool stage2, int layer, Vector2 gaze, out Vector2 center)
+        private bool TryFindGuardCenter(int layer, Vector2 gaze, out Vector2 center)
         {
             center = Vector2.zero;
             IrisMaze maze = _director.Maze;
-            float best = float.MaxValue;
-            foreach (MemoryFragment fragment in _director.Fragments)
+            bool keep = _guardTarget != null && _guardTarget.isActiveAndEnabled && !_guardTarget.Collected
+                && maze.LayerOfRing(_guardTarget.Ring) == layer;
+            if (!keep)
             {
-                if (fragment.Collected || fragment.Hidden == stage2 || maze.LayerOfRing(fragment.Ring) != layer) continue;
-                Vector2 position = maze.transform.InverseTransformPoint(fragment.transform.position);
-                float distance = (position - gaze).sqrMagnitude;
-                if (distance >= best) continue;
-                best = distance;
-                center = position;
+                // 숨김 여부와 상관없이 그 층의 얻지 못한 기억 가운데 시선에 가장 가까운 것을 지킨다.
+                _guardTarget = null;
+                float best = float.MaxValue;
+                foreach (MemoryFragment fragment in _director.Fragments)
+                {
+                    if (fragment.Collected || maze.LayerOfRing(fragment.Ring) != layer) continue;
+                    Vector2 position = maze.transform.InverseTransformPoint(fragment.transform.position);
+                    float distance = (position - gaze).sqrMagnitude;
+                    if (distance >= best) continue;
+                    best = distance;
+                    _guardTarget = fragment;
+                }
+                if (_guardTarget == null) return false;
+                AssignGuards(layer, maze.transform.InverseTransformPoint(_guardTarget.transform.position));
             }
-            return best < float.MaxValue;
+            center = maze.transform.InverseTransformPoint(_guardTarget.transform.position);
+            return true;
+        }
+
+        /// <summary>
+        /// 지킬 기억에 가까운 장애물부터 정해진 수만큼 골라 설 자리 번호를 준다. 나머지는 제자리에 남는다.
+        /// 층 번호 layer, center(미로 기준 기억 자리), _guardMaxCount를 사용하며, _guardSlots와 _guardCount를 바꾼다.
+        /// </summary>
+        private void AssignGuards(int layer, Vector2 center)
+        {
+            Transform mazeTransform = _director.Maze.transform;
+            for (int i = 0; i < _bodies.Length; i++) _guardSlots[i] = -1;
+            _guardCount = 0;
+            while (_guardCount < _guardMaxCount)
+            {
+                int nearest = -1;
+                float best = float.MaxValue;
+                for (int i = 0; i < _bodies.Length; i++)
+                {
+                    if (_guardSlots[i] >= 0 || _layers[i] != layer || !_bodies[i].isActiveAndEnabled) continue;
+                    Vector2 home = mazeTransform.InverseTransformPoint(_bodies[i].HomeWorld);
+                    float distance = (home - center).sqrMagnitude;
+                    if (distance >= best) continue;
+                    best = distance;
+                    nearest = i;
+                }
+                if (nearest < 0) return;
+                _guardSlots[nearest] = _guardCount++;
+            }
         }
 
         /// <summary>
@@ -323,18 +388,6 @@ namespace EyeMaze
             float gazeDegrees = Mathf.Atan2(toGaze.y, toGaze.x) * Mathf.Rad2Deg;
             float degrees = gazeDegrees + _guardGapDegrees * 0.5f + (360f - _guardGapDegrees) * (slot + 0.5f) / count;
             return center + (Vector2)Shapes.Polar(_guardTightRadius, degrees);
-        }
-
-        /// <summary>
-        /// 그 층에서 켜져 있는 장애물의 수를 센다.
-        /// 층 번호 layer를 사용하며, 장애물 수를 반환한다.
-        /// </summary>
-        private int CountActive(int layer)
-        {
-            int count = 0;
-            for (int i = 0; i < _bodies.Length; i++)
-                if (_bodies[i].isActiveAndEnabled && _layers[i] == layer) count++;
-            return count;
         }
 
         /// <summary>

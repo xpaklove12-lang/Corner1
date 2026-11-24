@@ -170,6 +170,8 @@ namespace EyeMaze
         [SerializeField] private ObstacleField _obstacles;
         [Tooltip("드러난 파편에 닿으면 여는 열쇠 조각 맞추기 화면")]
         [SerializeField] private KeyForgeUI _keyForge;
+        [Tooltip("열쇠가 맞는 문에 처음 닿으면 보여 줄 문 여는 컷신")]
+        [SerializeField] private GateUnlockScene _gateScene;
         [Tooltip("열쇠 조각 표 (Data/KeyPieces.csv). 기억별 낱말 조각과 새어 나오는 말을 여기서 읽는다")]
         [SerializeField] private TextAsset _keyPiecesCsv;
         [Tooltip("슬픔과 침잠의 지나온 길 흔적. 만남을 다시 시작할 때 지운다")]
@@ -178,6 +180,22 @@ namespace EyeMaze
         [SerializeField, Min(0f)] private float _leakRadius = 0.3f;
         [Tooltip("열망에서 드러난 파편이 시선 쪽으로 한 칸 옮겨 오는 시간(초)")]
         [SerializeField, Min(0.1f)] private float _pullStepSeconds = 1.5f;
+
+        // 스펙 046 FR-042, FR-043: 첫 파편을 얻기 전까지 막힌 플레이어에게만 보이는 안내
+        [Header("첫 안내")]
+        [Tooltip("경계 화제를 짚지 않고 머물 때 안내 문구가 나오기까지의 시간(초)")]
+        [SerializeField, Min(0f)] private float _nudgeTopicSeconds = 5f;
+        [Tooltip("드러난 파편에 닿지 않고 머물 때 안내 문구가 나오기까지의 시간(초)")]
+        [SerializeField, Min(0f)] private float _nudgeFragmentSeconds = 8f;
+        [Tooltip("경계 화제를 짚으라는 문구. {key}는 경계 화제의 번호로 바뀐다")]
+        [SerializeField, TextArea(1, 2)] private string _nudgeTopicMessage = "은재가 무언가를 지키고 있다. {key}을 눌러 더 다가선다.";
+        [Tooltip("드러난 파편에 닿으라는 문구")]
+        [SerializeField, TextArea(1, 2)] private string _nudgeFragmentMessage = "드러난 기억에 시선을 가져간다.";
+        // 첫 파편을 얻었는지, 지금 안내 단계(0 없음, 1 화제, 2 파편)와 그 단계에 머문 시간, 문구를 이미 보였는지
+        private bool _firstFragmentDone;
+        private int _nudgeStage;
+        private float _nudgeT;
+        private bool _nudgeShown;
 
         [Header("연출")]
         [SerializeField, FormerlySerializedAs("talkWallAlpha"), Range(0f, 1f)] private float _talkWallAlpha = 0.22f;
@@ -249,6 +267,8 @@ namespace EyeMaze
         [NonSerialized] private int _lastRing = -1;
         // 스펙 046: 열쇠 조각을 맞추는 중인 파편과 열망의 끌어오기 시간
         [NonSerialized] private MemoryFragment _forgeFragment;
+        // 스펙 046 FR-045: 컷신으로 여는 중인 문
+        [NonSerialized] private MazeGate _unlockingGate;
         [NonSerialized] private float _pullT;
 
         /// <summary>화면에 보여줄 선택지 하나 (뒤로가기 포함)</summary>
@@ -269,6 +289,10 @@ namespace EyeMaze
         public Person Person => _person;
         /// <summary>스펙 046: 감정 이름과 화제 목록을 UI가 읽는다.</summary>
         public EmotionControl EmotionControl => _emotion;
+        /// <summary>스펙 046 FR-042: 깜빡여 눌러 보게 할 화제의 번호(0부터). 안내할 것이 없으면 -1</summary>
+        public int NudgeTopicIndex => _nudgeStage == 1 ? GuardTopicIndex() : -1;
+        /// <summary>스펙 046 FR-043: 드러난 파편에서 고리를 퍼뜨려 닿아 보게 할 때인지</summary>
+        public bool NudgeFragments => _nudgeStage == 2 && CanRunHazards;
         public Mode CurrentMode => _mode;
         public bool AcceptInput { get => _acceptInput; set => _acceptInput = value; }
         public string Message { get => _message; set => _message = value; }
@@ -312,7 +336,9 @@ namespace EyeMaze
         public bool IsReading => _mode == Mode.Gaze && _reading;
         // 스펙 037: 파편 퍼즐이 열려 있는지
         // 스펙 046: 열쇠 조각 맞추기가 열려 있을 때도 미로를 멈춤
-        public bool IsSolvingPuzzle => (_puzzle != null && _puzzle.IsOpen) || _keyForge.IsOpen;
+        // 스펙 046 FR-045: 문 여는 컷신과 문이 사라지는 동안에도 미로를 멈춤
+        public bool IsSolvingPuzzle => (_puzzle != null && _puzzle.IsOpen) || _keyForge.IsOpen
+            || _gateScene.IsOpen || (_unlockingGate != null && _unlockingGate.IsUnlocking);
 
         /// <summary>선택지 결과를 한 줄씩 넘기는 중인지. 이때는 선택지와 들여다보기 전환을 받지 않는다.</summary>
         public bool IsReadingResponse => _mode == Mode.Talk && _responseLines.Count > 0;
@@ -379,6 +405,8 @@ namespace EyeMaze
             if (Application.isPlaying) _cursor.SnapTo(_startRing, _startSector);
             // 스펙 046: 씬에 이미 불러와 둔 인물은 LoadCase를 거치지 않으므로 문 열쇠 플래그를 여기서 적용한다.
             if (Application.isPlaying && _activeCase != null) _maze.SetGateKeyFlags(_activeCase.GateKeyFlags);
+            // 스펙 046 FR-001: 같은 이유로 그 인물의 시작 감정도 여기서 적용한다.
+            if (Application.isPlaying && _activeCase != null) _emotion.ResetState(_activeCase.StartEmotion);
         }
 
         void OnEnable()
@@ -392,6 +420,7 @@ namespace EyeMaze
             _keyForge.Cancelled += OnForgeCancelled;
             _keyForge.WrongOrder += OnForgeWrongOrder;
             _emotion.Changed += OnEmotionChanged;
+            _gateScene.Finished += OnGateSceneFinished;
             if (_puzzle != null)
             {
                 _puzzle.Solved += OnPuzzleSolved;
@@ -406,6 +435,7 @@ namespace EyeMaze
             _keyForge.Cancelled -= OnForgeCancelled;
             _keyForge.WrongOrder -= OnForgeWrongOrder;
             _emotion.Changed -= OnEmotionChanged;
+            _gateScene.Finished -= OnGateSceneFinished;
             if (_puzzle == null) return;
             _puzzle.Solved -= OnPuzzleSolved;
             _puzzle.Cancelled -= OnPuzzleCancelled;
@@ -469,6 +499,7 @@ namespace EyeMaze
             if (_puzzle != null && _puzzle.IsOpen && _mode != Mode.Gaze) ClosePuzzle();
             // 스펙 046: 들여다보기가 끝나면 열려 있던 열쇠 조각 맞추기도 닫는다.
             if (_keyForge.IsOpen && _mode != Mode.Gaze) CloseForge();
+            if (_gateScene.IsOpen && _mode != Mode.Gaze) _gateScene.Close();
 
             // 들여다보는 동안 정해진 시간마다 눈을 깜빡이고, 부담감이 차오른다. 퍼즐 중에는 멈춘다.
             if (_mode == Mode.Gaze && !_inAbyss && !_reading && !IsSolvingPuzzle)
@@ -486,6 +517,7 @@ namespace EyeMaze
             // 스펙 046: 동요의 새어 나오는 말과 열망의 끌려오는 기억을 진행한다.
             TickLeak();
             TickPull(dt);
+            TickNudge(dt);
 
             // 스펙 007: 대화 기록 창이 열려 있으면 입력을 받지 않는다.
             if (!_acceptInput || DialogueLog.BlocksInput)
@@ -570,6 +602,8 @@ namespace EyeMaze
         public void ToggleGaze()
         {
             if (_mode == Mode.Ending) return;
+            // 스펙 046 FR-045: 문 여는 컷신과 문이 사라지는 동안에는 시선을 거두지 않는다.
+            if (_mode == Mode.Gaze && (_gateScene.IsOpen || (_unlockingGate != null && _unlockingGate.IsUnlocking))) return;
             if (_mode == Mode.Gaze && _inAbyss) { _message = AbyssText; return; }
             // 스펙 003: 관찰을 멈출 때의 문구를 "관찰을 잠시 멈추고 생각에 잠긴다."로 변경
             if (_mode == Mode.Gaze) { ExitGaze(Strings.Get("msg.gaze_off", "관찰을 잠시 멈추고 생각에 잠긴다.")); return; }
@@ -605,8 +639,11 @@ namespace EyeMaze
             if (_mode == Mode.Gaze) return;
             if (_mode == Mode.Ending) ResetAll();
             _reading = false;
-            _responseLines.Clear();
+            // 넘기던 선택지 결과를 끝까지 넘겨 미뤄 둔 장면 이동까지 적용한다.
+            while (IsReadingResponse) NextResponseLine();
             _acceptInput = true;
+            // 대화를 건너뛰어도 감정을 바꿔 볼 수 있게 개발용 화제를 넣는다.
+            _emotion.AddDebugTopics();
             ToggleGaze();
         }
 #endif
@@ -724,7 +761,10 @@ namespace EyeMaze
             _velocity = Vector2.zero;
             _bumpFlash = Mathf.Max(_bumpFlash, 0.6f);
             StartGlitch();
-            _burden = Mathf.Clamp01(_burden + Mathf.Max(0f, burden));
+            // 스펙 046 FR-047: 희망과 열망에서는 맞을 때 더 크게 오르고, 여러 번 맞으면 희망이 꺾인다.
+            _burden = Mathf.Clamp01(_burden + Mathf.Max(0f, burden) * _emotion.HitBurdenScale);
+            string broken = _emotion.RegisterHit();
+            if (broken != null) _message = broken;
             if (_burden >= 1f) EndByBurden();
             return true;
         }
@@ -895,11 +935,18 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 들여다보는 동안 부담감을 채운다. 신뢰가 높을수록 느리게 차고, 가득 차면 leave 엔딩을 시작한다.
-        /// dt와 상대의 신뢰를 사용하며, _burden과 모드를 바꾼다.
+        /// 들여다보는 동안 부담감을 채운다. 신뢰가 높을수록 느리게 차고, 평온은 느리게 2단계는 빠르게 차며, 가득 차면 leave 엔딩을 시작한다.
+        /// 시선이 쉼터 안에 있으면 채우지 않고 줄인다.
+        /// dt, 상대의 신뢰, 감정 배율, 시선 위치를 사용하며, _burden과 모드를 바꾼다.
         /// </summary>
         private void TickBurden(float dt)
         {
+            // 스펙 046 FR-039: 쉼터 안에서는 부담감이 쌓이지 않고 줄어든다.
+            if (EmotionControl.InRestSpot(_cursor.transform.position))
+            {
+                _burden = Mathf.Max(0f, _burden - _emotion.RestBurdenReliefPerSecond * dt);
+                return;
+            }
             int trust = _person != null ? Mathf.Max(0, _person.Trust) : 0;
             float seconds = Mathf.Max(0.1f, _burdenFillSeconds + _burdenSecondsPerTrust * trust);
             // 스펙 046: 평온은 느리게, 2단계는 빠르게 차도록 감정 배율을 곱함
@@ -1378,8 +1425,8 @@ namespace EyeMaze
             _velocity = Vector2.zero;
             // 스펙 004: 옳은 대답으로 얻은 신뢰도 함께 초기화
             if (_person != null) { _person.Trust = 0; _person.EarnedTrust = 0; _person.Dilation = 0.2f; }
-            // 스펙 046: 감정을 평온으로 되돌리고 화제 목록을 비움
-            _emotion.ResetState();
+            // 스펙 046: 감정을 그 인물의 시작 감정으로 되돌리고 화제 목록을 비움
+            _emotion.ResetState(_activeCase != null ? _activeCase.StartEmotion : Emotion.Calm);
             ShowEncounterGuide(true);
             // 스펙 046: 열쇠 조각 맞추기, 끌어오기, 흔적, 지나간 문, 파편의 숨김과 자리를 처음으로 되돌림
             CloseForge();
@@ -1387,8 +1434,22 @@ namespace EyeMaze
             _declinedFragments.Clear();
             _lastRing = -1;
             _pullT = 0f;
+            _firstFragmentDone = false;
+            _nudgeStage = 0;
+            _nudgeT = 0f;
+            _nudgeShown = false;
             _trail.Clear();
             if (_maze != null) _maze.ClearPassedGates();
+            // 스펙 046 FR-045: 진행 중인 문 여는 장면을 취소해 다음 판에 열린 문으로 남지 않게 한다.
+            _gateScene.Close();
+            _unlockingGate = null;
+            if (_maze != null) foreach (MazeGate gate in _maze.GetComponentsInChildren<MazeGate>(true)) gate.CancelUnlock();
+            // 스펙 046: 직전 판의 장애물 치우침과 바뀐 벽이 남지 않게 처음으로 되돌린다.
+            if (Application.isPlaying)
+            {
+                _obstacles.ResetOffsets();
+                if (_activeCase != null && _maze.Seed != _activeCase.MazeSeed) _maze.Generate(_activeCase.MazeSeed);
+            }
             foreach (MemoryFragment f in Fragments) f.ResetState();
             foreach (MemoryFragment f in Fragments) f.Collected = false;
             if (_maze != null) foreach (MazeLayer l in _maze.Layers) l.Offset = 0;
@@ -1543,6 +1604,20 @@ namespace EyeMaze
         {
             if (!_maze.IsArcOpen(arcRing, sector, out MazeGate gate)) return false;
             if (gate != null && !gate.CanPass(_person)) { GateBlocked(gate); return false; }
+            // 스펙 046 FR-045: 열쇠가 맞는 문에 처음 닿으면 여는 장면을 보여 주고, 끝난 뒤에 지나가게 한다.
+            if (gate != null && Application.isPlaying && gate.NeedsUnlock)
+            {
+                if (!gate.IsUnlocking && !_gateScene.IsOpen)
+                {
+                    // 컷신이 끝나면 이 문이 먼지가 되어 사라진다.
+                    _unlockingGate = gate;
+                    _velocity = Vector2.zero;
+                    StopBump();
+                    _gateScene.Open();
+                    _message = Strings.Get("msg.gate_unlock", "건넨 말이 열쇠가 되어 문을 연다.");
+                }
+                return false;
+            }
 
             float d = _maze.SectorDeg;
             float mDeg = _wallMargin / Mathf.Max(0.2f, r) * Mathf.Rad2Deg;
@@ -1591,6 +1666,8 @@ namespace EyeMaze
                 MazeLayer l = _maze.GetLayer(layer);
                 if (layer > _lastLayer && l != null) _message = Strings.Get("msg.deeper", "더 깊은 곳으로 들어왔다 — {layer}", ("layer", l.DisplayName));
                 _lastLayer = layer;
+                // 스펙 046 FR-025: 반감인 채로 다른 층에 들어서면 그 층의 숨긴 파편도 드러낸다.
+                if (Application.isPlaying && _emotion.Current == Emotion.Guard && _emotion.Stage >= 2) RevealHidden();
             }
             CheckFragment();
         }
@@ -1626,6 +1703,7 @@ namespace EyeMaze
         private void CollectFragment(MemoryFragment f)
         {
             f.Collected = true;
+            _firstFragmentDone = true;
             _message = Strings.Get("msg.fragment", "파편 — {title}\n{text}", ("title", f.Title), ("text", f.Text));
             if (Application.isPlaying) { _reading = true; _readT = 0f; _velocity = Vector2.zero; StopBump(); }
         }
@@ -1638,13 +1716,15 @@ namespace EyeMaze
         {
             KeyPieces.Entry entry = KeyPieces.Find(f.Flag);
             if (entry == null || entry.Pieces.Length < KeyPieces.MIN_PIECES) return false;
-            // 감정이 막 동요로 바뀐 프레임에 닿아도 들은 말이 빠지지 않도록 화면을 열기 전에 한 번 더 확인한다.
-            TickLeak();
+            // 감정이 막 동요로 바뀐 프레임에 닿아도 들은 말이 빠지지 않도록 지금 여는 파편의 말을 화면을 열기 전에 확인한다.
+            if (_emotion.Current == Emotion.Stir && CanRunHazards && f.LeakHeard < _emotion.Stage && entry.Leak1.Length > 0)
+                f.LeakHeard = _emotion.Stage;
             _forgeFragment = f;
             _velocity = Vector2.zero;
             StopBump();
             _keyForge.Open(f.Text, LeakText(entry, f.LeakHeard), entry.Pieces);
-            _message = Strings.Get("msg.forge_open", "기억 — {title}\n흩어진 말을 이어 한 문장으로 만든다.\n(숫자키·클릭 조각 놓기 · Backspace 되돌리기 · Esc 그만두기)", ("title", f.Title));
+            // 조작 설명은 열쇠 화면 안의 안내 한 줄에만 둔다.
+            _message = Strings.Get("msg.forge_open", "기억 — {title}", ("title", f.Title));
             return true;
         }
 
@@ -1668,6 +1748,7 @@ namespace EyeMaze
             _forgeFragment = null;
             if (f == null) return;
             f.Collected = true;
+            _firstFragmentDone = true;
             _message = Strings.Get("msg.forge_done", "말을 찾았다 — \"{sentence}\"\n이 말을 {name}에게 건넬 수 있다.", ("sentence", sentence), ("name", Name));
             _reading = true;
             _readT = 0f;
@@ -1683,7 +1764,7 @@ namespace EyeMaze
         {
             if (_forgeFragment != null) _declinedFragments.Add(_forgeFragment);
             _forgeFragment = null;
-            _message = Strings.Get("msg.forge_cancel", "기억에서 잠시 물러났다. 칸을 벗어났다 돌아오면 다시 맞출 수 있다.");
+            _message = Strings.Get("msg.forge_cancel", "기억에서 잠시 물러났다.");
         }
 
         /// <summary>
@@ -1725,6 +1806,58 @@ namespace EyeMaze
                 _message = Strings.Get("msg.leak", "{name}의 말이 새어 나온다.\n{text}", ("name", Name), ("text", LeakText(entry, stage)));
                 return;
             }
+        }
+
+        /// <summary>
+        /// 스펙 046 FR-045: 문 여는 컷신이 끝나면 여는 중이던 문이 먼지가 되어 사라지기 시작한다.
+        /// _unlockingGate를 사용하며, 그 문의 여는 장면을 시작한다.
+        /// </summary>
+        private void OnGateSceneFinished()
+        {
+            if (_unlockingGate != null) _unlockingGate.BeginUnlock();
+        }
+
+        /// <summary>
+        /// 스펙 046 FR-042, FR-043: 첫 파편을 얻기 전까지 지금 필요한 안내 단계를 정하고, 그 단계에 오래 머물면 안내 문구를 한 번 보여 준다.
+        /// dt, 감정, 파편의 드러남과 수집 상태를 사용하며, _nudgeStage, _nudgeT, _nudgeShown과 문구를 바꾼다.
+        /// </summary>
+        private void TickNudge(float dt)
+        {
+            int stage = 0;
+            if (!_firstFragmentDone && _mode == Mode.Gaze && !_inAbyss)
+            {
+                bool revealed = false;
+                foreach (MemoryFragment f in Fragments)
+                    if (!f.Collected && !f.Hidden) revealed = true;
+                // 드러난 파편이 있으면 닿게 하고, 없으면 경계 화제를 짚어 반감을 만들게 한다.
+                if (revealed) stage = 2;
+                else if (_emotion.Current == Emotion.Guard && _emotion.Stage == 1 && GuardTopicIndex() >= 0) stage = 1;
+            }
+            if (stage != _nudgeStage)
+            {
+                _nudgeStage = stage;
+                _nudgeT = 0f;
+                _nudgeShown = false;
+            }
+            if (stage == 0 || _nudgeShown || !CanRunHazards) return;
+            _nudgeT += dt;
+            if (_nudgeT < (stage == 1 ? _nudgeTopicSeconds : _nudgeFragmentSeconds)) return;
+            _nudgeShown = true;
+            _message = stage == 1
+                ? _nudgeTopicMessage.Replace("{key}", (GuardTopicIndex() + 1).ToString())
+                : _nudgeFragmentMessage;
+        }
+
+        /// <summary>
+        /// 스펙 046 FR-042: 화제 목록에서 경계 화제의 번호를 찾는다.
+        /// 화제 목록을 사용하며, 숫자키로 짚을 수 있는 경계 화제의 번호(0부터) 또는 -1을 반환한다.
+        /// </summary>
+        private int GuardTopicIndex()
+        {
+            IReadOnlyList<EmotionControl.Topic> topics = _emotion.Topics;
+            for (int i = 0; i < topics.Count && i < EmotionControl.VISIBLE_TOPICS; i++)
+                if (topics[i].Emotion == Emotion.Guard) return i;
+            return -1;
         }
 
         /// <summary>
@@ -1830,7 +1963,8 @@ namespace EyeMaze
             _blinkPhase = next;
 
             // 스펙 010: 후보와 상관없이 깜빡임 문구를 하나로 표시
-            if (prev < close && next >= close && _mode == Mode.Gaze) _message = Strings.Get("msg.blink_rotate", "눈이 깜빡였다.");
+            // 스펙 046 FR-042, FR-043: 첫 안내 중에는 깜빡임 문구가 안내 문구를 덮지 않게 한다.
+            if (prev < close && next >= close && _mode == Mode.Gaze && _nudgeStage == 0) _message = Strings.Get("msg.blink_rotate", "눈이 깜빡였다.");
             if (prev < close && next >= close)
             {
                 // 스펙 010: 후보 종류에 따라 벽 교체 또는 회전을 확정

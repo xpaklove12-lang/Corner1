@@ -23,6 +23,8 @@ public class RotationObstaclesBasic : MonoBehaviour
     // 스펙 046: 감정별 값을 받는 컴포넌트와 원래 로컬 위치 추가
     private MazeObstacleBody _body;
     private Vector3 _homePos;
+    // 스펙 046 FR-040: 이미 피격을 준 접촉이 이어지는 중인지 기억
+    private bool _touching;
 
     void Start()
     {
@@ -73,12 +75,14 @@ public class RotationObstaclesBasic : MonoBehaviour
     /// </summary>
     private void CheckContact()
     {
-        if (_director == null || !_director.CanRunHazards || _body.Passable) return;
+        if (_director == null || !_director.CanRunHazards) return;
 
         Vector2 direction = _director.Cursor.transform.position - transform.position;
-        if (direction.sqrMagnitude > _body.HitRadius * _body.HitRadius) return;
+        // 스펙 046 FR-040: 시선이 벗어났다가 다시 닿아야 또 피격을 줌
+        if (direction.sqrMagnitude > _body.HitRadius * _body.HitRadius) { _touching = false; return; }
+        if (_touching || _body.Passable) return;
         if (direction.sqrMagnitude < 0.000001f) direction = transform.up;
 
-        _director.AddObstacleBurden(_burdenAmount, direction.normalized);
+        _touching = _director.AddObstacleBurden(_burdenAmount, direction.normalized);
     }
 }

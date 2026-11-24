@@ -90,7 +90,8 @@ namespace EyeMaze
             _drawnKey = key;
             Shapes.SetBlob(_line, Maze.RingWidth * 0.5f);
             Shapes.SetColor(_line, _color);
-            _line.sortingOrder = 12;
+            // 스펙 046 FR-046: 슬픔의 안개(17) 위에 그려 시선이 늘 보이게 한다.
+            _line.sortingOrder = 19;
             _line.enabled = _visible;
         }
 

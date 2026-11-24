@@ -49,6 +49,8 @@ public class SplineObstacle : MonoBehaviour
     private Color _lineEndColor;
     // 스펙 046: 지금 구간에 이미 반영한 치우침
     private Vector3 _appliedOffset;
+    // 스펙 046 FR-040: 이미 피격을 준 접촉이 이어지는 중인지 기억
+    private bool _touching;
 
     private int ConnectionCount => _originTargets.Length > 0 ? _originTargets.Length : 1;
 
@@ -169,13 +171,16 @@ public class SplineObstacle : MonoBehaviour
     /// </summary>
     private void CheckLineContact()
     {
-        if (_director == null || !_director.CanRunHazards || _contactCooldown > 0f || _contactBurden <= 0f) return;
-        // 스펙 046: 슬픔과 침잠에서는 닿아도 피격하지 않음
-        if (_body != null && _body.Passable) return;
+        if (_director == null || !_director.CanRunHazards || _contactBurden <= 0f) return;
         Vector2 cursor = _director.Cursor.transform.position;
         // 스펙 046: 선분 판정을 침잠의 장애물 속 판정과 함께 쓰도록 TryFindLineContact로 옮김
-        if (!TryFindLineContact(cursor, out Vector2 hitDirection)) return;
-        if (_director.AddObstacleBurden(_contactBurden, hitDirection)) _contactCooldown = _contactInterval;
+        // 스펙 046 FR-040: 시선이 선에서 벗어났다가 다시 닿아야 또 피격을 줌
+        if (!TryFindLineContact(cursor, out Vector2 hitDirection)) { _touching = false; return; }
+        // 스펙 046: 슬픔과 침잠에서는 닿아도 피격하지 않음
+        if (_touching || _contactCooldown > 0f || (_body != null && _body.Passable)) return;
+        if (!_director.AddObstacleBurden(_contactBurden, hitDirection)) return;
+        _contactCooldown = _contactInterval;
+        _touching = true;
     }
 
     /// <summary>

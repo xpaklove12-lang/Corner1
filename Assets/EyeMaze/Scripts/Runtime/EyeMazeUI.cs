@@ -31,6 +31,17 @@ namespace EyeMaze
         [SerializeField] private Text _emotionLabel;
         [Tooltip("들여다보는 동안 짚을 수 있는 화제를 한 줄씩 보여 줄 글")]
         [SerializeField] private Text[] _topicLabels = new Text[EmotionControl.VISIBLE_TOPICS];
+        [Tooltip("눌러 보게 할 화제 줄이 밝아졌다 어두워지는 주기(초)")]
+        [SerializeField, Min(0.1f)] private float _nudgePulseSeconds = 1f;
+        [Tooltip("감정 글과 화제 글의 색. 순서: 평온, 경계, 동요, 슬픔, 희망")]
+        [SerializeField] private Color[] _emotionColors =
+        {
+            Color.white,
+            new Color(1f, 0.6f, 0.25f, 1f),
+            new Color(1f, 0.9f, 0.35f, 1f),
+            new Color(0.5f, 0.7f, 1f, 1f),
+            new Color(0.65f, 0.95f, 0.55f, 1f),
+        };
 
         [Header("선택지")]
         [SerializeField, FormerlySerializedAs("optionButtons")] private Button[] _optionButtons = new Button[3];
@@ -133,11 +144,15 @@ namespace EyeMaze
             // 스펙 046: 감정 이름을 보여 주고, 들여다보는 동안에만 화제 목록을 번호와 함께 보여 준다.
             EmotionControl emotion = d.EmotionControl;
             Set(_emotionLabel, emotion.DisplayName);
-            bool showTopics = d.CurrentMode == EyeMazeDirector.Mode.Gaze && !d.InAbyss;
+            Tint(_emotionLabel, emotion.Current, false);
+            // 열쇠 조각 맞추기 중에는 짚을 수 없는 화제 목록도 숨긴다.
+            bool showTopics = d.CurrentMode == EyeMazeDirector.Mode.Gaze && !d.InAbyss && !d.IsSolvingPuzzle;
             for (int i = 0; i < _topicLabels.Length; i++)
             {
                 bool has = showTopics && i < emotion.Topics.Count;
-                Set(_topicLabels[i], has ? $"{i + 1}. {emotion.Topics[i].Text} ({EmotionControl.NameOf(emotion.Topics[i].Emotion, 1)})" : "");
+                // 화제 글 대신 번호와 감정 이름만 그 감정의 색으로 보여 준다.
+                Set(_topicLabels[i], has ? $"{i + 1} {EmotionControl.NameOf(emotion.Topics[i].Emotion, 1)}" : "");
+                if (has) Tint(_topicLabels[i], emotion.Topics[i].Emotion, i == d.NudgeTopicIndex);
             }
 
             // 선택지 결과를 한 줄씩 넘기는 동안에는 선택지를 숨긴다.
@@ -184,7 +199,10 @@ namespace EyeMaze
 
             // 스펙 004: 들어갈 때는 마음 읽기, 나올 때는 관찰 중지로 표시
             Set(_gazeButtonLabel, d.CurrentMode == EyeMazeDirector.Mode.Gaze ? Strings.Get("ui.gaze_button_gaze", "관찰 중지 (Space)") : Strings.Get("ui.gaze_button", "마음 읽기 (Space)"));
-            Set(_hint, d.IsReading
+            // 스펙 046 FR-026: 열쇠 조각 맞추기 중에는 쓸 수 없는 이동 안내를 비운다.
+            Set(_hint, d.IsSolvingPuzzle
+                ? ""
+                : d.IsReading
                 ? Strings.Get("hint.reading", "Space  계속")
                 : d.InAbyss
                 ? Strings.Get("hint.abyss", "WASD / 방향키로 가장 반짝이는 파편에 다가간다")
@@ -194,6 +212,27 @@ namespace EyeMaze
                 : d.CurrentMode == EyeMazeDirector.Mode.Ending ? (d.HeartFinished ? Strings.Get("hint.ending_done", "Space  돌아가기") : Strings.Get("hint.ending", "Space  계속"))
                 // 스펙 004: Q 안내를 잠시 휴식하기로 표시
                 : Strings.Get("hint.talk", "Space = 마음 읽기   ·   숫자키 대화   ·   Q 잠시 휴식하기"));
+        }
+
+        /// <summary>
+        /// 글을 감정의 색으로 칠한다. pulse가 켜져 있으면 밝아졌다 어두워지게 한다.
+        /// label, emotion, pulse, _emotionColors를 사용하며, label의 색을 바꾼다.
+        /// </summary>
+        private void Tint(Text label, Emotion emotion, bool pulse)
+        {
+            Color color = _emotionColors[(int)emotion];
+            if (pulse) color = Pulsed(color);
+            if (label.color != color) label.color = color;
+        }
+
+        /// <summary>
+        /// 색의 투명도를 주기에 맞춰 낮췄다 되돌린 색을 만든다.
+        /// color와 _nudgePulseSeconds를 사용하며, 지금 시각의 색을 반환한다.
+        /// </summary>
+        private Color Pulsed(Color color)
+        {
+            color.a *= Mathf.Lerp(0.3f, 1f, 0.5f + 0.5f * Mathf.Cos(Time.unscaledTime * Mathf.PI * 2f / _nudgePulseSeconds));
+            return color;
         }
 
         /// <summary>

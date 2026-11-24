@@ -14,6 +14,8 @@ namespace EyeMaze
 
         [Header("연결")]
         [SerializeField] private IrisMaze _maze;
+        [Tooltip("첫 안내 상태를 읽을 디렉터")]
+        [SerializeField] private EyeMazeDirector _director;
 
         [Header("후광")]
         [Tooltip("안쪽 후광 지름 (RingWidth 배율)")]
@@ -34,6 +36,14 @@ namespace EyeMaze
         [SerializeField] private float _ringSeconds = 0.6f;
         [Tooltip("고리가 끝날 때의 지름 (RingWidth 배율)")]
         [SerializeField] private float _ringEndRatio = 1.5f;
+        // 스펙 046 FR-043: 드러난 파편에 닿아 보게 하는 고리의 간격과 지난 시간
+        [Tooltip("첫 파편을 얻기 전, 드러난 파편에서 고리가 퍼지는 간격(초)")]
+        [SerializeField, Min(0.2f)] private float _nudgeRingSeconds = 2f;
+        private float _nudgeRingT;
+        // 스펙 046 FR-048: 열망에서 끌려오는 기억과 시선을 잇는 빛줄
+        [Tooltip("열망에서 끌려오는 기억과 시선을 잇는 빛줄의 투명도")]
+        [SerializeField, Range(0f, 1f)] private float _tetherAlpha = 0.45f;
+        private readonly Dictionary<MemoryFragment, LineRenderer> _tethers = new Dictionary<MemoryFragment, LineRenderer>();
 
         private readonly Dictionary<MemoryFragment, LineRenderer> _glows = new Dictionary<MemoryFragment, LineRenderer>();
         private readonly Dictionary<MemoryFragment, LineRenderer> _outerGlows = new Dictionary<MemoryFragment, LineRenderer>();
@@ -65,7 +75,60 @@ namespace EyeMaze
         void LateUpdate()
         {
             UpdateGlows();
+            TickNudgeRings(Time.deltaTime);
+            UpdateTethers();
             UpdateRings(Time.deltaTime);
+        }
+
+        /// <summary>
+        /// 스펙 046 FR-048: 열망에서 시선이 있는 층의 드러났지만 얻지 못한 파편과 시선 사이에 빛줄을 그린다. 그 밖에는 빛줄을 끈다.
+        /// 디렉터의 감정과 시선, 파편의 맥동을 사용하며, _tethers의 선을 만들거나 켜고 끄고 다시 그린다.
+        /// </summary>
+        private void UpdateTethers()
+        {
+            EmotionControl emotion = _director.EmotionControl;
+            bool pulling = _director.CanRunHazards && emotion.Current == Emotion.Hope && emotion.Stage >= 2;
+            int layer = pulling ? _maze.LayerOfRing(_director.Cursor.Ring) : -1;
+            foreach (MemoryFragment fragment in _glows.Keys)
+            {
+                if (fragment == null) continue;
+                bool show = pulling && fragment.isActiveAndEnabled && !fragment.Collected && !fragment.Hidden && _maze.LayerOfRing(fragment.Ring) == layer;
+                if (!_tethers.TryGetValue(fragment, out LineRenderer line))
+                {
+                    if (!show) continue;
+                    var go = new GameObject("끌어오는 빛줄");
+                    go.transform.SetParent(transform, false);
+                    line = Shapes.Ensure(go, _maze.LineMaterial, 0);
+                    line.useWorldSpace = true;
+                    line.sortingOrder = OUTER_GLOW_SORTING_ORDER;
+                    _tethers.Add(fragment, line);
+                }
+                if (line == null) continue;
+                line.enabled = show;
+                if (!show) continue;
+                line.positionCount = 2;
+                line.SetPosition(0, fragment.transform.position);
+                line.SetPosition(1, _director.Cursor.transform.position);
+                line.widthMultiplier = _maze.WallWidthNow * 0.6f;
+                Color color = fragment.MazeColor;
+                color.a *= _tetherAlpha * Mathf.Lerp(0.5f, 1f, fragment.PulseWave);
+                Shapes.SetColor(line, color);
+            }
+        }
+
+        /// <summary>
+        /// 스펙 046 FR-043: 첫 파편을 얻기 전, 드러났지만 얻지 못한 파편에서 정해진 간격마다 고리를 퍼뜨린다.
+        /// dt, _nudgeRingSeconds, 디렉터의 안내 상태를 사용하며, _nudgeRingT와 _activeRings를 바꾼다.
+        /// </summary>
+        private void TickNudgeRings(float dt)
+        {
+            // 안내가 시작되는 순간 바로 한 번 퍼지도록 시간을 가득 채워 둔다.
+            if (!_director.NudgeFragments) { _nudgeRingT = _nudgeRingSeconds; return; }
+            _nudgeRingT += dt;
+            if (_nudgeRingT < _nudgeRingSeconds) return;
+            _nudgeRingT = 0f;
+            foreach (MemoryFragment fragment in _glows.Keys)
+                if (fragment != null && fragment.isActiveAndEnabled && !fragment.Collected && !fragment.Hidden) PlayRing(fragment);
         }
 
         /// <summary>

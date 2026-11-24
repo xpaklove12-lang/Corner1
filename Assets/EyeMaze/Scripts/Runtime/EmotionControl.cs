@@ -23,6 +23,8 @@ namespace EyeMaze
         [SerializeField] private Person _person;
         [Tooltip("경계와 반감일 때 경계 애니메이션을 켤 초상화")]
         [SerializeField] private WaryStance _waryStance;
+        [Tooltip("감정별 표정 그림을 보여 줄 초상화")]
+        [SerializeField] private EmotionPortrait _portrait;
 
         [Header("수치")]
         [Tooltip("쉼터에서 한 단계 내려가는 시간(초)")]
@@ -30,37 +32,46 @@ namespace EyeMaze
         [Tooltip("평온일 때 부담감 누적 속도 배율")]
         [SerializeField, Min(0f)] private float _calmBurdenScale = 0.6f;
         [Tooltip("2단계일 때 부담감 누적 속도 배율")]
-        [SerializeField, Min(0f)] private float _stage2BurdenScale = 2f;
+        [SerializeField, Min(0f)] private float _stage2BurdenScale = 1.5f;
         [Tooltip("슬픔과 침잠일 때 시선 속도 배율")]
-        [SerializeField, Range(0.05f, 1f)] private float _sadGazeScale = 0.55f;
+        [SerializeField, Range(0.05f, 1f)] private float _sadGazeScale = 0.8f;
+        // 스펙 046 FR-047: 희망과 열망에서 장애물에 맞았을 때의 값
+        [Tooltip("희망과 열망에서 장애물에 맞을 때 오르는 부담감에 곱하는 배율")]
+        [SerializeField, Min(1f)] private float _hopeHitBurdenScale = 2f;
+        [Tooltip("희망과 열망에서 이만큼 맞으면 희망이 꺾여 경계가 된다")]
+        [SerializeField, Min(1)] private int _hopeBreakHits = 3;
+        private int _hopeHits;
+        [Tooltip("쉼터 안에서 초당 줄어드는 부담감 (0~1)")]
+        [SerializeField, Min(0f)] private float _restBurdenReliefPerSecond = 0.04f;
+        private readonly List<Topic> _topics = new List<Topic>();
+        private float _restT;
 
         [Header("문구")]
         [Tooltip("2단계에서 같은 감정의 화제를 또 짚었을 때")]
         [SerializeField, TextArea(1, 2)] private string _alreadyMaxMessage = "더는 밀어붙일 수 없다.";
         [Tooltip("반감이 되었는데 그 층에 드러낼 숨긴 파편이 없을 때")]
         [SerializeField, TextArea(1, 2)] private string _nothingHiddenMessage = "이 층에는 숨긴 것이 없다.";
+        [Tooltip("희망이 꺾여 경계가 되었을 때")]
+        [SerializeField, TextArea(1, 2)] private string _hopeBrokenMessage = "희망이 꺾였다. 은재가 다시 경계한다.";
         [Tooltip("감정이 바뀔 때 나오는 얻는 것과 잃는 것. 순서: 평온, 경계, 반감, 동요, 격동, 슬픔, 침잠, 희망, 열망")]
         [SerializeField, TextArea(1, 3)] private string[] _stateMessages =
         {
-            "마음이 가라앉았다. 장애물이 느려지고 부담이 천천히 쌓인다. 숨긴 것은 보이지 않는다.",
-            "은재가 경계한다. 장애물이 숨긴 기억 쪽으로 모인다. 그쪽에 무언가 있다.",
-            "반감이 솟는다. 숨긴 기억이 드러나지만 장애물이 좁혀 지킨다. 부담이 빨리 쌓인다.",
-            "마음이 흔들린다. 장애물이 빨라져 서로 부딪히고, 기억 가까이에서 말이 새어 나온다.",
-            "마음이 요동친다. 장애물이 연달아 부딪혀 틈이 길어지고 말이 더 이어진다. 부담이 빨리 쌓인다.",
-            "슬픔에 잠긴다. 장애물을 지나갈 수 있지만 시선이 느려진다. 지나온 길이 남는다.",
-            "깊이 가라앉는다. 장애물 속에서는 느려지지 않고 흔적이 멀리 남는다. 부담이 빨리 쌓인다.",
-            "희망이 비친다. 가까운 장애물이 비켜 주고, 열쇠가 맞는 문이 빛난다.",
-            "간절해진다. 드러난 기억이 이쪽으로 끌려온다. 부담이 빨리 쌓인다.",
+            "평온 · 장애물이 느려진다.",
+            "경계 · 장애물이 기억을 지키러 모인다.",
+            "반감 · 숨긴 기억이 드러난다.",
+            "동요 · 장애물이 서로 부딪혀 틈이 난다.",
+            "격동 · 틈이 길어진다.",
+            "슬픔 · 장애물을 지나가지만 앞이 흐려진다.",
+            "침잠 · 장애물 속에서 느려지지 않는다.",
+            "희망 · 장애물이 비켜 주지만 맞으면 크게 흔들린다.",
+            "열망 · 드러난 기억이 끌려온다.",
         };
-
-        private readonly List<Topic> _topics = new List<Topic>();
-        private float _restT;
 
         /// <summary>화제 하나. 대화에서 얻고 미로 안에서 짚는다.</summary>
         public struct Topic
         {
-            public string Text;
-            public Emotion Emotion;
+            public string Text { get; set; }
+            public Emotion Emotion { get; set; }
         }
 
         /// <summary>감정이나 단계가 바뀐 직후에 불린다.</summary>
@@ -76,6 +87,10 @@ namespace EyeMaze
         public float SadGazeScale => _sadGazeScale;
         /// <summary>반감이 되었는데 그 층에 드러낼 숨긴 파편이 없을 때의 문구</summary>
         public string NothingHiddenMessage => _nothingHiddenMessage;
+        /// <summary>스펙 046 FR-039: 쉼터 안에서 초당 줄어드는 부담감</summary>
+        public float RestBurdenReliefPerSecond => _restBurdenReliefPerSecond;
+        /// <summary>스펙 046 FR-047: 장애물에 맞을 때 오르는 부담감에 곱할 배율. 희망과 열망에서만 1보다 크다.</summary>
+        public float HitBurdenScale => Current == Emotion.Hope ? _hopeHitBurdenScale : 1f;
 
         /// <summary>시간으로 쌓이는 부담감에 곱할 배율. 평온은 느리게, 2단계는 빠르게 찬다.</summary>
         public float BurdenScale
@@ -85,6 +100,19 @@ namespace EyeMaze
                 if (Current == Emotion.Calm) return _calmBurdenScale;
                 return Stage >= 2 ? _stage2BurdenScale : 1f;
             }
+        }
+
+        /// <summary>
+        /// 스펙 046 FR-047: 장애물에 맞은 것을 알린다. 희망과 열망이면 맞은 횟수를 세고, 정해진 횟수에 닿으면 희망이 꺾여 경계 1단계가 된다.
+        /// 지금 감정과 _hopeBreakHits를 사용하며, _hopeHits와 상대의 감정을 바꾸고 꺾였으면 문구를, 아니면 null을 반환한다.
+        /// </summary>
+        public string RegisterHit()
+        {
+            if (Current != Emotion.Hope) return null;
+            _hopeHits++;
+            if (_hopeHits < _hopeBreakHits) return null;
+            Set(Emotion.Guard, 1);
+            return _hopeBrokenMessage;
         }
 
         /// <summary>
@@ -113,14 +141,15 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 감정을 평온으로 되돌리고 화제 목록과 쉼터 시간을 비운다. 인물을 불러오거나 만남을 다시 시작할 때 부른다.
-        /// 입력값은 없으며, 상대의 감정과 단계, _topics, _restT를 바꾼다.
+        /// 감정을 그 인물의 시작 감정으로 되돌리고 화제 목록과 쉼터 시간을 비운다. 인물을 불러오거나 만남을 다시 시작할 때 부른다.
+        /// start(시작 감정)를 사용하며, 상대의 감정과 단계, _topics, _restT를 바꾼다. 평온이 아니면 그 감정의 화제 하나를 넣는다.
         /// </summary>
-        public void ResetState()
+        public void ResetState(Emotion start)
         {
             _topics.Clear();
             _restT = 0f;
-            Set(Emotion.Calm, 0);
+            if (start != Emotion.Calm) _topics.Add(new Topic { Text = STAGE1_NAMES[(int)start], Emotion = start });
+            Set(start, start == Emotion.Calm ? 0 : 1);
         }
 
         /// <summary>
@@ -175,11 +204,13 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 경계와 반감일 때만 초상화의 경계 애니메이션을 켠다. 만남을 떠나 있으면 끈다.
-        /// inEncounter(만남 화면에 있는지)를 사용하며, WaryStance의 경계 상태를 바꾼다.
+        /// 경계와 반감일 때만 초상화의 경계 애니메이션을 켜고, 표정 그림이 있는 감정이면 그 그림을 보여 준다. 만남을 떠나 있으면 끈다.
+        /// inEncounter(만남 화면에 있는지)를 사용하며, 초상화 그림과 WaryStance의 경계 상태를 바꾼다.
         /// </summary>
         public void SyncWary(bool inEncounter)
         {
+            // 애니메이터를 다시 켠 뒤에 경계 애니메이션을 재생하도록 표정 그림을 먼저 맞춘다.
+            _portrait.Show(inEncounter ? Current : Emotion.Calm, Stage);
             _waryStance.SetWary(inEncounter && Current == Emotion.Guard);
         }
 
@@ -190,6 +221,8 @@ namespace EyeMaze
         private bool Set(Emotion emotion, int stage)
         {
             if (_person.Emotion == emotion && _person.EmotionStage == stage) return false;
+            // 다른 감정으로 바뀌면 희망에서 맞은 횟수를 처음부터 다시 센다.
+            if (_person.Emotion != emotion) _hopeHits = 0;
             _person.Emotion = emotion;
             _person.EmotionStage = stage;
             Changed?.Invoke();
@@ -221,11 +254,27 @@ namespace EyeMaze
         /// 월드 위치가 켜져 있는 쉼터 가운데 하나의 안인지 판단한다.
         /// gazeWorld와 RestSpot.Spots를 사용하며, 안이면 true를 반환한다.
         /// </summary>
-        private static bool InRestSpot(Vector3 gazeWorld)
+        public static bool InRestSpot(Vector3 gazeWorld)
         {
             foreach (RestSpot spot in RestSpot.Spots)
                 if (spot.Contains(gazeWorld)) return true;
             return false;
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>
+        /// 스펙 046: 개발자 진입에서 화제가 없는 감정마다 개발용 화제를 넣어 미로 안에서 감정을 바꿔 볼 수 있게 한다.
+        /// _topics를 사용하며, 빠진 감정의 화제를 _topics에 더한다.
+        /// </summary>
+        public void AddDebugTopics()
+        {
+            for (int i = 1; i < STAGE1_NAMES.Length; i++)
+            {
+                Emotion emotion = (Emotion)i;
+                if (_topics.FindIndex(t => t.Emotion == emotion) >= 0) continue;
+                _topics.Add(new Topic { Text = "개발용 " + STAGE1_NAMES[i], Emotion = emotion });
+            }
+        }
+#endif
     }
 }
