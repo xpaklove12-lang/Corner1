@@ -513,7 +513,8 @@ namespace EyeMaze
             // 스펙 046: 쉼터에 머문 시간을 진행하고, 경계일 때만 초상화의 경계 애니메이션을 켠다.
             string restMessage = _emotion.TickRest(dt, CanRunHazards, _cursor.transform.position);
             if (restMessage != null) _message = restMessage;
-            _emotion.SyncWary(_acceptInput);
+            // 스펙 046 FR-041: 마지막 열쇠 말을 건넨 뒤의 슬픔과 진실 결말에서는 눈물 초상화를 보여 준다.
+            _emotion.SyncWary(_acceptInput, ShowsTears());
             // 스펙 046: 동요의 새어 나오는 말과 열망의 끌려오는 기억을 진행한다.
             TickLeak();
             TickPull(dt);
@@ -632,7 +633,7 @@ namespace EyeMaze
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         /// <summary>
         /// 개발자 진입에서 종료 상태를 초기화하고 읽기나 응답 대기를 정리해 시선 조작을 시작한다.
-        /// 입력값은 없으며, 모드와 입력 허용 상태, 읽기와 응답 상태를 변경한다.
+        /// 입력값은 없으며, 모드와 입력 허용 상태, 읽기와 응답 상태를 변경하고 화제가 없는 감정의 개발용 화제를 더한다.
         /// </summary>
         public void DebugStartGaze()
         {
@@ -746,7 +747,7 @@ namespace EyeMaze
 
         /// <summary>
         /// worldDirection과 burden을 사용해 탄환·라인 공통 피격을 적용한다.
-        /// 무적 중이면 false를 반환하며 적용 시 밀려남, 점멸, 초점 요동, 부담감과 무적 시간을 변경한다.
+        /// 무적 중이면 false를 반환하며 적용 시 밀려남, 점멸, 초점 요동, 부담감과 무적 시간을 변경한다. 희망과 열망에서는 부담감이 더 오르고, 여러 번 맞으면 감정이 경계가 되며 문구가 바뀐다.
         /// </summary>
         private bool TryApplyHazardHit(Vector2 worldDirection, float burden)
         {
@@ -1598,6 +1599,7 @@ namespace EyeMaze
 
         /// <summary>
         /// 원호 통로를 지날 수 있는지 판단한다. 통로 가장자리에 걸쳐 있으면 살짝 가운데로 끌어당긴다.
+        /// 열쇠가 맞지만 아직 열지 않은 문이면 문 여는 컷신을 시작하고, 끝날 때까지 지나가지 못하게 한다.
         /// arcRing, sector, r, a(참조)를 사용하며, 지날 수 있으면 true를 반환하고 a를 보정한다.
         /// </summary>
         private bool CanCrossArc(int arcRing, int sector, float r, ref float a)
@@ -1806,6 +1808,19 @@ namespace EyeMaze
                 _message = Strings.Get("msg.leak", "{name}의 말이 새어 나온다.\n{text}", ("name", Name), ("text", LeakText(entry, stage)));
                 return;
             }
+        }
+
+        /// <summary>
+        /// 스펙 046 FR-041: 눈물 초상화를 보여 줄 때인지 판단한다. 진실 결말이 진행 중이거나, 마지막 문의 열쇠 플래그가 켜진 뒤 감정이 슬픔 또는 침잠일 때다.
+        /// 모드, 지금 결말, 인물의 문 열쇠 플래그, 감정을 사용하며, 보여 줄 때이면 true를 반환한다.
+        /// </summary>
+        private bool ShowsTears()
+        {
+            if (_mode == Mode.Ending && _currentEnding == "truth") return true;
+            if (_activeCase == null || _emotion.Current != Emotion.Sad) return false;
+            string[] keys = _activeCase.GateKeyFlags;
+            // 마지막 칸이 동공의 문 열쇠이고, 마지막 기억에서 찾은 말을 건네야 켜진다.
+            return keys.Length > 0 && !string.IsNullOrEmpty(keys[keys.Length - 1]) && Flags.IsOn(keys[keys.Length - 1]);
         }
 
         /// <summary>

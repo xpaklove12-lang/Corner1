@@ -32,6 +32,8 @@ namespace EyeMaze
             EmotionControl emotion = _director.EmotionControl;
             bool on = _director.CurrentMode == EyeMazeDirector.Mode.Gaze && !_director.InAbyss && emotion.Current == Emotion.Sad;
             _alpha = Mathf.MoveTowards(_alpha, on ? _maxAlpha : 0f, _fadeSpeed * Time.deltaTime);
+            // 동공 안은 덮지 않으므로 들어서는 순간 바로 걷는다.
+            if (_director.InAbyss) _alpha = 0f;
             bool visible = _alpha > 0.001f;
             if (_cover.enabled != visible) _cover.enabled = visible;
             if (_hole.enabled != visible) _hole.enabled = visible;

@@ -40,11 +40,11 @@ namespace EyeMaze
         [SerializeField, Min(1f)] private float _hopeHitBurdenScale = 2f;
         [Tooltip("희망과 열망에서 이만큼 맞으면 희망이 꺾여 경계가 된다")]
         [SerializeField, Min(1)] private int _hopeBreakHits = 3;
-        private int _hopeHits;
         [Tooltip("쉼터 안에서 초당 줄어드는 부담감 (0~1)")]
         [SerializeField, Min(0f)] private float _restBurdenReliefPerSecond = 0.04f;
         private readonly List<Topic> _topics = new List<Topic>();
         private float _restT;
+        private int _hopeHits;
 
         [Header("문구")]
         [Tooltip("2단계에서 같은 감정의 화제를 또 짚었을 때")]
@@ -59,8 +59,8 @@ namespace EyeMaze
             "평온 · 장애물이 느려진다.",
             "경계 · 장애물이 기억을 지키러 모인다.",
             "반감 · 숨긴 기억이 드러난다.",
-            "동요 · 장애물이 서로 부딪혀 틈이 난다.",
-            "격동 · 틈이 길어진다.",
+            "동요 · 버티면 가까운 벽이 흔들려 무너진다.",
+            "격동 · 벽이 더 빨리, 더 멀리 무너진다.",
             "슬픔 · 장애물을 지나가지만 앞이 흐려진다.",
             "침잠 · 장애물 속에서 느려지지 않는다.",
             "희망 · 장애물이 비켜 주지만 맞으면 크게 흔들린다.",
@@ -148,6 +148,7 @@ namespace EyeMaze
         {
             _topics.Clear();
             _restT = 0f;
+            _hopeHits = 0;
             if (start != Emotion.Calm) _topics.Add(new Topic { Text = STAGE1_NAMES[(int)start], Emotion = start });
             Set(start, start == Emotion.Calm ? 0 : 1);
         }
@@ -205,12 +206,15 @@ namespace EyeMaze
 
         /// <summary>
         /// 경계와 반감일 때만 초상화의 경계 애니메이션을 켜고, 표정 그림이 있는 감정이면 그 그림을 보여 준다. 만남을 떠나 있으면 끈다.
-        /// inEncounter(만남 화면에 있는지)를 사용하며, 초상화 그림과 WaryStance의 경계 상태를 바꾼다.
+        /// inEncounter(만남 화면에 있는지)와 tears(눈물 초상화를 보여 줄 때인지)를 사용하며, 초상화 그림과 WaryStance의 경계 상태를 바꾼다.
         /// </summary>
-        public void SyncWary(bool inEncounter)
+        public void SyncWary(bool inEncounter, bool tears)
         {
             // 애니메이터를 다시 켠 뒤에 경계 애니메이션을 재생하도록 표정 그림을 먼저 맞춘다.
-            _portrait.Show(inEncounter ? Current : Emotion.Calm, Stage);
+            bool wasAnimating = _portrait.Animating;
+            _portrait.Show(inEncounter ? Current : Emotion.Calm, Stage, inEncounter && tears, _person.DisplayName);
+            // 표정 그림을 보여 주다 애니메이터를 다시 켠 때에는, 경계 상태가 그대로여도 애니메이션을 처음부터 다시 재생하게 한다.
+            if (!wasAnimating && _portrait.Animating) _waryStance.SetWary(false);
             _waryStance.SetWary(inEncounter && Current == Emotion.Guard);
         }
 

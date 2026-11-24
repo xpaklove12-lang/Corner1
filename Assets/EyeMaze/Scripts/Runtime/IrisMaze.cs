@@ -192,7 +192,7 @@ namespace EyeMaze
             int ls = Mod(worldSector - Offset(owner));
             gate = FindGate(r, ls);
             MazeWall w = FindWall(MazeWall.Kind.Arc, r, ls);
-            return w == null || !w.gameObject.activeSelf;
+            return w == null || !w.gameObject.activeSelf || w.Fallen;
         }
 
         /// <summary>
@@ -203,7 +203,8 @@ namespace EyeMaze
         {
             int ls = Mod(worldBoundary - Offset(LayerOfRing(r)));
             MazeWall w = FindWall(MazeWall.Kind.Radial, r, ls);
-            return w == null || !w.gameObject.activeSelf;
+            // 스펙 046 FR-049: 동요로 무너진 벽은 열린 것으로 본다.
+            return w == null || !w.gameObject.activeSelf || w.Fallen;
         }
 
         /// <summary>

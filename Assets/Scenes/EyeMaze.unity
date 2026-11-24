@@ -9349,7 +9349,7 @@ LineRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 12
+  m_SortingOrder: 19
   m_MaskInteraction: 0
   m_Positions:
   - {x: 0, y: 0, z: 0}
@@ -16533,8 +16533,8 @@ MonoBehaviour:
   _glowPulseMinScale: 1
   _ringSeconds: 0.6
   _ringEndRatio: 1.5
-  _nudgeRingSeconds: 2
   _tetherAlpha: 0.45
+  _nudgeRingSeconds: 2
 --- !u!114 &534245102
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16566,9 +16566,9 @@ MonoBehaviour:
   - "\uACBD\uACC4 \xB7 \uC7A5\uC560\uBB3C\uC774 \uAE30\uC5B5\uC744 \uC9C0\uD0A4\uB7EC
     \uBAA8\uC778\uB2E4."
   - "\uBC18\uAC10 \xB7 \uC228\uAE34 \uAE30\uC5B5\uC774 \uB4DC\uB7EC\uB09C\uB2E4."
-  - "\uB3D9\uC694 \xB7 \uC7A5\uC560\uBB3C\uC774 \uC11C\uB85C \uBD80\uB52A\uD600 \uD2C8\uC774
-    \uB09C\uB2E4."
-  - "\uACA9\uB3D9 \xB7 \uD2C8\uC774 \uAE38\uC5B4\uC9C4\uB2E4."
+  - "\uB3D9\uC694 \xB7 \uBC84\uD2F0\uBA74 \uAC00\uAE4C\uC6B4 \uBCBD\uC774 \uD754\uB4E4\uB824
+    \uBB34\uB108\uC9C4\uB2E4."
+  - "\uACA9\uB3D9 \xB7 \uBCBD\uC774 \uB354 \uBE68\uB9AC, \uB354 \uBA40\uB9AC \uBB34\uB108\uC9C4\uB2E4."
   - "\uC2AC\uD514 \xB7 \uC7A5\uC560\uBB3C\uC744 \uC9C0\uB098\uAC00\uC9C0\uB9CC \uC55E\uC774
     \uD750\uB824\uC9C4\uB2E4."
   - "\uCE68\uC7A0 \xB7 \uC7A5\uC560\uBB3C \uC18D\uC5D0\uC11C \uB290\uB824\uC9C0\uC9C0
@@ -30806,9 +30806,9 @@ LineRenderer:
   m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Positions:
-  - {x: 0.0984825, y: 0.106972806, z: -0}
+  - {x: 0.052721575, y: -0.19788231, z: -0}
   - {x: 0, y: 0, z: 0}
-  - {x: -0.0984825, y: -0.106972806, z: 0}
+  - {x: -0.052721575, y: 0.19788231, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.035
@@ -34570,6 +34570,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.EmotionPortrait
   _animator: {fileID: 1210276056}
   _image: {fileID: 1210276054}
+  _personName: "\uC740\uC7AC"
   _sprites:
   - {fileID: 7021728497640476901, guid: 0da874a2f59521c4d8546d33b2df63a9, type: 3}
   - {fileID: -639277405152010671, guid: c25052a79ec28dc428f2b5564d92127a, type: 3}
@@ -34577,6 +34578,7 @@ MonoBehaviour:
   - {fileID: -4838680518744869945, guid: 010245b727af67d43870ff23455f226c, type: 3}
   - {fileID: 1266987229049174365, guid: 07a0bddc64dba534ba7a8a8b84366f5e, type: 3}
   - {fileID: -2152986441593054476, guid: 6b0bd17d1a7f8e44fbf1e6aeb1351c65, type: 3}
+  _truthSprite: {fileID: 3046131069240543263, guid: 19d87c1ec8abea7478deb0c3011ddd15, type: 3}
 --- !u!1 &1214466409
 GameObject:
   m_ObjectHideFlags: 0
@@ -44136,7 +44138,7 @@ LineRenderer:
   - {x: 0, y: 0.001, z: 0}
   m_Parameters:
     serializedVersion: 3
-    widthMultiplier: 0.36750427
+    widthMultiplier: 0.47091848
     widthCurve:
       serializedVersion: 2
       m_Curve:
@@ -44163,8 +44165,8 @@ LineRenderer:
       m_RotationOrder: 4
     colorGradient:
       serializedVersion: 2
-      key0: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.2784314}
-      key1: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.2784314}
+      key0: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.48235294}
+      key1: {r: 0.54901963, g: 0.9490196, b: 1, a: 0.48235294}
       key2: {r: 0, g: 0, b: 0, a: 0}
       key3: {r: 0, g: 0, b: 0, a: 0}
       key4: {r: 0, g: 0, b: 0, a: 0}
@@ -45647,6 +45649,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1624392687}
   - component: {fileID: 1624392688}
+  - component: {fileID: 1624392689}
   m_Layer: 0
   m_Name: "\uBBF8\uB85C (Iris Maze)"
   m_TagString: Untagged
@@ -45703,6 +45706,30 @@ MonoBehaviour:
   _loopChance: 0.08
   _pupilDilationRequired: 0.75
   _person: {fileID: 1802569233}
+--- !u!114 &1624392689
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1624392686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdff96697249bbe43bb4882cfccd62a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.StirWalls
+  _director: {fileID: 534245099}
+  _maze: {fileID: 1624392688}
+  _delaySeconds: 2
+  _reachStart: 0.65
+  _reachSpeed: 0.35
+  _reachMax: 1.8
+  _delaySeconds2: 1
+  _reachMax2: 3
+  _fallSeconds: 0.4
+  _riseSeconds: 1
+  _trembleBand: 0.35
+  _trembleAmount: 0.012
 --- !u!1 &1636352428
 GameObject:
   m_ObjectHideFlags: 0
@@ -53265,9 +53292,9 @@ LineRenderer:
   m_SortingOrder: 11
   m_MaskInteraction: 0
   m_Positions:
-  - {x: -0.0748476, y: 0.068973966, z: -0}
+  - {x: 0.13853545, y: 0.036838077, z: -0}
   - {x: 0, y: 0, z: 0}
-  - {x: 0.0748476, y: -0.068973966, z: 0}
+  - {x: -0.13853545, y: -0.036838077, z: 0}
   m_Parameters:
     serializedVersion: 3
     widthMultiplier: 0.035

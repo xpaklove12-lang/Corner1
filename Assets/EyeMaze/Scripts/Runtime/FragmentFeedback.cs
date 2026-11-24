@@ -37,12 +37,14 @@ namespace EyeMaze
         [Tooltip("고리가 끝날 때의 지름 (RingWidth 배율)")]
         [SerializeField] private float _ringEndRatio = 1.5f;
         // 스펙 046 FR-043: 드러난 파편에 닿아 보게 하는 고리의 간격과 지난 시간
+        [Header("끌어오는 빛줄")]
+        [Tooltip("열망에서 끌려오는 기억과 시선을 잇는 빛줄의 투명도")]
+        [SerializeField, Range(0f, 1f)] private float _tetherAlpha = 0.45f;
+
+        [Header("첫 안내 고리")]
         [Tooltip("첫 파편을 얻기 전, 드러난 파편에서 고리가 퍼지는 간격(초)")]
         [SerializeField, Min(0.2f)] private float _nudgeRingSeconds = 2f;
         private float _nudgeRingT;
-        // 스펙 046 FR-048: 열망에서 끌려오는 기억과 시선을 잇는 빛줄
-        [Tooltip("열망에서 끌려오는 기억과 시선을 잇는 빛줄의 투명도")]
-        [SerializeField, Range(0f, 1f)] private float _tetherAlpha = 0.45f;
         private readonly Dictionary<MemoryFragment, LineRenderer> _tethers = new Dictionary<MemoryFragment, LineRenderer>();
 
         private readonly Dictionary<MemoryFragment, LineRenderer> _glows = new Dictionary<MemoryFragment, LineRenderer>();
