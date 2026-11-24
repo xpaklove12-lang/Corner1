@@ -5,6 +5,9 @@ using UnityEngine.Serialization;
 
 namespace EyeMaze
 {
+    /// <summary>스펙 047: 파편 감정. 채우기 퍼즐의 정답색을 정한다 (평온 초록, 강렬 빨강, 슬픔 파랑).</summary>
+    public enum MemoryEmotion { Calm, Intense, Sad }
+
     /// <summary>
     /// 미로 속 기억 조각. 층(MazeLayer) 아래에 두면 그 층과 함께 회전한다.
     /// ring / sector를 바꾸면 에디트 모드에서도 바로 그 칸으로 옮겨진다.
@@ -34,6 +37,9 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("collected")] private bool _collected;
         [Tooltip("주우면 켜지는 플래그 id (Data/Flags.csv에 적힌 것). 대화 CSV의 need 칸에서 쓴다")]
         [SerializeField] private string _flag;
+        // 스펙 047: 채우기 퍼즐의 정답색이 되는 파편 감정
+        [Tooltip("파편 감정. 색 채우기 퍼즐에서 판 전체를 이 감정색으로 채워야 풀린다")]
+        [SerializeField] private MemoryEmotion _emotion = MemoryEmotion.Sad;
 
         [Header("그림")]
         [SerializeField, FormerlySerializedAs("color")] private Color _color = new Color(0.6f, 0.95f, 1f, 1f);
@@ -56,6 +62,7 @@ namespace EyeMaze
         public int Ring { get => _ring; set => _ring = value; }
         public int Sector { get => _sector; set => _sector = value; }
         public string Flag => _flag;
+        public MemoryEmotion Emotion => _emotion;
 
         /// <summary>주웠는지. 바꾸면 플래그도 함께 켜지고 꺼진다.</summary>
         public bool Collected

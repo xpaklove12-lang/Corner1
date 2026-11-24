@@ -115,6 +115,19 @@ namespace EyeMaze
         [Header("파편 퍼즐")]
         [Tooltip("파편에 닿으면 열 퍼즐. 비우면 기존처럼 바로 줍는다")]
         [SerializeField] private FragmentPuzzle _puzzle;
+        // 스펙 046: 정해진 층의 파편을 열 때 푸는 선 잇기 퍼즐
+        [Tooltip("선 잇기 퍼즐. 비우면 모든 층에서 조각 퍼즐을 쓴다")]
+        [SerializeField] private TracePuzzle _tracePuzzle;
+        [Tooltip("선 잇기 퍼즐을 쓰는 층 번호 (1부터)")]
+        [SerializeField] private int[] _traceFloors = { 1 };
+        // 스펙 047: 정해진 층의 파편을 열 때 푸는 감정색 채우기 퍼즐
+        [Tooltip("색 채우기 퍼즐. 비우면 이 퍼즐을 쓰지 않는다")]
+        [SerializeField] private FloodPuzzle _floodPuzzle;
+        [Tooltip("색 채우기 퍼즐을 쓰는 층 번호 (1부터). 선 잇기 층과 겹치면 선 잇기를 쓴다")]
+        [SerializeField] private int[] _floodFloors = { 2 };
+        // 스펙 048: 퍼즐을 열고 닫을 때 파편 확대와 네모 창 펼치기·줄이기 연출
+        [Tooltip("퍼즐 진입·복귀 연출. 비우면 연출 없이 퍼즐을 연다")]
+        [SerializeField] private PuzzleTransition _puzzleTransition;
 
         [Header("파편 읽은 뒤")]
         [Tooltip("파편을 다 읽고 나면 지금 층을 뺀 나머지 층의 벽을 무작위로 다시 만든다 (멈춰 있는 동안 길을 외우지 못하게)")]
@@ -286,7 +299,8 @@ namespace EyeMaze
         /// <summary>파편을 읽는 중이면 시선이 멈춘다.</summary>
         public bool IsReading => _mode == Mode.Gaze && _reading;
         // 스펙 037: 파편 퍼즐이 열려 있는지
-        public bool IsSolvingPuzzle => _puzzle != null && _puzzle.IsOpen;
+        public bool IsSolvingPuzzle => (_puzzle != null && _puzzle.IsOpen) || (_tracePuzzle != null && _tracePuzzle.IsOpen)
+            || (_floodPuzzle != null && _floodPuzzle.IsOpen) || (_puzzleTransition != null && _puzzleTransition.IsBusy);
 
         /// <summary>선택지 결과를 한 줄씩 넘기는 중인지. 이때는 선택지와 들여다보기 전환을 받지 않는다.</summary>
         public bool IsReadingResponse => _mode == Mode.Talk && _responseLines.Count > 0;
@@ -364,10 +378,32 @@ namespace EyeMaze
                 _puzzle.Cancelled += OnPuzzleCancelled;
                 _puzzle.Caught += OnPuzzleCaught;
             }
+            if (_tracePuzzle != null)
+            {
+                _tracePuzzle.Solved += OnPuzzleSolved;
+                _tracePuzzle.Cancelled += OnPuzzleCancelled;
+            }
+            if (_floodPuzzle != null)
+            {
+                _floodPuzzle.Solved += OnPuzzleSolved;
+                _floodPuzzle.Cancelled += OnPuzzleCancelled;
+                _floodPuzzle.WrongColor += OnFloodWrongColor;
+            }
         }
 
         void OnDisable()
         {
+            if (_tracePuzzle != null)
+            {
+                _tracePuzzle.Solved -= OnPuzzleSolved;
+                _tracePuzzle.Cancelled -= OnPuzzleCancelled;
+            }
+            if (_floodPuzzle != null)
+            {
+                _floodPuzzle.Solved -= OnPuzzleSolved;
+                _floodPuzzle.Cancelled -= OnPuzzleCancelled;
+                _floodPuzzle.WrongColor -= OnFloodWrongColor;
+            }
             if (_puzzle == null) return;
             _puzzle.Solved -= OnPuzzleSolved;
             _puzzle.Cancelled -= OnPuzzleCancelled;
@@ -1476,7 +1512,7 @@ namespace EyeMaze
             {
                 if (f.Collected || f == _declinedFragment || f.Ring != _cursor.Ring || f.WorldSector != _cursor.Sector) continue;
                 if (Vector3.Distance(pos, _maze.CellLocal(f.Ring, f.WorldSector)) > _maze.RingWidth * 0.55f) continue;
-                if (_puzzle != null && Application.isPlaying)
+                if ((_puzzle != null || UsesTracePuzzle(f) || UsesFloodPuzzle(f)) && Application.isPlaying)
                 {
                     OpenPuzzle(f);
                     return;
@@ -1505,8 +1541,74 @@ namespace EyeMaze
             _puzzleFragment = f;
             _velocity = Vector2.zero;
             StopBump();
-            _puzzle.Open(_maze.LayerOfRing(f.Ring), UnityEngine.Random.Range(int.MinValue, int.MaxValue));
-            _message = Strings.Get("msg.puzzle_open", "파편이 조각나 있다. 조각을 바꿔 길을 잇고 단서까지 걸어가야 열린다.\n(방향키·Space 조각 바꾸기 · R 돌리기 · WASD 걷기 · Esc 그만두기)");
+            // 스펙 048: 연출이 없을 때는 연출부터 시작하고, 네모가 다 펼쳐지면 이 메서드를 다시 불러 퍼즐을 연다.
+            if (_puzzleTransition != null && !_puzzleTransition.IsBusy)
+            {
+                _puzzleTransition.Play(f.transform.position, f.BodyDiameter, f.Tint, () => OpenPuzzle(f));
+                return;
+            }
+            int layer = _maze.LayerOfRing(f.Ring);
+            int seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            // 스펙 046: 정해진 층은 선 잇기 퍼즐을 연다.
+            if (UsesTracePuzzle(f))
+            {
+                _tracePuzzle.Open(layer, seed);
+                _message = Strings.Get("msg.trace_open", "파편의 선이 끊겨 있다. V자 조각을 돌려 모든 선을 하나로 이으면 파편을 얻는다.\n(WASD·방향키 조각 고르기 · Space 돌리기 · Esc 그만두기)");
+                return;
+            }
+            // 스펙 047: 정해진 층은 파편 감정색으로 채우는 퍼즐을 연다.
+            if (UsesFloodPuzzle(f))
+            {
+                _floodPuzzle.Open(layer, seed, f.Emotion);
+                _message = Strings.Get("msg.flood_open", "파편의 색이 흩어져 있다. 판 전체를 이 기억의 색({color})으로 물들이면 파편을 얻는다. 테두리 색이 이 기억의 색이다.\n(WASD·방향키 칸 고르기 · 1~4·Q/E 색 고르기 · Space 붓기 · R 처음으로 · Esc 그만두기)",
+                    ("color", EmotionColorName(f.Emotion)));
+                return;
+            }
+            _puzzle.Open(layer, seed);
+            _message = Strings.Get("msg.puzzle_open", "파편이 조각나 있다. 조각을 바꿔 길을 잇고 단서까지 걸어가야 열린다.\n(IJKL·Space 조각 바꾸기 · R 돌리기 · WASD·방향키 걷기 · Esc 그만두기)");
+        }
+
+        /// <summary>
+        /// 스펙 047: 파편 감정의 색 이름을 구한다.
+        /// emotion을 사용하며, 초록·빨강·파랑 중 하나를 반환한다.
+        /// </summary>
+        private static string EmotionColorName(MemoryEmotion emotion)
+        {
+            switch (emotion)
+            {
+                case MemoryEmotion.Calm: return Strings.Get("color.green", "초록");
+                case MemoryEmotion.Intense: return Strings.Get("color.red", "빨강");
+                default: return Strings.Get("color.blue", "파랑");
+            }
+        }
+
+        /// <summary>
+        /// 스펙 047: 색 채우기 판이 정답색이 아닌 한 색으로 모이면 이 기억의 색이 아니라고 알린다.
+        /// _puzzleFragment의 감정을 사용하며, 문구를 바꾼다.
+        /// </summary>
+        private void OnFloodWrongColor()
+        {
+            if (_puzzleFragment == null) return;
+            _message = Strings.Get("msg.flood_wrong", "판이 한 색으로 모였지만 이 기억의 색이 아니다. 이 기억은 {color}이다.",
+                ("color", EmotionColorName(_puzzleFragment.Emotion)));
+        }
+
+        /// <summary>
+        /// 스펙 046: 파편 f를 선 잇기 퍼즐로 열지 확인한다.
+        /// f의 층 번호, _tracePuzzle, _traceFloors를 사용하며, 선 잇기를 쓰면 true를 반환한다.
+        /// </summary>
+        private bool UsesTracePuzzle(MemoryFragment f)
+        {
+            return _tracePuzzle != null && Array.IndexOf(_traceFloors, _maze.LayerOfRing(f.Ring) + 1) >= 0;
+        }
+
+        /// <summary>
+        /// 스펙 047: 파편 f를 색 채우기 퍼즐로 열지 확인한다. 선 잇기 퍼즐 층이면 쓰지 않는다.
+        /// f의 층 번호, _floodPuzzle, _floodFloors를 사용하며, 색 채우기를 쓰면 true를 반환한다.
+        /// </summary>
+        private bool UsesFloodPuzzle(MemoryFragment f)
+        {
+            return _floodPuzzle != null && !UsesTracePuzzle(f) && Array.IndexOf(_floodFloors, _maze.LayerOfRing(f.Ring) + 1) >= 0;
         }
 
         /// <summary>
@@ -1515,7 +1617,10 @@ namespace EyeMaze
         /// </summary>
         private void ClosePuzzle()
         {
-            _puzzle.Close();
+            if (_puzzle != null && _puzzle.IsOpen) _puzzle.Close();
+            if (_tracePuzzle != null && _tracePuzzle.IsOpen) _tracePuzzle.Close();
+            if (_floodPuzzle != null && _floodPuzzle.IsOpen) _floodPuzzle.Close();
+            if (_puzzleTransition != null) _puzzleTransition.Stop();
             _puzzleFragment = null;
         }
 
@@ -1527,7 +1632,9 @@ namespace EyeMaze
         {
             MemoryFragment f = _puzzleFragment;
             _puzzleFragment = null;
-            if (f != null) CollectFragment(f);
+            // 스펙 048: 네모가 파편 자리로 다 줄어든 뒤에 파편을 줍는다.
+            if (_puzzleTransition != null) _puzzleTransition.Return(() => { if (f != null) CollectFragment(f); });
+            else if (f != null) CollectFragment(f);
         }
 
         /// <summary>
@@ -1539,6 +1646,8 @@ namespace EyeMaze
             _declinedFragment = _puzzleFragment;
             _puzzleFragment = null;
             _message = Strings.Get("msg.puzzle_cancel", "파편에서 잠시 물러났다. 칸을 벗어났다 돌아오면 다시 열 수 있다.");
+            // 스펙 048: 네모를 파편 자리로 줄여 눈으로 돌아간다.
+            if (_puzzleTransition != null) _puzzleTransition.Return(null);
         }
 
         /// <summary>
@@ -1550,6 +1659,8 @@ namespace EyeMaze
             _declinedFragment = _puzzleFragment;
             _puzzleFragment = null;
             _message = Strings.Get("msg.puzzle_caught", "무언가에 붙잡혀 파편에서 밀려났다. 칸을 벗어났다 돌아오면 다시 도전할 수 있다.");
+            // 스펙 048: 네모를 파편 자리로 줄여 눈으로 돌아간다.
+            if (_puzzleTransition != null) _puzzleTransition.Return(null);
         }
 
         /// <summary>

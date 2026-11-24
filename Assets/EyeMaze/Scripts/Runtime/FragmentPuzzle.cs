@@ -382,16 +382,17 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 방향키로 선택 틀을 옮기고, R로 선택한 조각을 돌리고, Space로 조각을 집거나 두 조각의 자리를 바꾼다.
+        /// IJKL로 선택 틀을 옮기고, R로 선택한 조각을 돌리고, Space로 조각을 집거나 두 조각의 자리를 바꾼다.
         /// kb를 사용하며, _cursor, _picked와 회전·자리 바꾸기 상태를 바꾼다.
         /// </summary>
         private void HandleTileInput(Keyboard kb)
         {
             int dr = 0, dc = 0;
-            if (kb.upArrowKey.wasPressedThisFrame) dr = 1;
-            else if (kb.downArrowKey.wasPressedThisFrame) dr = -1;
-            else if (kb.rightArrowKey.wasPressedThisFrame) dc = 1;
-            else if (kb.leftArrowKey.wasPressedThisFrame) dc = -1;
+            // 방향키는 말 걷기에 쓰므로 선택 틀은 IJKL로 옮긴다.
+            if (kb.iKey.wasPressedThisFrame) dr = 1;
+            else if (kb.kKey.wasPressedThisFrame) dr = -1;
+            else if (kb.lKey.wasPressedThisFrame) dc = 1;
+            else if (kb.jKey.wasPressedThisFrame) dc = -1;
             if (dr != 0 || dc != 0)
             {
                 int r = Mathf.Clamp(_cursor / _size + dr, 0, _size - 1);
@@ -507,7 +508,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 말을 한 프레임 걷게 하고, 도착하면 단서인지 확인한 뒤 저장한 방향이나 누르고 있는 WASD 방향으로 이어 간다.
+        /// 말을 한 프레임 걷게 하고, 도착하면 단서인지 확인한 뒤 저장한 방향이나 누르고 있는 WASD·방향키 방향으로 이어 간다.
         /// kb와 dt를 사용하며, 말 위치, 걷기 진행도, 저장한 방향과 성공 이벤트를 바꾼다.
         /// </summary>
         private void HandleWalk(Keyboard kb, float dt)
@@ -548,17 +549,17 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// WASD 한 방향을 읽는다. held가 true면 누르고 있는 키, false면 이번 프레임에 누른 키를 본다.
+        /// WASD·방향키 한 방향을 읽는다. held가 true면 누르고 있는 키, false면 이번 프레임에 누른 키를 본다.
         /// kb와 held를 사용하며, 방향이 있으면 dr·dc에 담고 true를 반환한다.
         /// </summary>
         private static bool ReadWalk(Keyboard kb, bool held, out int dr, out int dc)
         {
             dr = 0;
             dc = 0;
-            if (IsDown(kb.wKey, held)) dr = 1;
-            else if (IsDown(kb.sKey, held)) dr = -1;
-            else if (IsDown(kb.dKey, held)) dc = 1;
-            else if (IsDown(kb.aKey, held)) dc = -1;
+            if (IsDown(kb.wKey, held) || IsDown(kb.upArrowKey, held)) dr = 1;
+            else if (IsDown(kb.sKey, held) || IsDown(kb.downArrowKey, held)) dr = -1;
+            else if (IsDown(kb.dKey, held) || IsDown(kb.rightArrowKey, held)) dc = 1;
+            else if (IsDown(kb.aKey, held) || IsDown(kb.leftArrowKey, held)) dc = -1;
             else return false;
             return true;
         }
