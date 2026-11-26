@@ -81,6 +81,16 @@
 | 소파 착석 높이와 소파 앞부분 가림 | [`field.md`](field.md) | FIELD-06 |
 | 걷기 GIF 제작과 프레임 보간 | [`field.md`](field.md) | FIELD-07~08 |
 | 말을 걸 수 있는 NPC 테두리 | [`field.md`](field.md) | FIELD-11~12 |
+| 인트로 컷툰 칸 순서, 넘기기 입력(Space·Enter·클릭), 쪽 넘김, 암전, R로 다시 보기, 자동 진행 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-01~07 |
+| 인트로 컷툰 칸 연출(이동·크기·투명도, 흔들림, 번쩍임, 눈 감김) | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-08~11 |
+| 인트로 컷툰 그레이 박스 칸 모양, 라벨, 하단 안내 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-12~13 |
+| 인트로 컷툰 그레이 박스 씬을 다시 까는 메뉴 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-14 |
+| 인트로 컷툰 1쪽 3D 블록아웃 칸, 칸 카메라 구도(부감, 줌인, 상반신) | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-15~17, CUT-19 |
+| 인트로 컷툰 1-2 칸 테두리를 넘는 운석 그림자 | [`intro-cuttoon.md`](intro-cuttoon.md) | ~~CUT-18~~ 폐기 |
+| 인트로 컷툰 1-2 그림자가 올 때 칸 어두워짐과 칸 흔들림 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-21~22 |
+| 인트로 컷툰 3D 오브젝트 이동·회전 연출 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-20 |
+| 인트로 컷툰 1-3 카메라가 뒤로 빠지며 최종 구도로 가는 연출 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-23 |
+| 인트로 컷툰 1-3 `?`를 머리 옆에 같은 간격으로 붙이기 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-24 |
 
 ## 코드 파일 → 스펙
 
@@ -131,6 +141,7 @@
 | `Editor/FieldInspectors.cs` | [`dialogue.md`](dialogue.md) |
 | `Assets/EyeMaze/Data/Dialogue/<인물>_DayN.csv` | [`dialogue-editor.md`](dialogue-editor.md)(형식), 칸 의미는 [`dialogue.md`](dialogue.md)·[`burden.md`](burden.md)·[`emotion-maze.md`](emotion-maze.md) |
 | `Assets/EyeMaze/Data/Flashbacks.csv` | [`memory-fragments.md`](memory-fragments.md) |
+| `Assets/IntroCuttoon/Scripts/Runtime/Cuttoon*.cs`, `Assets/IntroCuttoon/Scripts/Editor/IntroCuttoonGrayboxBuilder.cs` | [`intro-cuttoon.md`](intro-cuttoon.md) |
 
 ## 요구사항 ID 접두어 → 스펙
 
@@ -144,6 +155,7 @@
 | `EDITOR` | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-01~38 |
 | `OPEN` | [`opening.md`](opening.md) | OPEN-01~06 |
 | `FIELD` | [`field.md`](field.md) | FIELD-01~12 |
+| `CUT` | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-01~24 (CUT-18 폐기) |
 
 옛 번호(`015`, `스펙 010 FR-017` 등)로 적힌 커밋이나 코드 주석은 [`README.md`](README.md) 2절 대응표로 새 ID를 찾는다.
 

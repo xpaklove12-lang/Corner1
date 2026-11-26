@@ -16,6 +16,7 @@
 | `EDITOR` | [`dialogue-editor.md`](dialogue-editor.md) | 인물·회차별 통합 CSV 대사를 텍스트와 노드 뷰에서 편집하는 도구 |
 | `OPEN` | [`opening.md`](opening.md) | 시작 독백과 첫 손님 입장 |
 | `FIELD` | [`field.md`](field.md) | 필드 인물의 전신 모습, 걷기·앉기·퇴장 표시, 주인공 외형, 말을 걸 수 있는 NPC 테두리 |
+| `CUT` | [`intro-cuttoon.md`](intro-cuttoon.md) | 운석 충돌부터 수면 캡슐까지 만화 칸이 차례로 열리는 인트로 컷툰, 그레이 박스 씬 |
 
 ## 2. 옛 번호 대응
 
