@@ -19,7 +19,7 @@ flowchart TD
     F --> H[게임이 같은 CSV로 상담·엔딩·필드 대사 실행 EDITOR-12]
 ```
 
-CSV 하나가 유일한 원본이다. `section`으로 Talk·Dialogue·Ending 행을, `actor`로 말하는 인물을 나눈다. 텍스트와 트리는 같은 모델을 그리므로 어느 쪽에서 고쳐도 같은 검사와 저장을 거친다. 노드 위치와 크기 같은 화면 설정은 CSV에 쓰지 않는다.
+인물·회차마다 대사 파일 하나가 원본이다. 텍스트와 트리는 같은 내용을 두 가지로 보여 주므로, 어느 쪽에서 고쳐도 같은 검사를 거쳐 같은 파일에 저장된다. 트리의 위치나 크기 같은 화면 설정은 대사 파일에 들어가지 않는다.
 
 ## 진행 중
 
@@ -27,18 +27,69 @@ CSV 하나가 유일한 원본이다. `section`으로 Talk·Dialogue·Ending 행
 
 ## 완료
 
-- **EDITOR-01** `EyeMaze/대사 편집기`에서 인물·회차 CSV(`Dialogue/<인물>_DayN.csv`)를 열면 `section`·`actor`·`id`로 Talk·Dialogue·Ending 행을 나눠 한 모델로 읽고, 값과 순서를 보존한다. 공용 `Strings.csv`도 따로 열 수 있다.
-- **EDITOR-02** 텍스트 뷰는 SUDS식 표기와 `[eye ...]`를 쓰고, 라벨·선택지·대사·명령·오류 줄을 색으로 구분하며, Tab으로 들여쓴다.
-- **EDITOR-03** 노드 트리(`DialogueEditorGraph`)는 등장 Talk에서 상담, 분기, 엔딩까지 위에서 아래로 잇고, 이 회차 손님의 파편을 왼쪽에 의존선과 함께 보인다.
-- **EDITOR-04** 트리에서 연결선과 카드를 끌어 `goto`와 순서를 바꾸고, 우클릭으로 선택지·대사·그룹·`after`를 더하며, F2와 Enter로 ID·본문·화자·파편 문구를 바로 고치고, Delete로 지운다.
-- **EDITOR-05** `DialogueEditorFormat.Validate`를 통과한 편집은 두 뷰를 갱신하고 CSV를 바로 저장·재임포트한다. 오류가 있으면 줄과 이유를 보이고 마지막 정상 상태를 유지한다.
-- **EDITOR-09** Ctrl+Z·Ctrl+Y(`UndoEdit`, `RedoEdit`)로 그 파일의 편집을 되돌리고 다시 한다.
-- **EDITOR-10** Ctrl+휠로 트리를 확대·축소하고, 분할선과 상자 크기를 끌어 바꾼다. 화면 설정은 `EditorPrefs`에 저장되어 다시 열어도 남는다.
-- **EDITOR-12** 씬의 상담(`ClientCase`)과 필드 인물(`FieldNPC`)은 연결된 회차 CSV로 상담, 엔딩, actor별 필드 대사를 실행한다.
-- **EDITOR-20** 선택지 아래에 `trust`·`dilation` 변화가 보이고(둘 다 0이면 "수치 변화 없음"), 클릭해 고친다.
-- **EDITOR-21** `truth`·`half`·`leave` 엔딩 조건(신뢰 기준, 부담 기준, 열쇠 파편 `key_flag`)과 선택지의 직접 엔딩 조건(`need`, `ending_need`)을 트리의 진입선에 보이고 고친다. 게임은 이 값으로 엔딩을 판정한다.
-- **EDITOR-32** 선택지 결과(`response`)는 `\n`으로 여러 줄을 두고, 트리에서 줄을 더하고 지운다. 게임은 결과를 한 줄씩 보인 뒤 `goto`로 간다.
-- **EDITOR-34** 빈 곳 우클릭 `기억 파편 추가/<층>`은 `Flags.csv` 줄과 씬 파편 오브젝트를 만들고 문구 편집을 시작한다.
+### 대사 편집기 창 (EDITOR-01)
+
+메뉴 `EyeMaze/대사 편집기`에서 인물·회차 대사 파일 하나를 열어 등장 대화, 상담, 결말을 한곳에서 편집한다.
+
+- 파일 하나에 Talk(필드 대화), Dialogue(상담), Ending(결말)이 함께 들어 있다.
+- 공용 문구 파일(`Strings.csv`)도 따로 열 수 있다.
+
+### 텍스트 뷰 (EDITOR-02)
+
+왼쪽 텍스트 뷰에서 대본을 글로 쓰고 고친다.
+
+- 라벨, 선택지, 대사, 명령, 오류 줄이 색으로 구분된다.
+- Tab으로 들여쓴다.
+
+### 노드 트리 (EDITOR-03)
+
+오른쪽 트리에서 등장 대화부터 상담 분기와 결말까지의 흐름을 한눈에 본다.
+
+- 이 손님의 기억 파편과, 파편이 열어 주는 선택지·결말을 선으로 잇는다.
+
+### 트리에서 편집하기 (EDITOR-04)
+
+트리에서 바로 흐름과 글을 고친다.
+
+- 선을 끌어 다음 장면을 바꾸고, 카드를 끌어 순서를 바꾼다.
+- 우클릭으로 선택지, 대사, 장면, 결말을 더하고, Delete로 지운다.
+- F2와 Enter로 이름, 대사, 화자, 파편 문구를 바로 고친다.
+
+### 저장과 오류 (EDITOR-05)
+
+올바르게 고치면 바로 저장되어 게임에 반영되고, 잘못 쓰면 오류 줄과 이유를 보여 주고 저장하지 않는다.
+
+### 실행 취소 (EDITOR-09)
+
+Ctrl+Z, Ctrl+Y로 편집을 되돌리고 다시 한다.
+
+### 화면 조절 (EDITOR-10)
+
+Ctrl+휠로 트리를 확대·축소하고, 두 뷰의 너비와 상자 크기를 끌어 바꾼다. 다시 열어도 그대로다.
+
+### 게임 연결 (EDITOR-12)
+
+씬의 손님과 필드 인물은 연결된 대사 파일로 상담, 결말, 필드 대화를 실행한다.
+
+### 선택지 수치 (EDITOR-20)
+
+선택지마다 신뢰와 동공이 얼마나 바뀌는지 트리에 보이고, 눌러서 고친다.
+
+### 결말 조건 (EDITOR-21)
+
+각 결말에 들어가는 조건을 트리의 선에 보이고 거기서 고친다. 게임은 이 조건으로 결말을 정한다.
+
+- truth: 신뢰가 충분하고 열쇠 파편을 주웠을 때. half: 그렇지 않을 때.
+- leave: 신뢰가 너무 낮거나 부담감이 가득 찼을 때.
+- 선택지로 바로 가는 결말은 그 선택지를 고를 수 있는 조건과, 고른 뒤 결말로 갈 조건을 따로 둔다.
+
+### 여러 줄 결과 (EDITOR-32)
+
+선택지를 고른 뒤의 반응을 여러 줄로 쓸 수 있고, 게임에서는 한 줄씩 넘기며 보여 준다.
+
+### 기억 파편 추가 (EDITOR-34)
+
+트리 빈 곳을 우클릭해 층을 고르면, 플래그와 씬의 파편 오브젝트를 함께 만든다.
 
 ---
 
@@ -75,6 +126,25 @@ CSV 하나가 유일한 원본이다. `section`으로 Talk·Dialogue·Ending 행
 
 - 에디터 전용 창이라 씬이나 프리팹 오브젝트를 만들지 않는다. 예외는 `EDITOR-34`의 파편 추가다.
 - 씬의 `ClientCase._dialogueCsv`가 회차 CSV를 가리키고, 그 손님의 `FieldNPC._talkCsv`가 같은 파일을, `_dialogueActorId`로 자기 Talk 행을 고른다.
+
+### 코드 단서
+
+기능을 고칠 때 먼저 볼 곳이다.
+
+| 기능 | 찾을 곳 |
+|---|---|
+| EDITOR-01 | `DialogueEditorWindow`, `DialogueEditorFormat.ReadCsv` |
+| EDITOR-02 | `DialogueEditorFormat.ParseText`, `DialogueEditorWindow.Highlight` |
+| EDITOR-03 | `DialogueEditorGraph.LayoutDay` |
+| EDITOR-04 | `DialogueEditorGraph.HandleEditInput`, `DialogueEditorGraph.HandleContextMenu` |
+| EDITOR-05 | `DialogueEditorFormat.Validate`, `DialogueEditorWindow.ApplyDraft` |
+| EDITOR-09 | `DialogueEditorWindow.UndoEdit` |
+| EDITOR-10 | `DialogueEditorGraph.HandleZoom`, `DialogueEditorWindow.HandleSplit` |
+| EDITOR-12 | `ClientCase.DialogueCsv`, `FieldNPC.Talk` |
+| EDITOR-20 | `DialogueEditorGraph.ScoreText` |
+| EDITOR-21 | `DialogueEditorGraph.BuildSegments`, `EyeMazeDirector.TouchCore` |
+| EDITOR-32 | `DialogueEditorGraph.BuildResponseMenu`, `EyeMazeDirector.NextResponseLine` |
+| EDITOR-34 | `DialogueEditorWindow.CreateFragment` |
 
 ### 메모
 

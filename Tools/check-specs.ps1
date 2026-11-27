@@ -12,6 +12,8 @@ $specDir = Join-Path $root 'docs/specs'
 $metaFiles = @('README.md', '_TEMPLATE.md')
 $errors = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
+$clueNames = New-Object System.Collections.Generic.List[object]
+$doneIds = @{}
 
 function Read-Utf8([string]$Path) {
     return [IO.File]::ReadAllText($Path, [Text.Encoding]::UTF8)
@@ -82,49 +84,63 @@ foreach ($name in $registered.Keys) {
         $errors.Add("docs/specs/$name 에 '## 흐름' 절과 Mermaid 차트가 없다.")
     }
 
-    # 요구사항 줄로 접두어, 중복, 다음 번호를 본다.
+    # 요구사항은 "### 기능 이름 (ID)" 제목이다. 접두어, 중복, 다음 번호를 본다.
+    $reqPattern = '(?m)^### (.+?) \(([A-Z]+)-(\d{2,3})\)(.*)$'
     $seen = @{}
-    foreach ($m in [regex]::Matches($text, '(?m)^\s*-\s*\*\*([A-Z]+)-(\d{2,3})\*\*')) {
-        $id = "$($m.Groups[1].Value)-$($m.Groups[2].Value)"
-        if ($m.Groups[1].Value -ne $prefix) {
+    foreach ($m in [regex]::Matches($text, $reqPattern)) {
+        $id = "$($m.Groups[2].Value)-$($m.Groups[3].Value)"
+        if ($m.Groups[2].Value -ne $prefix) {
             $errors.Add("docs/specs/$name 의 $id 는 이 파일의 접두어 $prefix 와 다르다.")
         }
         if ($seen.ContainsKey($id)) {
             $errors.Add("docs/specs/$name 에서 $id 가 두 번 나온다. 브랜치를 합치다 번호가 겹쳤다면 늦게 합친 쪽이 다음 번호로 바꾼다.")
         }
-        if ([int]$m.Groups[2].Value -ge $nextNumber) {
+        if ([int]$m.Groups[3].Value -ge $nextNumber) {
             $errors.Add("docs/specs/$name 의 $id 가 다음 번호보다 작지 않다. 다음 번호를 올린다.")
         }
         $seen[$id] = $true
     }
-
-    # 요구사항에는 코드를 찾을 이름(필드, key, 메뉴 등)을 백틱으로 하나 이상 넣는다.
-    foreach ($m in [regex]::Matches($text, '(?m)^-\s*\*\*([A-Z]+-\d{2,3})\*\*(.*)$')) {
-        if (($m.Groups[2].Value -replace '`\[(제안|개발중)\]`', '') -notmatch '`[^`]+`') {
-            $warnings.Add("docs/specs/$name 의 $($m.Groups[1].Value) 에 코드를 찾을 이름이 없다. Inspector 필드, 문구 key, 메뉴 경로 같은 이름을 넣는다.")
-        }
+    if ($text -match '(?m)^\s*-\s*\*\*[A-Z]+-\d{2,3}\*\*') {
+        $errors.Add("docs/specs/$name 에 옛 형식 요구사항 줄(- **ID**)이 있다. ""### 기능 이름 (ID)"" 제목으로 쓴다.")
     }
 
     if ($progress.Success) {
-        foreach ($m in [regex]::Matches($progress.Groups[1].Value, '(?m)^-\s*\*\*([A-Z]+-\d{2,3})\*\*(.*)$')) {
-            if ($m.Groups[2].Value -notmatch '^\s*`\[(제안|개발중)\]`') {
-                $errors.Add("docs/specs/$name 진행 중의 $($m.Groups[1].Value) 에 상태 태그(``[제안]``, ``[개발중]``)가 없다.")
+        foreach ($m in [regex]::Matches($progress.Groups[1].Value, $reqPattern)) {
+            if ($m.Groups[4].Value -notmatch '^\s*`\[(제안|개발중)\]`\s*$') {
+                $errors.Add("docs/specs/$name 진행 중의 $($m.Groups[2].Value)-$($m.Groups[3].Value) 제목 끝에 상태 태그(``[제안]``, ``[개발중]``)가 없다.")
             }
         }
     }
     if ($done.Success) {
-        foreach ($m in [regex]::Matches($done.Groups[1].Value, '(?m)^-\s*\*\*([A-Z]+-\d{2,3})\*\*(.*)$')) {
-            if ($m.Groups[2].Value -match '^\s*`\[') {
-                $errors.Add("docs/specs/$name 완료의 $($m.Groups[1].Value) 에 상태 태그가 남아 있다. 완료 줄에는 태그를 쓰지 않는다.")
+        foreach ($m in [regex]::Matches($done.Groups[1].Value, $reqPattern)) {
+            $doneIds["$($m.Groups[2].Value)-$($m.Groups[3].Value)"] = $true
+            if ($m.Groups[4].Value.Trim()) {
+                $errors.Add("docs/specs/$name 완료의 $($m.Groups[2].Value)-$($m.Groups[3].Value) 제목에 상태 태그가 남아 있다.")
             }
+        }
+    }
+
+    # 코드 단서 표: 요구사항마다 한 줄. 이름은 아래에서 코드와 대조한다.
+    $clue = [regex]::Match($text, '(?ms)^### 코드 단서[ \t]*\n(.*?)(?=^#{2,3} |\z)')
+    if (-not $clue.Success) {
+        $warnings.Add("docs/specs/$name 에 '### 코드 단서' 표가 없다.")
+    } else {
+        $rows = @{}
+        foreach ($r in [regex]::Matches($clue.Groups[1].Value, '(?m)^\|\s*([A-Z]+-\d{2,3})\s*\|(.*)\|\s*$')) {
+            $rows[$r.Groups[1].Value] = $true
+            foreach ($n in [regex]::Matches($r.Groups[2].Value, '`([^`]+)`')) { $clueNames.Add([pscustomobject]@{ File = $name; Id = $r.Groups[1].Value; Name = $n.Groups[1].Value }) }
+        }
+        foreach ($id in $seen.Keys) {
+            if (-not $rows.ContainsKey($id)) { $warnings.Add("docs/specs/$name 코드 단서 표에 $id 줄이 없다.") }
         }
     }
 }
 
-# 코드에는 요구사항 ID와 스펙 번호를 쓰지 않는다. 스펙을 고칠 때 코드까지 고치지 않게 하기 위해서다.
-# GitHub 검사처럼 Assets가 없는 체크아웃에서는 건너뛴다.
 $assetsDir = Join-Path $root 'Assets'
 if (Test-Path $assetsDir) {
+    $code = (Get-ChildItem $assetsDir -Recurse -Include '*.cs', '*.shader' | ForEach-Object { Read-Utf8 $_.FullName }) -join "`n"
+
+    # 코드에는 요구사항 ID와 스펙 번호를 쓰지 않는다. 스펙을 고칠 때 코드까지 고치지 않게 하기 위해서다.
     $prefixPattern = ($prefixOwner.Keys | Sort-Object) -join '|'
     $found = New-Object System.Collections.Generic.List[string]
     foreach ($f in Get-ChildItem $assetsDir -Recurse -Include '*.cs', '*.shader') {
@@ -133,6 +149,20 @@ if (Test-Path $assetsDir) {
     }
     if ($found.Count -gt 0) {
         $errors.Add("코드에 요구사항 ID나 스펙 번호를 쓰지 않는다. 스펙과의 연결은 커밋 제목의 ID로 한다: $($found -join ', ')")
+    }
+
+    # 완료 요구사항의 코드 단서 이름이 코드에 있는지 본다. 진행 중인 요구사항은 아직 코드가 없을 수 있어 보지 않는다.
+    # 경로(/ 포함)는 Assets/EyeMaze/Data 아래 파일로 본다.
+    foreach ($c in ($clueNames | Where-Object { $doneIds.ContainsKey($_.Id) })) {
+        $ok = $true
+        if ($c.Name -match '/') {
+            $ok = Test-Path (Join-Path $root ('Assets/EyeMaze/Data/' + $c.Name))
+        } else {
+            foreach ($part in $c.Name.Split('.')) {
+                if ($code -notmatch ('\b' + [regex]::Escape($part) + '\b')) { $ok = $false }
+            }
+        }
+        if (-not $ok) { $warnings.Add("docs/specs/$($c.File) 코드 단서의 $($c.Id) 이름 '$($c.Name)'이(가) 코드에 없다. 이름이 바뀌었으면 표를 고친다.") }
     }
 }
 
