@@ -585,12 +585,29 @@ namespace EyeMaze
         /// {client|이/가}처럼 조사를 함께 적으면 이름 받침에 맞춰 붙인다. 이름은 name.원래이름, 3인칭은 pron.원래이름 key에서 읽는다.
         /// s와 지금 케이스를 사용하며, 채운 문구를 반환한다.
         /// </summary>
-        public string Personalize(string s)
+        public string Personalize(string s) => PersonalizeFor(_activeCase, s);
+
+        /// <summary>
+        /// Personalize와 같지만 지금 손님 대신 c의 이름과 3인칭으로 채운다.
+        /// 대화 기록처럼 나중에 다시 그리는 글이, 그 뒤에 바뀐 손님 이름을 쓰지 않게 할 때 쓴다 (스펙 LOC-03).
+        /// c와 s를 사용하며, 채운 문구를 반환한다.
+        /// </summary>
+        public static string PersonalizeFor(ClientCase c, string s)
         {
-            if (string.IsNullOrEmpty(s) || _activeCase == null) return s;
-            string name = _activeCase.PersonName;
-            s = Strings.Fill(s, CLIENT_PRONOUN_VAR, Strings.Get(Strings.PRONOUN_PREFIX + name, _activeCase.Pronoun));
+            if (string.IsNullOrEmpty(s) || c == null) return s;
+            string name = c.PersonName;
+            s = Strings.Fill(s, CLIENT_PRONOUN_VAR, Strings.Get(Strings.PRONOUN_PREFIX + name, c.Pronoun));
             return Strings.Fill(s, CLIENT_VAR, Strings.Name(name));
+        }
+
+        /// <summary>
+        /// 대화 기록에 남길 글을 가져오는 방법을 만든다. 남기는 때의 손님을 붙잡아 두고, 기록 창이 그릴 때마다 현재 언어로 다시 채운다 (스펙 LOC-03).
+        /// text(글을 돌려주는 방법)와 지금 손님을 사용하며, 기록용 글 가져오기를 반환한다.
+        /// </summary>
+        private Func<string> LogText(Func<string> text)
+        {
+            ClientCase c = _activeCase;
+            return () => PersonalizeFor(c, text());
         }
 
         /// <summary>
@@ -1154,8 +1171,8 @@ namespace EyeMaze
                 if (!string.IsNullOrEmpty(o.Goto) && string.IsNullOrEmpty(o.Ending))
                 {
                     // 스펙 007: 다른 장면으로 넘어가는 말은 다시 골라도 대화 기록에 남긴다.
-                    DialogueLog.Add("", Personalize(o.Text), true);
-                    DialogueLog.Add(Name, Personalize(o.Response), false, FieldNPC.PortraitOf(Name));
+                    DialogueLog.Add("", LogText(() => o.Text), true);
+                    DialogueLog.Add(Name, LogText(() => o.Response), false, FieldNPC.PortraitOf(Name));
                     ShowResponse(o.Response, "", o.Goto, null);
                 }
                 else _message = Strings.Get("msg.already", ("name", Strings.Name(Name)));
@@ -1163,7 +1180,7 @@ namespace EyeMaze
             }
             _usedOptions.Add(key);
             // 스펙 007: 고른 말을 대화 기록에 남긴다.
-            DialogueLog.Add("", Personalize(o.Text), true);
+            DialogueLog.Add("", LogText(() => o.Text), true);
 
             // 스펙 004: 선택 전에 열려 있던 문 수를 기억
             int openBefore = OpenGateCount();
@@ -1199,7 +1216,7 @@ namespace EyeMaze
             // 스펙 005: 신뢰 leave가 아니고 부담감이 가득 찼으면 _burdenEndLine으로 끝낸다.
             if (!leave && _burden > burdenBefore && _burden >= _burdenLimit) { EndByBurden(); return; }
             // 스펙 007: 엔딩으로 이어지지 않을 때만 반응을 남긴다. 엔딩이면 엔딩 줄로 남는다.
-            if (!leave) DialogueLog.Add(Name, Personalize(o.Response), false, FieldNPC.PortraitOf(Name));
+            if (!leave) DialogueLog.Add(Name, LogText(() => o.Response), false, FieldNPC.PortraitOf(Name));
             ShowResponse(o.Response, sb.ToString(), o.Goto, leave ? o.Response : null);
         }
 
@@ -2315,7 +2332,8 @@ namespace EyeMaze
             if (e != null)
             {
                 if (e.Lines != null) foreach (string l in e.Lines) if (!string.IsNullOrEmpty(l)) list.Add(l);
-                list.Add($"— {e.Title} —");
+                // 스펙 LOC-07: 제목을 감싸는 모양도 언어별 글(ui.ending_title)이 정한다.
+                list.Add(Strings.Get("ui.ending_title", ("title", e.Title)));
             }
             else if (!string.IsNullOrEmpty(_endingText)) list.Add(_endingText);
             if (list.Count == 0) list.Add("…");
@@ -2330,8 +2348,9 @@ namespace EyeMaze
         {
             List<string> l = EndingLines;
             _message = l[Mathf.Clamp(_heartIndex, 0, l.Count - 1)];
-            // 스펙 007: 엔딩 줄을 서술로 대화 기록에 남긴다.
-            DialogueLog.Add("", Personalize(_message));
+            // 스펙 007: 엔딩 줄을 서술로 대화 기록에 남긴다. 스펙 LOC-03: 남길 때의 손님으로 채운다.
+            string line = _message;
+            DialogueLog.Add("", LogText(() => line));
         }
 
         /// <summary>
@@ -2343,7 +2362,7 @@ namespace EyeMaze
             DialogueScript.Node node = CurrentNode;
             if (node == null || node == _loggedNode) return;
             _loggedNode = node;
-            DialogueLog.Add("", Personalize(node.Situation));
+            DialogueLog.Add("", LogText(() => node.Situation));
         }
     }
 }

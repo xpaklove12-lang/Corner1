@@ -398,7 +398,8 @@ namespace EyeMaze
             Typewriter.SetText(_bodyText, line.Text);
             if (_lineKind == LineKind.Look) return;
             Sprite portrait = string.IsNullOrEmpty(line.Speaker) ? null : FieldNPC.PortraitOf(line.Speaker);
-            DialogueLog.Add(line.Speaker, line.Text, false, portrait);
+            // 스펙 LOC-03: 줄 글자열이 아니라 줄을 붙잡아 두어, 기록 창이 현재 언어로 다시 읽게 한다.
+            DialogueLog.Add(line.Speaker, () => line.Text, false, portrait);
         }
 
         /// <summary>

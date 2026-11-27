@@ -20,8 +20,8 @@
   - 그림 안에 그려진 글자(텍스처) 교체
   - 음성
 - 구현 순서: 요구사항이 많으므로 다음 묶음 단위로 승인받는다.
-  1. UI 기반: LOC-01, LOC-02, LOC-03, LOC-04, LOC-05, LOC-06, EDITOR-40(`dialogue-editor.md`)
-  2. UI 문구 정리: LOC-07, LOC-08, LOC-10, LOC-11, LOC-19, EDITOR-41(`dialogue-editor.md`)
+  1. UI 기반: LOC-01, LOC-02, LOC-03, LOC-04, LOC-05, LOC-06, EDITOR-40(`dialogue-editor.md`) — 구현완료
+  2. UI 문구 정리: LOC-07, LOC-08, LOC-10, LOC-11, LOC-19, EDITOR-41(`dialogue-editor.md`) — 구현완료
   3. 대화: LOC-12, LOC-13, LOC-14, LOC-15, EDITOR-39(`dialogue-editor.md`)
   4. 도구와 검사: LOC-16, LOC-17, LOC-18, LOC-20
   5. 인스펙터 문구: LOC-09 (9절 미결 사항을 정한 뒤)
@@ -49,27 +49,29 @@
 
 ### 언어와 설정
 
-- **LOC-01** `[승인]` 언어 설정 에셋(`LocConfig`)에 언어 목록을 둔다. 한 항목은 언어 코드, 언어 이름(그 언어로 쓴 이름, 예: `English`, `日本語`), 그 언어의 폰트다. 처음 목록은 `ko`, `en`, `ja`이며 `ko`가 첫 항목이자 원문이다. 언어를 더할 때는 이 목록에 항목을 넣고 번역 파일에 `<코드>`, `<코드>_ok` 열을 더하는 것으로 끝나야 한다.
-- **LOC-02** `[승인]` 게임을 시작하면 다음 순서로 현재 언어를 정한다.
+- **LOC-01** `[구현완료]` 언어 설정 에셋(`LocConfig`)에 언어 목록을 둔다. 한 항목은 언어 코드, 언어 이름(그 언어로 쓴 이름, 예: `English`, `日本語`), 그 언어의 폰트다. 처음 목록은 `ko`, `en`, `ja`이며 `ko`가 첫 항목이자 원문이다. 언어를 더할 때는 이 목록에 항목을 넣고 번역 파일에 `<코드>`, `<코드>_ok` 열을 더하는 것으로 끝나야 한다.
+- **LOC-02** `[구현완료]` 게임을 시작하면 다음 순서로 현재 언어를 정한다.
   1. 저장된 언어 코드(PlayerPrefs `_languagePrefKey`)가 언어 목록에 있으면 그 언어
   2. 없으면 운영체제 언어(`Application.systemLanguage`)를 4절 "운영체제 언어 대응" 표로 바꾼 코드가 언어 목록에 있으면 그 언어
   3. 둘 다 아니면 `LocConfig`의 대체 언어(`_fallbackLanguage`)
   - 2·3으로 정한 언어는 저장하지 않는다. 플레이어가 언어를 직접 바꿀 때(LOC-04, 이후 설정 화면)만 그 코드를 저장한다. 그래서 저장값이 없는 동안에는 운영체제 언어를 바꾸면 다음 실행부터 따라간다.
   - `_detectSystemLanguage`를 끄면 2를 건너뛴다(개발 중 항상 한국어로 시작하고 싶을 때).
-- **LOC-03** `[승인]` 현재 언어를 바꾸면 화면에 떠 있는 고정 라벨(LOC-08)은 곧바로 새 언어로 바뀐다. 대사·상황·선택지·안내 문구는 다음에 새로 나오는 글부터 새 언어로 나온다. 이미 대화 기록 창(`DLG-24`~`DLG-31`, `dialogue.md`)에 쌓인 줄은 바꾸지 않는다.
-- **LOC-04** `[승인]` 메뉴 `EyeMaze/번역/언어 바꾸기`는 언어 바꾸기 창을 연다. 창은 현재 언어, 저장된 언어, 운영체제 언어와 그 대응 코드를 보여 주고, 언어 목록의 언어마다 버튼을 둔다. 버튼을 누르면 그 언어를 저장하고 현재 언어로 삼는다. Play Mode가 아니면 에디터의 현재 언어도 바뀌어 편집 중 미리보기(대사 편집기 등)에 쓰이고, Play를 시작하면 정적 값이 초기화된 뒤 저장값으로 다시 정해 그 언어로 시작한다. `저장된 언어 지우기` 버튼은 저장값을 지우고 LOC-02 규칙으로 언어를 다시 정한다. 개발 확인용이며 플레이어용 설정 화면은 범위 밖이다.
+- **LOC-03** `[구현완료]` 현재 언어를 바꾸면 화면에 떠 있는 고정 라벨(LOC-08)은 곧바로 새 언어로 바뀐다. 대사·상황·선택지·안내 문구는 다음에 새로 나오는 글부터 새 언어로 나온다. 대화 기록 창(`DLG-24`~`DLG-31`, `dialogue.md`)은 그릴 때마다 이미 쌓인 줄의 이름과 글을 모두 현재 언어로 다시 가져오고, 창이 열려 있는 동안 언어가 바뀌면 곧바로 다시 그린다.
+  - 기록은 줄을 남길 때의 글자열이 아니라 글을 가져오는 방법을 보관한다. 선택지·반응·장면 상황·회상 대사는 그 대상(선택지, 장면, 회상 줄)을 붙잡아 두어, 번역이 붙으면(LOC-15) 대상이 돌려주는 현재 언어 글을 쓴다. 필드 대화 줄과 엔딩 줄은 LOC-15를 구현할 때까지 남길 때의 글자열을 보관한다.
+  - `{client}` 칸은 줄을 남길 때의 손님으로 채운다. 나중에 다른 손님과 상담해도 예전 줄의 이름이 바뀌지 않는다.
+- **LOC-04** `[구현완료]` 메뉴 `EyeMaze/번역/언어 바꾸기`는 언어 바꾸기 창을 연다. 창은 현재 언어, 저장된 언어, 운영체제 언어와 그 대응 코드를 보여 주고, 언어 목록의 언어마다 버튼을 둔다. 버튼을 누르면 그 언어를 저장하고 현재 언어로 삼는다. Play Mode가 아니면 에디터의 현재 언어도 바뀌어 편집 중 미리보기(대사 편집기 등)에 쓰이고, Play를 시작하면 정적 값이 초기화된 뒤 저장값으로 다시 정해 그 언어로 시작한다. `저장된 언어 지우기` 버튼은 저장값을 지우고 LOC-02 규칙으로 언어를 다시 정한다. 개발 확인용이며 플레이어용 설정 화면은 범위 밖이다.
 
 ### UI 문구
 
-- **LOC-05** `[승인]` 공용 문구 파일 `Assets/EyeMaze/Data/Strings.csv`를 `.meta`와 함께 `Assets/EyeMaze/Data/Loc/UI.csv`로 옮겨 GUID를 유지하고, 머리글을 `key,context,maxlen,ko,en,ja,note,en_ok,ja_ok,ko_synced`로 바꾼다. 기존 `text`는 `ko`로, `memo`는 `note`로 옮긴다. `ko` 칸이 UI 문구의 원문이며 제작자가 이 파일에서 직접 고친다. `Assets/EyeMaze/Data/README.md`의 `Strings.csv` 절을 새 파일 형식으로 고친다.
-- **LOC-06** `[승인]` `Strings.Get`과 `Strings.Lines`는 현재 언어 칸의 글을 돌려준다. 그 칸이 비어 있으면 `ko` 칸을 쓴다. 기본 글을 넘긴 `Strings.Get(key, 기본 글)`은 key가 표에 없으면 그 기본 글을, 기본 글 없이 부른 `Strings.Get(key)`는 key 이름을 그대로 보이고 같은 key마다 한 번 경고한다. `{name}` 같은 칸 채우기는 고른 글에 한다.
-- **LOC-07** `[승인]` 화면에 나오는 글 가운데 코드에만 적힌 것을 `Loc/UI.csv`의 key로 옮긴다.
+- **LOC-05** `[구현완료]` 공용 문구 파일 `Assets/EyeMaze/Data/Strings.csv`를 `.meta`와 함께 `Assets/EyeMaze/Data/Loc/UI.csv`로 옮겨 GUID를 유지하고, 머리글을 `key,context,maxlen,ko,en,ja,note,en_ok,ja_ok,ko_synced`로 바꾼다. 기존 `text`는 `ko`로, `memo`는 `note`로 옮긴다. `ko` 칸이 UI 문구의 원문이며 제작자가 이 파일에서 직접 고친다. `Assets/EyeMaze/Data/README.md`의 `Strings.csv` 절을 새 파일 형식으로 고친다.
+- **LOC-06** `[구현완료]` `Strings.Get`과 `Strings.Lines`는 현재 언어 칸의 글을 돌려준다. 그 칸이 비어 있으면 `ko` 칸을 쓴다. 기본 글을 넘긴 `Strings.Get(key, 기본 글)`은 key가 표에 없으면 그 기본 글을, 기본 글 없이 부른 `Strings.Get(key)`는 key 이름을 그대로 보이고 같은 key마다 한 번 경고한다. `{name}` 같은 칸 채우기는 고른 글에 한다.
+- **LOC-07** `[구현완료]` 화면에 나오는 글 가운데 코드에만 적힌 것을 `Loc/UI.csv`의 key로 옮긴다.
   - `Strings.Get("key", "한글 기본 글")`처럼 코드에 적힌 기본 글은 지운다. 같은 key가 이미 `Loc/UI.csv`에 있으므로 `Strings.Get("key")`로 부른다.
   - 코드에 직접 적힌 화면 문구(부담 증감 안내, 문의 행동 이름 `맞이하기`)는 새 key(`msg.burden_down`, `msg.burden_up`, `verb.greet`)로 옮긴다.
   - 인스펙터 기본값을 쓰던 디렉터 문구(`_burdenEndLine`, `_returnMessage`, `_firstGuide`, `_againGuide`, `_restReturnMessage`, `_returnText`)는 다른 공용 문구처럼 key(`msg.burden_end`, `msg.return`, `msg.first_guide`, `msg.again_guide`, `msg.rest_return`, `ui.return_choice`)를 먼저 읽고, key가 없을 때만 인스펙터 값을 쓴다.
-  - 코드가 글을 이어 붙여 만드는 문장은 칸을 가진 문장 하나의 key로 바꿔 어순을 언어별 글이 정하게 한다: 선택지 번호와 글은 `ui.choice`(`{n}. {text}`), 필드 상호작용 안내는 `hint.interact`(`Space  {verb} — {target}`).
+  - 코드가 글을 이어 붙여 만드는 문장은 칸을 가진 문장 하나의 key로 바꿔 어순을 언어별 글이 정하게 한다: 선택지 번호와 글은 `ui.choice`(`{n}. {text}`), 필드 상호작용 안내는 `hint.interact`(`Space  {verb} — {target}`), 엔딩 마지막 줄의 제목은 `ui.ending_title`(`— {title} —`).
   - 디버그 로그, 검사 오류 문구, `Header`, `Tooltip`, 오브젝트 이름은 옮기지 않는다. 다른 key가 있을 때만 쓰이는 인스펙터 기본값(`MazeGate._lockedMessage`, `MazeLayer._displayName`, `FieldCutscene`의 혼잣말·안내, `CutsceneFastForward._hintText`, `OpeningMonologue`의 기본 독백)은 코드에 남는다.
-- **LOC-08** `[승인]` 코드가 글을 넣지 않는 고정 라벨에는 `LocalizedLabel` 컴포넌트를 붙인다. `LocalizedLabel`은 `[SerializeField]`로 같은 오브젝트의 `Text`와 `Loc/UI.csv` key를 참조하고, 켜질 때와 언어가 바뀔 때 그 key의 글을 넣는다. 씬에 적힌 글은 편집용 미리보기로만 남는다. 붙이는 라벨은 다음 여섯 개다. 나머지 `Text`는 코드가 매번 글을 넣으므로 붙이지 않는다.
+- **LOC-08** `[구현완료]` 코드가 글을 넣지 않는 고정 라벨에는 `LocalizedLabel` 컴포넌트를 붙인다. `LocalizedLabel`은 `[SerializeField]`로 같은 오브젝트의 `Text`와 `Loc/UI.csv` key를 참조하고, 켜질 때와 언어가 바뀔 때 그 key의 글을 넣는다. 씬에 적힌 글은 편집용 미리보기로만 남는다. 붙이는 라벨은 다음 여섯 개다. 나머지 `Text`는 코드가 매번 글을 넣으므로 붙이지 않는다.
 
   | 라벨 | 위치 | key |
   |---|---|---|
@@ -89,10 +91,10 @@
   | `MemoryFragment` | `_title`, `_text` | 11, 11 | `Flags.csv`에 title·text가 없을 때만 쓰임 |
 
   다음은 화면에 쓰이지 않으므로 번역 대상이 아니다: `DialogueNode`(옛 방식 대화 오브젝트), `ClientCase`의 `_endings`·`_introMessage`·`_idleSituation`·`_abyssMessage`와 `EyeMazeDirector`의 같은 이름 필드(회차 CSV의 엔딩·`@intro`·`@idle`·`@abyss`가 있으면 쓰이지 않음), `FieldRoom._roomName`, `CoreFragment._title`, `FieldNPC._lineBefore`(코드에서 읽지 않음). 인물·사물 이름 `_displayName`(`Person`, `FieldNPC`, `FieldDoor`, `MazeLayer`)은 LOC-11의 `name.` key와 `layer.` key로 번역한다.
-- **LOC-10** `[승인]` `EyeMazeDirector.Personalize`의 `은재`·`그녀` 글자 바꾸기를 없앤다. 대신 문구에 `{client}`(손님 이름)와 `{client_pron}`(손님 3인칭)을 쓰고, 게임이 지금 손님 값으로 채운다. 손님 이름은 `name.<손님 PersonName>`(LOC-11과 같은 key), 3인칭은 `pron.<손님 PersonName>` key의 현재 언어 글이며, key가 없으면 `ClientCase`의 `_personName`·`_pronoun`을 쓴다.
+- **LOC-10** `[구현완료]` `EyeMazeDirector.Personalize`의 `은재`·`그녀` 글자 바꾸기를 없앤다. 대신 문구에 `{client}`(손님 이름)와 `{client_pron}`(손님 3인칭)을 쓰고, 게임이 지금 손님 값으로 채운다. 손님 이름은 `name.<손님 PersonName>`(LOC-11과 같은 key), 3인칭은 `pron.<손님 PersonName>` key의 현재 언어 글이며, key가 없으면 `ClientCase`의 `_personName`·`_pronoun`을 쓴다.
   - 조사: 칸 이름 뒤에 `|받침 있을 때/받침 없을 때`를 적으면(`{client|이/가}`, `{name|은/는}`) 채운 값의 끝 글자 받침에 맞는 조사를 붙인다. 뒤쪽이 `로`이면 ㄹ 받침에도 뒤쪽을 쓴다(`{client|으로/로}`). 끝 글자가 숫자면 한국어 읽기로 판단하고, 그 밖의 글자는 받침이 없는 것으로 본다. 모든 `Strings.Get` 칸 채우기에 같은 규칙을 쓴다.
   - `Loc/UI.csv`에서 손님을 가리키던 `은재`·`그녀`를 칸으로 바꾼다(`gate.first`, `gate.pupil`, `wind.first`, `wind.slip`, `wind.empty`, `ui.abyss`). `{name}가`·`{name}는`도 조사 표기로 바꾼다(`ui.rest_hint_gaze`, `msg.already`). 은재 미로 전용 문구(`prop.eunjae.*`)와 인물·회차 CSV의 글은 그 손님의 것이므로 바꾸지 않는다.
-- **LOC-11** `[승인]` 대사창·대화 기록·회상·필드 상호작용 안내·눈 속 상황 칸에 보이는 이름은 `name.<원래 이름>` key의 현재 언어 글로 보인다(`Strings.Name`). key가 없으면 원래 이름을 그대로 보인다. 원래 이름은 대화 CSV `speaker` 칸이나 `Flashbacks.csv` `speaker` 칸 값, 없으면 그 인물·대상의 `DisplayName`이다. 빈 이름, `-`(서술), `???`는 바꾸지 않는다. 이름은 화면에 그릴 때만 바꾸고, 대화 기록에 남기는 값·초상화 찾기(`FieldNPC.PortraitOf`)·actor 판정은 원래 이름을 그대로 쓴다. `Loc/UI.csv`에 지금 인물 이름(`name.은재`, `name.은재 어머니`, `name.지수`, `name.문`, 회상 화자 다섯)과 3인칭(`pron.은재`, `pron.지수`) 줄을 둔다.
+- **LOC-11** `[구현완료]` 대사창·대화 기록·회상·필드 상호작용 안내·눈 속 상황 칸에 보이는 이름은 `name.<원래 이름>` key의 현재 언어 글로 보인다(`Strings.Name`). key가 없으면 원래 이름을 그대로 보인다. 원래 이름은 대화 CSV `speaker` 칸이나 `Flashbacks.csv` `speaker` 칸 값, 없으면 그 인물·대상의 `DisplayName`이다. 빈 이름, `-`(서술), `???`는 바꾸지 않는다. 이름은 화면에 그릴 때만 바꾸고, 대화 기록에 남기는 값·초상화 찾기(`FieldNPC.PortraitOf`)·actor 판정은 원래 이름을 그대로 쓴다. `Loc/UI.csv`에 지금 인물 이름(`name.은재`, `name.은재 어머니`, `name.지수`, `name.문`, 회상 화자 다섯)과 3인칭(`pron.은재`, `pron.지수`) 줄을 둔다.
 
 ### 대화 문구
 
@@ -100,6 +102,8 @@
 - **LOC-13** `[작성중]` 번역 key는 `<tid>.<칸 이름>`이다(예: `jisu_day1_0005.response`). 번역 대상 칸은 인물·회차 CSV의 `situation`, `text`, `response`, `back`, `rest`, `title`, `after`, `Flashbacks.csv`의 `text`다. `Flags.csv`는 `id`를 그대로 써서 `flag.<id>.title`, `flag.<id>.text`를 key로 한다. `speaker` 칸은 번역 대상이 아니다(LOC-11).
 - **LOC-14** `[작성중]` 대화 번역 파일은 `Assets/EyeMaze/Data/Loc/Dialogue/<원본 파일 이름>.csv`다(예: `Loc/Dialogue/Jisu_Day1.csv`, `Loc/Dialogue/Flags.csv`, `Loc/Dialogue/Flashbacks.csv`). 머리글은 `key,speaker,context,maxlen,ko,en,ja,note,en_ok,ja_ok`다. 줄은 원본의 줄 순서(대화는 대본 순서)를 따른다. `speaker`, `context`, `ko`는 번역 파일 갱신이 원본에서 채우는 칸이고, 사람은 언어 칸·`note`·`maxlen`·`_ok`만 고친다.
 - **LOC-15** `[작성중]` 현재 언어가 `ko`가 아니면, 대화 문구를 읽는 곳(`DialogueScript`, `TalkScript`, `EndingScript`, `Flags`, `FlashbackScript`)은 원문 칸 대신 같은 key의 현재 언어 글을 쓴다. 그 글이 없거나 비어 있으면 원문을 쓴다. `tid`가 비어 있는 줄은 원문을 쓴다. `tid`가 전역에서 겹치지 않으므로 `LocConfig`에 등록한 대화 번역 파일을 모두 한 표로 합쳐 찾는다.
+  - 번역은 읽을 때 고른다. 선택지·장면·회상 줄·필드 대사·엔딩 줄은 `tid`를 들고, 글 속성을 읽을 때마다 현재 언어 글을 돌려준다. 그래야 대화 기록(LOC-03)이 붙잡아 둔 대상이 언어를 바꾼 뒤에도 현재 언어로 다시 그려진다.
+  - 필드 대화(`GameFlow.ShowConvLine`)와 엔딩 줄(`EyeMazeDirector.ShowHeartLine`)은 지금 글자열을 기록에 남긴다. 이 요구사항을 구현할 때 줄 대상(`TalkScript.Line`, 엔딩 줄)을 기록에 넘기도록 바꾼다.
 
 ### 도구와 검사
 
@@ -113,7 +117,7 @@
 - **LOC-18** `[작성중]` 메뉴 `EyeMaze/기획 데이터 검사`가 번역도 검사한다.
   - 오류: 번역 파일 안의 같은 key 중복, 원문과 번역의 `{…}` 칸 이름 집합이 다름, 언어 칸 이름이 `LocConfig` 목록에 없음.
   - 경고: 언어별 빈 번역 개수, 글은 있는데 `_ok`가 빈 줄(다시 확인할 줄) 개수, `maxlen`보다 긴 번역, 원본에 없는 key(번역 파일 갱신이 필요), 그 언어 폰트에 없는 글자(LOC-19). 폰트 글자 검사는 동적 폰트의 `Font.HasCharacter`에 기대지 않고, 에디터에서 폰트 파일(TTF)의 cmap 표를 직접 읽어 그 글자가 있는지 본다.
-- **LOC-19** `[승인]` 현재 언어의 `LocConfig` 폰트가 지정돼 있으면, 화면의 uGUI `Text`는 그 폰트로 글을 그린다. 폰트가 비어 있으면 씬에 지정된 폰트(지금 `Galmuri11`)를 쓴다. 폰트를 바꿔도 글자 크기·정렬·위치는 씬 값을 유지한다. `GameSettings`가 `Start`와 언어가 바뀔 때 씬의 모든 `Text`(꺼진 것 포함)에 입힌다. `Galmuri11`은 한글 11,172자, 히라가나·가타카나 전부, 한자 6,477자(JIS 1·2수준 6,355자 이상)를 가지므로 일본어도 기본 폰트로 그릴 수 있다. 중국어를 하면 한자가 모자랄 수 있어 언어 폰트를 따로 지정한다.
+- **LOC-19** `[구현완료]` 현재 언어의 `LocConfig` 폰트가 지정돼 있으면, 화면의 uGUI `Text`는 그 폰트로 글을 그린다. 폰트가 비어 있으면 씬에 지정된 폰트(지금 `Galmuri11`)를 쓴다. 폰트를 바꿔도 글자 크기·정렬·위치는 씬 값을 유지한다. `GameSettings`가 `Start`와 언어가 바뀔 때 씬의 모든 `Text`(꺼진 것 포함)에 입힌다. `Galmuri11`은 한글 11,172자, 히라가나·가타카나 전부, 한자 6,477자(JIS 1·2수준 6,355자 이상)를 가지므로 일본어도 기본 폰트로 그릴 수 있다. 중국어를 하면 한자가 모자랄 수 있어 언어 폰트를 따로 지정한다.
 - **LOC-20** `[작성중]` 번역 참고용 용어집 `Assets/EyeMaze/Data/Loc/Glossary.csv`를 둔다. 머리글은 `ko,en,ja,note`이고 인물 이름, 고유 용어(파편, 심연, 동공 등)의 정해진 번역을 적는다. 게임과 검사기는 이 파일을 읽지 않는다.
 
 ## 3. 상태와 전이
@@ -210,13 +214,13 @@ jisu_day1_0005.response,Jisu,dialogue/Jisu/smile · 선택지: 피곤하면 푹 
 
 ## 5. 코드 위치
 
-> LOC-01~LOC-06은 구현했다. 나머지는 고칠 예정인 곳이며, 구현 후 메서드 이름까지 갱신한다.
+> LOC-01~LOC-08, LOC-10, LOC-11, LOC-19는 구현했다. 나머지(LOC-09, LOC-12~LOC-18, LOC-20)는 고칠 예정인 곳이며, 구현 후 메서드 이름까지 갱신한다.
 
 | 요구사항 | 파일 | 메서드·속성 |
 |---|---|---|
 | LOC-01 | `Assets/EyeMaze/Scripts/Runtime/LocConfig.cs`, `Assets/EyeMaze/Data/Loc/LocConfig.asset` | `LocConfig.Languages`, `LocConfig.Find`, `LocConfig.Has`, `LocConfig.OnValidate` |
 | LOC-02 | `Assets/EyeMaze/Scripts/Runtime/Loc.cs`, `Assets/EyeMaze/Scripts/Runtime/GameSettings.cs`, `Assets/Scenes/EyeMaze.unity`(`게임 설정 (GameSettings)` 오브젝트) | `Loc.Init`, `Loc.StartLanguage`, `Loc.FromSystemLanguage`, `Loc.SetLanguage`, `GameSettings.Awake`, `GameSettings.Language`, `GameSettings.SetLanguage` |
-| LOC-03 | `Assets/EyeMaze/Scripts/Runtime/Loc.cs`, `Assets/EyeMaze/Scripts/Runtime/Strings.cs` | `Loc.LanguageChanged`, `Strings.EnsureResolved`(언어가 바뀐 뒤 첫 조회 때 그 언어로 다시 고름). 고정 라벨 즉시 갱신은 LOC-08에서 |
+| LOC-03 | `Assets/EyeMaze/Scripts/Runtime/Loc.cs`, `Strings.cs`, `DialogueLog.cs`, `DialogueLogUI.cs`, `EyeMazeDirector.cs`, `FlashbackPlayer.cs` | `Loc.LanguageChanged`, `Strings.EnsureResolved`(언어가 바뀐 뒤 첫 조회 때 그 언어로 다시 고름), `DialogueLog.Add(speaker, Func<string>, …)`, `DialogueLog.Entry.Text`, `DialogueLogUI.MarkDirty`, `EyeMazeDirector.LogText`, `EyeMazeDirector.PersonalizeFor`. 고정 라벨 즉시 갱신은 LOC-08에서 |
 | LOC-04 | `Assets/EyeMaze/Scripts/Editor/LocTools.cs` | `LocTools.Open`, `LocTools.OnGUI`, `Loc.ClearSavedLanguage` |
 | LOC-05 | `Assets/EyeMaze/Data/Loc/UI.csv`, `Assets/EyeMaze/Data/README.md`, `Assets/EyeMaze/Scripts/Runtime/Strings.cs` | `Strings.DefaultPath`, `Strings.SOURCE_COLUMN` |
 | LOC-06 | `Assets/EyeMaze/Scripts/Runtime/Strings.cs` | `Strings.Load`, `Strings.EnsureResolved`, `Strings.Pick`, `Strings.Get`, `Strings.Lines` |
@@ -254,7 +258,7 @@ jisu_day1_0005.response,Jisu,dialogue/Jisu/smile · 선택지: 피곤하면 푹 
 ## 7. 검증 방법
 
 - **LOC-01, LOC-02**: `LocConfig`에 `ko`, `en`, `ja`를 두고 대체 언어를 `en`으로 한다. 저장값을 지운 뒤 한국어 Windows에서 Play하면 한국어로, Windows 표시 언어를 일본어로 바꾸면 일본어로, 프랑스어로 바꾸면 영어로 시작한다. 이때 PlayerPrefs에 언어가 저장되지 않는다. LOC-04 메뉴로 `English`를 고르고 Play를 다시 시작하면 운영체제 언어와 관계없이 영어로 시작한다. PlayerPrefs 값을 목록에 없는 코드로 바꾸면 운영체제 언어 규칙으로 정한다. `_detectSystemLanguage`를 끄고 저장값을 지우면 대체 언어로 시작한다.
-- **LOC-03, LOC-04**: 상담 중 언어를 바꾸면 고정 라벨은 곧바로, 다음 선택지·상황 문구는 새 언어로 나오고 대화 기록 창의 이전 줄은 그대로다.
+- **LOC-03, LOC-04**: 상담 중 언어를 바꾸면 고정 라벨은 곧바로, 다음 선택지·상황 문구는 새 언어로 나온다. 대화 기록 창을 연 채 언어를 바꾸면 쌓인 줄의 이름이 곧바로 새 언어로 다시 그려진다. 은재 상담 뒤 지수 상담을 해도 은재 상담 때 남긴 줄의 손님 이름은 은재 그대로다. 대화 글의 언어 전환은 LOC-15 구현 후 같은 방법으로 확인한다.
 - **LOC-05, LOC-06**: `Loc/UI.csv`의 `gate.first`에 `en` 글을 넣고 영어로 잠긴 문에 부딪히면 영어 글이 나온다. `en` 칸을 비우면 한국어가, `ko` 줄까지 지우면 코드 기본 글이 나온다.
 - **LOC-07**: 영어로 오프닝부터 은재·지수 상담 끝까지 진행할 때, `Loc/UI.csv`의 모든 key에 `en`이 있다면 화면에 한글이 남지 않는다(인스펙터 문구 LOC-09 제외).
 - **LOC-07**(선택지 번호): `ui.choice`의 `en`에 `{n}) {text}`를 넣고 영어로 상담하면 선택지와 돌아가기 줄이 `1) …` 모양으로 나온다. 필드에서 문 앞에 서면 `hint.interact` 글로 안내가 나온다.
@@ -270,7 +274,7 @@ jisu_day1_0005.response,Jisu,dialogue/Jisu/smile · 선택지: 피곤하면 푹 
 
 ## 8. 알려진 문제
 
-- 대화 기록 창의 이름 칸은 그릴 때 현재 언어로 바꾸므로(LOC-11), 언어를 바꾼 뒤 이전 줄을 다시 열면 이름만 새 언어이고 글은 그 줄을 남길 때의 언어다(LOC-03).
+- 대화 기록의 필드 대화 줄과 엔딩 줄은 LOC-15 전까지 글자열로 남는다. 지금은 대화 글 자체에 번역이 없어 화면 차이는 없고, LOC-15에서 줄 대상을 넘기도록 바꾼다(LOC-15 본문).
 - LOC-19 폰트는 `GameSettings.Start` 때 씬에 있는 `Text`와 언어를 바꿀 때 있는 `Text`에만 입힌다. 지금 씬은 모든 `Text`를 처음부터 갖고 있어 문제가 없지만, 나중에 실행 중 프리팹으로 글 상자를 만들게 되면 그 자리에서 폰트를 입혀야 한다.
 - `EyeMazeUI.Update`는 매 프레임 `{n}`·`{name}` 같은 칸을 채우므로 글자열을 새로 만든다. 언어 팩 조회(5절 "언어 팩 준비")는 한 번으로 끝나지만 칸 채우기는 줄이지 않았다.
 - 기본 글 없이 부르는 `Strings.Get(key)`는 `Loc/UI.csv`에서 그 줄을 지우면 key 이름이 화면에 보인다(LOC-06). 줄을 지울 때는 코드에서 쓰는지 먼저 찾는다.

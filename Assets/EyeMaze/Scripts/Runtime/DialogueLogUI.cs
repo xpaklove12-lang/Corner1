@@ -69,10 +69,19 @@ namespace EyeMaze
             DialogueLog.MaxEntries = _rows.Length;
         }
 
+        void OnEnable() => Loc.LanguageChanged += MarkDirty;
+
         void OnDisable()
         {
+            Loc.LanguageChanged -= MarkDirty;
             if (DialogueLog.IsOpen) Close();
         }
+
+        /// <summary>
+        /// 언어가 바뀌면 열려 있는 기록을 다음 프레임에 현재 언어로 다시 그리게 한다 (스펙 LOC-03).
+        /// 입력값은 없으며, _drawnVersion을 바꾼다.
+        /// </summary>
+        private void MarkDirty() => _drawnVersion = -1;
 
         void Update()
         {
