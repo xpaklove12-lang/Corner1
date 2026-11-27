@@ -38,7 +38,7 @@ namespace EyeMaze
         private Vector3 _bellBaseScale = Vector3.one;
 
         public bool Answered { get; private set; }
-        public override string Verb => "맞이하기";
+        public override string Verb => Strings.Get("verb.greet");
         public override bool Available => _ringing;
 
         void Start()

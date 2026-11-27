@@ -392,7 +392,7 @@ namespace EyeMaze
         private void ShowLine()
         {
             FlashbackScript.Line line = _lines[_lineIndex];
-            _speakerText.text = line.Speaker;
+            _speakerText.text = Strings.Name(line.Speaker);
             // 앞줄과 글이 같아도 처음부터 다시 찍히도록 비운 뒤 쓴다.
             Typewriter.SetText(_bodyText, "");
             Typewriter.SetText(_bodyText, line.Text);

@@ -122,7 +122,7 @@ namespace EyeMaze
 
             if (p != null)
             {
-                Set(_status, Strings.Get("ui.status", "신뢰 {trust}",
+                Set(_status, Strings.Get("ui.status",
                     ("trust", p.Trust > 0 ? "+" + p.Trust : p.Trust.ToString()), ("dilation", (p.Dilation * 100f).ToString("0")), ("mode", ModeName(d.CurrentMode))));
                 UpdateTrustBar(p.Trust, d.LeaveTrust, d.TruthTrust);
             }
@@ -132,22 +132,22 @@ namespace EyeMaze
             if (d.CurrentMode == EyeMazeDirector.Mode.Ending)
             {
                 EndingDef e = d.CurrentEnding;
-                sit = e != null && !string.IsNullOrEmpty(e.Situation) ? e.Situation : Strings.Get("ui.ending_situation", "{name}의 마음이 들린다.", ("name", p != null ? p.DisplayName : "그녀"));
+                sit = e != null && !string.IsNullOrEmpty(e.Situation) ? e.Situation : Strings.Get("ui.ending_situation", ("name", p != null ? Strings.Name(p.DisplayName) : ""));
             }
-            else if (d.InAbyss) sit = Strings.Get("ui.abyss", "그녀의 마음 속 심연");
-            else if (d.IsReading) sit = Strings.Get("ui.reading", "시선이 파편에 머문다.");
+            else if (d.InAbyss) sit = Strings.Get("ui.abyss");
+            else if (d.IsReading) sit = Strings.Get("ui.reading");
             else if (d.CurrentMode == EyeMazeDirector.Mode.Gaze)
             {
                 MazeLayer layer = d.CursorLayer;
-                sit = Strings.Get("ui.gaze_situation", "{name}의 눈 속 — {layer}", ("name", p != null ? p.DisplayName : ""), ("layer", layer != null ? layer.DisplayName : ""));
+                sit = Strings.Get("ui.gaze_situation", ("name", p != null ? Strings.Name(p.DisplayName) : ""), ("layer", layer != null ? layer.DisplayName : ""));
                 // 스펙 011: 신호 중 들여다보면 대화로 돌아오라는 온보딩 문구를 추가
-                if (d.RestRequested) sit += "\n" + Strings.Get("ui.rest_hint_gaze", "{name}가 하고 싶은 말이 있는 거 같다. 잠시 관찰을 멈춰보자.", ("name", p != null ? p.DisplayName : ""));
+                if (d.RestRequested) sit += "\n" + Strings.Get("ui.rest_hint_gaze", ("name", p != null ? Strings.Name(p.DisplayName) : ""));
                 // 스펙 019 FR-002: 단서로 선택지가 열렸으면 대화로 돌아갈 이유를 알린다
-                if (d.NewTalkReady) sit += "\n" + Strings.Get("ui.new_talk_hint", "(새로 꺼낼 수 있는 이야기가 생겼다. 관찰을 멈춰보자.)");
+                if (d.NewTalkReady) sit += "\n" + Strings.Get("ui.new_talk_hint");
             }
             // 스펙 011: 신호 중에는 장면 설명 자리에 쉬자는 대사를 표시
             // 스펙 011: 쉬게 해 줄 때임을 알리는 온보딩 문구를 대사 아래에 추가
-            else if (d.RestRequested) sit = d.RestLine + "\n" + Strings.Get("ui.rest_hint_talk", "(잠시 쉴 시간이 필요한 거 같다.)");
+            else if (d.RestRequested) sit = d.RestLine + "\n" + Strings.Get("ui.rest_hint_talk");
             else sit = node != null ? node.Situation : d.IdleSituation;
             // 공용 문구 속 이름과 대명사를 지금 손님에 맞춘다.
             sit = d.Personalize(sit);
@@ -171,7 +171,8 @@ namespace EyeMaze
                     _optionButtons[i].gameObject.SetActive(show);
                 if (!show || i >= _optionLabels.Length) continue;
                 EyeMazeDirector.ChoiceView c = choices[i];
-                Set(_optionLabels[i], c.Available ? $"{i + 1}. {c.Text}" : $"{i + 1}. " + Strings.Get("ui.locked_choice", "??? (아직 모르는 이야기)"));
+                // 스펙 LOC-07: 번호와 글을 잇는 순서도 언어별 글(ui.choice)이 정한다.
+                Set(_optionLabels[i], Strings.Get("ui.choice", ("n", i + 1), ("text", c.Available ? c.Text : Strings.Get("ui.locked_choice"))));
 
             }
 
@@ -198,23 +199,23 @@ namespace EyeMaze
             if (showReturn)
             {
                 // 스펙 004: 보이는 선택지 바로 다음 번호와 자리에 표시
-                Set(_returnLabel, $"{choices.Count + 1}. {d.ReturnText}");
+                Set(_returnLabel, Strings.Get("ui.choice", ("n", choices.Count + 1), ("text", d.ReturnText)));
                 PlaceReturnButton(choices.Count);
             }
 
             // 스펙 004: 들어갈 때는 마음 읽기, 나올 때는 관찰 중지로 표시
-            Set(_gazeButtonLabel, d.CurrentMode == EyeMazeDirector.Mode.Gaze ? Strings.Get("ui.gaze_button_gaze", "관찰 중지 (Space)") : Strings.Get("ui.gaze_button", "마음 읽기 (Space)"));
+            Set(_gazeButtonLabel, d.CurrentMode == EyeMazeDirector.Mode.Gaze ? Strings.Get("ui.gaze_button_gaze") : Strings.Get("ui.gaze_button"));
             UpdateGazeLabelPulse(d);
             Set(_hint, d.IsReading
-                ? Strings.Get("hint.reading", "Space  계속")
+                ? Strings.Get("hint.reading")
                 : d.InAbyss
-                ? Strings.Get("hint.abyss", "WASD / 방향키로 가장 반짝이는 파편에 다가간다")
+                ? Strings.Get("hint.abyss")
                 : d.CurrentMode == EyeMazeDirector.Mode.Gaze
                 // 시선 조작 안내에서 금색 문, 하늘색 점 설명 삭제
-                ? Strings.Get("hint.gaze", "WASD / 방향키로 이동   ·   Space 관찰 중지")
-                : d.CurrentMode == EyeMazeDirector.Mode.Ending ? (d.HeartFinished ? Strings.Get("hint.ending_done", "Space  돌아가기") : Strings.Get("hint.ending", "Space  계속"))
+                ? Strings.Get("hint.gaze")
+                : d.CurrentMode == EyeMazeDirector.Mode.Ending ? (d.HeartFinished ? Strings.Get("hint.ending_done") : Strings.Get("hint.ending"))
                 // 스펙 004: Q 안내를 잠시 휴식하기로 표시
-                : Strings.Get("hint.talk", "Space = 마음 읽기   ·   숫자키 대화   ·   Q 잠시 휴식하기"));
+                : Strings.Get("hint.talk"));
         }
 
         /// <summary>
@@ -475,9 +476,9 @@ namespace EyeMaze
         {
             switch (m)
             {
-                case EyeMazeDirector.Mode.Gaze: return Strings.Get("mode.gaze", "들여다보는 중");
-                case EyeMazeDirector.Mode.Ending: return Strings.Get("mode.ending", "마음");
-                default: return Strings.Get("mode.talk", "대화 중");
+                case EyeMazeDirector.Mode.Gaze: return Strings.Get("mode.gaze");
+                case EyeMazeDirector.Mode.Ending: return Strings.Get("mode.ending");
+                default: return Strings.Get("mode.talk");
             }
         }
 

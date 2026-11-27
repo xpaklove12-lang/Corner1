@@ -207,10 +207,14 @@ namespace EyeMaze.EditorTools
                     g.Items.Add(ReadStringsItem(r));
                     continue;
                 }
+                if (doc.Columns.Count == 0) doc.Columns.AddRange(r.ColumnNames());
                 if (r[s.BodyColumn].Length == 0) continue;
                 var item = new DialogueEditorDocument.Item();
                 item.Fields[s.BodyColumn] = r[s.BodyColumn];
                 foreach (string c in s.ItemColumns) if (r[c].Length > 0) item.Fields[c] = r[c];
+                // 스펙 EDITOR-41: 편집기가 모르는 열(tid, 메모 열 등)은 그 이름 그대로 보관했다가 저장할 때 다시 쓴다.
+                foreach (string c in doc.Columns)
+                    if (IsHiddenColumn(kind, c) && r[c].Length > 0) item.Fields[c] = r[c];
                 if (section == Csv.SECTION_DIALOGUE && r[GOTO].Length > 0) item.Fields[GOTO] = r[GOTO];
                 g.Items.Add(item);
             }
@@ -231,9 +235,17 @@ namespace EyeMaze.EditorTools
             string note = r.Has(STRINGS_NOTE) ? r[STRINGS_NOTE] : r[MEMO];
             if (note.Length > 0) item.Fields[MEMO] = note;
             foreach (string c in r.ColumnNames())
-                if (!IsStringsModelColumn(c) && r[c].Length > 0) item.Fields[c] = r[c];
+                if (IsHiddenColumn(DialogueEditorKind.Strings, c) && r[c].Length > 0) item.Fields[c] = r[c];
             return item;
         }
+
+        /// <summary>
+        /// 텍스트 뷰에 보이지 않고 그대로 보관만 하는 열인지 본다.
+        /// 인물·회차 CSV는 알려진 머리글(DAY_COLUMNS)에 없는 열, 공용 문구는 key·원문·메모가 아닌 열이다 (EDITOR-40, EDITOR-41).
+        /// kind와 column을 사용하며, 보관만 하는 열이면 true를 반환한다.
+        /// </summary>
+        private static bool IsHiddenColumn(DialogueEditorKind kind, string column) =>
+            kind == DialogueEditorKind.Day ? System.Array.IndexOf(DAY_COLUMNS, column) < 0 : !IsStringsModelColumn(column);
 
         /// <summary>
         /// 공용 문구 파일에서 편집기가 직접 다루는 칸인지 본다.
@@ -243,13 +255,13 @@ namespace EyeMaze.EditorTools
             column == STRINGS_KEY || column == STRINGS_SOURCE || column == STRINGS_NOTE || column == TEXT || column == MEMO;
 
         /// <summary>
-        /// 텍스트로 다시 읽은 공용 문구 모델에, 텍스트에 보이지 않는 칸(언어 칸 등)을 이전 모델에서 옮긴다.
-        /// 같은 key 안에서 몇 번째 줄인지로 짝을 맞춘다. 공용 문구가 아니면 아무것도 하지 않는다 (EDITOR-40).
+        /// 텍스트로 다시 읽은 모델에, 텍스트에 보이지 않는 칸(공용 문구의 언어 칸, 회차 CSV의 모르는 열)을 이전 모델에서 옮긴다.
+        /// 같은 그룹(section·actor·id 또는 key) 안에서 몇 번째 줄인지로 짝을 맞춘다 (EDITOR-40, EDITOR-41).
         /// from(이전 모델)과 to(새 모델)를 사용하며, to의 머리글 순서와 항목 칸을 바꾼다.
         /// </summary>
         public static void CarryHiddenColumns(DialogueEditorDocument from, DialogueEditorDocument to)
         {
-            if (from == null || to == null || to.Kind != DialogueEditorKind.Strings) return;
+            if (from == null || to == null) return;
             to.Columns.Clear();
             to.Columns.AddRange(from.Columns);
             foreach (DialogueEditorDocument.Group g in to.Groups)
@@ -258,8 +270,19 @@ namespace EyeMaze.EditorTools
                 if (old == null) continue;
                 for (int k = 0; k < g.Items.Count && k < old.Items.Count; k++)
                     foreach (KeyValuePair<string, string> f in old.Items[k].Fields)
-                        if (!IsStringsModelColumn(f.Key)) g.Items[k].Fields[f.Key] = f.Value;
+                        if (IsHiddenColumn(to.Kind, f.Key)) g.Items[k].Fields[f.Key] = f.Value;
             }
+        }
+
+        /// <summary>
+        /// 인물·회차 CSV를 쓸 머리글을 정한다. 알려진 머리글 뒤에, 읽은 파일에 있던 모르는 열을 파일 순서대로 붙인다 (EDITOR-41).
+        /// doc을 사용하며, 머리글 목록을 반환한다.
+        /// </summary>
+        private static string[] DayColumns(DialogueEditorDocument doc)
+        {
+            var list = new List<string>(DAY_COLUMNS);
+            foreach (string c in doc.Columns) if (!list.Contains(c)) list.Add(c);
+            return list.ToArray();
         }
 
         /// <summary>
@@ -665,7 +688,7 @@ namespace EyeMaze.EditorTools
         /// </summary>
         public static string WriteCsv(DialogueEditorDocument doc, List<int> rowLines)
         {
-            string[] columns = doc.Kind == DialogueEditorKind.Day ? DAY_COLUMNS : StringsColumns(doc);
+            string[] columns = doc.Kind == DialogueEditorKind.Day ? DayColumns(doc) : StringsColumns(doc);
             var sb = new StringBuilder();
             sb.Append(string.Join(",", columns)).Append("\r\n");
             foreach (DialogueEditorDocument.Group g in doc.Groups)
@@ -713,6 +736,7 @@ namespace EyeMaze.EditorTools
                 else if (System.Array.IndexOf(s.GroupColumns, c) >= 0) v = first ? g.Get(c) : "";
                 else if (item == null) v = "";
                 else if (c == s.BodyColumn || System.Array.IndexOf(s.ItemColumns, c) >= 0 || (c == GOTO && g.Section == Csv.SECTION_DIALOGUE)) v = item.Get(c);
+                else if (IsHiddenColumn(DialogueEditorKind.Day, c)) v = item.Get(c);
                 else v = "";
                 cells.Add(Cell(v));
             }

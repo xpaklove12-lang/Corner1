@@ -75,7 +75,7 @@
 | 편집기에서 노드·대사·엔딩·결과 추가와 삭제 | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-28~32, EDITOR-34, EDITOR-36 |
 | 선택지 결과(`response`)를 한 줄씩 넘겨 보여 주기 | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-33 |
 | 선택지를 고른 뒤 엔딩으로 갈지 가르는 `ending_need` | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-38 |
-| 대사 CSV의 번역용 줄 ID `tid`, 편집기에서 `Loc/UI.csv` 원문 편집 | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-39~40 |
+| 대사 CSV의 번역용 줄 ID `tid`, 편집기에서 `Loc/UI.csv` 원문 편집, 모르는 열 보존 | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-39~41 |
 | 지원 언어 목록, 시작 언어, 언어 바꾸기 | [`localization.md`](localization.md) | LOC-01~04 |
 | 공용 문구 파일(`Loc/UI.csv`, 옛 `Strings.csv`)과 코드 속 화면 문구 | [`localization.md`](localization.md) | LOC-05~07 |
 | 씬 고정 라벨과 인스펙터 문구의 번역 | [`localization.md`](localization.md) | LOC-08~09 |
@@ -125,7 +125,7 @@
 | `Runtime/Typewriter.cs` | [`dialogue.md`](dialogue.md), [`memory-fragments.md`](memory-fragments.md) |
 | `Runtime/Flags.cs` | [`dialogue.md`](dialogue.md)(문 플래그), [`memory-fragments.md`](memory-fragments.md)(파편 플래그) |
 | `Runtime/Strings.cs` | [`opening.md`](opening.md)(`Strings.csv` 문구), [`dialogue-editor.md`](dialogue-editor.md)(`Strings.csv` 편집), [`localization.md`](localization.md)(언어별 조회, LOC-05~06) |
-| `Runtime/GameSettings.cs`, `Runtime/LocConfig.cs`, `Runtime/Loc.cs`, `Editor/LocTools.cs`, `Runtime/LocalizedLabel.cs` (만들 예정) | [`localization.md`](localization.md) |
+| `Runtime/GameSettings.cs`, `Runtime/LocConfig.cs`, `Runtime/Loc.cs`, `Editor/LocTools.cs`, `Runtime/LocalizedLabel.cs` | [`localization.md`](localization.md) |
 | `Assets/EyeMaze/Data/Loc/` | [`localization.md`](localization.md) |
 | `Runtime/Shapes.cs` | [`blink-maze.md`](blink-maze.md), [`memory-fragments.md`](memory-fragments.md) |
 | `Runtime/MemoryFragment.cs`, `Runtime/FragmentFeedback.cs` | [`memory-fragments.md`](memory-fragments.md), [`emotion-maze.md`](emotion-maze.md)(사물 투명도 계산 공유) |
@@ -151,7 +151,7 @@
 | `DLG` | [`dialogue.md`](dialogue.md) | DLG-01~44 |
 | `EMO` | [`emotion-maze.md`](emotion-maze.md) | EMO-01~20 |
 | `MEM` | [`memory-fragments.md`](memory-fragments.md) | MEM-01~44 (MEM-25~33 폐기) |
-| `EDITOR` | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-01~40 |
+| `EDITOR` | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-01~41 |
 | `OPEN` | [`opening.md`](opening.md) | OPEN-01~06 |
 | `FIELD` | [`field.md`](field.md) | FIELD-01~12 |
 | `LOC` | [`localization.md`](localization.md) | LOC-01~20 |

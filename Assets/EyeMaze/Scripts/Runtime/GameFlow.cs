@@ -422,7 +422,8 @@ namespace EyeMaze
             string line = _convLines[i];
             if (_convSpeakers != null && i < _convSpeakers.Count) _convSpeaker = _convSpeakers[i];
             if (_convPortraits != null && i < _convPortraits.Count) _fieldPortrait = _convPortraits[i];
-            _fieldText = string.IsNullOrEmpty(_convSpeaker) ? line : $"{_convSpeaker}\n{line}";
+            // 스펙 LOC-11: 화면에는 현재 언어 이름을 보이고, 기록과 초상화는 원래 이름으로 둔다.
+            _fieldText = string.IsNullOrEmpty(_convSpeaker) ? line : $"{Strings.Name(_convSpeaker)}\n{line}";
             // 스펙 007: 글 상자에 나온 줄을 얼굴과 함께 대화 기록에 남긴다. 같은 줄을 다시 보여줘도 한 번만 남는다.
             DialogueLog.Add(_convSpeaker, line, false, string.IsNullOrEmpty(_convSpeaker) ? null : _fieldPortrait);
         }

@@ -159,7 +159,7 @@ namespace EyeMaze
             // 플레이어 말은 이름 없이 오른쪽, 상대 말은 얼굴과 이름을 두고 왼쪽에 붙인다.
             bool other = !e.IsPlayer && !narration;
             if (row.Name.gameObject.activeSelf != other) row.Name.gameObject.SetActive(other);
-            if (other) row.Name.text = e.Speaker;
+            if (other) row.Name.text = Strings.Name(e.Speaker);
             if (row.Face.gameObject.activeSelf != other) row.Face.gameObject.SetActive(other);
             // 얼굴이 없는 사람도 말풍선 위치가 같도록 칸은 남기고 그림만 끈다.
             row.Face.sprite = e.Portrait;

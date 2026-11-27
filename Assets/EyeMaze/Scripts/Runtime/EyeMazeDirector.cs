@@ -22,6 +22,10 @@ namespace EyeMaze
 
         // 스펙 010: 기본 후보를 F6 자물쇠 맞춤으로 지정
         private const int BLINK_DEFAULT_PRESET_INDEX = 1;
+        /// <summary>공용 문구의 손님 이름 칸 (스펙 LOC-10)</summary>
+        private const string CLIENT_VAR = "client";
+        /// <summary>공용 문구의 손님 3인칭 칸 (스펙 LOC-10)</summary>
+        private const string CLIENT_PRONOUN_VAR = "client_pron";
 
         // 스펙 015: 손님에게 그 감정의 눈 표현이 없을 때 쓰는 기본 표현
         private static readonly EmotionLook DEFAULT_EMOTION_LOOK = new EmotionLook();
@@ -319,7 +323,7 @@ namespace EyeMaze
         public ClientCase ActiveCase => _activeCase;
         // 스펙 006: 부담감 막대를 가리는 데 쓰는 눈꺼풀 닫힘 정도 공개
         public float BlinkAmount => _blinkAmount;
-        public string ReturnText => _returnText;
+        public string ReturnText => Strings.Get("ui.return_choice", _returnText);
         public float Burden => _burden;
         /// <summary>내담자의 휴식 신호가 나타난 상태인지</summary>
         public bool RestRequested => _restRequested;
@@ -577,15 +581,16 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 씬에 저장된 공용 문구 속 '은재'/'그녀'를 지금 손님의 이름/대명사로 바꾼다.
-        /// s와 지금 케이스를 사용하며, 바뀐 문구를 반환한다.
+        /// 공용 문구 속 {client}(손님 이름)와 {client_pron}(손님 3인칭) 칸을 지금 손님의 현재 언어 값으로 채운다 (스펙 LOC-10).
+        /// {client|이/가}처럼 조사를 함께 적으면 이름 받침에 맞춰 붙인다. 이름은 name.원래이름, 3인칭은 pron.원래이름 key에서 읽는다.
+        /// s와 지금 케이스를 사용하며, 채운 문구를 반환한다.
         /// </summary>
         public string Personalize(string s)
         {
             if (string.IsNullOrEmpty(s) || _activeCase == null) return s;
-            if (_activeCase.PersonName != "은재") s = s.Replace("은재", _activeCase.PersonName);
-            if (_activeCase.Pronoun != "그녀") s = s.Replace("그녀", _activeCase.Pronoun);
-            return s;
+            string name = _activeCase.PersonName;
+            s = Strings.Fill(s, CLIENT_PRONOUN_VAR, Strings.Get(Strings.PRONOUN_PREFIX + name, _activeCase.Pronoun));
+            return Strings.Fill(s, CLIENT_VAR, Strings.Name(name));
         }
 
         /// <summary>
@@ -611,7 +616,7 @@ namespace EyeMaze
             if (_mode == Mode.Ending) return;
             if (_mode == Mode.Gaze && _inAbyss) { _message = AbyssText; return; }
             // 스펙 003: 관찰을 멈출 때의 문구를 "관찰을 잠시 멈추고 생각에 잠긴다."로 변경
-            if (_mode == Mode.Gaze) { ExitGaze(Strings.Get("msg.gaze_off", "관찰을 잠시 멈추고 생각에 잠긴다.")); return; }
+            if (_mode == Mode.Gaze) { ExitGaze(Strings.Get("msg.gaze_off")); return; }
             if (!CanGaze) return;
             _mode = Mode.Gaze;
             _velocity = Vector2.zero;
@@ -619,7 +624,7 @@ namespace EyeMaze
             _lastLayer = _maze != null && _cursor != null ? _maze.LayerOfRing(_cursor.Ring) : -1;
             // 스펙 015: 지금 손님의 사물을 모으고 지금 감정에 맞춰 표시를 정한다.
             SyncProps();
-            _message = Strings.Get("msg.gaze_on", "{name}의 눈을 들여다본다.", ("name", Name));
+            _message = Strings.Get("msg.gaze_on", ("name", Strings.Name(Name)));
         }
 
         /// <summary>
@@ -860,7 +865,7 @@ namespace EyeMaze
                 _wallChange.Tick(0f);
                 _respawnEffectT = 0f;
             }
-            _message = Strings.Get("msg.respawn", "다른 층의 길이 바뀌었다.");
+            _message = Strings.Get("msg.respawn");
         }
 
         /// <summary>
@@ -928,8 +933,9 @@ namespace EyeMaze
         /// </summary>
         private void EndByBurden()
         {
-            if (FindEnding("leave") != null) StartEnding("leave", _burdenEndLine);
-            else ExitGaze(_burdenEndLine);
+            string line = Personalize(Strings.Get("msg.burden_end", _burdenEndLine));
+            if (FindEnding("leave") != null) StartEnding("leave", line);
+            else ExitGaze(line);
         }
 
         /// <summary>
@@ -1127,7 +1133,7 @@ namespace EyeMaze
         public void ChooseOption(int index)
         {
             if (_mode == Mode.Ending || IsReadingResponse) return;
-            if (_mode == Mode.Gaze) { _message = Strings.Get("msg.no_talk_in_gaze", "들여다보는 중에는 말할 수 없다. (Space로 관찰 중지)"); return; }
+            if (_mode == Mode.Gaze) { _message = Strings.Get("msg.no_talk_in_gaze"); return; }
             DialogueScript.Node node = CurrentNode;
             if (node == null || index < 0) return;
             // 스펙 004: 화면 번호를 CSV 순번으로 변환
@@ -1136,7 +1142,7 @@ namespace EyeMaze
             if (index >= visible.Count) return;
             int choiceIndex = visible[index];
             DialogueScript.Choice o = node.Choices[choiceIndex];
-            if (!IsAvailable(o)) { _message = Strings.Get("msg.locked_choice", "아직 모르는 이야기다. 눈 속에서 단서를 찾아야 한다."); return; }
+            if (!IsAvailable(o)) { _message = Strings.Get("msg.locked_choice"); return; }
 
             // 같은 말을 반복해서 신뢰를 올릴 수 없게 좋은 말은 한 번만 통한다.
             // 다른 장면으로 넘어가는 말이면 수치는 다시 주지 않고 그 장면으로만 간다 (뒤로 갔다가 다시 들어올 때).
@@ -1152,7 +1158,7 @@ namespace EyeMaze
                     DialogueLog.Add(Name, Personalize(o.Response), false, FieldNPC.PortraitOf(Name));
                     ShowResponse(o.Response, "", o.Goto, null);
                 }
-                else _message = Strings.Get("msg.already", "이미 한 이야기다. {name}는 다음 말을 기다리고 있다.", ("name", Name));
+                else _message = Strings.Get("msg.already", ("name", Strings.Name(Name)));
                 return;
             }
             _usedOptions.Add(key);
@@ -1179,14 +1185,14 @@ namespace EyeMaze
             if (!string.IsNullOrEmpty(o.Ending) && Flags.AllSet(o.EndingNeed)) { StartEnding(o.Ending, o.Response); return; }
             var sb = new StringBuilder();
             // 스펙 018: 신뢰 안내와 문 안내를 따로 붙인다. 문은 선택지가 켠 플래그로 열린다.
-            if (o.Trust > 0) sb.Append("\n" + Strings.Get("msg.trust_up_no_gate", "(신뢰가 깊어졌다.)"));
-            if (OpenGateCount() > openBefore) sb.Append("\n" + Strings.Get("msg.gate_open", "(눈 속 어딘가의 문이 열렸다.)"));
+            if (o.Trust > 0) sb.Append("\n" + Strings.Get("msg.trust_up_no_gate"));
+            if (OpenGateCount() > openBefore) sb.Append("\n" + Strings.Get("msg.gate_open"));
             if (o.Trust < 0) sb.Append(Strings.Get("msg.trust_down", "") is string td && td.Length > 0 ? "\n" + td : "");
-            if (o.Dilation > 0.05f) sb.Append("\n" + Strings.Get("msg.dilation_up", "(동공이 조금 커졌다.)"));
-            if (o.Dilation < -0.05f) sb.Append("\n" + Strings.Get("msg.dilation_down", "(동공이 좁아졌다.)"));
-            if (_burden < burdenBefore) sb.Append("\n(부담이 조금 줄었다.)");
+            if (o.Dilation > 0.05f) sb.Append("\n" + Strings.Get("msg.dilation_up"));
+            if (o.Dilation < -0.05f) sb.Append("\n" + Strings.Get("msg.dilation_down"));
+            if (_burden < burdenBefore) sb.Append("\n" + Strings.Get("msg.burden_down"));
             // 스펙 005: 부담감이 오른 선택지에 증가 문구를 붙인다.
-            if (_burden > burdenBefore) sb.Append("\n(부담이 조금 늘었다.)");
+            if (_burden > burdenBefore) sb.Append("\n" + Strings.Get("msg.burden_up"));
             // 스펙 011: rest 대사가 있는 선택지를 처음 고르면 휴식 신호를 켠다.
             if (!string.IsNullOrEmpty(o.Rest)) { _restRequested = true; _restLine = o.Rest; }
             bool leave = _person != null && _person.Trust <= _leaveTrust && FindEnding("leave") != null;
@@ -1310,7 +1316,7 @@ namespace EyeMaze
             // 스펙 004: CSV 대화의 시작 장면으로 돌아가고 지나온 장면 목록을 비운다.
             _currentNodeId = Script.Root.Id;
             _nodeHistory.Clear();
-            _message = _returnMessage;
+            _message = Strings.Get("msg.return", _returnMessage);
         }
 
         /// <summary>
@@ -1321,8 +1327,8 @@ namespace EyeMaze
         {
             MemoryFragment[] all = Fragments;
             string[] got = all.Where(f => f.Collected).Select(f => "· " + f.Title).ToArray();
-            return Strings.Get("ui.fragments", "파편들 ({got}/{all})", ("got", got.Length), ("all", all.Length)) + "\n"
-                + (got.Length > 0 ? string.Join("\n", got) : Strings.Get("ui.fragments_none", "· 아직 없음"));
+            return Strings.Get("ui.fragments", ("got", got.Length), ("all", all.Length)) + "\n"
+                + (got.Length > 0 ? string.Join("\n", got) : Strings.Get("ui.fragments_none"));
         }
 
         /// <summary>
@@ -1331,12 +1337,12 @@ namespace EyeMaze
         /// </summary>
         public void ShowEncounterGuide(bool first)
         {
-            _message = first ? _firstGuide : _againGuide;
+            _message = first ? Strings.Get("msg.first_guide", _firstGuide) : Strings.Get("msg.again_guide", _againGuide);
             if (!_restAccepted) return;
             // 스펙 011: 막대가 내려가는 모습이 보이도록 돌아왔을 때 줄인다.
             _restAccepted = false;
             _burden = Mathf.Max(0f, _burden - _burdenRestRelief);
-            _message = _restReturnMessage;
+            _message = Strings.Get("msg.rest_return", _restReturnMessage);
         }
 
         /// <summary>
@@ -1904,7 +1910,7 @@ namespace EyeMaze
             if (layer != _lastLayer)
             {
                 MazeLayer l = _maze.GetLayer(layer);
-                if (layer > _lastLayer && l != null) _message = Strings.Get("msg.deeper", "더 깊은 곳으로 들어왔다 — {layer}", ("layer", l.DisplayName));
+                if (layer > _lastLayer && l != null) _message = Strings.Get("msg.deeper", ("layer", l.DisplayName));
                 _lastLayer = layer;
             }
             CheckFragment();
@@ -1931,7 +1937,7 @@ namespace EyeMaze
                 if (Application.isPlaying) CheckUnlockedChoices();
                 // 스펙 016: 회상 방과 대본이 있으면 글 대신 회상을 재생한다
                 bool flashback = Application.isPlaying && _flashback != null && _flashback.CanPlay(f.Flag, f.Flag);
-                if (!flashback) _message = Strings.Get("msg.fragment", "파편 — {title}\n{text}", ("title", f.Title), ("text", f.Text));
+                if (!flashback) _message = Strings.Get("msg.fragment", ("title", f.Title), ("text", f.Text));
                 if (Application.isPlaying) { _reading = true; _readT = 0f; _velocity = Vector2.zero; StopBump(); }
                 if (!flashback) continue;
                 _flashbackFragment = f;
@@ -2149,7 +2155,7 @@ namespace EyeMaze
             _blinkPhase = next;
 
             // 스펙 010: 후보와 상관없이 깜빡임 문구를 하나로 표시
-            if (prev < close && next >= close && _mode == Mode.Gaze) _message = Strings.Get("msg.blink_rotate", "눈이 깜빡였다.");
+            if (prev < close && next >= close && _mode == Mode.Gaze) _message = Strings.Get("msg.blink_rotate");
             if (prev < close && next >= close)
             {
                 // 스펙 010: 후보 종류에 따라 벽 교체 또는 회전을 확정

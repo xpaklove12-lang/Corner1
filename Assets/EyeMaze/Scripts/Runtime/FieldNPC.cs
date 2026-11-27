@@ -103,7 +103,7 @@ namespace EyeMaze
         }
 
         public override bool Available => Present;
-        public override string Verb => _talkOnly || _resolved ? Strings.Get("verb.talk", "이야기하기") : Strings.Get("verb.gaze", "눈을 마주하기");
+        public override string Verb => _talkOnly || _resolved ? Strings.Get("verb.talk") : Strings.Get("verb.gaze");
 
         void OnEnable() { _drawnKey = int.MinValue; }
         protected override void OnValidate() { _drawnKey = int.MinValue; base.OnValidate(); }

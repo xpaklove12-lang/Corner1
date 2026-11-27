@@ -49944,6 +49944,7 @@ GameObject:
   - component: {fileID: 648563996}
   - component: {fileID: 1692975436}
   - component: {fileID: 869949150}
+  - component: {fileID: 910000010}
   m_Layer: 0
   m_Name: "\uBD80\uB2F4\uAC10 \uAE00"
   m_TagString: Untagged
@@ -59938,6 +59939,7 @@ GameObject:
   - component: {fileID: 1727881676}
   - component: {fileID: 1727881675}
   - component: {fileID: 1727881674}
+  - component: {fileID: 910000013}
   m_Layer: 0
   m_Name: "\uD638\uCD9C \uAE00\uC528 (\uB775-\uB3D9)"
   m_TagString: Untagged
@@ -60940,6 +60942,7 @@ GameObject:
   - component: {fileID: 1772311362}
   - component: {fileID: 1772311364}
   - component: {fileID: 1772311363}
+  - component: {fileID: 910000011}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -64337,6 +64340,7 @@ GameObject:
   - component: {fileID: 1875838419}
   - component: {fileID: 1875838421}
   - component: {fileID: 1875838420}
+  - component: {fileID: 910000012}
   m_Layer: 0
   m_Name: Label
   m_TagString: Untagged
@@ -73984,6 +73988,62 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.GameSettings
   _locConfig: {fileID: 11400000, guid: bd473b1b502d455585728a927264cc4f, type: 2}
+--- !u!114 &910000010
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1437671202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d24e339f250b4091921c971ef4c967db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.LocalizedLabel
+  _label: {fileID: 869949150}
+  _key: label.burden
+--- !u!114 &910000011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1772311361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d24e339f250b4091921c971ef4c967db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.LocalizedLabel
+  _label: {fileID: 1772311363}
+  _key: label.recap_play
+--- !u!114 &910000012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875838418}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d24e339f250b4091921c971ef4c967db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.LocalizedLabel
+  _label: {fileID: 1875838420}
+  _key: label.recap_close
+--- !u!114 &910000013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1727881673}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d24e339f250b4091921c971ef4c967db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.LocalizedLabel
+  _label: {fileID: 1727881674}
+  _key: label.bell
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

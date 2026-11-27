@@ -20,7 +20,7 @@
   - SUDS 엔진 도입과 `.sud` 파일 저장·내보내기
   - 게임 실행 시 대사 처리 방식 변경
   - `Flags.csv` 편집과 게임 UI 변경
-  - CSV 주석, 미사용 열, 공백, 인용 방식의 원문 보존
+  - CSV 주석, 공백, 인용 방식의 원문 보존 (모르는 열은 EDITOR-41에 따라 보존한다)
   - Day2 이후 회차 선택·진행·저장 로직 (파일 이름과 열 구조만 준비)
   - 공용 `Strings.csv`의 인물별 파일 편입
 - 구현 순서: EDITOR-01~EDITOR-05는 기존 편집기의 기준 동작이다. 이후 작업은 EDITOR-11~EDITOR-14(통합 CSV·런타임·트리)로 데이터 이전을 끝낸 뒤 EDITOR-06~EDITOR-08(표시·입력·추가), EDITOR-09~EDITOR-10(기록·확대), EDITOR-15~EDITOR-20(크기·선택·인라인 편집·수치 표시), EDITOR-21~EDITOR-24(엔딩 규칙 이전·표시·기준 편집), EDITOR-25~EDITOR-26(직접 엔딩 조건·선택지 수치 편집) 순서로 구현한다. 묶음별 승인 범위를 확인한다.
@@ -71,6 +71,7 @@
 - **EDITOR-38** `[승인]` 선택지에 `ending_need`(결과 분기 조건)를 둔다. `need`는 선택지가 열리는 조건이고, `ending_need`는 고른 뒤 `ending`으로 갈지 가르는 조건이다. `ending_need`가 모두 켜져 있으면 `ending`으로 가고, 아니면 `ending`이 없는 선택지처럼 결과와 `goto`로 진행한다. 트리의 엔딩 진입선은 `해금`(need)과 `엔딩 조건`(ending_need)을 따로 보이고, 두 조건 모두 EDITOR-25·EDITOR-35·EDITOR-37 방식으로 고친다.
 - **EDITOR-39** `[작성중]` 회차 CSV의 `tid` 열(`LOC-12`(`localization.md`))을 알려진 열로 읽고 저장할 때 보존한다. 텍스트 뷰에서는 각 Dialogue 선택지의 `[eye ...]` 줄과 Talk·Ending 행의 `[eye ...]` 줄에 `tid="..."`로 표시한다. 행을 옮기거나 본문·조건·수치를 고치거나 그룹 ID를 바꿔도 그 행의 `tid`는 바꾸지 않는다. 저장할 때 `tid`가 빈 행(새로 추가한 행 포함)에는 LOC-12 규칙으로 새 번호를 준다. 텍스트 뷰에서 줄을 복사해 같은 `tid`가 둘 이상 생기면 뒤쪽 행에 새 번호를 주고 경고 목록에 보인다. 사람이 `tid` 값을 직접 고치는 것은 오류로 막지 않는다.
 - **EDITOR-40** `[승인]` 편집기의 공용 문구 선택 항목은 `Strings.csv` 대신 `Loc/UI.csv`(`LOC-05`(`localization.md`))를 연다. 텍스트 뷰와 트리, 인라인 편집은 `ko` 칸을 지금의 `text` 칸처럼 다루고, `context`·`maxlen`·언어 칸·`note`·`_ok`·`ko_synced`는 읽어 두었다가 저장할 때 그대로 쓴다. 지금의 `memo`는 `note`로 다룬다.
+- **EDITOR-41** `[승인]` 회차 CSV를 저장할 때 공통 머리글(4절)에 없는 열(예: 아직 알려진 열이 아닌 `tid`, 제작자가 더한 메모 열)을 지우지 않는다. 그런 열은 읽은 파일의 순서대로 공통 머리글 뒤에 쓰고, 각 행의 값은 텍스트 뷰에 보이지 않게 보관했다가 그대로 쓴다. 값을 옮기는 규칙은 EDITOR-40과 같다(같은 그룹 안에서 몇 번째 행인지로 짝을 맞춘다).
 
 ### 예외 및 경계 조건
 
@@ -226,6 +227,7 @@ flowchart TD
 | EDITOR-21 | `Assets/EyeMaze/Scripts/Runtime/ClientCase.cs`, `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueData.cs` | 메서드는 확인하지 못함 |
 | EDITOR-33, EDITOR-38 | `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs`, `Assets/EyeMaze/Scripts/Runtime/DialogueScript.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorGraph.cs` | 메서드는 확인하지 못함 |
 | EDITOR-39 | `Assets/EyeMaze/Scripts/Editor/DialogueEditorFormat.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorDocument.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorWindow.cs` | `DialogueEditorFormat.DAY_COLUMNS` (아직 구현하지 않음) |
+| EDITOR-41 | `Assets/EyeMaze/Scripts/Editor/DialogueEditorFormat.cs` | `ReadCsv`, `IsHiddenColumn`, `DayColumns`, `WriteRow`, `CarryHiddenColumns` |
 | EDITOR-40 | `Assets/EyeMaze/Scripts/Editor/DialogueEditorFormat.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorDocument.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorWindow.cs`, `Assets/EyeMaze/Scripts/Runtime/Csv.cs` | `DialogueEditorFormat.STRINGS_COLUMNS`, `ReadStringsItem`, `StringsColumns`, `CarryHiddenColumns`, `WriteRow`, `DialogueEditorDocument.Columns`, `DialogueEditorWindow.ApplyDraft`, `ApplyGraphEdit`, `Csv.Row.ColumnNames` |
 
 ### 구조
@@ -302,6 +304,7 @@ flowchart TD
 - **EDITOR-37**: 은재 `red_eyes`의 직접 엔딩 조건에 `trust_3`이 있을 때 `trust_3`을 클릭해 `>=5`를 입력하면 그 선택지 need의 `trust_3`이 `trust_5`로 바뀌고, Flags.csv에 `trust_5,신뢰 5 이상,계산,trust>=5` 줄이 생기며 `trust_3` 줄은 그대로다. 우클릭에서 `trust_5 비교/<=`를 고르면 `trust_le_5`로 바뀐다. `>=0.5`처럼 이미 있는 조건(`pupil_open`과 같은 `dilation>=0.5`)이면 새 줄 없이 그 플래그를 쓴다.
 - **EDITOR-38**: 은재 `red_eyes`의 음성 메시지 선택지를 `need=eunjae_voicemail`, `ending_need=trust_le_m3`로 두면 파편만 주워도 선택지가 열린다. Play Mode에서 신뢰가 -3 이하일 때 고르면 `delete` 엔딩으로, 아니면 결과를 보이고 장면에 머문다. 트리 진입선에 `해금 eunjae_voicemail`과 `엔딩 조건 trust_le_m3`가 따로 보이고 각각 고칠 수 있다.
 - **EDITOR-39**: 지수 Day1을 열어 선택지 하나를 다른 장면으로 옮기고 본문을 고친 뒤 저장하면 CSV에서 그 행의 `tid`가 그대로다. 우클릭으로 새 선택지를 더하고 저장하면 그 행에 파일 안 가장 큰 번호 다음 `tid`가 생긴다. 텍스트 뷰에서 선택지 블록을 복사해 붙이면 붙인 쪽에 새 `tid`가 생기고 경고가 보인다.
+- **EDITOR-41**: 지수 Day1 CSV 끝에 `note2` 열을 더하고 몇 행에 값을 적은 뒤, 편집기에서 선택지 글 하나를 고쳐 저장하면 `note2` 열과 값이 그대로 남는다. 노드 뷰에서 그 행을 다른 장면으로 옮겨도 값이 행을 따라간다.
 - **EDITOR-40**: 공용 문구 항목을 열면 `Loc/UI.csv`의 `ko` 글이 보인다. 한 줄의 글을 고쳐 저장하면 그 줄의 `ko`만 바뀌고 `en`·`ja`·`context`·`maxlen`·`note`·`_ok`·`ko_synced`는 그대로다.
 
 ## 8. 알려진 문제
@@ -310,8 +313,8 @@ flowchart TD
 - 범위의 제외 항목 "게임 실행 시 대사 처리 방식 변경"과 EDITOR-33(결과 줄을 한 줄씩 넘김), EDITOR-38(`ending_need` 분기)이 서로 어긋나 보인다. 본문은 옛 스펙대로 옮겼다.
 - 엔딩 조건 판정의 `half`는 별도 열 없이 `truth`의 반대로 계산한다.
 - 5절 코드 위치의 메서드 이름은 확인하지 못했다.
-- 범위의 제외 항목 "CSV 주석, 미사용 열 … 원문 보존"에 따라 편집기는 모르는 열을 저장할 때 지운다. EDITOR-39 구현 전에 회차 CSV에 `tid`를 적으면 편집기 저장 때 사라진다.
-- EDITOR-40: 텍스트 뷰에 보이지 않는 칸(언어 칸, `context`, `maxlen`, `_ok`, `ko_synced`)은 같은 key 안에서 몇 번째 줄인지로 이전 모델의 값을 옮긴다. 텍스트 뷰에서 `opening`처럼 여러 줄인 key의 중간에 줄을 넣거나 줄 순서를 바꾸면, 그 뒤 줄들의 번역이 한 줄씩 어긋난다. 노드 뷰의 행 추가는 같은 모델에서 옮기므로 어긋나지 않는다.
+- EDITOR-40, EDITOR-41: 텍스트 뷰에 보이지 않는 칸(공용 문구의 언어 칸·`context`·`maxlen`·`_ok`·`ko_synced`, 회차 CSV의 모르는 열)은 같은 그룹 안에서 몇 번째 행인지로 이전 모델의 값을 옮긴다. 텍스트 뷰에서 여러 행인 그룹의 중간에 행을 넣거나 행 순서를 바꾸면, 그 뒤 행들의 보관 값이 한 행씩 어긋난다. 노드 뷰의 행 추가·이동은 같은 모델에서 옮기므로 어긋나지 않는다. 회차 CSV는 EDITOR-39의 `tid`가 들어오면 `tid`로 짝을 맞추도록 바꾼다.
+- EDITOR-41: 본문이 빈 행(그룹 칸만 있는 행)의 모르는 열 값은 보관하지 않는다.
 
 ## 9. 미결 사항
 

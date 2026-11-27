@@ -31,7 +31,7 @@ namespace EyeMaze
             get => _examined;
             set { _examined = value; Flags.Set(_flag, value); }
         }
-        public override string Verb => Strings.Get("verb.examine", "살펴보기");
+        public override string Verb => Strings.Get("verb.examine");
 
         void OnEnable() { _drawnKey = int.MinValue; }
         protected override void OnValidate() { _drawnKey = int.MinValue; base.OnValidate(); }
