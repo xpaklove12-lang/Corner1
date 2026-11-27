@@ -197,9 +197,6 @@ namespace EyeMaze.EditorTools
         private GUIStyle _situationStyle;
         private float _styleZoom = -1f;
 
-        /// <summary>노드 뷰 확대율 (0.5~2.0, 파일에 저장하지 않음)</summary>
-        public float Zoom => _zoom;
-
         /// <summary>그룹 키로 저장된 노드 크기를 읽는다. 없으면 null이다. 창이 EditorPrefs로 채운다.</summary>
         public System.Func<string, Vector2?> SizeLoader { get; set; }
 
@@ -1035,14 +1032,12 @@ namespace EyeMaze.EditorTools
             var parts = new List<string>();
             string trust = item.Get("trust");
             string dilation = item.Get("dilation");
-            string spring = item.Get("spring");
             if (trust.Length > 0 && trust != "0") parts.Add("신뢰 " + Signed(trust));
             if (dilation.Length > 0 && float.TryParse(dilation, NumberStyles.Float, CultureInfo.InvariantCulture, out float d) && d != 0f)
                 parts.Add("동공 " + Signed(dilation));
-            string springText = spring.Length > 0 && spring != "0" ? "spring " + Signed(spring) + " (미적용)" : "";
-            if (parts.Count == 0 && springText.Length == 0) return "수치 변화 없음 · 클릭해서 편집";
-            string primary = string.Join(" · ", parts);
-            return primary.Length == 0 ? springText + "  ✎" : springText.Length == 0 ? primary + "  ✎" : primary + "\n" + springText + "  ✎";
+            // 선택지 spring 수치 제거: spring 줄 없이 신뢰·동공만 표시
+            if (parts.Count == 0) return "수치 변화 없음 · 클릭해서 편집";
+            return string.Join(" · ", parts) + "  ✎";
         }
 
         /// <summary>
@@ -1204,7 +1199,6 @@ namespace EyeMaze.EditorTools
             var menu = new GenericMenu();
             menu.AddItem(new GUIContent("신뢰 (trust)"), false, () => StartScoreEdit(doc, hit.Group, row, "trust"));
             menu.AddItem(new GUIContent("동공 (dilation)"), false, () => StartScoreEdit(doc, hit.Group, row, "dilation"));
-            menu.AddItem(new GUIContent("spring (현재 실행 미적용)"), false, () => StartScoreEdit(doc, hit.Group, row, "spring"));
             menu.DropDown(new Rect(windowMouse, Vector2.zero));
             e.Use();
         }
@@ -2372,7 +2366,8 @@ namespace EyeMaze.EditorTools
         {
             variable = op = value = "";
             System.Text.RegularExpressions.Match m = System.Text.RegularExpressions.Regex.Match(condition ?? "",
-                @"^\s*(trust|dilation|spring)\s*(>=|<=|==|!=|>|<)\s*(-?\d+(?:\.\d+)?)\s*$");
+                // 선택지 spring 수치 제거
+                @"^\s*(trust|dilation)\s*(>=|<=|==|!=|>|<)\s*(-?\d+(?:\.\d+)?)\s*$");
             if (!m.Success) return false;
             variable = m.Groups[1].Value;
             op = m.Groups[2].Value;
@@ -2461,7 +2456,8 @@ namespace EyeMaze.EditorTools
                 string opName = op == ">=" ? "" : op == "<=" ? "le_" : op == "<" ? "lt_" : op == ">" ? "gt_" : op == "==" ? "eq_" : "ne_";
                 target = $"{variable}_{opName}{value.Replace("-", "m").Replace(".", "_")}";
                 if (ids.Contains(target)) { error = $"'{target}'가 Flags.csv에 다른 조건으로 이미 있다. Flags.csv에서 조건을 확인한다."; return null; }
-                string name = variable == "trust" ? "신뢰" : variable == "dilation" ? "동공" : "태엽";
+                // 선택지 spring 수치 제거
+                string name = variable == "trust" ? "신뢰" : "동공";
                 (bool ok, string createError) = FlagCreator(target, $"{name} {value} {OpWord(op)}", "계산", $"{variable}{op}{value}");
                 if (!ok) { error = createError; return null; }
             }
@@ -2848,7 +2844,8 @@ namespace EyeMaze.EditorTools
             if (section == Csv.SECTION_DIALOGUE)
             {
                 g.Fields["situation"] = "새 상황";
-                foreach (string c in new[] { "trust", "dilation", "spring" }) item.Fields[c] = "0";
+                // 선택지 spring 수치 제거
+                foreach (string c in new[] { "trust", "dilation" }) item.Fields[c] = "0";
             }
             if (section == Csv.SECTION_ENDING) g.Fields["title"] = "새 엔딩";
             g.Items.Add(item);
@@ -2947,7 +2944,8 @@ namespace EyeMaze.EditorTools
             if (g.Section == Csv.SECTION_DIALOGUE)
             {
                 item.Fields[DialogueEditorFormat.TEXT] = "새 선택지";
-                foreach (string c in new[] { "trust", "dilation", "spring" }) item.Fields[c] = "0";
+                // 선택지 spring 수치 제거
+                foreach (string c in new[] { "trust", "dilation" }) item.Fields[c] = "0";
             }
             else
             {

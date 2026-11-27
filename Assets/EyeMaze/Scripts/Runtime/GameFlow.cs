@@ -223,12 +223,6 @@ namespace EyeMaze
         // 필드 글 상자
 
         /// <summary>
-        /// 한 줄짜리 글(단서 등)을 글 상자에 띄운다.
-        /// text를 사용하며, 대화 상태를 한 줄짜리로 연다.
-        /// </summary>
-        public void ShowText(string text) => ShowConversation(null, null, new List<string> { text }, null);
-
-        /// <summary>
         /// 여러 줄 대화를 연다. Space로 한 줄씩 넘기고, 마지막 줄 다음 Space에서 닫히며 done이 불린다.
         /// speaker, portrait, lines, done을 사용하며, 글 상자 상태와 초상화를 바꾸고 플레이어를 멈춘다.
         /// </summary>
