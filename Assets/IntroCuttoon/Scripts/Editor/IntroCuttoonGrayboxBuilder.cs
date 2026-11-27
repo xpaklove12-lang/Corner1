@@ -92,6 +92,33 @@ namespace IntroCuttoon.EditorTools
         private const float REFLECTION_START = 0.46f;
         private const float REFLECTION_DELAY = 0f;
         private const float REFLECTION_DURATION = 3.2f;
+        // 3-2 지구와 로켓 세트다. 칸 카메라 시야각과 원평면, 지구 반지름과 카메라에서의 거리, 칸 화면에서 지구 가운데의 가로·세로 비율 자리다.
+        private const float LAUNCH_FOV = 40f;
+        private const float LAUNCH_FAR = 420f;
+        private const float LAUNCH_EARTH_RADIUS = 40f;
+        private const float LAUNCH_EARTH_DISTANCE = 150f;
+        private const float LAUNCH_EARTH_VIEW_X = 0.28f;
+        private const float LAUNCH_EARTH_VIEW_Y = 0.42f;
+        private const int LAUNCH_STAR_COUNT = 110;
+        // 불길 구는 지구의 BURN_SCALE배 크기다. 지구와 크기가 너무 비슷하면 두 면이 얕게 만나 경계가 톱니처럼 보인다. 착탄점 둘레 반경 BURN_START_ANGLE도에서 BURN_END_ANGLE도까지 BURN_DURATION초 동안 번진다.
+        private const float BURN_SCALE = 0.8f;
+        private const float BURN_START_ANGLE = 6f;
+        private const float BURN_END_ANGLE = 35f;
+        private const float BURN_DURATION = 2.6f;
+        // 로켓 크기 배율, 출발 자리의 지구 표면 아래 깊이(미터), 멈추는 자리의 카메라 앞 거리(미터), 출발 기다림과 시간(초), 몸체가 도는 각도(도)다.
+        private const float ROCKET_SCALE = 2.5f;
+        private const float ROCKET_START_DEPTH = 6f;
+        private const float ROCKET_END_DISTANCE = 28f;
+        private const float ROCKET_DELAY = 0.3f;
+        private const float ROCKET_DURATION = 2.6f;
+        private const float ROCKET_ROLL = 80f;
+        // 불꽃은 로켓이 나는 동안 노즐을 축으로 FLAME_FLICKER_CYCLES번 떨린다. 떨림 수를 정수로 두어 처음과 끝에 불꽃이 곧게 선다.
+        private const float FLAME_FLICKER_CYCLES = 24f;
+        private const float FLAME_FLICKER_AMPLITUDE = 6f;
+        // 지구 불길 경계가 각지지 않도록 쓰는 촘촘한 구 메시의 위도 칸 수와 저장 자리다. 경도 칸 수는 두 배다.
+        private const int SPHERE_MESH_LATITUDE = 80;
+        private const string MESH_FOLDER = "Assets/IntroCuttoon/Meshes";
+        private const string SPHERE_MESH_PATH = MESH_FOLDER + "/GB_SphereDense.asset";
         // 2-1과 2-2 카메라 배경(하늘) 밝기다.
         private const float SKY_GRAY = 0.5f;
         // 2-2 시민 눈높이(미터), 올려다보는 각도(도), 좌우 각도(도), 시야각(도)이다.
@@ -173,6 +200,14 @@ namespace IntroCuttoon.EditorTools
         private static readonly Vector3 _faceSetPosition = new Vector3(4000f, 0f, 0f);
         private static readonly Vector3 _povSetPosition = new Vector3(5000f, 0f, 0f);
         private static readonly Vector3 _faceTilt = new Vector3(25f, 0f, 0f);
+        // 3-2 지구와 로켓 세트 자리다. 2-2 카메라 원평면(1,400m)보다 멀리 둔다.
+        private static readonly Vector3 _launchSetPosition = new Vector3(8000f, 0f, 0f);
+        // 착탄점은 지구에서 카메라를 향한 점을 이만큼 왼쪽 위로 옮긴 방향이다. 로켓은 _rocketLaunchNormal 방향의 지구 표면 아래에서 솟아 카메라 오른쪽 위 _rocketPassPoint를 향해 난다.
+        private static readonly Vector3 _impactShift = new Vector3(-0.15f, 0.3f, 0f);
+        private static readonly Vector3 _rocketLaunchNormal = new Vector3(0.45f, -0.1f, -0.89f);
+        private static readonly Vector3 _rocketPassPoint = new Vector3(5f, 2f, 6f);
+        private static readonly Color _flameOuterColor = new Color(0.75f, 0.36f, 0.24f, 1f);
+        private static readonly Color _flameCoreColor = new Color(0.95f, 0.9f, 0.78f, 1f);
         // 구름마다 다른 값이다. 시민 눈에서의 거리(미터), 칸 화면에서 운석 중심 둘레로 놓인 방향(도, 0이 오른쪽, 90이 위), 시선에서 떨어진 각도(도), 크기 배율.
         // 첫 구름은 운석 처음 자리의 왼쪽 위 가장자리를 가리고 운석이 지나는 거리에 있어, 운석이 다가오며 그 구름 앞으로 나온다.
         private static readonly float[] _cloudDistances = { 220f, 320f, 160f };
@@ -1060,6 +1095,83 @@ namespace IntroCuttoon.EditorTools
         }
 
         /// <summary>
+        /// 빛을 받지 않는 색 재질 name을 MATERIAL_FOLDER에서 찾아 돌려준다. 없으면 색 color인 URP Unlit 재질로 만든다.
+        /// </summary>
+        private static Material EnsureUnlitColorMaterial(string name, Color color)
+        {
+            EnsureFolder(MATERIAL_FOLDER);
+            string path = MATERIAL_FOLDER + "/" + name + ".mat";
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (material != null)
+            {
+                return material;
+            }
+
+            material = new Material(Shader.Find(UNLIT_SHADER));
+            material.SetColor("_BaseColor", color);
+            AssetDatabase.CreateAsset(material, path);
+            return material;
+        }
+
+        /// <summary>
+        /// 지름 1인 촘촘한 구 메시를 SPHERE_MESH_PATH에서 찾아 돌려준다. 없으면 위도 SPHERE_MESH_LATITUDE칸, 경도 그 두 배 칸으로 만들어 저장한다.
+        /// 기본 구 메시는 칸이 성겨, 두 구가 얕은 각도로 만나는 3-2 불길 경계가 계단처럼 보이기 때문에 쓴다.
+        /// </summary>
+        private static Mesh EnsureSphereMesh()
+        {
+            EnsureFolder(MESH_FOLDER);
+            Mesh mesh = AssetDatabase.LoadAssetAtPath<Mesh>(SPHERE_MESH_PATH);
+            if (mesh != null)
+            {
+                return mesh;
+            }
+
+            int latitude = SPHERE_MESH_LATITUDE;
+            int longitude = SPHERE_MESH_LATITUDE * 2;
+            Vector3[] vertices = new Vector3[(latitude + 1) * (longitude + 1)];
+            Vector3[] normals = new Vector3[vertices.Length];
+            int[] triangles = new int[latitude * longitude * 6];
+            for (int a = 0; a <= latitude; a++)
+            {
+                float theta = Mathf.PI * a / latitude;
+                for (int b = 0; b <= longitude; b++)
+                {
+                    float phi = 2f * Mathf.PI * b / longitude;
+                    Vector3 direction = new Vector3(Mathf.Sin(theta) * Mathf.Cos(phi), Mathf.Cos(theta), Mathf.Sin(theta) * Mathf.Sin(phi));
+                    int index = a * (longitude + 1) + b;
+                    vertices[index] = direction * 0.5f;
+                    normals[index] = direction;
+                }
+            }
+
+            // 바깥에서 볼 때 시계 방향이 되도록 위쪽 줄 두 점과 아래쪽 줄 한 점, 아래쪽 줄 두 점과 위쪽 줄 한 점으로 삼각형을 잇는다.
+            int cursor = 0;
+            for (int a = 0; a < latitude; a++)
+            {
+                for (int b = 0; b < longitude; b++)
+                {
+                    int top = a * (longitude + 1) + b;
+                    int bottom = top + longitude + 1;
+                    triangles[cursor++] = top;
+                    triangles[cursor++] = top + 1;
+                    triangles[cursor++] = bottom;
+                    triangles[cursor++] = bottom;
+                    triangles[cursor++] = top + 1;
+                    triangles[cursor++] = bottom + 1;
+                }
+            }
+
+            mesh = new Mesh();
+            mesh.name = "GB_SphereDense";
+            mesh.vertices = vertices;
+            mesh.normals = normals;
+            mesh.triangles = triangles;
+            mesh.RecalculateBounds();
+            AssetDatabase.CreateAsset(mesh, SPHERE_MESH_PATH);
+            return mesh;
+        }
+
+        /// <summary>
         /// 투명한 재질 name을 MATERIAL_FOLDER에서 찾아 돌려준다. 없으면 색 color, 그림 texture(없으면 null)로 알파 섞기 URP Unlit 재질을 만든다.
         /// 깊이를 쓰지 않아 앞의 불투명 도형에는 가려지고 뒤의 것 위에는 섞여 그려진다. 같은 거리의 투명 재질끼리는 queueOffset이 큰 쪽이 나중에 그려진다.
         /// </summary>
@@ -1183,6 +1295,133 @@ namespace IntroCuttoon.EditorTools
         }
 
         /// <summary>
+        /// 3-2 지구와 로켓 3D 세트를 _launchSetPosition에 만든다. 칸 크기 viewSize의 가로세로 비율로 지구를 칸 화면의 정한 자리에 둔다.
+        /// 불길 구 burn과 로켓 rocket은 시작 자리에 두고 끝 자리를 burnEnd, rocketEnd로 내보낸다. 몸체 돌기 대상 rocketBody와 불꽃 떨림 대상 flameOuter, flameCore도 내보낸다.
+        /// 세트 루트를 돌려준다. 칸 카메라는 루트 원점에서 앞(+Z)을 본다.
+        /// </summary>
+        private static Transform BuildLaunchSet(Vector2 viewSize, out Transform burn, out Vector3 burnEnd, out Transform rocket, out Vector3 rocketEnd, out Transform rocketBody, out Transform flameOuter, out Transform flameCore)
+        {
+            Transform root = CreateFromMenu(MENU_EMPTY, null, "Set_Launch").transform;
+            root.position = _launchSetPosition;
+            root.rotation = Quaternion.identity;
+            float tanHalf = Mathf.Tan(LAUNCH_FOV * 0.5f * Mathf.Deg2Rad);
+            float aspect = viewSize.x / viewSize.y;
+            Vector3 earthCenter = new Vector3((LAUNCH_EARTH_VIEW_X * 2f - 1f) * tanHalf * aspect * LAUNCH_EARTH_DISTANCE, (LAUNCH_EARTH_VIEW_Y * 2f - 1f) * tanHalf * LAUNCH_EARTH_DISTANCE, LAUNCH_EARTH_DISTANCE);
+            Mesh denseSphere = EnsureSphereMesh();
+
+            Transform earth = CreatePrimitive(MENU_SPHERE, root, "Earth", earthCenter, Vector3.one * LAUNCH_EARTH_RADIUS * 2f, EnsureMaterial("GB_Earth", 0.42f));
+            earth.GetComponent<MeshFilter>().sharedMesh = denseSphere;
+
+            // 지구보다 조금 작은 붉은 구를 착탄점 쪽으로 밀면 지구 밖으로 나온 부분만 보여, 착탄점 둘레의 둥근 불길이 된다.
+            Vector3 impact = ((-earthCenter).normalized + _impactShift).normalized;
+            burn = CreatePrimitive(MENU_SPHERE, root, "Burn", earthCenter + impact * LAUNCH_EARTH_RADIUS * BurnOffset(BURN_START_ANGLE), Vector3.one * LAUNCH_EARTH_RADIUS * BURN_SCALE * 2f, EnsureUnlitColorMaterial("GB_Burn", _fireColor));
+            burn.GetComponent<MeshFilter>().sharedMesh = denseSphere;
+            burnEnd = earthCenter + impact * LAUNCH_EARTH_RADIUS * BurnOffset(BURN_END_ANGLE);
+
+            // 별은 칸 화면에 고르게 흩어지도록 먼 거리에서 시야 안에 둔다. 씨앗을 고정해 다시 만들어도 같은 자리에 놓인다.
+            Material star = EnsureUnlitMaterial("GB_Star", 0.6f);
+            System.Random random = new System.Random(7);
+            for (int i = 0; i < LAUNCH_STAR_COUNT; i++)
+            {
+                float z = 330f + (float)random.NextDouble() * 70f;
+                float halfHeight = tanHalf * z;
+                float x = ((float)random.NextDouble() * 2f - 1f) * halfHeight * aspect;
+                float y = ((float)random.NextDouble() * 2f - 1f) * halfHeight;
+                float size = 0.7f + (float)random.NextDouble() * 0.6f;
+                CreatePrimitive(MENU_SPHERE, root, "Star" + i, new Vector3(x, y, z), Vector3.one * size, star);
+            }
+
+            Vector3 start = earthCenter + _rocketLaunchNormal.normalized * (LAUNCH_EARTH_RADIUS - ROCKET_START_DEPTH);
+            rocketEnd = Vector3.Lerp(start, _rocketPassPoint, (start.z - ROCKET_END_DISTANCE) / (start.z - _rocketPassPoint.z));
+            rocket = CreateFromMenu(MENU_EMPTY_CHILD, root, "Rocket").transform;
+            rocket.localPosition = start;
+            rocket.localRotation = Quaternion.LookRotation(rocketEnd - start);
+            rocket.localScale = Vector3.one * ROCKET_SCALE;
+            rocketBody = CreateFromMenu(MENU_EMPTY_CHILD, rocket, "Body").transform;
+            rocketBody.localPosition = Vector3.zero;
+            rocketBody.localRotation = Quaternion.identity;
+            BuildRocket(rocketBody, out flameOuter, out flameCore);
+
+            foreach (MeshRenderer meshRenderer in root.GetComponentsInChildren<MeshRenderer>())
+            {
+                meshRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            }
+
+            return root;
+        }
+
+        /// <summary>
+        /// body 아래에 앞이 +Z인 로켓 도형(원통 몸체, 둥근 머리, 띠, 창, 날개 4장, 노즐)과 두 겹 불꽃을 만든다.
+        /// 불꽃은 노즐에 붙은 받침 아래 떨림 축 flameOuter, flameCore에 달려, 두 축을 로컬 Z로 돌리면 불꽃이 노즐을 축으로 기운다.
+        /// </summary>
+        private static void BuildRocket(Transform body, out Transform flameOuter, out Transform flameCore)
+        {
+            Quaternion alongZ = Quaternion.Euler(90f, 0f, 0f);
+            Material hull = EnsureMaterial("GB_RocketHull", 0.8f);
+            Material dark = EnsureMaterial("GB_RocketDark", 0.3f);
+            CreatePrimitive(MENU_CYLINDER, body, "Hull", Vector3.zero, new Vector3(0.9f, 2.2f, 0.9f), hull).localRotation = alongZ;
+            CreatePrimitive(MENU_SPHERE, body, "Nose", new Vector3(0f, 0f, 2.2f), new Vector3(0.9f, 0.9f, 2f), hull);
+            CreatePrimitive(MENU_CYLINDER, body, "Band", new Vector3(0f, 0f, 1.1f), new Vector3(0.93f, 0.12f, 0.93f), dark).localRotation = alongZ;
+            CreatePrimitive(MENU_SPHERE, body, "Window", new Vector3(0f, 0.4f, 1.65f), new Vector3(0.28f, 0.2f, 0.28f), EnsureMaterial("GB_RocketWindow", 0.18f));
+            Material fin = EnsureMaterial("GB_RocketFin", 0.52f);
+            for (int i = 0; i < 4; i++)
+            {
+                float angle = i * 90f + 45f;
+                Vector3 outward = new Vector3(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad), 0f);
+                CreatePrimitive(MENU_CUBE, body, "Fin" + i, outward * 0.8f + new Vector3(0f, 0f, -1.6f), new Vector3(0.08f, 0.8f, 1.3f), fin).localRotation = Quaternion.Euler(0f, 0f, angle - 90f);
+            }
+
+            CreatePrimitive(MENU_CYLINDER, body, "Nozzle", new Vector3(0f, 0f, -2.42f), new Vector3(0.62f, 0.22f, 0.62f), dark).localRotation = alongZ;
+            // 받침의 로컬 +X가 몸체 뒤쪽(-Z)을 보게 돌려, 불꽃을 +X로 늘이고 떨림 축의 Z 회전이 불꽃을 위아래로 기울이게 한다.
+            Transform mount = CreateFromMenu(MENU_EMPTY_CHILD, body, "FlameMount").transform;
+            mount.localPosition = new Vector3(0f, 0f, -2.42f);
+            mount.localRotation = Quaternion.Euler(0f, 90f, 0f);
+            flameOuter = CreateFromMenu(MENU_EMPTY_CHILD, mount, "FlameOuterPivot").transform;
+            flameOuter.localPosition = Vector3.zero;
+            flameOuter.localRotation = Quaternion.identity;
+            CreatePrimitive(MENU_SPHERE, flameOuter, "FlameOuter", new Vector3(1.5f, 0f, 0f), new Vector3(3f, 0.85f, 0.85f), EnsureUnlitColorMaterial("GB_FlameOuter", _flameOuterColor));
+            flameCore = CreateFromMenu(MENU_EMPTY_CHILD, mount, "FlameCorePivot").transform;
+            flameCore.localPosition = Vector3.zero;
+            flameCore.localRotation = Quaternion.identity;
+            CreatePrimitive(MENU_SPHERE, flameCore, "FlameCore", new Vector3(0.7f, 0f, 0f), new Vector3(1.7f, 0.45f, 0.45f), EnsureUnlitColorMaterial("GB_FlameCore", _flameCoreColor));
+        }
+
+        /// <summary>
+        /// 불길이 착탄점 둘레 반경 angle도(지구 중심에서 잰 각도)까지 번져 보이도록, 불길 구 중심을 지구 중심에서 착탄점 쪽으로 미는 거리를 지구 반지름 배로 돌려준다.
+        /// 지구 반지름을 1로 보면 불길 구(반지름 BURN_SCALE)와 지구 표면이 만나는 원이 angle도에 오는 거리이며, 두 해 중 지구 밖으로 덜 나오는 쪽을 쓴다.
+        /// </summary>
+        private static float BurnOffset(float angle)
+        {
+            float cosine = Mathf.Cos(angle * Mathf.Deg2Rad);
+            return cosine - Mathf.Sqrt(cosine * cosine - (1f - BURN_SCALE * BURN_SCALE));
+        }
+
+        /// <summary>
+        /// 불길 구 위치 연출의 곡선을 만든다. 번진 반경이 BURN_START_ANGLE도에서 BURN_END_ANGLE도까지 처음엔 빠르게 점점 느리게(이즈 아웃) 커지도록
+        /// 시간마다 BurnOffset 거리를 0~1로 바꾼 값을 11개 키로 넣고 접선을 부드럽게 한 곡선을 돌려준다.
+        /// </summary>
+        private static AnimationCurve BurnCurve()
+        {
+            float from = BurnOffset(BURN_START_ANGLE);
+            float to = BurnOffset(BURN_END_ANGLE);
+            Keyframe[] keys = new Keyframe[11];
+            for (int i = 0; i < keys.Length; i++)
+            {
+                float t = i / 10f;
+                float eased = 1f - (1f - t) * (1f - t);
+                keys[i] = new Keyframe(t, (BurnOffset(Mathf.Lerp(BURN_START_ANGLE, BURN_END_ANGLE, eased)) - from) / (to - from));
+            }
+
+            AnimationCurve curve = new AnimationCurve(keys);
+            for (int i = 0; i < keys.Length; i++)
+            {
+                curve.SmoothTangents(i, 0f);
+            }
+
+            return curve;
+        }
+
+        /// <summary>
         /// 3쪽(3-1 충돌, 3-2 멸망과 출발, 3-3 우주선)을 pagesRoot 아래에 깔고 쪽 컴포넌트를 돌려준다.
         /// 3-1에는 flash를 쓰는 번쩍임 연출을 단다.
         /// </summary>
@@ -1200,24 +1439,28 @@ namespace IntroCuttoon.EditorTools
 
             // 3-2 멸망과 출발
             RectTransform departure = CreatePanel(page, "3-2", 0f, 0f, 0.7f, 0.8f, Gray(0.06f), out Vector2 departureSize);
-            CreateStars(departure, new[]
-            {
-                0.05f, 0.9f, 0.15f, 0.75f, 0.28f, 0.95f, 0.72f, 0.88f, 0.85f, 0.7f, 0.93f, 0.92f, 0.66f, 0.35f,
-                0.9f, 0.2f, 0.78f, 0.1f, 0.08f, 0.15f, 0.18f, 0.35f, 0.95f, 0.5f, 0.58f, 0.95f, 0.45f, 0.05f,
-            });
-            Image earth = CreateImage(departure, "Earth", _circle, Gray(0.4f));
-            SetPoint(earth.rectTransform, new Vector2(0.36f, 0.5f), new Vector2(600f, 600f));
-            earth.gameObject.AddComponent<Mask>().showMaskGraphic = true;
-            Image fire = CreateImage(earth.transform, "Fire", _circle, _fireColor);
-            SetPoint(fire.rectTransform, new Vector2(0.74f, 0.76f), new Vector2(240f, 240f));
-            Image ship = CreateImage(departure, "Ship", _triangle, Gray(0.88f));
-            SetPoint(ship.rectTransform, new Vector2(0.6f, 0.6f), new Vector2(64f, 40f));
-            ship.rectTransform.localEulerAngles = new Vector3(0f, 0f, 28f);
-            CuttoonTween burn = AddTween(departure, fire.rectTransform, 0.2f, 2.6f);
-            TweenScale(burn, Vector3.one * 0.2f, Vector3.one * 1.4f);
-            CuttoonTween escape = AddTween(departure, ship.rectTransform, 0.4f, 3f);
-            TweenPosition(escape, Vector2.zero, new Vector2(360f, 210f));
-            CreateLabel(departure, departureSize, "3-2", "멸망과 출발", "불길이 번지는 지구 옆으로 작은 우주선이 빠져나간다");
+            // 3D 지구와 로켓 세트를 칸 카메라로 찍어 보여 준다. 운석이 떨어진 한 점에서 불길이 번지고, 지구에서 솟은 로켓이 거의 정면으로 다가온다.
+            Transform launchSet = BuildLaunchSet(departureSize, out Transform burn, out Vector3 burnEnd, out Transform rocket, out Vector3 rocketEnd, out Transform rocketBody, out Transform flameOuter, out Transform flameCore);
+            Camera launchCamera = CreateSetCamera("Camera_3-2", launchSet, Vector3.zero, Vector3.forward * 10f, LAUNCH_FOV, Gray(0.06f), EnsureRenderTexture("3-2", departureSize));
+            launchCamera.farClipPlane = LAUNCH_FAR;
+            CreateView(departure, launchCamera);
+            CuttoonTransformTween spread = AddTransformTween(departure, burn, 0f, BURN_DURATION);
+            TweenLocalPosition(spread, burn.localPosition, burnEnd);
+            SetCurve(spread, BurnCurve());
+            CuttoonTransformTween liftOff = AddTransformTween(departure, rocket, ROCKET_DELAY, ROCKET_DURATION);
+            TweenLocalPosition(liftOff, rocket.localPosition, rocketEnd);
+            SetCurve(liftOff, AnimationCurve.Linear(0f, 0f, 1f, 1f));
+            CuttoonTransformTween roll = AddTransformTween(departure, rocketBody, ROCKET_DELAY, ROCKET_DURATION);
+            TweenLocalRotation(roll, Vector3.zero, new Vector3(0f, 0f, ROCKET_ROLL));
+            SetCurve(roll, AnimationCurve.Linear(0f, 0f, 1f, 1f));
+            CuttoonFlap flicker = departure.gameObject.AddComponent<CuttoonFlap>();
+            SetRef(flicker, "_leftWing", flameOuter);
+            SetRef(flicker, "_rightWing", flameCore);
+            SetFloat(flicker, "_delay", ROCKET_DELAY);
+            SetFloat(flicker, "_duration", ROCKET_DURATION);
+            SetFloat(flicker, "_frequency", FLAME_FLICKER_CYCLES / ROCKET_DURATION);
+            SetFloat(flicker, "_amplitude", FLAME_FLICKER_AMPLITUDE);
+            CreateLabel(departure, departureSize, "3-2", "멸망과 출발", "운석이 떨어진 자리에서 불길이 번지고, 지구에서 솟은 로켓이 정면으로 다가온다");
             panels.Add(FinishPanel(departure));
 
             // 3-3 우주선
