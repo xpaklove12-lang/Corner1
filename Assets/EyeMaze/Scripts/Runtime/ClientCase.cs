@@ -47,7 +47,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("idleSituation"), TextArea(2, 4)] private string _idleSituation;
         [SerializeField, FormerlySerializedAs("abyssMessage"), TextArea(1, 3)] private string _abyssMessage;
         [Tooltip("이 사람이 들어와 앉은 뒤 하는 첫마디 (없으면 생략)")]
-        [SerializeField, FormerlySerializedAs("entryLine"), TextArea(1, 3)] private string _entryLine;
+        [SerializeField, FormerlySerializedAs("entryLine"), SceneText(3)] private string _entryLine;
 
         [Header("결말")]
         [SerializeField, FormerlySerializedAs("endings")] private List<EndingDef> _endings = new List<EndingDef>();
@@ -71,7 +71,7 @@ namespace EyeMaze
         public string IntroMessage => EndingData?.Text(EndingScript.Intro) ?? _introMessage;
         public string IdleSituation => EndingData?.Text(EndingScript.Idle) ?? _idleSituation;
         public string AbyssMessage => EndingData?.Text(EndingScript.Abyss) ?? _abyssMessage;
-        public string EntryLine => _entryLine;
+        public string EntryLine => Strings.Scene(_entryLine);
         /// <summary>결말 목록. 엔딩 CSV가 있으면 그걸, 없으면 인스펙터의 목록을 쓴다.</summary>
         public List<EndingDef> Endings
         {

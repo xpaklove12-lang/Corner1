@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using UnityEngine;
 
@@ -14,6 +14,10 @@ namespace EyeMaze
     public static class Strings
     {
         public const string DefaultPath = "Assets/EyeMaze/Data/Loc/UI.csv";
+        /// <summary>씬 인스펙터 문구 표의 기본 경로. LocConfig의 씬 문구 파일로 연결해 읽는다.</summary>
+        public const string SCENE_PATH = "Assets/EyeMaze/Data/Loc/Scene.csv";
+        /// <summary>씬 문구 key 앞부분. 인스펙터 칸 값이 이것으로 시작하면 key로 본다.</summary>
+        public const string SCENE_KEY_PREFIX = "scene.";
         /// <summary>원문 칸. 옛 형식(key, text, memo) 파일이면 text 칸을 원문으로 읽는다.</summary>
         public const string SOURCE_COLUMN = Loc.SOURCE_LANGUAGE;
         private const string OLD_SOURCE_COLUMN = "text";
@@ -86,8 +90,8 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 문구 표를 읽는다. 같은 파일이면 다시 읽지 않는다.
-        /// asset과 force를 사용하며, 문구 표를 바꾼다.
+        /// 문구 표를 읽는다. 공용 문구 표에 이어 LocConfig에 연결한 씬 문구 표도 함께 읽는다. 같은 파일이면 다시 읽지 않는다.
+        /// asset, force와 Loc.Config의 씬 문구 파일을 사용하며, 문구 표를 바꾼다.
         /// </summary>
         public static void Load(TextAsset asset, bool force = false)
         {
@@ -96,6 +100,17 @@ namespace EyeMaze
             _loaded = true;
             Table.Clear();
             ClearResolved();
+            AddRows(asset);
+            LocConfig config = Loc.Config;
+            if (config != null && config.SceneTexts != null) AddRows(config.SceneTexts);
+        }
+
+        /// <summary>
+        /// 한 파일의 줄을 key별로 문구 표에 더한다.
+        /// asset을 사용하며, Table을 바꾸고 읽기 오류를 로그로 남긴다.
+        /// </summary>
+        private static void AddRows(TextAsset asset)
+        {
             var errors = new List<string>();
             foreach (Csv.Row r in Csv.Read(asset, errors))
             {
@@ -104,7 +119,7 @@ namespace EyeMaze
                 if (!Table.TryGetValue(key, out List<Csv.Row> list)) Table[key] = list = new List<Csv.Row>();
                 list.Add(r);
             }
-            foreach (string e in errors) Debug.LogError($"[UI.csv] {e}", asset);
+            foreach (string e in errors) Debug.LogError($"[{asset.name}.csv] {e}", asset);
         }
 
         /// <summary>
@@ -158,6 +173,17 @@ namespace EyeMaze
             if (!ResolvedText.ContainsKey(key) && _loaded && MissingWarned.Add(key))
                 Debug.LogWarning($"[UI.csv] key '{key}'가 없다. 화면에는 key 이름이 보인다.", _asset);
             return Get(key, key, vars);
+        }
+
+        /// <summary>
+        /// 씬 인스펙터 문구 칸의 값을 화면에 보일 글로 바꾼다. 값이 씬 문구 key면 그 key의 현재 언어 글을,
+        /// 아직 옮기지 않은 글이면 적힌 글을 그대로 쓴다. key가 표에 없으면 key 이름이 보인다.
+        /// value를 사용하며, 화면에 보일 글을 반환한다.
+        /// </summary>
+        public static string Scene(string value)
+        {
+            if (string.IsNullOrEmpty(value) || !value.StartsWith(SCENE_KEY_PREFIX, System.StringComparison.Ordinal)) return value ?? "";
+            return Get(value);
         }
 
         /// <summary>
@@ -220,6 +246,19 @@ namespace EyeMaze
             Ensure();
             EnsureResolved();
             return ResolvedLines.TryGetValue(key, out List<string> lines) && lines.Count > 0 ? new List<string>(lines) : null;
+        }
+
+        /// <summary>
+        /// key의 원문(ko) 글을 가져온다. 언어와 상관없이 원문을 보여야 하는 에디터 표시에 쓴다.
+        /// key를 사용하며, 여러 줄이면 줄바꿈으로 이은 원문 또는 (표에 없으면) null을 반환한다.
+        /// </summary>
+        public static string Source(string key)
+        {
+            Ensure();
+            if (!Table.TryGetValue(key, out List<Csv.Row> rows)) return null;
+            var lines = new List<string>(rows.Count);
+            foreach (Csv.Row r in rows) lines.Add(Pick(r, Loc.SOURCE_LANGUAGE));
+            return string.Join("\n", lines);
         }
 
         /// <summary>표에 있는 key들 (에디터 검사용)</summary>

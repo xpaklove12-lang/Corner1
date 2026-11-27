@@ -22,6 +22,7 @@ MonoBehaviour:
   - _code: ja
     _name: "日本語"
     _font: {fileID: 0}
+  _sceneTexts: {fileID: 4900000, guid: 7a865dee0ca047cbab6d5d7b2a556870, type: 3}
   _detectSystemLanguage: 1
   _fallbackLanguage: en
   _languagePrefKey: EyeMaze.Language

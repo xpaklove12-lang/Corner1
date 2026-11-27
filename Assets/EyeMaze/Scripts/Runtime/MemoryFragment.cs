@@ -22,8 +22,8 @@ namespace EyeMaze
         public static event Action FeedbackCleared;
 
         [Header("내용")]
-        [SerializeField, FormerlySerializedAs("title")] private string _title = "기억";
-        [SerializeField, FormerlySerializedAs("text"), TextArea(2, 5)] private string _text;
+        [SerializeField, FormerlySerializedAs("title"), SceneText] private string _title = "기억";
+        [SerializeField, FormerlySerializedAs("text"), SceneText(5)] private string _text;
 
         [Header("위치")]
         [SerializeField, FormerlySerializedAs("ring")] private int _ring;
@@ -64,9 +64,9 @@ namespace EyeMaze
         [NonSerialized] private bool _linked;
 
         /// <summary>파편 이름. Flags.csv에서 이 파편 플래그 줄의 title 칸이 있으면 그걸 쓴다.</summary>
-        public string Title => Flags.TitleOf(_flag) ?? _title;
+        public string Title => Flags.TitleOf(_flag) ?? Strings.Scene(_title);
         /// <summary>파편을 주울 때 나오는 글. Flags.csv의 text 칸이 있으면 그걸 쓴다.</summary>
-        public string Text => Flags.TextOf(_flag) ?? _text;
+        public string Text => Flags.TextOf(_flag) ?? Strings.Scene(_text);
         public int Ring { get => _ring; set => _ring = value; }
         public int Sector { get => _sector; set => _sector = value; }
         public string Flag => _flag;

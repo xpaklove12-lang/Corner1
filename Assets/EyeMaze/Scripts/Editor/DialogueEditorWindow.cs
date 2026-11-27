@@ -954,6 +954,7 @@ namespace EyeMaze.EditorTools
                 list.AddRange(found);
             }
             if (AssetDatabase.LoadAssetAtPath<TextAsset>(Strings.DefaultPath) != null) list.Add(Strings.DefaultPath);
+            if (AssetDatabase.LoadAssetAtPath<TextAsset>(Strings.SCENE_PATH) != null) list.Add(Strings.SCENE_PATH);
             _paths = list.ToArray();
             _selected = _doc != null ? System.Array.IndexOf(_paths, _doc.AssetPath) : -1;
         }

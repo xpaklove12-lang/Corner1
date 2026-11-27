@@ -32,6 +32,10 @@ namespace EyeMaze
         [Tooltip("지원 언어. 첫 항목은 원문 언어(ko)다")]
         [SerializeField] private List<Language> _languages = new List<Language>();
 
+        [Header("번역 파일")]
+        [Tooltip("씬 인스펙터 문구의 번역 표 (Data/Loc/Scene.csv). 공용 문구 표와 같은 열을 쓴다")]
+        [SerializeField] private TextAsset _sceneTexts;
+
         [Header("시작 언어")]
         [Tooltip("저장값이 없을 때 운영체제 언어를 볼지. 끄면 저장값이 없을 때 바로 대체 언어로 시작한다")]
         [SerializeField] private bool _detectSystemLanguage = true;
@@ -41,6 +45,7 @@ namespace EyeMaze
         [SerializeField] private string _languagePrefKey = "EyeMaze.Language";
 
         public IReadOnlyList<Language> Languages => _languages;
+        public TextAsset SceneTexts => _sceneTexts;
         public bool DetectSystemLanguage => _detectSystemLanguage;
         public string FallbackLanguage => _fallbackLanguage;
         public string LanguagePrefKey => _languagePrefKey;

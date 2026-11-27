@@ -286,6 +286,8 @@ namespace EyeMaze.EditorTools
             ValidateFlashbacks(known, Err, Warn);
             // 이어지는 쌍의 플래그, 기억의 자리, 연결 회상 대본, 재사용할 방을 검사한다
             ValidateLinks(known, Err);
+            // 공용 문구와 씬 문구 파일의 번역을 검사한다
+            TranslationCheck.Validate(Err, Warn);
             return issues;
         }
 

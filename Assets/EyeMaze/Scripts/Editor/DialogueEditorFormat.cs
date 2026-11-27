@@ -124,7 +124,7 @@ namespace EyeMaze.EditorTools
         {
             kind = DialogueEditorKind.Strings;
             if (string.IsNullOrEmpty(path) || !path.EndsWith(".csv", System.StringComparison.OrdinalIgnoreCase)) return false;
-            if (path == Strings.DefaultPath) return true;
+            if (path == Strings.DefaultPath || path == Strings.SCENE_PATH) return true;
             if (path.StartsWith(DialogueData.DialogueFolder + "/")) { kind = DialogueEditorKind.Day; return true; }
             return false;
         }
