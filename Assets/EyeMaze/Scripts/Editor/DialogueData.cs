@@ -22,8 +22,6 @@ namespace EyeMaze.EditorTools
         // 스펙 016: 상수 이름 FlashbacksPath → FLASHBACKS_PATH
         public const string FLASHBACKS_PATH = DataFolder + "/Flashbacks.csv";
         private const int FLASHBACK_MAX_LINES = 12;
-        // 스펙 017: 이어지는 쌍 경로 추가
-        public const string LINKS_PATH = DataFolder + "/Links.csv";
 
         /// <summary>Flags.csv 한 줄</summary>
         public class FlagDef
@@ -119,8 +117,8 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// 플래그마다 켜는 곳(파편, 단서, 대화 set)과 쓰는 곳(대화 need)을 모은다.
-        /// dialogues와 열린 씬의 파편/단서를 사용하며, setters와 users 사전을 채운다.
+        /// 플래그마다 켜는 곳(파편, 대화 set)과 쓰는 곳(대화 need)을 모은다.
+        /// dialogues와 열린 씬의 파편을 사용하며, setters와 users 사전을 채운다.
         /// </summary>
         public static void CollectRefs(List<(TextAsset asset, DialogueScript script)> dialogues,
             Dictionary<string, List<Ref>> setters, Dictionary<string, List<Ref>> users)
@@ -133,8 +131,6 @@ namespace EyeMaze.EditorTools
             }
             foreach (MemoryFragment f in Object.FindObjectsByType<MemoryFragment>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 Add(setters, f.Flag, $"파편 · {f.Title}", f);
-            foreach (FieldClue c in Object.FindObjectsByType<FieldClue>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                Add(setters, c.Flag, $"단서 · {c.DisplayName}", c);
             foreach ((TextAsset asset, DialogueScript s) in dialogues)
                 foreach (DialogueScript.Node n in s.Nodes)
                     foreach (DialogueScript.Choice c in n.Choices)
@@ -152,7 +148,7 @@ namespace EyeMaze.EditorTools
 
         /// <summary>
         /// 기획 데이터 전체를 검사한다.
-        /// Flags.csv, 대화 CSV, 열린 씬의 파편/단서/손님을 사용하며, 문제 목록을 반환한다.
+        /// Flags.csv, 대화 CSV, 열린 씬의 파편/손님을 사용하며, 문제 목록을 반환한다.
         /// </summary>
         public static List<Issue> Validate()
         {
@@ -212,8 +208,9 @@ namespace EyeMaze.EditorTools
                             if (!known.Contains(f)) Err($"{asset.name}.csv {c.Line}행 플래그 '{f}'가 Flags.csv에 없다.", asset);
                         foreach (string f in c.Set)
                             if (computed.Contains(f)) Err($"{asset.name}.csv {c.Line}행 '{f}'는 계산 플래그라 set으로 켤 수 없다.", asset);
+                        // 필드 단서 표현 제거
                         foreach (string f in c.Need)
-                            if (known.Contains(f) && !computed.Contains(f) && !setters.ContainsKey(f)) Warn($"{asset.name}.csv {c.Line}행 플래그 '{f}'를 켜는 곳(파편/단서/set)이 없다. 이 선택지는 열리지 않는다.", asset);
+                            if (known.Contains(f) && !computed.Contains(f) && !setters.ContainsKey(f)) Warn($"{asset.name}.csv {c.Line}행 플래그 '{f}'를 켜는 곳(파편/set)이 없다. 이 선택지는 열리지 않는다.", asset);
                         if (c.Ending.Length > 0 && endings != null && !endings.Contains(c.Ending))
                             Warn($"{asset.name}.csv {c.Line}행 엔딩 '{c.Ending}'이 손님의 결말 목록에 없다.", asset);
                     }
@@ -265,35 +262,16 @@ namespace EyeMaze.EditorTools
                 if (string.IsNullOrEmpty(f.Flag)) Warn($"파편 '{f.Title}'에 플래그가 없다.", f);
                 else if (!known.Contains(f.Flag)) Err($"파편 '{f.Title}'의 플래그 '{f.Flag}'가 Flags.csv에 없다.", f);
             }
-            // 스펙 015: 막음 사물과 같은 칸에 놓인 파편을 오류로 알린다
-            foreach (ClientCase c in cases)
-            {
-                List<MemoryFragment> fragments = c.Fragments();
-                foreach (MazeProp p in c.Props())
-                {
-                    if (p.Kind != MazePropKind.Block) continue;
-                    foreach (MemoryFragment f in fragments)
-                        if (f.Layer == p.Layer && f.Ring == p.Ring && f.Sector == p.Sector)
-                            Err($"손님 '{c.PersonName}'의 막음 사물 '{p.name}'이 파편 '{f.Title}'과 같은 칸(ring {p.Ring}, sector {p.Sector})에 있다.", p);
-                }
-            }
-            foreach (FieldClue c in Object.FindObjectsByType<FieldClue>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-            {
-                if (string.IsNullOrEmpty(c.Flag)) Warn($"단서 '{c.DisplayName}'에 플래그가 없다.", c);
-                else if (!known.Contains(c.Flag)) Err($"단서 '{c.DisplayName}'의 플래그 '{c.Flag}'가 Flags.csv에 없다.", c);
-            }
             // 스펙 016: 회상 대본의 길이, 플래그, 사물 id를 검사한다
             ValidateFlashbacks(known, Err, Warn);
-            // 스펙 017: 이어지는 쌍의 플래그, 기억의 자리, 연결 회상 대본, 재사용할 방을 검사한다
-            ValidateLinks(known, Err);
             return issues;
         }
 
         /// <summary>
         /// 스펙 016: 회상 대본(Flashbacks.csv)을 검사한다. 대본 줄이 12줄을 넘으면 경고, flag가 Flags.csv에 없거나 prop이 그 방에 없으면 오류로 알린다.
-        /// 방은 FlashbackPlayer.FindRoom과 같은 규칙으로 실제 재생될 방 하나다. 원래 회상은 플래그가 같은 첫 방이고, 연결 회상은 Links.csv room의 첫 방(쌍이 없으면 그 이름의 추가 사물 묶음을 가진 첫 방)이다.
+        /// 방은 FlashbackPlayer.FindRoom과 같은 규칙으로 실제 재생될 방 하나다. 방은 플래그가 같은 첫 방이다.
         /// 방이 없는 회상은 글로 나오므로 prop을 검사하지 않는다. 같은 플래그의 방이 둘 이상이면 경고한다.
-        /// known(Flags.csv의 id), err, warn과 열린 씬의 회상 방, Links.csv를 사용하며, err와 warn으로 문제를 남긴다. 파일이 없으면 검사하지 않는다.
+        /// known(Flags.csv의 id), err, warn과 열린 씬의 회상 방을 사용하며, err와 warn으로 문제를 남긴다. 파일이 없으면 검사하지 않는다.
         /// </summary>
         private static void ValidateFlashbacks(HashSet<string> known, System.Action<string, Object> err, System.Action<string, Object> warn)
         {
@@ -306,8 +284,6 @@ namespace EyeMaze.EditorTools
             FlashbackRoom[] rooms = PlayerRooms();
             foreach (IGrouping<string, FlashbackRoom> g in rooms.GroupBy(r => r.Flag).Where(g => g.Count() > 1))
                 warn($"회상 방 플래그 '{g.Key}'를 쓰는 방이 {g.Count()}개다. 회상 재생기 목록의 첫 방 '{g.First().name}'만 재생된다.", g.First());
-            var linksAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(LINKS_PATH);
-            List<MemoryLinkScript.Link> links = linksAsset != null ? MemoryLinkScript.Parse(linksAsset, new List<string>()) : new List<MemoryLinkScript.Link>();
             foreach (FlashbackScript.Flashback f in flashbacks.Values)
             {
                 if (f.LineCount > FLASHBACK_MAX_LINES)
@@ -315,18 +291,11 @@ namespace EyeMaze.EditorTools
                 if (!known.Contains(f.Flag)) err($"Flashbacks.csv {f.Row}행 회상 플래그 '{f.Flag}'가 Flags.csv에 없다.", asset);
 
                 FlashbackRoom room = FirstRoom(rooms, f.Flag);
-                GameObject extra = null;
-                if (room == null)
-                {
-                    // 연결 회상은 재사용하는 방의 기본 사물과 그 이름의 추가 사물 묶음을 쓴다.
-                    MemoryLinkScript.Link link = links.FirstOrDefault(l => l.Result == f.Flag);
-                    room = link != null ? FirstRoom(rooms, link.Room) : rooms.FirstOrDefault(r => r.ExtraSets.Any(g => g != null && g.name == f.Flag));
-                    if (room != null) extra = room.ExtraSets.FirstOrDefault(g => g != null && g.name == f.Flag);
-                }
                 if (room == null) continue;
+                // 추가 소품 묶음 제거: 방 안의 모든 사물을 대본 사물 후보로 본다.
                 var propIds = new HashSet<string>();
                 foreach (FlashbackProp p in room.GetComponentsInChildren<FlashbackProp>(true))
-                    if (InSet(p, extra) || !InAnyExtraSet(p, room)) propIds.Add(p.Id);
+                    propIds.Add(p.Id);
                 foreach (FlashbackScript.Step s in f.Steps)
                     if (!propIds.Contains(s.Prop)) err($"Flashbacks.csv {s.Row}행 prop '{s.Prop}'가 회상 '{f.Flag}'의 방에 없다.", asset);
             }
@@ -352,53 +321,6 @@ namespace EyeMaze.EditorTools
             if (string.IsNullOrEmpty(flag)) return null;
             return rooms.FirstOrDefault(r => r.Flag == flag);
         }
-
-        /// <summary>
-        /// 스펙 017: 이어지는 쌍(Links.csv)을 검사한다. a와 b가 같음, a, b, result가 Flags.csv에 없음, a나 b의 회상 대본이나 회상 방이 없어 기억의 자리가 될 수 없음,
-        /// 연결 회상 대본 없음, room이 a도 b도 아님, room의 회상 방 없음을 오류로 알린다.
-        /// known(Flags.csv의 id), err, Flashbacks.csv, 회상 재생기의 방 목록을 사용하며, err로 문제를 남긴다. 파일이 없으면 검사하지 않는다.
-        /// </summary>
-        private static void ValidateLinks(HashSet<string> known, System.Action<string, Object> err)
-        {
-            var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(LINKS_PATH);
-            if (asset == null) return;
-            var errors = new List<string>();
-            List<MemoryLinkScript.Link> links = MemoryLinkScript.Parse(asset, errors);
-            foreach (string e in errors) err("Links.csv: " + e, asset);
-            var flashbackAsset = AssetDatabase.LoadAssetAtPath<TextAsset>(FLASHBACKS_PATH);
-            Dictionary<string, FlashbackScript.Flashback> flashbacks = flashbackAsset != null
-                ? FlashbackScript.Parse(flashbackAsset, new List<string>())
-                : new Dictionary<string, FlashbackScript.Flashback>();
-            FlashbackRoom[] rooms = PlayerRooms();
-            foreach (MemoryLinkScript.Link l in links)
-            {
-                string where = $"Links.csv {l.Row}행";
-                if (l.A == l.B) err($"{where} a와 b가 같은 플래그 '{l.A}'다.", asset);
-                foreach (string f in new[] { l.A, l.B, l.Result })
-                    if (!known.Contains(f)) err($"{where} 플래그 '{f}'가 Flags.csv에 없다.", asset);
-                foreach (string f in new[] { l.A, l.B }.Distinct())
-                    if (!flashbacks.ContainsKey(f) || FirstRoom(rooms, f) == null)
-                        err($"{where} '{f}'의 회상 대본이나 회상 방이 없어 기억의 자리가 될 수 없다. 이 쌍은 이을 수 없다.", asset);
-                if (!flashbacks.ContainsKey(l.Result)) err($"{where} 연결 회상 '{l.Result}'의 대본이 Flashbacks.csv에 없다.", asset);
-                if (l.Room != l.A && l.Room != l.B) err($"{where} room '{l.Room}'이 a도 b도 아니다.", asset);
-                else if (FirstRoom(rooms, l.Room) == null) err($"{where} room '{l.Room}'의 회상 방이 없다.", asset);
-            }
-            // 수정(017): 같은 result를 여러 쌍이 쓰면 한 쌍만 이어도 나머지가 이은 것으로 처리되므로 오류로 알리게 했다.
-            foreach (IGrouping<string, MemoryLinkScript.Link> g in links.GroupBy(l => l.Result).Where(g => g.Count() > 1))
-                err($"Links.csv {string.Join(", ", g.Select(l => l.Row + "행"))} 쌍들이 같은 result '{g.Key}'를 쓴다. 쌍마다 다른 result를 쓴다.", asset);
-        }
-
-        /// <summary>
-        /// 스펙 016: 사물이 추가 사물 묶음 set 아래에 있는지 확인한다.
-        /// p와 set을 사용하며, set이 있고 p가 그 아래에 있으면 true를 반환한다.
-        /// </summary>
-        private static bool InSet(FlashbackProp p, GameObject set) => set != null && p.transform.IsChildOf(set.transform);
-
-        /// <summary>
-        /// 스펙 016: 사물이 방의 추가 사물 묶음 중 하나에 속하는지 확인한다.
-        /// p와 room을 사용하며, 어느 추가 사물 묶음 아래에 있으면 true를 반환한다.
-        /// </summary>
-        private static bool InAnyExtraSet(FlashbackProp p, FlashbackRoom room) => room.ExtraSets.Any(g => InSet(p, g));
 
         /// <summary>
         /// 검사 결과를 Console에 보여준다.
@@ -427,7 +349,8 @@ namespace EyeMaze.EditorTools
             int day = actor.LastIndexOf("_Day", System.StringComparison.Ordinal);
             if (day > 0) actor = actor.Substring(0, day);
             // 스펙 015: 새 파일 머리글에 emotion 추가
-            var columns = new List<string> { "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring", "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need", "emotion" };
+            // 선택지 spring 수치 제거
+            var columns = new List<string> { "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need", "emotion" };
             var sb = new System.Text.StringBuilder(string.Join(",", columns)).Append("\r\n");
             void Row(string section, string id, params (string column, string value)[] cells)
             {
@@ -437,9 +360,10 @@ namespace EyeMaze.EditorTools
                 sb.Append(string.Join(",", row)).Append("\r\n");
             }
             Row("talk", "enter", ("text", "들어와 앉은 뒤 첫마디"));
-            Row("dialogue", "start", ("situation", "처음 장면 상황 설명"), ("text", "첫 번째 질문"), ("response", "상대의 반응"), ("trust", "0"), ("dilation", "0"), ("spring", "0"));
-            Row("dialogue", "start", ("text", "플래그가 있어야 열리는 질문"), ("response", "반응"), ("need", "flag_id"), ("trust", "1"), ("dilation", "0.1"), ("spring", "0"), ("goto", "next"));
-            Row("dialogue", "next", ("situation", "다음 장면 상황 (뒤로가기가 자동으로 붙음)"), ("text", "질문"), ("response", "반응"), ("trust", "0"), ("dilation", "0"), ("spring", "0"));
+            // 선택지 spring 수치 제거 (예시 선택지 행 세 줄)
+            Row("dialogue", "start", ("situation", "처음 장면 상황 설명"), ("text", "첫 번째 질문"), ("response", "상대의 반응"), ("trust", "0"), ("dilation", "0"));
+            Row("dialogue", "start", ("text", "플래그가 있어야 열리는 질문"), ("response", "반응"), ("need", "flag_id"), ("trust", "1"), ("dilation", "0.1"), ("goto", "next"));
+            Row("dialogue", "next", ("situation", "다음 장면 상황 (뒤로가기가 자동으로 붙음)"), ("text", "질문"), ("response", "반응"), ("trust", "0"), ("dilation", "0"));
             Row("ending", "@intro", ("text", "눈 속에 들어왔을 때 첫 문구"));
             // truth·leave 첫 줄에는 엔딩 판정 기준을 함께 적는다. 열쇠 파편(key_flag)은 비워 두면 신뢰만 본다.
             Row("ending", "truth", ("title", "엔딩 · truth"), ("situation", "엔딩 상황"), ("after", "필드로 돌아온 뒤 말을 걸면 나오는 말"), ("text", "엔딩 대사"), ("truth_trust", "3"));
@@ -465,8 +389,6 @@ namespace EyeMaze.EditorTools
             Flags.ReloadDefinitions();
             // 스펙 016: 회상 대본도 다시 읽는다
             FlashbackScript.Reload();
-            // 스펙 017: 이어지는 쌍도 다시 읽는다
-            MemoryLinkScript.Reload();
             Strings.Reload();
             // 에셋 임포트 도중에는 씬 검색이 불안정하므로 한 프레임 뒤에 검사한다.
             EditorApplication.delayCall += () =>

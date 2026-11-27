@@ -9,7 +9,7 @@
 - 포함:
   - `Data/Dialogue/<인물>_Day<번호>.csv`에서 Talk·Dialogue·Ending을 함께 편집
   - 등장·필드 대화부터 상담 선택지와 결말까지 단계 연결과 분기를 한 트리에 표시
-  - 기존 은재·지수 1회차 CSV의 통합, 런타임 참조와 씬 연결 이전
+  - 기존 은재 1회차 CSV의 통합, 런타임 참조와 씬 연결 이전
   - 두 뷰의 동기화, 유효한 변경의 즉시 CSV 저장, 오류 표시
   - 텍스트 문법 강조와 Tab 입력, 노드 우클릭 대사 추가, 실행 취소·다시 실행, 노드 뷰 확대·축소
   - 텍스트·트리 뷰의 분할 너비와 트리 노드 크기 조절·유지, 노드 선택과 F2 ID 변경, 대사 행 선택과 Enter 본문 편집
@@ -43,19 +43,19 @@
 - **EDITOR-11** `[승인]` `Dialogue/<인물>_DayN.csv`를 열 때 편집기와 파서는 `section`·`actor`·`id`로 Talk·Dialogue·Ending 행을 구분하면서 기존 각 행의 값과 순서를 보존한다.
 - **EDITOR-12** `[승인]` 회차 CSV가 씬의 `ClientCase`와 관련 `FieldNPC`에 연결될 때 게임은 상담·엔딩과 actor별 필드 대사를 그 파일에서 실행한다.
 - **EDITOR-13** `[승인]` 통합 회차 CSV를 노드 뷰에 표시할 때 등장·필드 Talk에서 상담 시작 노드, 선택지 분기와 Ending까지 단계 연결을 보여준다.
-- **EDITOR-14** `[승인]` 기존 은재·지수 1회차 데이터를 이전할 때 Talk·Dialogue·Ending의 모든 실사용 행을 각 Day1 CSV에 합치고 씬 참조를 새 파일에 연결한다.
+- **EDITOR-14** `[승인]` 기존 은재 1회차 데이터를 이전할 때 Talk·Dialogue·Ending의 모든 실사용 행을 Day1 CSV에 합치고 씬 참조를 새 파일에 연결한다.
 - **EDITOR-15** `[승인]` 텍스트 뷰와 트리 뷰 사이의 분할선을 끌 때 두 뷰의 너비를 바꾸고, 다시 열어도 마지막 너비 비율을 유지한다.
 - **EDITOR-16** `[승인]` 트리의 그룹 노드나 엔딩 카드를 오른쪽 아래 모서리에서 끌 때 해당 상자의 너비·높이를 바꾸고, 같은 파일을 다시 열어도 그 크기를 유지한다.
 - **EDITOR-17** `[승인]` 트리의 노드 또는 엔딩 카드를 클릭할 때 그 항목을 선택하고 선택 테두리와 대응하는 텍스트 위치를 표시한다.
 - **EDITOR-18** `[승인]` 선택한 그룹 노드에서 F2를 누를 때 `:again`과 같은 ID를 인라인으로 편집하고, 유효한 새 ID를 확정하면 해당 section·actor의 CSV ID와 연결 참조를 함께 바꾼다.
 - **EDITOR-19** `[승인]` 트리에서 대사 행을 선택하고 Enter를 누르거나 대사 행을 더블 클릭할 때 해당 행의 본문을 인라인으로 편집하며, 유효한 값을 확정하면 공통 모델·텍스트 뷰·CSV에 함께 반영한다.
-- **EDITOR-20** `[승인]` 회차 CSV의 Dialogue 선택지 아래에 0이 아닌 `trust`·`dilation` 변화량을 표시한다. 두 값이 0이면 `수치 변화 없음`을 표시한다. `spring` 값이 0이 아니면 현재 실행에 적용되지 않는 데이터임을 함께 표시한다.
+- **EDITOR-20** `[승인]` 회차 CSV의 Dialogue 선택지 아래에 0이 아닌 `trust`·`dilation` 변화량을 표시한다. 두 값이 0이면 `수치 변화 없음`을 표시한다.
 - **EDITOR-21** `[승인]` 회차 CSV의 `truth`·`leave` 엔딩 첫 행에 기준값과 열쇠 파편 Flag ID가 있을 때 게임은 그 값을 엔딩 판정에 사용한다.
 - **EDITOR-22** `[승인]` 엔딩으로 들어가는 경로를 트리에 그릴 때 각 진입선에 현재 실행 조건을 표시한다.
 - **EDITOR-23** `[승인]` 트리의 `truth`·`half`·`leave` 조건 수치를 편집할 때 해당 회차 CSV의 공유 기준값을 바꾼다.
 - **EDITOR-24** `[승인]` 트리의 `truth` 조건에서 열쇠 파편 대상을 선택할 때 해당 회차 CSV의 `key_flag`를 바꾼다.
 - **EDITOR-25** `[승인]` 선택지에서 바로 이어지는 엔딩 선의 조건을 편집할 때 그 선택지의 `need` 플래그 목록을 바꾼다.
-- **EDITOR-26** `[승인]` 트리의 선택지 수치 줄을 클릭해 `trust`·`dilation`·`spring` 중 하나를 고쳐 해당 회차 CSV에 저장한다. 정수 열과 소수 열의 형식을 검사한다. 현재 실행에 적용되는 선택지 변화량은 `trust`·`dilation`이다.
+- **EDITOR-26** `[승인]` 트리의 선택지 수치 줄을 클릭해 `trust`·`dilation` 중 하나를 고쳐 해당 회차 CSV에 저장한다. 정수 열과 소수 열의 형식을 검사한다.
 - **EDITOR-27** `[승인]` 열린 씬에서 회차 CSV를 사용하는 `ClientCase`를 찾으면 그 케이스의 기억 파편을 트리 왼쪽에 노드로 표시한다. 파편의 Flag ID가 선택지의 `need`나 `truth`의 `key_flag`에 있으면 해당 행·엔딩으로 의존선을 그린다. 파편 노드는 씬의 실제 `MemoryFragment`를 읽으며, 회차 CSV에 새 행을 만들지 않는다.
 - **EDITOR-28** `[승인]` 트리의 Talk 그룹에서 대사 행을 추가할 때 기본 화자, 서술, `???`, 열린 씬의 인물 이름과 기존 Talk 화자 중 하나를 선택한다. 기본 화자 외의 선택은 새 행의 `speaker` 열에 기록한다. 그룹의 `actor`는 대화를 시작하는 인물로 유지한다. 이미 있는 Talk 대사 행을 우클릭하면 같은 목록에서 그 행의 화자를 바꿀 수 있고, 현재 화자에 체크 표시를 한다. 기본 화자를 고르면 `speaker`를 비운다.
 - **EDITOR-29** `[승인]` 엔딩의 `after` 카드를 선택해 Enter를 누르거나 더블 클릭하면 그 엔딩의 `after` 문구를 인라인으로 편집한다. 빈 값으로 확정하면 `after`를 제거한다. `after`가 없는 엔딩은 우클릭 메뉴에서 추가할 수 있다.
@@ -83,7 +83,7 @@
 - 오류만 저장을 막는다. 켜는 곳이 없는 need 플래그 같은 경고는 목록에 보여주고 저장한다.
 - 텍스트 초안에 오류가 있거나 검사 대기 중이면 노드 뷰의 연결·카드 편집을 막는다. 노드 편집이 검사를 통과하지 못하면 모델·텍스트·CSV를 그대로 두고 이유만 보여준다.
 - 연결선 끝을 노드에 놓으면 그 선택지의 `ending`은 지운다. 다른 section이나 actor의 노드에 연결하거나 카드를 옮기는 동작은 거절한다.
-- 값이 없는 `[eye ...]` 속성과 행 속성 줄은 텍스트에 쓰지 않는다. Dialogue 선택지의 `trust`·`dilation`·`spring`은 0이어도 쓴다.
+- 값이 없는 `[eye ...]` 속성과 행 속성 줄은 텍스트에 쓰지 않는다. Dialogue 선택지의 `trust`·`dilation`은 0이어도 쓴다.
 - 저장 파일은 UTF-8 BOM과 CRLF 줄바꿈을 쓰며, 내용이 같으면 다시 쓰지 않는다.
 - 우클릭 추가는 텍스트 초안에 오류가 있거나 검사 대기 중이면 비활성화한다. `Dialogue` 노드에 이미 선택지 3개가 있으면 추가 메뉴를 비활성화한다. 새 `Dialogue` 선택지는 `새 선택지`라는 글, 빈 반응·연결·엔딩, 수치 0으로 만들고 다른 파일의 새 행은 `새 대사` 또는 `새 문구`로 만든 뒤 기존 저장 검사를 거친다.
 - Ctrl+Z를 누를 때 아직 검사 전이거나 오류가 있는 텍스트 초안은 우선 마지막 정상 모델의 글로 되돌린다. 정상 편집을 취소·재실행하면 CSV를 다시 기록하며, 취소 뒤 새 편집을 확정하면 다시 실행 기록을 지운다. 파일을 바꾸거나 다시 열면 그 파일의 기록은 새 현재 상태에서 시작한다.
@@ -106,7 +106,7 @@
 - 기억 파편 추가: 층 후보는 이 회차 파일을 쓰는 씬 `ClientCase`의 파편 묶음이며, 메뉴에는 묶음이 놓인 층 이름을 보인다. 씬에 그 손님이 없거나 묶음이 없거나, 텍스트 오류·검사 대기 중이거나, Play Mode 중이면 메뉴를 비활성화한다. 새 Flag ID는 `<파일 이름의 인물 부분 소문자>_fragment_N`(예: `Eunjae_Day1.csv` → `eunjae_fragment_1`)이며 Flags.csv에 없는 가장 작은 N을 쓴다. 새 Flags.csv 줄은 description `<손님 이름> · 새 기억`, source `파편`, title `새 기억`, text `새 기억 글`이다. 새 오브젝트는 같은 묶음(없으면 같은 손님)의 기존 파편을 복제해 그림 설정을 이어받고, 이름은 `기억 조각 · 새 기억`, Collected는 끔, 위치는 그 층의 ring 중 같은 묶음 파편이 쓰지 않는 첫 칸(바깥 ring, sector 0부터)이다. 씬은 변경 표시만 하고 저장하지 않는다. Flags.csv 변경은 창의 실행 취소 기록 하나이고, 씬 오브젝트 추가는 Unity 실행 취소(Edit > Undo) 하나다. Flag ID 바꾸기는 이 기능에 넣지 않는다.
 - 조건 변수 메뉴: `조건 추가/<source>/<id>`에는 지금 조건에 없는 Flags.csv 플래그를 source(파편·단서·대화·계산, 비면 기타)별로 보이고, `조건 빼기/<id>`에는 지금 조건의 플래그를 보인다. `새 조건 변수 만들기`는 조건 자리에 ID 입력창을 연다. ID는 영문 소문자·숫자·`_`만 쓰며 Flags.csv에 이미 있으면 거절한다. 새 Flags.csv 줄은 id만 채우고 나머지 칸은 비운다. Flags.csv 줄 추가와 need 변경은 실행 취소 기록 각각 하나다. 텍스트 오류·검사 대기 중에는 메뉴 항목을 비활성화한다. 왼쪽 클릭 메뉴(EDITOR-25)는 그대로 둔다.
 - Delete 제거: 그룹 노드를 지우면 그 그룹의 모든 행이 사라지고, 같은 actor 선택지에서 지운 장면을 가리키는 `goto`나 지운 엔딩을 가리키는 `ending`을 비운다. 행을 클릭해 그룹을 선택한 상태에서도 그룹 전체를 지운다. 게임이 직접 부르는 예약 ID(`enter`, `reveal`, `rest`, `truth`, `half`, `leave`, `@`로 시작하는 ID)와 공용 Strings의 key는 지우지 않고 이유를 보인다. 기억 파편 카드와 판정 카드는 Delete로 지우지 않는다. 텍스트 오류·검사 대기 중이거나 인라인 편집 중이면 동작하지 않는다. 제거는 실행 취소 기록 하나이며, 검사에 실패하면 저장하지 않는다.
-- 조건 수치 편집: 대상은 Flags.csv `condition`이 `trust`·`dilation`·`spring` 중 하나와 숫자의 비교 하나(`>=`, `<=`, `>`, `<`, `==`, `!=`)인 계산 플래그다. 직접 엔딩 조건은 플래그마다 따로 클릭할 수 있게 보인다. 대상이 아닌 플래그를 클릭하면 EDITOR-25 메뉴를 띄운다. 입력창은 `>=3`처럼 비교와 수치를 함께 보이며, `5`처럼 수치만 쓰면 비교를 유지하고 `=`·`≥`·`≤`·`≠`도 각각 `==`·`>=`·`<=`·`!=`로 받는다. 확정하면 같은 변수·비교·수치의 계산 플래그를 Flags.csv에서 찾아 쓰고, 없으면 `<변수>_<수치>`(비교가 `>=`일 때)나 `<변수>_<le|lt|gt|eq|ne>_<수치>` ID로 description `<신뢰|동공|태엽> <수치> <이상|이하|초과|미만|와 같음|이 아님>`, source `계산`인 줄을 추가한다. 수치의 `-`는 `m`, `.`은 `_`로 ID에 적는다(예: `dilation_0_5`, `trust_le_m2`). 우클릭 메뉴의 `<플래그> 비교/<비교>`는 수치를 유지한 채 같은 규칙으로 바꾼다. 형식이 틀리면 입력창에 이유를 보이고 저장하지 않는다. Flags.csv 줄 추가와 need 변경은 실행 취소 기록 각각 하나다.
+- 조건 수치 편집: 대상은 Flags.csv `condition`이 `trust`·`dilation` 중 하나와 숫자의 비교 하나(`>=`, `<=`, `>`, `<`, `==`, `!=`)인 계산 플래그다. 직접 엔딩 조건은 플래그마다 따로 클릭할 수 있게 보인다. 대상이 아닌 플래그를 클릭하면 EDITOR-25 메뉴를 띄운다. 입력창은 `>=3`처럼 비교와 수치를 함께 보이며, `5`처럼 수치만 쓰면 비교를 유지하고 `=`·`≥`·`≤`·`≠`도 각각 `==`·`>=`·`<=`·`!=`로 받는다. 확정하면 같은 변수·비교·수치의 계산 플래그를 Flags.csv에서 찾아 쓰고, 없으면 `<변수>_<수치>`(비교가 `>=`일 때)나 `<변수>_<le|lt|gt|eq|ne>_<수치>` ID로 description `<신뢰|동공> <수치> <이상|이하|초과|미만|와 같음|이 아님>`, source `계산`인 줄을 추가한다. 수치의 `-`는 `m`, `.`은 `_`로 ID에 적는다(예: `dilation_0_5`, `trust_le_m2`). 우클릭 메뉴의 `<플래그> 비교/<비교>`는 수치를 유지한 채 같은 규칙으로 바꾼다. 형식이 틀리면 입력창에 이유를 보이고 저장하지 않는다. Flags.csv 줄 추가와 need 변경은 실행 취소 기록 각각 하나다.
 - 결과 분기 조건(`ending_need`): `|`로 이은 Flag ID이며 `need`와 같은 규칙(Flags.csv에 있는 ID, 계산 플래그 사용 가능)을 따른다. `ending`이 없는 선택지에 쓰면 검사 오류다. 판정은 그 선택지의 신뢰·동공·부담·`set` 변화를 반영한 뒤 한다. 비어 있으면 지금처럼 고르는 즉시 `ending`으로 간다. 조건이 맞지 않으면 `response`를 보이고 `goto`가 있으면 그 장면으로 가며, 없으면 그 장면에 머문다. 이 경우 낮은 신뢰 `leave` 판정과 휴식 신호도 일반 선택지와 같이 한다. 트리의 엔딩 진입선 글은 `해금 <need>`(비면 `해금 없음`)와 `엔딩 조건 <ending_need>`(비면 `선택 시 즉시`)이며, 왼쪽 클릭 켜고 끄기 메뉴, 우클릭 조건 변수 메뉴, 수치 계산 플래그 비교·수치 편집이 각각 자기 칸을 바꾼다.
 
 ## 3. 상태와 전이
@@ -141,7 +141,7 @@ flowchart TD
     A --> O[회차 CSV의 Talk·Dialogue·Ending 읽기 - EDITOR-11]
     O --> P[actor별 런타임 대사 연결 - EDITOR-12]
     O --> Q[단계 연결과 분기 한 트리에 표시 - EDITOR-13]
-    P --> R[은재·지수 Day1 데이터 이전 - EDITOR-14]
+    P --> R[은재 Day1 데이터 이전 - EDITOR-14]
     C --> S[분할 손잡이로 뷰 너비 조절 - EDITOR-15]
     C --> T[노드 모서리로 크기 조절 - EDITOR-16]
     C --> U[노드 클릭해 선택 - EDITOR-17]
@@ -171,7 +171,7 @@ flowchart TD
 |---|---|---|---|
 | 회차 CSV (상담) | 씬에서 연결 | `_dialogueCsv` (`ClientCase`) | 해당 인물·회차의 통합 CSV(TextAsset). 엔딩도 여기서 읽음 |
 | 회차 CSV (필드 대사) | 씬에서 연결 | `_talkCsv` (`FieldNPC`) | 해당 인물·회차의 통합 CSV(TextAsset) |
-| 대사 actor ID | 빈 값 | `_dialogueActorId` (`FieldNPC`) | 같은 CSV에서 이 NPC의 Talk 행을 고르는 ID. 씬에서는 `EunjaeMom`, `Eunjae`, `Jisu` 지정 |
+| 대사 actor ID | 빈 값 | `_dialogueActorId` (`FieldNPC`) | 같은 CSV에서 이 NPC의 Talk 행을 고르는 ID. 씬에서는 `EunjaeMom`, `Eunjae` 지정 |
 | 옛 엔딩 판정 필드 | 기존 씬 값 | `_keyFragment`, `_truthTrust`, `_leaveTrust` (`ClientCase`) | CSV 이전 뒤 엔딩 판정의 원본으로 쓰지 않고 제거 |
 
 ### 편집기 상태
@@ -193,18 +193,18 @@ flowchart TD
 
 ### 인물·회차 CSV 형식
 
-- 경로는 `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`, `Jisu_Day1.csv`처럼 정한다. 공통 머리글은 `section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest,ending_need,emotion`다. `emotion`은 dialogue 행에서 그 선택지를 고른 뒤 내담자의 감정이며 값과 동작은 `EMO-01`~`EMO-20`(`emotion-maze.md`)을 따른다.
-- `section=talk`: `actor`는 대사를 실행하는 FieldNPC의 안정적인 ID(`EunjaeMom`, `Eunjae`, `Jisu`), `id`는 기존 `group`, `text`는 기존 대사다. `speaker`, `need`, `set`, `memo`는 기존 의미를 유지한다. 같은 actor 안에서 그룹의 첫 등장 순서가 `TalkScript.Pick()` 우선순위다.
+- 경로는 `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`처럼 정한다. 공통 머리글은 `section,actor,id,situation,text,response,need,set,trust,dilation,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest,ending_need,emotion`다. `emotion`은 dialogue 행에서 그 선택지를 고른 뒤 내담자의 감정이며 값과 동작은 `EMO-01`~`EMO-03`, `EMO-10`~`EMO-12`, `EMO-15`(`emotion-maze.md`)를 따른다.
+- `section=talk`: `actor`는 대사를 실행하는 FieldNPC의 안정적인 ID(`EunjaeMom`, `Eunjae`), `id`는 기존 `group`, `text`는 기존 대사다. `speaker`, `need`, `set`, `memo`는 기존 의미를 유지한다. 같은 actor 안에서 그룹의 첫 등장 순서가 `TalkScript.Pick()` 우선순위다.
 - `section=dialogue`: `actor`는 상담 인물 ID, `id`는 기존 `node`, `text`는 선택지다. `situation`, `response`, `need`, `set`, 수치, `goto`, `ending`, `back`, `memo`는 기존 의미를 유지한다. `rest`는 그 선택지를 고르면 내담자가 쉬자고 청하는 대사다(`BURDEN-23`(`burden.md`)). `ending_need`는 `ending`이 있는 선택지에만 쓰는 결과 분기 조건이다(EDITOR-38). 첫 dialogue 노드가 상담 시작 노드다.
 - `section=ending`: `actor`는 상담 인물 ID, `id`는 기존 엔딩 id 또는 `@intro`·`@idle`·`@abyss`, `text`는 기존 `line`이다. `title`, `situation`, `after`, `memo`는 기존 의미를 유지한다. `truth` 첫 행에는 정수 `truth_trust`와 파편의 Flag ID `key_flag`, `leave` 첫 행에는 정수 `leave_trust`와 0 초과 1 이하의 실수 `burden_limit`을 기록한다. `half` 조건은 `truth`의 반대로 계산하므로 별도 열을 갖지 않는다. 빈 `key_flag`는 파편 조건이 없다는 뜻이다.
 - 행은 section별로 Talk, Dialogue, Ending 순서로 모아 기록한다. 한 section 안의 그룹·행 순서는 유지한다. `Talk`의 `again`처럼 재상호작용용 그룹은 원래 우선순위를 보존한다. `Strings.csv`는 그대로 별도 파일로 둔다.
-- 기존 `Dialogue/Eunjae.csv`와 `Dialogue/Jisu.csv`의 파일·`.meta`를 각각 `Eunjae_Day1.csv`, `Jisu_Day1.csv`로 이름을 바꿔 GUID를 유지한 뒤 Talk·Ending 행을 넣는다. 은재 Day1에는 `Talk/EunjaeMom.csv`의 실사용 행을 `actor=EunjaeMom`으로 포함한다. `Talk/Eunjae.csv`처럼 주석만 있는 파일에는 이관할 대사 행이 없다. 지수 Day1에는 `Talk/Jisu.csv`의 실사용 행을 포함한다.
-- 씬의 `ClientCase` 두 개는 각 Day1 CSV 하나만 참조하고, 은재 어머니·은재·지수 `FieldNPC`는 해당 회차 CSV와 각각 `EunjaeMom`·`Eunjae`·`Jisu` actor ID를 참조한다. 이전 데이터와 씬 연결을 검증한 뒤 중복된 옛 Talk·Ending CSV 및 `.meta`를 제거한다. `Assets/EyeMaze/Data/README.md`를 새 머리글과 회차 파일 작성 절차에 맞춰 갱신한다.
+- 기존 `Dialogue/Eunjae.csv`의 파일·`.meta`를 `Eunjae_Day1.csv`로 이름을 바꿔 GUID를 유지한 뒤 Talk·Ending 행을 넣는다. 은재 Day1에는 `Talk/EunjaeMom.csv`의 실사용 행을 `actor=EunjaeMom`으로 포함한다. `Talk/Eunjae.csv`처럼 주석만 있는 파일에는 이관할 대사 행이 없다.
+- 씬의 은재 `ClientCase`는 Day1 CSV 하나만 참조하고, 은재 어머니·은재 `FieldNPC`는 해당 회차 CSV와 각각 `EunjaeMom`·`Eunjae` actor ID를 참조한다. 이전 데이터와 씬 연결을 검증한 뒤 중복된 옛 Talk·Ending CSV 및 `.meta`를 제거한다. `Assets/EyeMaze/Data/README.md`를 새 머리글과 회차 파일 작성 절차에 맞춰 갱신한다.
 
 ### 텍스트 뷰 표기
 
 - 파일마다 하나의 문서를 표시한다. `[eye section="talk|dialogue|ending" actor="..."]`가 각 단계의 시작을 알리고, 그 아래 `:id`가 Talk의 `group`, Dialogue의 `node`, Ending의 `id`를 시작한다. 라벨 순서가 해당 section·actor 안의 CSV 그룹 순서이며, 대사 순서가 그룹 안의 행 순서다. 같은 id는 section·actor가 다르면 별개다.
-- `Dialogue`: `:node` 뒤 `[eye situation="..." back="..."]`를 표시한다. 각 선택지는 `* 선택지 글`, 이어서 **Tab 한 개** 들여쓴 `[eye response="..." need="..." set="..." trust=0 dilation=0 spring=0 memo="..."]`, 마지막으로 필요할 때 같은 깊이의 `[goto 대상]` 또는 `[eye ending="..."]`를 둔다. 둘 다 없으면 현재 노드에 머문다. `back`은 노드의 첫 CSV 행에 기록한다.
+- `Dialogue`: `:node` 뒤 `[eye situation="..." back="..."]`를 표시한다. 각 선택지는 `* 선택지 글`, 이어서 **Tab 한 개** 들여쓴 `[eye response="..." need="..." set="..." trust=0 dilation=0 memo="..."]`, 마지막으로 필요할 때 같은 깊이의 `[goto 대상]` 또는 `[eye ending="..."]`를 둔다. 둘 다 없으면 현재 노드에 머문다. `back`은 노드의 첫 CSV 행에 기록한다.
 - `Talk`: `[eye section="talk" actor="EunjaeMom"]` 같은 단계 명령 아래 `:group` 뒤 `[eye need="..." set="..."]`를 표시한다. 각 행은 `[eye speaker="..." memo="..."]`와 `Line: 대사`의 쌍이다. 빈 speaker, `-`, `???`는 CSV 값을 그대로 기록한다. 같은 actor의 그룹 순서는 `TalkScript.Pick()`의 우선순위이므로 유지한다.
 - `Ending`: `[eye section="ending" actor="Eunjae"]` 같은 단계 명령 아래 `:id` 뒤 `[eye title="..." situation="..." after="..."]`를 표시한다. `:truth`에는 `truth_trust`, `key_flag`, `:leave`에는 `leave_trust`, `burden_limit`을 같은 `[eye ...]` 명령에 적는다. 각 행은 `[eye memo="..."]`와 `Line: 대사`의 쌍이다. `@intro`, `@idle`, `@abyss`는 title·situation·after가 없는 라벨로 표시한다.
 - `Strings.csv`는 기존처럼 별도 파일에서 편집한다. 인물·회차 트리에는 넣지 않는다.
@@ -217,7 +217,7 @@ flowchart TD
 |---|---|---|
 | EDITOR-01 ~ EDITOR-10, EDITOR-15 | `Assets/EyeMaze/Scripts/Editor/DialogueEditorWindow.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorFormat.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorDocument.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorGraph.cs` | 메서드는 확인하지 못함 |
 | EDITOR-11 | `Assets/EyeMaze/Scripts/Editor/DialogueEditorFormat.cs`, `Assets/EyeMaze/Scripts/Runtime/DialogueScript.cs`, `Assets/EyeMaze/Scripts/Runtime/TalkScript.cs`, `Assets/EyeMaze/Scripts/Runtime/EndingScript.cs` | 메서드는 확인하지 못함 |
-| EDITOR-12, EDITOR-14 | `Assets/EyeMaze/Scripts/Runtime/ClientCase.cs`, `Assets/EyeMaze/Scripts/Runtime/FieldNPC.cs`, `Assets/Scenes/EyeMaze.unity`, `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`, `Assets/EyeMaze/Data/Dialogue/Jisu_Day1.csv` | `ClientCase._dialogueCsv`, `FieldNPC._talkCsv`, `FieldNPC._dialogueActorId` |
+| EDITOR-12, EDITOR-14 | `Assets/EyeMaze/Scripts/Runtime/ClientCase.cs`, `Assets/EyeMaze/Scripts/Runtime/FieldNPC.cs`, `Assets/Scenes/EyeMaze.unity`, `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv` | `ClientCase._dialogueCsv`, `FieldNPC._talkCsv`, `FieldNPC._dialogueActorId` |
 | EDITOR-13, EDITOR-16 ~ EDITOR-20, EDITOR-22 ~ EDITOR-32, EDITOR-34 ~ EDITOR-37 | `Assets/EyeMaze/Scripts/Editor/DialogueEditorGraph.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorWindow.cs` | 메서드는 확인하지 못함 |
 | EDITOR-21 | `Assets/EyeMaze/Scripts/Runtime/ClientCase.cs`, `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueData.cs` | 메서드는 확인하지 못함 |
 | EDITOR-33, EDITOR-38 | `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs`, `Assets/EyeMaze/Scripts/Runtime/DialogueScript.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorGraph.cs` | 메서드는 확인하지 못함 |
@@ -236,7 +236,7 @@ flowchart TD
 - 오브젝트 구성: 해당 없음. 에디터 전용 창이며 씬·프리팹과 런타임 GameObject를 만들지 않는다.
 - 클래스 간 관계: `DialogueEditorWindow`가 인물·회차 파일을 선택해 `DialogueEditorFormat`으로 한 `DialogueEditorDocument`를 만든다. 텍스트 뷰와 `DialogueEditorGraph`는 이를 공유한다. `ClientCase`는 같은 파일에서 Dialogue·Ending을, 해당 `FieldNPC`들은 actor ID로 Talk를 읽는다.
 - 실행 순서 의존성: 해당 없음.
-- 기존 코드와의 접점: `DialogueScript`, `TalkScript`, `EndingScript`가 `section`과 `actor`로 통합 CSV의 행을 골라 읽도록 바꾼다. `ClientCase._dialogueCsv`의 기존 참조는 새 회차 파일로 이전하고 별도 `_endingCsv` 참조를 없앤다. `FieldNPC._talkCsv`는 같은 회차 파일을 가리키며 새 `_dialogueActorId`로 Talk 행을 고른다. `ClientCase`와 `EyeMazeDirector`는 엔딩 기준값·열쇠 파편 Flag ID를 CSV에서 읽고, `DialogueData`는 파편 대상과 수치를 검사한다. 씬의 은재 어머니·은재·지수 필드를 함께 이전한다.
+- 기존 코드와의 접점: `DialogueScript`, `TalkScript`, `EndingScript`가 `section`과 `actor`로 통합 CSV의 행을 골라 읽도록 바꾼다. `ClientCase._dialogueCsv`의 기존 참조는 새 회차 파일로 이전하고 별도 `_endingCsv` 참조를 없앤다. `FieldNPC._talkCsv`는 같은 회차 파일을 가리키며 새 `_dialogueActorId`로 Talk 행을 고른다. `ClientCase`와 `EyeMazeDirector`는 엔딩 기준값·열쇠 파편 Flag ID를 CSV에서 읽고, `DialogueData`는 파편 대상과 수치를 검사한다. 씬의 은재 어머니·은재 필드를 함께 이전한다.
 
 ### 구현 방식
 
@@ -246,18 +246,18 @@ flowchart TD
 - 텍스트 시각화: 입력 가능한 텍스트 영역에서 마크다운 편집기처럼 문법 요소별 색을 입힌다. 라벨은 청록, 선택지는 노랑, `Line:` 대사는 기본 글자색, `[eye ...]`는 보라, `[goto ...]`는 파랑, 오류 줄은 빨강으로 구분한다. 커서·선택 영역·스크롤과 실제 입력 글자의 위치가 일치해야 하며 밝은/어두운 Unity 테마에서 읽을 수 있어야 한다.
 - 편집 기록: 유효한 텍스트 변경 한 번과 노드 조작 한 번을 각각 기록 항목으로 삼는다. 기록에는 CSV의 모든 알려진 값과 순서를 담고, 실행 취소·다시 실행 시 같은 저장·재임포트 경로를 사용한다.
 - 화면 설정: 분할 너비는 에디터 전체에, 노드 크기는 파일 GUID와 section·actor·id별로 `EditorPrefs`에 저장한다. CSV에는 화면 크기나 위치를 적지 않는다. ID를 바꾸면 해당 노드의 크기 설정 키도 함께 옮긴다.
-- 선택지 수치 표시: 트리의 Dialogue 선택지 행 오른쪽에 CSV의 `trust`와 `dilation` 변화량을 배지로 표시한다. 동공은 0~1 값을 백분율 포인트로 바꿔 `+15%p`처럼 쓴다. 0인 항목은 생략하고 둘 다 0이면 `수치 변화 없음`을 쓴다. 런타임에서 적용하지 않는 `spring`은 표시하지 않는다.
+- 선택지 수치 표시: 트리의 Dialogue 선택지 행 오른쪽에 CSV의 `trust`와 `dilation` 변화량을 배지로 표시한다. 동공은 0~1 값을 백분율 포인트로 바꿔 `+15%p`처럼 쓴다. 0인 항목은 생략하고 둘 다 0이면 `수치 변화 없음`을 쓴다.
 - 엔딩 조건: 심연 핵심 접촉 시 `truth`는 `trust >= truth_trust`와 지정한 `key_flag` 파편의 획득, `half`는 그 반대다. `leave`는 선택 후 `trust <= leave_trust` 또는 들여다보는 동안 `burden >= burden_limit`이다. 선택지에서 바로 향하는 엔딩은 그 선택지의 `need` 플래그가 충족되고 선택됐을 때 실행된다. 트리에서 각각의 진입선을 구분해 표시한다.
 
 ## 6. 다른 영역과의 접점
 
 - **부르는 것**: 기존 `Csv`, `DialogueScript`, `TalkScript`, `EndingScript`, `Strings`, `DialogueData`, 열린 씬의 `ClientCase`·`MemoryFragment`, `Flags.csv`
 - **불리는 것**: 회차 CSV를 읽는 `ClientCase`, `FieldNPC`, `EyeMazeDirector`(dialogue)가 이 스펙의 CSV 형식을 따른다.
-- **다른 스펙의 데이터**: `emotion` 열은 `EMO-01`~`EMO-20`(`emotion-maze.md`), `rest` 열과 Talk `rest` 그룹은 `BURDEN-23`~`BURDEN-36`(`burden.md`)을 따른다. 기억 파편 노드는 `MEM-06`~`MEM-24`(`memory-fragments.md`)의 파편을 읽는다.
+- **다른 스펙의 데이터**: `emotion` 열은 `EMO-01`~`EMO-03`, `EMO-10`~`EMO-12`, `EMO-15`(`emotion-maze.md`), `rest` 열과 Talk `rest` 그룹은 `BURDEN-23`~`BURDEN-36`(`burden.md`)을 따른다. 기억 파편 노드는 `MEM-06`~`MEM-24`(`memory-fragments.md`)의 파편을 읽는다.
 
 ## 7. 검증 방법
 
-- **EDITOR-01**: 에디터 창에서 은재·지수 Day1 파일을 열면 각 파일의 Talk·Dialogue·Ending 그룹과 행, 조건, 수치, `memo`가 하나의 텍스트에 표시된다. 별도 `Strings.csv`도 계속 열 수 있다.
+- **EDITOR-01**: 에디터 창에서 은재 Day1 파일을 열면 그 파일의 Talk·Dialogue·Ending 그룹과 행, 조건, 수치, `memo`가 하나의 텍스트에 표시된다. 별도 `Strings.csv`도 계속 열 수 있다.
 - **EDITOR-02**: Day1 텍스트의 선택지, `goto`, `[eye ...]`, Talk·Ending 대사와 순서를 바꾸면 노드 뷰와 저장 후 같은 회차 CSV에 반영된다.
 - **EDITOR-03**: 은재 Day1을 열면 어머니의 등장 Talk에서 은재 상담 시작 노드와 선택지 분기·엔딩으로 이어지는 안내선이 보인다. 합류·되돌아감도 각각 연결선으로 표시된다.
 - **EDITOR-04**: 연결선 끝을 다른 노드에 놓고 선택지·대사 카드를 옮긴 뒤 CSV를 재열면 `goto`, 그룹, 행 순서가 새 배치와 일치한다.
@@ -267,22 +267,22 @@ flowchart TD
 - **EDITOR-08**: `Dialogue` 노드와 행을 우클릭해 추가한 선택지가 지정 위치에 보이고 텍스트와 CSV에도 생긴다. 선택지가 3개인 노드에서는 추가가 비활성화된다. `Talk`, `Ending`, `Strings`에서도 우클릭으로 해당 그룹의 행이 추가된다.
 - **EDITOR-09**: 텍스트 수정과 노드 카드 이동을 차례로 확정한 뒤 Ctrl+Z 두 번, Ctrl+Y 두 번을 누르면 각 단계의 두 뷰와 CSV가 이전·다음 값으로 바뀐다. 오류 초안에서 Ctrl+Z는 초안만 되돌리고, 취소 후 새 편집을 하면 Ctrl+Y가 이전 분기를 복구하지 않는다.
 - **EDITOR-10**: 노드 뷰에서 Ctrl+스크롤로 0.5~2.0 사이 확대율이 바뀌고 포인터 아래 노드가 같은 위치에 머문다. 확대 후에도 연결점과 대사 카드 클릭·드래그가 화면 표시와 일치하며, 일반 휠 스크롤은 확대하지 않는다.
-- **EDITOR-11**: 은재 Day1 파일의 `section=talk`와 `actor=EunjaeMom` 행, `section=dialogue`와 `actor=Eunjae` 행, `section=ending` 행을 읽어도 기존 대사의 글·순서·플래그·수치·메모가 유지된다. 지수 Day1도 같은 방식으로 확인한다.
-- **EDITOR-12**: Play Mode에서 은재 어머니의 등장·재대화, 은재·지수의 상담 선택지와 특수 문구·엔딩이 각 Day1 CSV에서 나온다. 씬의 각 FieldNPC가 다른 actor의 Talk를 읽지 않는다.
-- **EDITOR-13**: 은재 Day1 트리에 어머니 Talk, 은재 상담, 엔딩과 `after` 카드가 연결돼 보이고, `again`·`@intro`·`@idle`·`@abyss`는 보조 카드로 보인다. 지수 Day1도 등장 Talk부터 상담·결말까지 보인다.
-- **EDITOR-14**: 두 Day1 CSV의 GUID가 기존 Dialogue 파일과 같고, 씬에 남은 옛 Talk·Ending CSV 참조가 없으며, 이전 후 `EyeMaze/기획 데이터 검사`에 오류가 없다. 인물별 대사를 수정해 Play Mode에서 변경 값이 나타나는지 확인한다.
+- **EDITOR-11**: 은재 Day1 파일의 `section=talk`와 `actor=EunjaeMom` 행, `section=dialogue`와 `actor=Eunjae` 행, `section=ending` 행을 읽어도 기존 대사의 글·순서·플래그·수치·메모가 유지된다.
+- **EDITOR-12**: Play Mode에서 은재 어머니의 등장·재대화, 은재의 상담 선택지와 특수 문구·엔딩이 Day1 CSV에서 나온다. 씬의 각 FieldNPC가 다른 actor의 Talk를 읽지 않는다.
+- **EDITOR-13**: 은재 Day1 트리에 어머니 Talk, 은재 상담, 엔딩과 `after` 카드가 연결돼 보이고, `again`·`@intro`·`@idle`·`@abyss`는 보조 카드로 보인다.
+- **EDITOR-14**: Day1 CSV의 GUID가 기존 Dialogue 파일과 같고, 씬에 남은 옛 Talk·Ending CSV 참조가 없으며, 이전 후 `EyeMaze/기획 데이터 검사`에 오류가 없다. 인물별 대사를 수정해 Play Mode에서 변경 값이 나타나는지 확인한다.
 - **EDITOR-15**: 분할선을 좌우로 끌면 텍스트·트리 뷰 너비가 함께 바뀌고, 창을 닫았다 다시 열어도 비율이 유지된다. 창이 500px 이상일 때 어느 뷰도 250px 아래로 줄지 않으며, 더 좁으면 반씩 표시된다.
 - **EDITOR-16**: 은재 Day1의 `:again` 노드를 가로·세로로 늘린 뒤 파일과 창을 다시 열면 크기가 유지된다. 확대 상태에서도 모서리·연결점·카드 판정이 표시 위치와 일치한다.
 - **EDITOR-17**: 노드를 클릭하면 선택 테두리가 생기고 텍스트 뷰가 해당 `:id` 줄로 이동한다. 다른 노드를 클릭하거나 빈 곳을 클릭하면 선택이 바뀌거나 해제되고, 기존 카드·연결선 드래그는 계속 동작한다.
 - **EDITOR-18**: `:again` 노드를 선택해 F2로 `:again_later`로 바꾸면 텍스트·CSV의 ID가 함께 바뀐다. Dialogue 노드와 일반 Ending ID를 바꾸면 각각 `goto`와 `ending` 참조도 갱신되고 Ctrl+Z로 한 번에 되돌아간다. 중복·빈 ID와 예약 ID는 변경되지 않는다.
 - **EDITOR-19**: 은재 Day1의 선택지 행을 클릭해 Enter로, 또는 더블 클릭으로 편집을 시작하면 곧바로 입력할 수 있고, 글을 바꾸면 그 행의 `text`와 텍스트 뷰의 `*` 줄, CSV가 함께 바뀌고 `response`·`goto`는 유지된다. Talk·Ending·Strings 행도 `Line:` 본문만 바뀐다. Escape는 취소하고 빈 Dialogue 선택지는 오류를 보여주며 저장하지 않는다. 확정 후 Ctrl+Z 한 번으로 원래 글이 복구된다.
-- **EDITOR-20**: 은재 Day1의 `trust=-1, dilation=0` 선택지는 `신뢰 -1`, `trust=1, dilation=0.15` 선택지는 `신뢰 +1 · 동공 +0.15`, 둘 다 0이면 `수치 변화 없음`으로 보인다. 0이 아닌 `spring`은 별도 줄에 실행 미적용으로 보인다. 텍스트 뷰에서 값을 바꾸면 표시가 갱신된다.
-- **EDITOR-21**: 은재·지수 Day1 CSV의 `truth`·`leave` 행에 기존 씬의 신뢰 기준과 열쇠 파편 Flag ID, `burden_limit=1`이 기록된다. Play Mode에서 신뢰·파편·부담 조건을 바꿔 보면 새 CSV 값대로 `truth`·`half`·`leave`가 선택된다.
-- **EDITOR-22**: 트리의 핵심 접촉에서 `truth`·`half`로 가는 선, 낮은 신뢰·부담에서 `leave`로 가는 선, 선택지에서 `delete`·`expose` 같은 직접 엔딩으로 가는 선에 각각 현재 조건이 보인다.
+- **EDITOR-20**: 은재 Day1의 `trust=-1, dilation=0` 선택지는 `신뢰 -1`, `trust=1, dilation=0.15` 선택지는 `신뢰 +1 · 동공 +0.15`, 둘 다 0이면 `수치 변화 없음`으로 보인다. 텍스트 뷰에서 값을 바꾸면 표시가 갱신된다.
+- **EDITOR-21**: 은재 Day1 CSV의 `truth`·`leave` 행에 기존 씬의 신뢰 기준과 열쇠 파편 Flag ID, `burden_limit=1`이 기록된다. Play Mode에서 신뢰·파편·부담 조건을 바꿔 보면 새 CSV 값대로 `truth`·`half`·`leave`가 선택된다.
+- **EDITOR-22**: 트리의 핵심 접촉에서 `truth`·`half`로 가는 선, 낮은 신뢰·부담에서 `leave`로 가는 선, 선택지에서 `delete` 같은 직접 엔딩으로 가는 선에 각각 현재 조건이 보인다.
 - **EDITOR-23**: 트리에서 `truth` 또는 `half`의 신뢰 기준과 `leave`의 신뢰·부담 기준을 바꾸면 텍스트와 CSV의 해당 열이 바뀌고, Play Mode 엔딩 판정도 바뀐다. 범위를 벗어난 부담 값은 저장되지 않는다.
 - **EDITOR-24**: 은재 Day1 트리에서 열쇠 파편을 다른 은재 파편으로 바꾸면 `key_flag`가 바뀌고, Play Mode에서 새 대상의 획득 여부로 엔딩이 갈린다. 없는 Flag ID와 다른 케이스 파편은 저장되지 않는다.
-- **EDITOR-25**: `delete` 또는 `expose`로 향하는 선택지 선에서 `need` 플래그를 추가·제거하면 텍스트·CSV가 함께 바뀌고, Play Mode에서 그 플래그 충족 여부에 따라 선택 가능 상태가 달라진다.
-- **EDITOR-26**: 선택지 아래 수치 줄을 클릭해 신뢰·동공·`spring` 중 하나를 고치면 텍스트·CSV·표시가 일치한다. Play Mode에서는 신뢰·동공 변경이 적용된다. 잘못된 수치는 저장되지 않고 Ctrl+Z로 유효한 변경 하나가 되돌아간다.
+- **EDITOR-25**: `delete`로 향하는 선택지 선에서 `need` 플래그를 추가·제거하면 텍스트·CSV가 함께 바뀌고, Play Mode에서 그 플래그 충족 여부에 따라 선택 가능 상태가 달라진다.
+- **EDITOR-26**: 선택지 아래 수치 줄을 클릭해 신뢰·동공 중 하나를 고치면 텍스트·CSV·표시가 일치한다. Play Mode에서는 신뢰·동공 변경이 적용된다. 잘못된 수치는 저장되지 않고 Ctrl+Z로 유효한 변경 하나가 되돌아간다.
 - **EDITOR-27**: 은재 회차를 사용하는 `ClientCase`가 열린 씬에 있으면 은재 기억 파편 노드가 모두 보인다. `eunjae_piano_hands`에서 해당 선택지로, `eunjae_empty_seat`에서 `truth` 엔딩으로 의존선이 보인다. 씬에 해당 `ClientCase`가 없으면 파편 노드는 표시되지 않아도 대화 CSV와 트리는 정상 표시된다.
 - **EDITOR-28**: 은재 어머니의 Talk 노드에서 대사를 추가할 때 `은재`를 고르면 새 CSV 행의 `actor`는 `EunjaeMom`, `speaker`는 `은재`가 된다. 기본 화자를 고르면 `speaker`가 비고, 서술과 `???`도 각 예약값으로 저장된다. 기존 대사 행을 우클릭해 화자를 `은재`로 바꾸면 그 행의 `speaker`만 `은재`로 바뀌고, 기본 화자로 되돌리면 비며, Ctrl+Z로 되돌아간다.
 - **EDITOR-29**: 은재 `truth` 엔딩의 `after` 카드를 수정하면 텍스트 뷰와 회차 CSV의 첫 `truth` 행 `after`가 함께 바뀐다. Escape는 취소하고 Ctrl+Z는 변경을 되돌린다. 빈 값으로 확정하면 카드가 사라지고, 엔딩 노드 우클릭의 `after 추가`로 다시 만들 수 있다.

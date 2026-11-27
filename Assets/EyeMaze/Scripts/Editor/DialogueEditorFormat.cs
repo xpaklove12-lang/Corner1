@@ -40,7 +40,6 @@ namespace EyeMaze.EditorTools
             public string[] NumberColumns;
         }
 
-        public const string MEMO = "memo";
         public const string GOTO = "goto";
         public const string ENDING = "ending";
         public const string TEXT = "text";
@@ -48,7 +47,8 @@ namespace EyeMaze.EditorTools
         /// <summary>인물·회차 CSV의 머리글 순서</summary>
         public static readonly string[] DAY_COLUMNS =
         {
-            "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring",
+            // 선택지 spring 수치 제거
+            "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation",
             // 스펙 015: 선택지의 감정 열 emotion 추가
             "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need", "emotion",
         };
@@ -73,8 +73,9 @@ namespace EyeMaze.EditorTools
             BodyColumn = TEXT,
             GroupColumns = new[] { "situation", "back" },
             // 스펙 015: 선택지 속성에 emotion 추가
-            ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "spring", "memo", "ending", "rest", "ending_need", "emotion" },
-            NumberColumns = new[] { "trust", "dilation", "spring" },
+            // 선택지 spring 수치 제거 (ItemColumns, NumberColumns)
+            ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "memo", "ending", "rest", "ending_need", "emotion" },
+            NumberColumns = new[] { "trust", "dilation" },
         };
 
         private static readonly Schema EndingSchema = new Schema
@@ -818,7 +819,8 @@ namespace EyeMaze.EditorTools
                 {
                     if (!known.Contains(f)) issues.Add(new Issue { Line = line, Message = $"플래그 '{f}'가 Flags.csv에 없다." });
                     else if (!computed.Contains(f) && !setters.ContainsKey(f) && !setHere.Contains(f))
-                        issues.Add(new Issue { Line = line, Error = false, Message = $"플래그 '{f}'를 켜는 곳(파편/단서/set)이 없어 열리지 않는다." });
+                        // 필드 단서 표현 제거
+                        issues.Add(new Issue { Line = line, Error = false, Message = $"플래그 '{f}'를 켜는 곳(파편/set)이 없어 열리지 않는다." });
                 }
                 foreach (string f in Split(set))
                 {

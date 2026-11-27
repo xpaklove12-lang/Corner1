@@ -8,7 +8,7 @@ namespace EyeMaze
     /// <summary>
     /// 인물·회차 CSV(Data/Dialogue/인물_DayN.csv)에서 section=dialogue 행을 읽은 결과.
     /// 줄 하나가 선택지 하나이고, 같은 id 값을 가진 줄들이 한 장면이 된다. 첫 장면이 시작 장면이다.
-    /// 열: id, situation, text, response, need, set, trust, dilation, spring, goto, ending, back, rest, ending_need, emotion (그 밖의 열은 이 단계에서 무시).
+    /// 열: id, situation, text, response, need, set, trust, dilation, goto, ending, back, rest, ending_need, emotion (그 밖의 열은 이 단계에서 무시).
     /// section 열이 없는 옛 형식 파일은 node 열을 장면 id로 읽는다.
     /// 자세한 규칙은 Data/README.md에 있다.
     /// </summary>
@@ -29,7 +29,6 @@ namespace EyeMaze
             public string[] Set = Array.Empty<string>();
             public int Trust;
             public float Dilation;
-            public int Spring;
             public string Goto;
             public string Ending;
             /// <summary>스펙 014 FR-038: 고른 뒤 ending으로 갈지 가르는 조건. 비면 고르는 즉시 ending으로 간다.</summary>
@@ -139,7 +138,6 @@ namespace EyeMaze
                     Set = r.List("set"),
                     Trust = r.Int("trust", s.Errors),
                     Dilation = r.Float("dilation", s.Errors),
-                    Spring = r.Int("spring", s.Errors),
                     Goto = r["goto"],
                     Ending = r["ending"],
                     EndingNeed = r.List("ending_need"),

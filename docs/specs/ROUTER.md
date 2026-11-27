@@ -6,7 +6,7 @@
 
 1. **동작을 바꾸면 그 기능을 이미 다루는 영역 스펙을 고친다. 같은 기능에 대해 새 스펙 파일을 만들지 않는다.** 아래 표에서 담당 스펙을 찾아, 그 스펙의 요구사항·수치 표를 먼저 고치고, 코드를 고친 뒤 "5. 코드 위치"를 갱신한다.
 2. 한 변경이 여러 스펙에 걸치면 **걸리는 스펙을 모두** 같은 변경에서 고친다(아래 "여러 스펙에 걸치는 변경").
-3. 새 스펙은 이 라우터에서 찾아도 맞는 스펙이 없는 **새 기능 영역**일 때만 만든다. 만들 때는 [`_TEMPLATE.md`](_TEMPLATE.md)를 복사해 번호 없는 이름(소문자 영어, 낱말은 `-`로 잇는다. 예: `field-clue.md`)으로 두고, 새 요구사항 ID 접두어를 정해 이 라우터의 표와 [`README.md`](README.md)의 스펙 목록에 등록한다.
+3. 새 스펙은 이 라우터에서 찾아도 맞는 스펙이 없는 **새 기능 영역**일 때만 만든다. 만들 때는 [`_TEMPLATE.md`](_TEMPLATE.md)를 복사해 번호 없는 이름(소문자 영어, 낱말은 `-`로 잇는다. 예: `weather.md`)으로 두고, 새 요구사항 ID 접두어를 정해 이 라우터의 표와 [`README.md`](README.md)의 스펙 목록에 등록한다.
 4. 요구사항 ID 범위는 각 스펙의 지금 번호다. 스펙에 요구사항을 더하거나 지우면 이 표의 범위도 함께 고친다.
 
 ## 주제 → 스펙
@@ -56,9 +56,6 @@
 | 눈 속에서 보이는 "하고 싶은 말이 있는 거 같다" 안내 | [`burden.md`](burden.md) | BURDEN-36 |
 | 손님의 감정(평온, 경계, 불안, 슬픔, 안도)과 시작 감정 | [`emotion-maze.md`](emotion-maze.md) | EMO-01~02, EMO-10 |
 | 감정마다 달라지는 눈 모양(눈꺼풀, 홍채 색, 눈물, 시선 피함) | [`emotion-maze.md`](emotion-maze.md) | EMO-03, EMO-11~12 |
-| 감정에 따라 미로에 나타나고 사라지는 사물 | [`emotion-maze.md`](emotion-maze.md) | EMO-04~05, EMO-09, EMO-13~14 |
-| 사물이 길을 막거나, 밀어내거나, 길을 내는 방식 | [`emotion-maze.md`](emotion-maze.md) | EMO-06~08, EMO-18, EMO-20 |
-| 사물 그림의 위치와 크기, 어지러움 반경 | [`emotion-maze.md`](emotion-maze.md) | EMO-16~17, EMO-19 |
 | 미로 속 파편의 맥동과 빛 번짐 | [`memory-fragments.md`](memory-fragments.md) | MEM-01 |
 | 파편을 주울 때 고리 연출과 기억 목록 줄 강조 | [`memory-fragments.md`](memory-fragments.md) | MEM-02~05 |
 | 파편에 닿으면 들어가는 회상 장면 그림과 회상 방 | [`memory-fragments.md`](memory-fragments.md) | MEM-06~10 |
@@ -67,7 +64,6 @@
 | 회상 중에 멈추는 것(부담감, 깜빡임, R, Q)과 대화 기록 | [`memory-fragments.md`](memory-fragments.md) | MEM-21~24 |
 | 새 선택지가 열렸다는 안내와 `관찰 중지` 버튼 맥동 | [`memory-fragments.md`](memory-fragments.md) | MEM-34~37 |
 | 기억 목록 줄을 눌러 파편 요약 보기, 회상 다시 재생 | [`memory-fragments.md`](memory-fragments.md) | MEM-38~44 |
-| 기억 잇기(실 잇기) | [`memory-fragments.md`](memory-fragments.md) | ~~MEM-25~33~~ 폐기 |
 | 대사 편집기 창, 텍스트 뷰와 노드 뷰 | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-01~10, EDITOR-15~19 |
 | 인물·회차별 대사 CSV 형식과 게임 연결 | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-11~14 |
 | 엔딩 조건(truth, half, leave)과 열쇠 파편 | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-21~25, EDITOR-35, EDITOR-37 |
@@ -81,6 +77,20 @@
 | 소파 착석 높이와 소파 앞부분 가림 | [`field.md`](field.md) | FIELD-06 |
 | 걷기 GIF 제작과 프레임 보간 | [`field.md`](field.md) | FIELD-07~08 |
 | 말을 걸 수 있는 NPC 테두리 | [`field.md`](field.md) | FIELD-11~12 |
+| 인트로 컷툰 칸 순서, 넘기기 입력(Space·Enter·클릭), 쪽 넘김, 암전, R로 다시 보기, 자동 진행 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-01~07 |
+| 인트로 컷툰 숫자패드 1~5 쪽 바로 가기(확인용 임시 키) | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-33 |
+| 인트로 컷툰 칸 연출(이동·크기·투명도, 번쩍임, 눈 감김, 2쪽 흔들림은 폐기) | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-08, ~~CUT-09~~ 폐기, CUT-10~11 |
+| 인트로 컷툰 그레이 박스 칸 모양, 라벨, 하단 안내 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-12~13 |
+| 인트로 컷툰 그레이 박스 씬을 다시 까는 메뉴 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-14 |
+| 인트로 컷툰 1·2쪽 3D 블록아웃 칸, 칸 카메라 구도(부감, 줌인, 상반신) | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-15~17, CUT-19 |
+| 인트로 컷툰 1-2 칸 테두리를 넘는 운석 그림자 | [`intro-cuttoon.md`](intro-cuttoon.md) | ~~CUT-18~~ 폐기 |
+| 인트로 컷툰 1-2 그림자가 올 때 칸 어두워짐(칸 흔들림은 폐기) | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-21, ~~CUT-22~~ 폐기 |
+| 인트로 컷툰 1-2 그림자가 오기 전에 카메라 가까이를 지나 달아나는 흰 새 떼, 날갯짓 연출 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-26, CUT-27 |
+| 인트로 컷툰 3D 오브젝트 이동·회전·크기 연출, 3D 재질 색 연출 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-20, CUT-36 |
+| 인트로 컷툰 1-3 카메라가 머리 둘레로 돌며 뒤로 빠져 최종 구도로 가는 연출, 카메라 궤도 연출 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-23, CUT-25 |
+| 인트로 컷툰 1-3 `?`를 머리 옆에 같은 간격으로 붙이기 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-24 |
+| 인트로 컷툰 2-1 위를 올려다보는 시민 얼굴 정면 클로즈업, 호기심에서 경악으로 점진적으로 바뀌는 표정(눈썹, 눈, 동공 확장, 입), 동공에 비쳐 점점 커지는 운석 | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-28, CUT-32, CUT-37 |
+| 인트로 컷툰 2-2 시민이 올려다본 시점, 실제로 다가오는 운석과 달아오른 공기 띠, 다가올수록 짙어지는 운석과 살구빛이 되는 띠, 천천히 흐르는 구름과 구름을 지나 나오는 운석, 띠의 뜨거운 쪽과 띠가 닿아 뜯기는 구름 가장자리, 묵직하게 떠나 빨라지며 하늘을 닫는 운석(효과음 글자는 폐기) | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-29~30, CUT-34~35, ~~CUT-31~~ 폐기 |
 
 ## 코드 파일 → 스펙
 
@@ -88,20 +98,19 @@
 
 | 코드 | 스펙 |
 |---|---|
-| `Runtime/EyeMazeDirector.cs` | 기능마다 나뉜다: 깜빡임·벽 재생성은 [`blink-maze.md`](blink-maze.md), 부담감·밀려남·휴식 신호는 [`burden.md`](burden.md), 선택지·문·대화 기록은 [`dialogue.md`](dialogue.md), 감정·사물은 [`emotion-maze.md`](emotion-maze.md), 파편·회상·해금 안내는 [`memory-fragments.md`](memory-fragments.md), CSV 엔딩 판정은 [`dialogue-editor.md`](dialogue-editor.md) |
+| `Runtime/EyeMazeDirector.cs` | 기능마다 나뉜다: 깜빡임·벽 재생성은 [`blink-maze.md`](blink-maze.md), 부담감·밀려남·휴식 신호는 [`burden.md`](burden.md), 선택지·문·대화 기록은 [`dialogue.md`](dialogue.md), 감정·눈 표현은 [`emotion-maze.md`](emotion-maze.md), 파편·회상·해금 안내는 [`memory-fragments.md`](memory-fragments.md), CSV 엔딩 판정은 [`dialogue-editor.md`](dialogue-editor.md) |
 | `Runtime/EyeMazeUI.cs` | [`blink-maze.md`](blink-maze.md)(BLINK-13, BLINK-16), [`burden.md`](burden.md)(부담감 막대, BURDEN-27, BURDEN-36), [`dialogue.md`](dialogue.md)(공통 선택지, 안내 문구), [`memory-fragments.md`](memory-fragments.md)(기억 목록, 해금 안내) |
 | `Runtime/BlinkTurnPreset.cs` | [`blink-maze.md`](blink-maze.md) |
 | `Runtime/MazeWall.cs`, `Runtime/MazeWallChangeEffect.cs` | [`blink-maze.md`](blink-maze.md) |
 | `Runtime/GazeCursor.cs` | [`blink-maze.md`](blink-maze.md) |
-| `Runtime/MazeLayer.cs` | [`blink-maze.md`](blink-maze.md), [`emotion-maze.md`](emotion-maze.md)(사물 묶음의 부모 층) |
+| `Runtime/MazeLayer.cs` | [`blink-maze.md`](blink-maze.md) |
 | `Runtime/MazeGate.cs` | [`dialogue.md`](dialogue.md)(DLG-21, DLG-40), [`burden.md`](burden.md)(잠긴 문 접촉), [`blink-maze.md`](blink-maze.md)(벽 변화 연출) |
-| `Runtime/IrisMaze.cs` | [`blink-maze.md`](blink-maze.md)(벽 생성), [`dialogue.md`](dialogue.md)(층 문 생성), [`emotion-maze.md`](emotion-maze.md)(사물 위치·이동 판정), [`burden.md`](burden.md)(초점 요동), [`memory-fragments.md`](memory-fragments.md)(선 재질) |
+| `Runtime/IrisMaze.cs` | [`blink-maze.md`](blink-maze.md)(벽 생성), [`dialogue.md`](dialogue.md)(층 문 생성), [`burden.md`](burden.md)(초점 요동), [`memory-fragments.md`](memory-fragments.md)(선 재질) |
 | `Runtime/EyeVisual.cs` | [`blink-maze.md`](blink-maze.md)(눈꺼풀, BLINK-12), [`burden.md`](burden.md)(눈물, BURDEN-25), [`emotion-maze.md`](emotion-maze.md)(감정 눈 표현), [`dialogue.md`](dialogue.md)(초점 저장값, DLG-06) |
 | `Runtime/Pupil.cs` | [`burden.md`](burden.md)(떨림, BURDEN-24), [`emotion-maze.md`](emotion-maze.md)(감정용 입력) |
 | `Runtime/ClientTearCue.cs` | [`burden.md`](burden.md), [`emotion-maze.md`](emotion-maze.md)(EMO-11) |
-| `Runtime/ClientEmotion.cs`, `Runtime/EmotionLook.cs`, `Runtime/MazeProp.cs` | [`emotion-maze.md`](emotion-maze.md) |
-| `Runtime/ClientCase.cs` | [`emotion-maze.md`](emotion-maze.md)(시작 감정, 사물 묶음), [`dialogue.md`](dialogue.md)(문 플래그, DLG-41), [`dialogue-editor.md`](dialogue-editor.md)(회차 CSV 연결) |
-| `Runtime/DialogueNode.cs` | [`dialogue.md`](dialogue.md), [`emotion-maze.md`](emotion-maze.md)(`emotion` 값) |
+| `Runtime/ClientEmotion.cs`, `Runtime/EmotionLook.cs` | [`emotion-maze.md`](emotion-maze.md) |
+| `Runtime/ClientCase.cs` | [`emotion-maze.md`](emotion-maze.md)(시작 감정, 감정별 눈 표현), [`dialogue.md`](dialogue.md)(문 플래그, DLG-41), [`dialogue-editor.md`](dialogue-editor.md)(회차 CSV 연결) |
 | `Runtime/DialogueScript.cs` | [`dialogue-editor.md`](dialogue-editor.md), [`burden.md`](burden.md)(`rest` 칸), [`emotion-maze.md`](emotion-maze.md)(`emotion` 칸) |
 | `Runtime/TalkScript.cs` | [`dialogue-editor.md`](dialogue-editor.md), [`burden.md`](burden.md)(`rest` 묶음), [`opening.md`](opening.md) |
 | `Runtime/EndingScript.cs` | [`dialogue-editor.md`](dialogue-editor.md) |
@@ -118,32 +127,33 @@
 | `Runtime/Flags.cs` | [`dialogue.md`](dialogue.md)(문 플래그), [`memory-fragments.md`](memory-fragments.md)(파편 플래그) |
 | `Runtime/Strings.cs` | [`opening.md`](opening.md)(`Strings.csv` 문구), [`dialogue-editor.md`](dialogue-editor.md)(`Strings.csv` 편집) |
 | `Runtime/Shapes.cs` | [`blink-maze.md`](blink-maze.md), [`memory-fragments.md`](memory-fragments.md) |
-| `Runtime/MemoryFragment.cs`, `Runtime/FragmentFeedback.cs` | [`memory-fragments.md`](memory-fragments.md), [`emotion-maze.md`](emotion-maze.md)(사물 투명도 계산 공유) |
+| `Runtime/MemoryFragment.cs`, `Runtime/FragmentFeedback.cs` | [`memory-fragments.md`](memory-fragments.md) |
 | `Runtime/FlashbackPlayer.cs`, `Runtime/FlashbackRoom.cs`, `Runtime/FlashbackProp.cs`, `Runtime/FlashbackScript.cs` | [`memory-fragments.md`](memory-fragments.md)(MEM-06~24) |
 | `Runtime/FieldPlayer.cs`, `Runtime/FieldRoom.cs` | [`memory-fragments.md`](memory-fragments.md)(회상 방 안 이동), `FieldPlayer.cs`는 [`field.md`](field.md)(주인공 외형과 걷기, FIELD-02·09·10)도 함께 |
 | `Runtime/SofaForeground.cs`, `Assets/EyeMaze/Art/SofaForeground.shader` | [`field.md`](field.md)(FIELD-06, feature/charactrers-model-add 브랜치) |
 | `Assets/EyeMaze/Art/NpcInteractionOutline.shader`, `Assets/EyeMaze/Art/NpcInteractionOutline.mat` | [`field.md`](field.md)(FIELD-11~12, feature/charactrers-model-add 브랜치) |
 | `Assets/EyeMaze/Arts/FieldCharacters/` | [`field.md`](field.md)(FIELD-01, FIELD-05, FIELD-07~08, feature/charactrers-model-add 브랜치) |
 | `Runtime/FragmentRecapUI.cs` | [`memory-fragments.md`](memory-fragments.md)(MEM-38~44) |
-| `Runtime/MemoryLinkScript.cs`, `Runtime/MemoryThread.cs` | [`memory-fragments.md`](memory-fragments.md)(폐기된 기억 잇기, MEM-25~33) |
 | `Editor/DialogueEditorWindow.cs`, `Editor/DialogueEditorDocument.cs`, `Editor/DialogueEditorFormat.cs`, `Editor/DialogueEditorGraph.cs`, `Editor/DialogueData.cs` | [`dialogue-editor.md`](dialogue-editor.md), 열 목록은 [`emotion-maze.md`](emotion-maze.md)(EMO-15)도 함께 |
 | `Editor/EyeInspectors.cs` | [`blink-maze.md`](blink-maze.md), [`burden.md`](burden.md)(BURDEN-06), [`dialogue.md`](dialogue.md)(DLG-05, DLG-13) |
 | `Editor/FieldInspectors.cs` | [`dialogue.md`](dialogue.md) |
 | `Assets/EyeMaze/Data/Dialogue/<인물>_DayN.csv` | [`dialogue-editor.md`](dialogue-editor.md)(형식), 칸 의미는 [`dialogue.md`](dialogue.md)·[`burden.md`](burden.md)·[`emotion-maze.md`](emotion-maze.md) |
 | `Assets/EyeMaze/Data/Flashbacks.csv` | [`memory-fragments.md`](memory-fragments.md) |
+| `Assets/IntroCuttoon/Scripts/Runtime/Cuttoon*.cs`, `Assets/IntroCuttoon/Scripts/Editor/IntroCuttoonGrayboxBuilder.cs` | [`intro-cuttoon.md`](intro-cuttoon.md) |
 
 ## 요구사항 ID 접두어 → 스펙
 
 | 접두어 | 스펙 | 지금 범위 |
 |---|---|---|
 | `BLINK` | [`blink-maze.md`](blink-maze.md) | BLINK-01~41 |
-| `BURDEN` | [`burden.md`](burden.md) | BURDEN-01~36 |
+| `BURDEN` | [`burden.md`](burden.md) | BURDEN-01~36 (BURDEN-34~35 폐기) |
 | `DLG` | [`dialogue.md`](dialogue.md) | DLG-01~44 |
-| `EMO` | [`emotion-maze.md`](emotion-maze.md) | EMO-01~20 |
+| `EMO` | [`emotion-maze.md`](emotion-maze.md) | EMO-01~20 (EMO-04~09, EMO-13~14, EMO-16~20 폐기) |
 | `MEM` | [`memory-fragments.md`](memory-fragments.md) | MEM-01~44 (MEM-25~33 폐기) |
 | `EDITOR` | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-01~38 |
 | `OPEN` | [`opening.md`](opening.md) | OPEN-01~06 |
 | `FIELD` | [`field.md`](field.md) | FIELD-01~12 |
+| `CUT` | [`intro-cuttoon.md`](intro-cuttoon.md) | CUT-01~37 (CUT-09, CUT-18, CUT-22, CUT-31 폐기) |
 
 옛 번호(`015`, `스펙 010 FR-017` 등)로 적힌 커밋이나 코드 주석은 [`README.md`](README.md) 2절 대응표로 새 ID를 찾는다.
 
@@ -153,7 +163,6 @@
 |---|---|
 | 대사 CSV에 새 열 추가 | `dialogue-editor`(머리글 목록, 편집기 열 목록) + 그 열을 쓰는 동작 영역(예: `emotion` 열은 `emotion-maze`, `rest` 열은 `burden`) |
 | 새 감정 추가 | `emotion-maze`(`ClientEmotion`, 눈 표현 값) + `dialogue-editor`(`emotion` 열 값) + 회상 뒤 감정을 쓰면 `memory-fragments`(MEM-18) |
-| 새 감정 사물 종류 추가 | `emotion-maze` + 밀려남을 쓰면 `burden`(BURDEN-12~18) + 깜빡임 회전과 겹치면 `blink-maze` |
 | 깜빡임 중이나 회상 중 멈추는 것 바꾸기 | `blink-maze`(BLINK-15, BLINK-21, BLINK-40) + `burden`(BURDEN-01, BURDEN-20) + `memory-fragments`(MEM-21, MEM-24) |
 | 층 문을 여는 조건 바꾸기 | `dialogue`(DLG-20~23, DLG-40~44) + `memory-fragments`(파편 플래그, MEM-34 해금 안내) + 잠긴 문 접촉이 바뀌면 `burden`(BURDEN-19~22) |
 | 새 회상 추가 | `memory-fragments`(`Flashbacks.csv`, 회상 방) + 감정이 바뀌면 `emotion-maze` + 문 선택지를 열면 `dialogue`(DLG-42, DLG-44) + 편집기 파편 노드가 필요하면 `dialogue-editor`(EDITOR-27, EDITOR-34) |

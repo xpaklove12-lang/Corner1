@@ -6,7 +6,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 공용 문구 표 (Data/Strings.csv). 열: key, text, memo.
-    /// 태엽/조작 안내, 시스템 메시지, 오프닝 독백, 잠긴 문, 층 이름처럼 특정 사람에 속하지 않는 글을 둔다.
+    /// 조작 안내, 시스템 메시지, 오프닝 독백, 잠긴 문, 층 이름처럼 특정 사람에 속하지 않는 글을 둔다.
     /// 같은 key를 여러 줄에 쓰면 여러 줄짜리 글(예: 오프닝 독백)이 된다.
     /// 글 안의 {name} 같은 칸은 게임이 채운다 (key마다 쓸 수 있는 칸은 memo에 적어 둔다).
     /// 표에 없는 key는 코드에 적힌 기본 글을 쓴다.
@@ -84,8 +84,5 @@ namespace EyeMaze
             Ensure();
             return Table.TryGetValue(key, out List<string> list) && list.Count > 0 ? new List<string>(list) : null;
         }
-
-        /// <summary>표에 있는 key들 (에디터 검사용)</summary>
-        public static IEnumerable<string> Keys { get { Ensure(); return Table.Keys; } }
     }
 }

@@ -12,7 +12,7 @@
   - 첫 노드가 아닐 때 보이는 공통 선택지 `다른 이야기를 해볼까요?`와 키·버튼 선택, 만남 UI의 4번째 선택지 버튼과 선택지 버튼 4개 배치, 디렉터 인스펙터의 같은 버튼, 대화 안내 문구
   - 한 번 고른 안 좋은 말을 선택지 목록에서 빼기, 안 좋은 말의 감점이 문을 막지 않게 하기
   - 층 사이 문을 플래그로 여는 조건, 인물별로 문마다 여는 플래그 설정, 문을 여는 선택지의 `need`(그 층 단서 전부)와 `set`(문 플래그) 데이터, 선택지 반응 뒤 신뢰 안내와 문 안내 문구의 분리
-  - 필드 글 상자에 나온 대사(말한 사람 + 대사, 단서 살펴보기 문구 포함), 만남 대화의 장면 상황 문구·고른 선택지·상대 반응, 엔딩 마음의 소리 대사 기록
+  - 필드 글 상자에 나온 대사(말한 사람 + 대사), 만남 대화의 장면 상황 문구·고른 선택지·상대 반응, 엔딩 마음의 소리 대사 기록
   - L 키, 게임패드 Select(View) 버튼으로 여닫는 대화 기록 창. 메신저처럼 플레이어가 고른 말은 오른쪽, 상대의 말은 왼쪽 말풍선, 상대 말 왼쪽에 말한 사람 얼굴(초상화), 목록 오른쪽 세로 스크롤바, 창이 열린 동안 게임 일시정지와 입력 차단
   - 대화 기록 전용 Canvas 프리팹 `DialogueLogCanvas`와 그 인스턴스를 `EyeMaze` 씬에 배치
   - 컷신 빨리감기 구간: 시작 독백부터 문 앞 혼잣말 B가 닫힐 때까지(`OpeningMonologue` 재생, `FieldCutscene`의 `CallFirst`, `CallTalking`), 문 상호작용 직후부터 은재 착석 뒤 서술이 끝날 때까지(`FieldCutscene`의 `Arrive`부터 `Reveal`까지), 상담이 끝난 뒤 앞 손님 퇴장부터 다음 손님 착석·첫마디까지(`FieldCutscene`의 `ClientOut`부터 `ClientGreet`까지)
@@ -31,14 +31,14 @@
   - 대화 기록의 파일 저장, 다음 플레이로 이어지는 기록, 기록에서 대사 다시 듣기, 특정 지점으로 되돌아가기
   - 문 상호작용을 기다리는 구간(`WaitDoor`). 플레이어가 직접 문을 열어야 한다.
   - 상담(눈 속 미로, `GameFlow.State.Encounter`)과 줌 인·줌 아웃 구간의 빨리감기
-  - 플레이어가 직접 말을 걸어 연 필드 대화와 단서 글의 빨리감기
+  - 플레이어가 직접 말을 걸어 연 필드 대화의 빨리감기
   - 한 번 눌러 목표 지점으로 바로 건너뛰는 기능
   - 시작 독백 화면의 빨리감기 안내 표시
 
 ### 선택하지 않은 방식
 
 - 태엽 시스템을 담당하던 `WindingIntro`를 이름만 바꿔 남기는 방식은 남는 역할이 입력 한 줄과 문구 두 개뿐이라 쓰지 않는다.
-- 공통 선택지를 노드마다 `DialogueOption` 하나씩 추가하는 방식은 노드가 늘 때마다 같은 데이터를 반복해서 넣어야 하고, 선택지 칸(1~3번)을 이미 다 쓰고 있어서 쓰지 않는다.
+- 공통 선택지를 노드마다 선택지 하나씩 추가하는 방식은 노드가 늘 때마다 같은 데이터를 반복해서 넣어야 하고, 선택지 칸(1~3번)을 이미 다 쓰고 있어서 쓰지 않는다.
 - 신뢰 기준값을 올려 문이 덜 열리게 하는 방식은 쓰지 않는다(여전히 무관한 선택지가 문을 연다). 단서를 모두 모으면 선택지 없이 문이 저절로 열리는 방식은 쓰지 않는다(문은 대화의 결과로 열려야 한다).
 - 대화 기록 전체를 `Text` 하나에 넣는 방식은 줄마다 왼쪽, 오른쪽 정렬을 나눌 수 없어 쓰지 않는다.
 - 대화 기록 줄 칸을 런타임에 `Instantiate`로 늘리는 방식은 UI를 코드로 만들지 않는 규칙 때문에 쓰지 않는다. 칸은 프리팹에 미리 둔다.
@@ -122,12 +122,10 @@
 - **DLG-41** `[승인]` 손님을 불러올 때와 씬에 저장된 상담으로 Play를 시작할 때 `EyeMazeDirector`는 그 인물의 `ClientCase._gateFlags`를 `IrisMaze.SetGateFlags()`로 넘긴다. `IrisMaze.Generate()`는 층 번호 N(1부터)의 문을 만들 때 목록의 N-1번째 플래그를 `_requiredFlag`로 넣고 신뢰 조건을 끈다. 목록에 그 자리가 없거나 비어 있으면 신뢰 N을 조건으로 넣는다.
 - **DLG-42** `[승인]` 문을 여는 선택지는 대화 CSV의 `need` 칸에 그 층의 파편 플래그를 모두 적는다. `need`의 플래그가 모두 켜져야 그 선택지를 고를 수 있다.
 - **DLG-43** `[승인]` 문을 여는 선택지는 대화 CSV의 `set` 칸에 문 플래그를 적는다. 선택지를 고르면 그 플래그가 켜진다.
-- **DLG-44** `[승인]` 지수와 은재의 문 플래그와 문을 여는 선택지는 아래 표와 같다.
+- **DLG-44** `[승인]` 은재의 문 플래그와 문을 여는 선택지는 아래 표와 같다.
 
 | 인물 | 문 | 문 플래그 | `need` (모두 필요) | 문을 여는 선택지 |
 |------|----|-----------|--------------------|------------------|
-| 지수 | 0층 → 1층 | `jisu_gate_1` | `jisu_messenger_0312`, `jisu_elevator_mirror` | `smile` 장면의 "대답이 빠른 편이시네요…" |
-| 지수 | 1층 → 2층 | `jisu_gate_2` | `jisu_resignation`, `jisu_autopay_25` | `work` 장면의 "떠나고 싶은 마음이랑 붙잡는 마음이…" |
 | 은재 | 0층 → 1층 | `eunjae_gate_1` | `eunjae_piano_hands`, `eunjae_closed_piano` | `window` 장면의 "쇼팽 녹턴 20번…" |
 | 은재 | 1층 → 2층 | `eunjae_gate_2` | `eunjae_red_button`, `eunjae_voicemail`, `eunjae_phone_flipped` | `red_eyes` 장면의 "그날 일, 다들 아는 이야기랑…" |
 
@@ -407,7 +405,7 @@ flowchart TD
 |---|---|---|
 | DLG-01 | `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs` | `HandleInput()`, `ToggleGaze()` |
 | DLG-02 | `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs`, `Assets/EyeMaze/Scripts/Runtime/GameFlow.cs` | `ShowEncounterGuide()`, `GameFlow.EnterEncounterNow()` |
-| DLG-03 | `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs`, `Assets/EyeMaze/Scripts/Runtime/DialogueNode.cs` | `ChooseOption()`, `DialogueOption` |
+| DLG-03 | `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs` | `ChooseOption()` |
 | DLG-04, DLG-05 | `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs`, `Assets/EyeMaze/Scripts/Runtime/EyeMazeUI.cs`, `Assets/EyeMaze/Scripts/Editor/EyeInspectors.cs`, `Assets/EyeMaze/Scripts/Editor/FieldInspectors.cs` | 화면 문구, `EyeMazeDirectorEditor`, `GameFlowEditor` |
 | DLG-06 | `Assets/Scenes/EyeMaze.unity` | `EyeVisual._focus`, `IrisMaze._focus` |
 | DLG-07 | `Assets/EyeMaze/Scripts/Runtime/EyeMazeUI.cs`, `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs` | `EyeMazeUI.Update()`, `CanReturnToStart`, `ReturnText` |
@@ -428,7 +426,7 @@ flowchart TD
 | DLG-37 | `Assets/EyeMaze/Scripts/Runtime/GameFlowUI.cs` | `Update()`의 `_fieldHint` |
 | DLG-38, DLG-39 | `Assets/EyeMaze/Scripts/Runtime/FastForwardOverlay.cs`, `Assets/EyeMaze/Shaders/FastForwardLines.shader`, `Assets/EyeMaze/Materials/FastForwardLines.mat` | `FastForwardOverlay` |
 | DLG-41 | `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs`, `Assets/EyeMaze/Scripts/Runtime/IrisMaze.cs`, `Assets/EyeMaze/Scripts/Runtime/ClientCase.cs`, `Assets/EyeMaze/Scripts/Runtime/MazeGate.cs` | `RebuildMaze()`, `IrisMaze.SetGateFlags()`, `IrisMaze.Generate()`, `MazeGate.Setup()`, `ClientCase._gateFlags` |
-| DLG-42 ~ DLG-44 | `Assets/EyeMaze/Data/Dialogue/Jisu_Day1.csv`, `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`, `Flags.csv` | 문을 여는 선택지의 `need`, `set`, 문 플래그 정의 |
+| DLG-42 ~ DLG-44 | `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`, `Flags.csv` | 문을 여는 선택지의 `need`, `set`, 문 플래그 정의 |
 
 ### 구조
 
@@ -438,7 +436,6 @@ flowchart TD
 | 클래스 | `GameFlow` | 만남에 들어갈 때 `EyeMazeDirector.ShowEncounterGuide()`를 부른다. 필드 대사를 기록하고, 대화 기록 창이 열린 동안 입력을 받지 않는다 |
 | 클래스 | `EyeMazeUI` | 상황과 안내 문구를 표시한다. 4번째 버튼을 보이거나 숨기고, 글을 표시한다 |
 | 클래스 | `EyeMazeDirectorEditor` | 에디트 모드에서 공통 선택지를 버튼으로 보여 준다 |
-| 클래스 | `DialogueOption` | `Spring` 없이 신뢰, 동공, 반응, 엔딩만 가진다 |
 | 클래스 | `MazeGate` | 여는 플래그가 있으면 플래그로, 없으면 신뢰 조건으로 통과를 판단한다 |
 | 클래스 | `ClientCase` | 인물의 문 플래그 목록(`_gateFlags`)을 가진다 |
 | 클래스 | `IrisMaze` | 문 플래그 목록을 받아 두고 층 문을 만들 때 넣는다 |
@@ -451,7 +448,7 @@ flowchart TD
 | 셰이더 | `EyeMaze/FastForwardLines` (`Assets/EyeMaze/Shaders/FastForwardLines.shader`) | 무작위 가로줄 노이즈를 그리는 UI 셰이더 |
 | 재질 | `FastForwardLines.mat` (`Assets/EyeMaze/Materials/`) | 가로줄 셰이더 설정값(행 수, 밀도, 바뀌는 빈도, 밝기, 투명도, 길이 변화) |
 | 데이터 | `Flags.csv` | 문 플래그 정의 |
-| 데이터 | `Jisu_Day1.csv`, `Eunjae_Day1.csv` | 문을 여는 선택지의 `need`, `set` |
+| 데이터 | `Eunjae_Day1.csv` | 문을 여는 선택지의 `need`, `set` |
 | 프리팹 | `DialogueLogCanvas` | `Assets/EyeMaze/Prefabs/DialogueLogCanvas.prefab`. 대화 기록 전용 Canvas와 창 구성 |
 | 씬 | `EyeMaze` | 태엽 오브젝트와 태엽 UI 칸이 없다. `대화 칸/속지/선택지 4` 버튼을 가진다. 최상위에 `DialogueLogCanvas` 프리팹 인스턴스 `대화 기록 (Canvas)`를 가진다. `게임 흐름 (Game Flow)` 오브젝트에 `CutsceneFastForward`가 붙어 있고, `UI (Canvas)` 마지막 자식으로 `빨리감기 연출` 오브젝트를 둔다 |
 
@@ -468,7 +465,7 @@ flowchart TD
 
 ### 구현 방식
 
-- 공통 선택지는 `DialogueNode` 데이터에 넣지 않고 `EyeMazeDirector.ReturnToStart()`로 처리한다. UI는 별도 버튼 하나로 표시한다.
+- 공통 선택지는 대화 데이터에 넣지 않고 `EyeMazeDirector.ReturnToStart()`로 처리한다. UI는 별도 버튼 하나로 표시한다.
 - 층 문: `MazeGate`에 여는 플래그(`_requiredFlag`)가 있다. 플래그가 적힌 문은 `Flags.IsOn()`이 참일 때만 지나갈 수 있고 신뢰는 보지 않는다. 플래그는 대화 CSV의 `set` 칸으로 선택지가 켠다. 문을 여는 선택지는 `need` 칸에 그 층의 파편 플래그를 `|`로 모두 적어, 전부 켜져야 고를 수 있게 한다. 층 문은 `IrisMaze`가 벽 묶음 아래에 만든다.
 - 대화 기록:
   - 사용 기술: uGUI `Canvas`(Screen Space - Overlay), `CanvasScaler`, `GraphicRaycaster`, `ScrollRect`, `RectMask2D`, `Scrollbar`, `Text`, `Image`, `VerticalLayoutGroup`, `HorizontalLayoutGroup`, `LayoutElement`, `ContentSizeFitter`, Unity Input System `Keyboard`, `Gamepad`
@@ -561,17 +558,17 @@ flowchart TD
 - **DLG-12**: 대화 중 하단 안내에 `숫자키 대화`가 보인다.
 - **DLG-13**: 에디트 모드에서 두 번째 노드로 넘긴 뒤 인스펙터 버튼으로 첫 노드로 돌아가고, Ctrl+Z로 되돌릴 수 있다.
 - **DLG-14**: 01 노드에서 2번으로 넘어간 뒤 뒤로가기로 돌아와 다시 2번을 고르면, 신뢰와 동공은 그대로이고 `이미 한 이야기다.`가 보이며 02 노드로 넘어간다.
-- **DLG-15**: `smile` 장면 1번을 고르면 신뢰가 1 내려가고 반응 문구가 보인다.
-- **DLG-16**: DLG-15 직후 그 선택지가 사라지고 나머지가 1번부터 다시 번호가 매겨진다. 지수의 `smile` 장면에서 엘리베이터 거울 파편을 본 뒤 `웃는 얼굴이… 조금 무거워 보여요.`를 고르면 반응이 나온 뒤 그 선택지가 사라지고, 문을 여는 `대답이 빠른 편이시네요…`는 고른 뒤에도 남는다.
+- **DLG-15**: 안 좋은 말을 고르면 신뢰가 내려가고 반응 문구가 보인다.
+- **DLG-16**: DLG-15 직후 그 선택지가 사라지고 나머지가 1번부터 다시 번호가 매겨진다.
 - **DLG-17**: DLG-16 뒤 숫자키 1과 첫 번째 버튼이 화면의 1번 선택지를 고른다.
 - **DLG-18**: 숨긴 뒤 다른 장면에 갔다 돌아오거나 Q로 나갔다 돌아와도 숨겨져 있고, R을 누르면 다시 보인다.
-- **DLG-19**: `work`, `home` 장면에서 안 좋은 말을 골라도 새 선택지가 생기지 않고, 남은 선택지와 뒤로가기만 보인다.
+- **DLG-19**: 안 좋은 말을 골라도 새 선택지가 생기지 않고, 남은 선택지와 뒤로가기만 보인다.
 - **DLG-20**: 은재 `window`에서 안 좋은 말을 고른 뒤 단서 선택지를 고르면 Inspector의 `Trust`는 0이지만 첫 문이 열린다.
 - **DLG-21**: DLG-20 상태에서 노란 문이 열린 색으로 바뀌고 지나갈 수 있으며, 두 번째 문은 잠겨 있다.
 - **DLG-22**: 문을 여는 선택지를 고르면 `(눈 속 어딘가의 문이 열렸다.)`가 나오고, 신뢰만 오르는 선택지에서는 `(신뢰가 깊어졌다.)`만 나온다.
 - **DLG-23**: DLG-20 뒤 R을 누르면 첫 문이 다시 잠긴다.
 - **DLG-24**: `_rows`를 3칸으로 줄이고 대사 5줄을 본 뒤 창을 열면 마지막 3줄만 보인다. R로 리셋하거나 다른 손님을 만나도 이전 기록이 남아 있다.
-- **DLG-25**: 필드에서 NPC에게 말을 걸어 여러 줄 대화를 넘긴 뒤 창을 열면 각 줄이 말한 사람 이름과 함께 순서대로, 중복 없이 보인다. 단서를 살펴본 문구는 이름 없이 보인다.
+- **DLG-25**: 필드에서 NPC에게 말을 걸어 여러 줄 대화를 넘긴 뒤 창을 열면 각 줄이 말한 사람 이름과 함께 순서대로, 중복 없이 보인다.
 - **DLG-26**: 만남에서 선택지를 하나 고른 뒤 창을 열면 `가운데 상황 → 오른쪽 선택지 말풍선 → 왼쪽 손님 이름과 반응 말풍선 → 가운데 다음 장면 상황` 순서로 보인다. 신뢰/동공 변화 문구와 잠긴 선택지 안내는 보이지 않는다.
 - **DLG-27**: 엔딩에 들어가 마음의 소리를 끝까지 넘긴 뒤 창을 열면 모든 엔딩 줄이 이름 없이 순서대로 보인다.
 - **DLG-28**: 필드, 만남, 엔딩 중 L 또는 Select로 창이 열리고 다시 누르면 닫힌다. 열린 상태에서 Esc 또는 B로 닫힌다. 시작 독백 중에는 L을 눌러도 열리지 않는다.
@@ -588,13 +585,13 @@ flowchart TD
 - **DLG-39**: 빨리감기 중 화면 가운데의 큰 `▶▶`가 꺼지지 않고 흐려졌다 밝아지기를 부드럽게 반복하고, 빨리감기가 끝나면 함께 사라진다.
 - **DLG-40**: 문 플래그가 꺼진 동안에는 신뢰를 아무리 올려도 그 문에서 막힌다. 문 플래그가 켜지면 신뢰가 0이어도 지나간다.
 - **DLG-41**: 깜빡임으로 미로가 바뀐 뒤에도 연 문은 열려 있고, 안 연 문은 닫혀 있다.
-- **DLG-42**: 지수의 0층 단서를 하나만 본 상태에서는 "대답이 빠른 편이시네요…" 선택지를 고를 수 없고, 둘 다 보면 고를 수 있다.
+- **DLG-42**: 은재의 0층 단서를 하나만 본 상태에서는 "쇼팽 녹턴 20번…" 선택지를 고를 수 없고, 둘 다 보면 고를 수 있다.
 - **DLG-43**: 그 선택지를 고르면 1층으로 가는 문이 열린다.
-- **DLG-44**: 은재와 지수 모두 표의 선택지 네 개로만 층 문이 열린다.
+- **DLG-44**: 은재는 표의 선택지 두 개로만 층 문이 열린다.
 
 ## 8. 알려진 문제
 
-- 태엽 시스템은 제거됨. `WindingIntro`, `_wound`, 용량(`Capacity`), `_editStepUnwind`, `DialogueOption`의 `Spring`, 씬의 `태엽 (Mainspring)`, `눈 (Eye)/태엽 톱니 (Crown)`, `UI (Canvas)/만남 UI/태엽 막대 칸`, `UI (Canvas)/만남 UI/톱니 칸`, `gear_white.png`가 없다.
+- 태엽 시스템은 제거됨. `WindingIntro`, `_wound`, 용량(`Capacity`), `_editStepUnwind`, 씬의 `태엽 (Mainspring)`, `눈 (Eye)/태엽 톱니 (Crown)`, `UI (Canvas)/만남 UI/태엽 막대 칸`, `UI (Canvas)/만남 UI/톱니 칸`, `gear_white.png`가 없다.
 - DLG-21의 신뢰 기준 문 판정과 DLG-40의 플래그 문 판정이 함께 있다. 문 플래그가 있는 인물은 DLG-40만 쓰고, 문 플래그가 없는 인물만 DLG-21의 신뢰 판정을 쓴다.
 - DLG-03의 검증 문장("두 번째부터 `이미 한 이야기다.`가 나온다")은 DLG-16에 따라 신뢰와 동공만 바꾸는 좋은 말이 사라진 뒤에는 맞지 않고, 흐름에 필요한 좋은 말에만 맞는다.
 - DLG-29 검증에 쓰는 부담감 막대는 다른 영역(`BURDEN-01`~`BURDEN-09`(`burden.md`)) 기능이다.

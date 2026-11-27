@@ -24,7 +24,6 @@
   - 신호 중 장면 설명 자리에 내담자가 쉬자고 말하는 대사
   - 쉬어 주고 상담실로 돌아온 직후 내담자의 일러스트와 대화창으로 보여 주는 리액션 대사
   - 쉬고 돌아왔을 때의 부담감 감소와 문구
-  - 지수의 `home` 장면, 병원비 단서로 여는 선택지 하나에 휴식 신호 추가
 - 제외:
   - 대화 중 시간에 따른 부담감 자연 감소
   - 부담감에 따른 눈 연출(떨림, 화면 어두워짐). 휴식 신호의 떨림과 흐려짐은 포함한다
@@ -97,8 +96,8 @@
 - **BURDEN-31** `[구현완료]` `BURDEN-30` 뒤 `ClientTearCue`는 떨림, 눈물, 초점을 `_tearFallSeconds`에 걸쳐 원래대로 되돌린다.
 - **BURDEN-32** `[구현완료]` 신호 상태가 아닐 때 Q를 누르면 `GameFlow`는 바로 필드로 나가고 부담감은 바뀌지 않는다.
 - **BURDEN-33** `[구현완료]` `ResetAll`이 호출될 때 `EyeMazeDirector`는 휴식 상태를 끄고 `ClientTearCue`는 떨림, 눈물, 초점을 바로 되돌린다.
-- **BURDEN-34** `[구현완료]` 지수의 `home` 장면에서 `jisu_autopay_25`로 여는 선택지의 `rest` 칸에는 쉬자는 대사가 들어 있다.
-- **BURDEN-35** `[구현완료]` 지수 대화 CSV의 `talk` 행 `rest` 묶음에는 쉬어 준 뒤의 리액션 대사가 들어 있다.
+- ~~**BURDEN-34**~~ `[폐기]` (폐기: 2026-11-27 지수 제거)
+- ~~**BURDEN-35**~~ `[폐기]` (폐기: 2026-11-27 지수 제거)
 - **BURDEN-36** `[구현완료]` 신호 상태에서 눈을 들여다볼 때 `EyeMazeUI`는 눈 속 표시 아래에 `{name}가 하고 싶은 말이 있는 거 같다. 잠시 관찰을 멈춰보자.`를 표시한다.
 
 ### 예외 및 경계 조건
@@ -123,7 +122,7 @@
 - `_knockbackDistance`가 0: 밀려나지 않고 연출만 적용된다.
 - 잠긴 문에 붙어 계속 누르고 있음: 막힌 상태가 이어지는 동안은 접촉 1회로 센다. `_gatePushGap`초 이상 떨어졌다 다시 막혀야 다음 1회다.
 - 서로 다른 잠긴 문에 번갈아 부딪힘: 문을 구분하지 않고 합쳐서 센다.
-- 일반 벽과 감정 미로 사물(`EMO-01`~`EMO-20`(`emotion-maze.md`))에 닿음: 접촉 횟수에 넣지 않는다.
+- 일반 벽에 닿음: 접촉 횟수에 넣지 않는다.
 - 시선을 거두거나 `ResetAll()`이 호출됨: 접촉 횟수를 0으로 되돌린다.
 - 에디트 모드: 부딪힘을 시작하지 않는다.
 - 초점이 요동하는 동안 벽, 문, 파편이 매 프레임 다시 그려진다 (현재 씬 벽 약 190개). 연출 시간 동안만 일어난다.
@@ -273,15 +272,6 @@ flowchart TD
 | 속지 | (0, 0) | (1, 1) | (-20, -20) | 예전 속지와 같음 |
 | 채움 | (0, 0) | (1, 1) | (-12, -12) | 붉은색 (1, 0.3, 0.25, 0.9), 피벗 (0.5, 0), 세로 스케일 = 부담감 |
 
-### 휴식 신호 데이터
-
-| 데이터 | 값 |
-|------|------|
-| `Jisu_Day1.csv` `dialogue` 행 `home` 장면, `jisu_autopay_25` 선택지의 `rest` 칸 | `"…잠시 상담을 멈춰도 될까요? 너무 감정이 북받쳐 오르네요."` |
-| `Jisu_Day1.csv` `talk` 행 `rest` 묶음 1 | `"…죄송해요. 갑자기 멈춰 달라고 해서."` |
-| `Jisu_Day1.csv` `talk` 행 `rest` 묶음 2 | `"이런 얘기, 회사에선 한 번도 안 해 봤거든요."` |
-| `Jisu_Day1.csv` `talk` 행 `rest` 묶음 3 | `"기다려 주셔서 감사해요. 이제 좀 괜찮아졌어요."` |
-
 ### 상태와 데이터
 
 | 이름 | 타입 | 설명 | 초기값 |
@@ -327,7 +317,6 @@ flowchart TD
 | BURDEN-28, BURDEN-32 | `Assets/EyeMaze/Scripts/Runtime/GameFlow.cs` | `Update()`의 Q 처리, `EyeMazeDirector.AcceptRest()` |
 | BURDEN-29 | `Assets/EyeMaze/Scripts/Runtime/GameFlow.cs`, `Assets/EyeMaze/Scripts/Runtime/TalkScript.cs` | `ReturnToFieldNow()`, `FieldNPC.TryTalk()`, `TalkScript.Rest` |
 | BURDEN-30 | `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs` | `ShowEncounterGuide()` |
-| BURDEN-34, BURDEN-35 | `Assets/EyeMaze/Data/Dialogue/Jisu_Day1.csv` | `rest` 칸, `talk` 행 `rest` 묶음 |
 
 ### 구조
 
@@ -343,7 +332,6 @@ flowchart TD
 | 클래스 | Pupil | 동공을 떨리게 한다 |
 | 클래스 | GameFlow | 신호 중 Q로 승낙을 기록해 필드로 나가고, 돌아오면 리액션 대화를 연다 |
 | 클래스 | TalkScript | `rest`를 예약 묶음으로 두어 평소 말을 걸 때는 고르지 않는다 |
-| 데이터 | `Assets/EyeMaze/Data/Dialogue/Jisu_Day1.csv` | `rest` 칸이 있는 선택지 하나와 `talk` 행 `rest` 묶음의 리액션 대사를 가진다 |
 | 씬 | EyeMaze | `만남 UI/부담감 막대 칸/속지/채움`과 그 위의 `만남 UI/부담감 글`을 가진다. `EyeMazeDirector`에 `벽 부딪힘` 헤더의 Inspector 값을 저장한다. 눈물 메시는 Play 중에 만든다 |
 
 - 오브젝트 구성:
@@ -371,13 +359,13 @@ flowchart TD
 
 - **부르는 것**: `IrisMaze.Focus`, `MazeGate.CanPass`, `EyeVisual.Focus`, `EyeVisual.TearLevel`, `Pupil.Tremble`, `FieldNPC.TryTalk()`, `StartEnding()` (leave 엔딩)
 - **불리는 것**: `EyeMazeDirector.AcceptRest()` ← `GameFlow.Update()`의 Q 처리, `EyeMazeDirector.ShowEncounterGuide()` ← 만남 시작
-- **영향을 받는 것**: 깜빡임 회전과 벽 변화 연출 중에는 부담감이 차지 않는다 (`BURDEN-01` ↔ `BLINK-21`, `BLINK-40`(`blink-maze.md`)). 깜빡일 때 부담감 막대와 글이 함께 가려진다 (`BURDEN-05` ↔ `BLINK-16`(`blink-maze.md`)). 안 좋은 말이 목록에서 빠지는 규칙은 `DLG-16`(`dialogue.md`)을 따른다. 잠긴 문 접촉 횟수에서 감정 미로 사물(`EMO-01`~`EMO-20`(`emotion-maze.md`))은 뺀다.
+- **영향을 받는 것**: 깜빡임 회전과 벽 변화 연출 중에는 부담감이 차지 않는다 (`BURDEN-01` ↔ `BLINK-21`, `BLINK-40`(`blink-maze.md`)). 깜빡일 때 부담감 막대와 글이 함께 가려진다 (`BURDEN-05` ↔ `BLINK-16`(`blink-maze.md`)). 안 좋은 말이 목록에서 빠지는 규칙은 `DLG-16`(`dialogue.md`)을 따른다.
 
 ## 7. 검증 방법
 
 - BURDEN-01: 신뢰 0에서 깜빡임 회전 시간을 빼고 약 100초 동안 들여다보면 가득 찬다. 신뢰 2에서는 약 134초가 걸린다. 파편을 읽는 동안, 깜빡임 회전 중, 심연 안에서는 막대가 멈춰 있다.
 - BURDEN-02: 부담감이 있을 때 좋은 말을 처음 고르면 막대가 1/4만큼 줄고 `(부담이 조금 줄었다.)`가 보인다. 같은 말을 다시 고르면 줄지 않는다.
-- BURDEN-03: 가득 차는 순간 시선이 풀리고 `은재가 시선을 피했다. 더는 마주 보기 힘든 것 같다.` 뒤로 leave 엔딩 대사가 이어진다. 지수에게는 `지수가 시선을 피했다.`로 보인다.
+- BURDEN-03: 가득 차는 순간 시선이 풀리고 `은재가 시선을 피했다. 더는 마주 보기 힘든 것 같다.` 뒤로 leave 엔딩 대사가 이어진다.
 - BURDEN-04: 막대가 절반쯤 찬 상태에서 Q로 나갔다가 다시 말을 걸면 막대가 그대로다. R을 누르면 0이 된다.
 - BURDEN-05: 들여다보는 동안 눈 왼쪽의 붉은 막대가 아래에서 위로 차오른다. 눈을 깜빡일 때 막대도 함께 가려진다.
 - BURDEN-06: 디렉터 인스펙터 상태 줄에 `부담감 N%`가 보인다.
@@ -397,25 +385,22 @@ flowchart TD
 - BURDEN-20: 밀려나거나 흐려지는 도중 Q로 시선을 거두거나 R을 누르면 바로 멈추고, `IrisMaze` Focus 값이 부딪히기 전 값으로 돌아와 있다.
 - BURDEN-21: 기본 설정(`_bumpEnabled` 꺼짐)에서 잠긴 문에 한 번 또는 두 번 닿았다 떨어져도 부담감 막대가 오르지 않는다. 문에 붙어 방향키를 계속 누르고 있어도 오르지 않는다. 10초가 지난 뒤 다시 닿으면 1회부터 다시 센다.
 - BURDEN-22: 10초 안에 잠긴 문에서 떨어졌다 닿기를 세 번 하면 세 번째에 부담감 막대가 1/10만큼 오른다. 부담감이 90% 이상일 때 세 번째로 닿으면 leave 엔딩이 시작된다.
-- BURDEN-23: 지수의 `home` 장면에서 병원비 단서 선택지를 고르면 신호가 시작되고, 다른 선택지와 은재의 대화에서는 시작되지 않는다.
+- BURDEN-23: `rest` 칸이 채워진 선택지를 고르면 신호가 시작되고, `rest` 칸이 빈 선택지에서는 시작되지 않는다.
 - BURDEN-24: `BURDEN-23` 뒤 동공이 제자리에서 떨린다.
 - BURDEN-25: `BURDEN-23` 뒤 눈 아래쪽부터 눈물이 약 3초에 걸쳐 차오른다.
 - BURDEN-26: 눈물이 차오르는 동안 눈과 미로가 흐려진다.
 - BURDEN-27: 신호가 시작되면 `▶` 장면 설명이 쉬자는 대사로 바뀌고, 그 아래에 `(잠시 쉴 시간이 필요한 거 같다.)`가 보인다.
 - BURDEN-28: 신호 중 Q를 한 번 누르면 바로 상담실로 돌아간다.
-- BURDEN-29: 상담실로 돌아오면 지수의 일러스트와 대화창에 리액션 대사가 나오고 Z로 넘길 수 있다.
-- BURDEN-30: 돌아와서 지수에게 말을 걸면 부담감 막대가 0.4만큼 내려가고 돌아왔을 때 문구가 보인다.
+- BURDEN-29: 상담실로 돌아오면 그 손님의 일러스트와 대화창에 리액션 대사가 나오고 Z로 넘길 수 있다.
+- BURDEN-30: 돌아와서 그 손님에게 말을 걸면 부담감 막대가 0.4만큼 내려가고 돌아왔을 때 문구가 보인다.
 - BURDEN-31: `BURDEN-30` 뒤 약 1.5초에 걸쳐 눈물이 빠지고 눈과 미로가 선명해지며 동공이 멈춘다.
 - BURDEN-32: 신호 전에 Q로 나갔다 돌아오면 부담감 막대가 그대로다.
 - BURDEN-33: 신호 중 R을 누르면 눈물과 떨림이 바로 사라지고 초점이 원래대로 돌아온다.
-- BURDEN-34: `Jisu_Day1.csv`의 해당 줄 `rest` 칸에 대사가 있고, 은재의 대화 CSV에는 휴식 대사가 없다.
-- BURDEN-35: 상담이 끝난 뒤 지수에게 말을 걸어도 리액션 대사가 나오지 않는다.
-- BURDEN-36: 신호 중 Space로 들여다보면 눈 속 표시 아래에 `지수가 하고 싶은 말이 있는 거 같다. 잠시 관찰을 멈춰보자.`가 보인다.
+- BURDEN-36: 신호 중 Space로 들여다보면 눈 속 표시 아래에 `{name}`이 지금 손님 이름으로 바뀐 `{name}가 하고 싶은 말이 있는 거 같다. 잠시 관찰을 멈춰보자.`가 보인다.
 
 ## 8. 알려진 문제
 
 - 벽 부딪힘 밀려남과 지지직 연출(`BURDEN-11`~`BURDEN-19`)은 `_bumpEnabled` 기본값이 꺼져 있어 지금 게임에서 보이지 않는다.
-- 옛 스펙은 휴식 대사 위치를 `Data/Dialogue/Jisu.csv`의 `rest` 칸과 `Data/Talk/Jisu.csv`의 `rest` 묶음으로 적었다. 지금은 인물·회차별 통합 CSV `Assets/EyeMaze/Data/Dialogue/Jisu_Day1.csv` 하나에 `dialogue` 행과 `talk` 행으로 함께 들어 있어 본문을 이 파일 기준으로 적었다.
 - 옛 스펙은 은재의 대화 CSV에 `rest` 칸이 없다고 적었으나, 지금 `Eunjae_Day1.csv`는 통합 CSV 머리글에 `rest` 칸을 가진다. 칸은 모두 비어 있고 `talk` 행 `rest` 묶음도 없다.
 - 휴식 신호와 부담감 관련 화면 문구 일부는 `Strings.Get`의 기본 문구로 들어 있다. 문자열 표에서 바꿨는지는 확인하지 못함.
 

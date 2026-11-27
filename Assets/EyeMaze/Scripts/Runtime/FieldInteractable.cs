@@ -3,7 +3,7 @@ using UnityEngine.Serialization;
 
 namespace EyeMaze
 {
-    /// <summary>필드에서 Space로 상호작용할 수 있는 것 (사람, 단서).</summary>
+    /// <summary>필드에서 Space로 상호작용할 수 있는 것 (사람).</summary>
     public abstract class FieldInteractable : MonoBehaviour
     {
         [Header("상호작용")]
