@@ -26,3 +26,13 @@ Thumbs.db
 AGENTS.override.md
 claude.override.md
 .obsidian/
+# FMOD (자동으로 다시 만들어지는 파일)
+/FMOD/*/.cache/
+/FMOD/*/.unsaved/
+/FMOD/*/.user/
+/Assets/Resources/FMOD/FMODStudioCache.asset
+/Assets/Resources/FMOD/FMODStudioCache.asset.meta
+/Assets/StreamingAssets/*.bank
+/Assets/StreamingAssets/*.bank.meta
+fmod_editor.log
+/FMOD/*/Assets/Licensed/
