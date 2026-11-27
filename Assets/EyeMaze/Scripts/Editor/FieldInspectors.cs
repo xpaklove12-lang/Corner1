@@ -38,8 +38,9 @@ namespace EyeMaze.EditorTools
                     f.Player.transform.position = npc.transform.position + (f.Player.SideView ? Vector3.right : Vector3.down) * (npc.Radius + f.Player.Radius + 0.3f),
                     f.Player.transform);
 
+            // 필드 단서 표현 제거
             EditorGUILayout.HelpBox(
-                "필드의 모든 것(플레이어, 손님, 가구, 단서)은 Transform을 끌어서 옮긴다. 가구 크기는 FieldObstacle의 size로 바꾼다.\n" +
+                "필드의 모든 것(플레이어, 손님, 가구)은 Transform을 끌어서 옮긴다. 가구 크기는 FieldObstacle의 size로 바꾼다.\n" +
                 "눈 화면에서는 '게임 디렉터'의 버튼으로 Play 없이 미로와 대화를 진행할 수 있다.", MessageType.None);
             EditorGUILayout.Space();
             DrawDefaultInspector();
@@ -79,19 +80,6 @@ namespace EyeMaze.EditorTools
         private static void Step(FieldPlayer p, Vector2 dir)
         {
             EyeEditorOps.Run("플레이어 이동", () => { p.Facing = dir; p.MoveBy(dir * 0.4f); }, p.gameObject);
-        }
-    }
-
-    /// <summary>단서 인스펙터: 살펴본 상태를 바꾸는 버튼을 보여준다.</summary>
-    [CustomEditor(typeof(FieldClue))]
-    public class FieldClueEditor : Editor
-    {
-        public override void OnInspectorGUI()
-        {
-            DrawDefaultInspector();
-            var c = (FieldClue)target;
-            if (GUILayout.Button(c.Examined ? "살펴보지 않은 상태로" : "살펴본 상태로"))
-                EyeEditorOps.Run("단서", () => c.Examined = !c.Examined, c);
         }
     }
 }

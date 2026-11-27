@@ -10,7 +10,6 @@ namespace EyeMaze
     public class FieldRoom : MonoBehaviour
     {
         [Header("방")]
-        [SerializeField, FormerlySerializedAs("roomName")] private string _roomName = "상담실";
         [SerializeField, FormerlySerializedAs("size")] private Vector2 _size = new Vector2(12f, 7.5f);
         [SerializeField, FormerlySerializedAs("wallThickness")] private float _wallThickness = 0.18f;
 

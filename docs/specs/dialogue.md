@@ -102,8 +102,6 @@ L을 누르면 지난 대화를 메신저처럼 다시 볼 수 있다.
 
 | 인물 | 문 | 필요한 단서 | 여는 선택지 |
 |---|---|---|---|
-| 지수 | 0→1층 | `jisu_messenger_0312`, `jisu_elevator_mirror` | `smile` "대답이 빠른 편이시네요…" |
-| 지수 | 1→2층 | `jisu_resignation`, `jisu_autopay_25` | `work` "떠나고 싶은 마음이랑 붙잡는 마음이…" |
 | 은재 | 0→1층 | `eunjae_piano_hands`, `eunjae_closed_piano` | `window` "쇼팽 녹턴 20번…" |
 | 은재 | 1→2층 | `eunjae_red_button`, `eunjae_voicemail`, `eunjae_phone_flipped` | `red_eyes` "그날 일, 다들 아는 이야기랑…" |
 
@@ -164,6 +162,6 @@ L을 누르면 지난 대화를 메신저처럼 다시 볼 수 있다.
 | DLG-09 | `CutsceneFastForward` |
 | DLG-10 | `FastForwardOverlay` |
 | DLG-11 | `IrisMaze.SetGateFlags`, `MazeGate.CanPass` |
-| DLG-12 | `Dialogue/Jisu_Day1.csv`, `Dialogue/Eunjae_Day1.csv` |
+| DLG-12 | `Dialogue/Eunjae_Day1.csv` |
 
 </details>

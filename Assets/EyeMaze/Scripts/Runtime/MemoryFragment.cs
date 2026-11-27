@@ -60,8 +60,6 @@ namespace EyeMaze
         [NonSerialized] private bool _seen;
         [NonSerialized] private Color _seenColor;
         [NonSerialized] private bool _appeared;
-        // 다른 기억과 이었는지
-        [NonSerialized] private bool _linked;
 
         /// <summary>파편 이름. Flags.csv에서 이 파편 플래그 줄의 title 칸이 있으면 그걸 쓴다.</summary>
         public string Title => Flags.TitleOf(_flag) ?? Strings.Scene(_title);
@@ -72,9 +70,6 @@ namespace EyeMaze
         public string Flag => _flag;
         // 추가 파편 조건과 회상 본 상태 공개
         public string AppearAfter => _appearAfter;
-        public bool Seen => _seen;
-        // 이은 상태 공개
-        public bool Linked => _linked;
 
         /// <summary>주웠는지. 바꾸면 플래그도 함께 켜지고 꺼진다.</summary>
         public bool Collected
@@ -215,25 +210,12 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 다른 기억과 이은 것으로 표시하고 기억의 자리를 이은 뒤의 색으로 그린다.
-        /// color(이은 뒤의 기억의 자리 색)를 사용하며, _linked와 _seenColor를 바꾸고 다시 그리게 한다.
-        /// </summary>
-        public void MarkLinked(Color color)
-        {
-            _linked = true;
-            _seenColor = color;
-            _drawnKey = int.MinValue;
-        }
-
-        /// <summary>
         /// 회상 본 표시를 지운다.
-        /// 입력값은 없으며, _seen과 _linked를 끄고 다시 그리게 한다.
+        /// 입력값은 없으며, _seen을 끄고 다시 그리게 한다.
         /// </summary>
         public void ClearSeen()
         {
             _seen = false;
-            // 회상 본 표시와 함께 이은 상태도 지운다
-            _linked = false;
             _drawnKey = int.MinValue;
         }
 

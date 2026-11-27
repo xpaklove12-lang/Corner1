@@ -13,7 +13,6 @@ namespace EyeMaze
     public class CoreFragment : MonoBehaviour
     {
         [Header("파편")]
-        [SerializeField, FormerlySerializedAs("title")] private string _title = "가장 반짝이는 파편";
         [Tooltip("이 거리(미로 기준) 안으로 시선이 들어오면 닿은 것으로 친다")]
         [SerializeField, FormerlySerializedAs("touchRadius")] private float _touchRadius = 0.22f;
         [SerializeField, FormerlySerializedAs("touched")] private bool _touched;

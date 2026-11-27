@@ -68,8 +68,6 @@ namespace EyeMaze
         private float _phaseT;
         private float _mazeAlpha = 1f;
         private float _mazeTarget = 1f;
-        private string _flag;
-        private string _roomFlag;
         private FlashbackRoom _room;
         private FlashbackScript.Flashback _script;
         private Action _onFinished;
@@ -135,28 +133,28 @@ namespace EyeMaze
 
         /// <summary>
         /// 플래그의 회상을 재생할 수 있는지 확인한다.
-        /// flag(대본 플래그)와 roomFlag(방 플래그)를 사용하며, 재생기가 켜져 있고 회상 방과 회상 대본이 모두 있으면 true를 반환한다.
+        /// flag(대본과 방의 플래그)를 사용하며, 재생기가 켜져 있고 회상 방과 회상 대본이 모두 있으면 true를 반환한다.
         /// </summary>
-        public bool CanPlay(string flag, string roomFlag)
+        public bool CanPlay(string flag)
         {
+            // 추가 소품 묶음 제거: 방 플래그를 따로 받지 않고 대본 플래그로 방을 찾는다.
             // 수정(016): 재생기가 꺼져 있어도 회상을 시작해 입력이 잠기던 것을 글 표시로 넘어가게 바꿨다.
-            return isActiveAndEnabled && FindRoom(roomFlag) != null && FlashbackScript.Find(flag) != null;
+            return isActiveAndEnabled && FindRoom(flag) != null && FlashbackScript.Find(flag) != null;
         }
 
         /// <summary>
-        /// 회상을 시작한다. 미로를 가라앉히고 만남 UI를 숨기며 roomFlag 방의 장면 그림을 보여 주기 시작한다.
-        /// flag(대본 플래그), roomFlag(방 플래그), onFinished(끝났을 때 부를 콜백)를 사용하며, IsPlaying과 재생 상태, 카메라 복귀 값을 바꾼다.
+        /// 회상을 시작한다. 미로를 가라앉히고 만남 UI를 숨기며 flag 방의 장면 그림을 보여 주기 시작한다.
+        /// flag(대본과 방의 플래그), onFinished(끝났을 때 부를 콜백)를 사용하며, IsPlaying과 재생 상태, 카메라 복귀 값을 바꾼다.
         /// </summary>
-        public void Play(string flag, string roomFlag, Action onFinished)
+        public void Play(string flag, Action onFinished)
         {
             if (!Application.isPlaying || IsPlaying) return;
-            _room = FindRoom(roomFlag);
+            // 추가 소품 묶음 제거: 방 플래그 인자를 없애고 대본 플래그로 방을 찾는다.
+            _room = FindRoom(flag);
             _script = FlashbackScript.Find(flag);
             if (_room == null || _script == null) return;
 
             IsPlaying = true;
-            _flag = flag;
-            _roomFlag = roomFlag;
             _onFinished = onFinished;
             _cameraPosBefore = _camera.transform.position;
             _cameraSizeBefore = _camera.orthographicSize;
@@ -263,13 +261,12 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 회상 방을 켜고 추가 사물 묶음을 맞춘 뒤, 카메라를 방의 기준점과 크기로 옮기고 내담자를 시작 위치에 둔다.
-        /// _room, _flag, _roomFlag를 사용하며, 방 활성 상태, _props, 카메라 위치와 크기, 내담자 위치를 바꾼다.
+        /// 회상 방을 켠 뒤, 카메라를 방의 기준점과 크기로 옮기고 내담자를 시작 위치에 둔다.
+        /// _room을 사용하며, 방 활성 상태, _props, 카메라 위치와 크기, 내담자 위치를 바꾼다.
         /// </summary>
         private void EnterRoom()
         {
             _room.gameObject.SetActive(true);
-            _room.ApplyExtraSets(_flag, _roomFlag);
             _props = _room.ActiveProps();
             Vector3 cameraPoint = _room.CameraPoint.position;
             _camera.transform.position = new Vector3(cameraPoint.x, cameraPoint.y, _camera.transform.position.z);

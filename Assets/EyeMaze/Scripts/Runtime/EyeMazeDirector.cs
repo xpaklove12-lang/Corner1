@@ -47,11 +47,6 @@ namespace EyeMaze
         [SerializeField] private TextAsset _flashbacksCsv;
         [Tooltip("파편 회상을 재생하는 회상 화면. 비우면 모든 파편이 글로 나온다")]
         [SerializeField] private FlashbackPlayer _flashback;
-        // 이어지는 쌍 데이터와 실 연결 추가
-        [Tooltip("이어지는 기억의 쌍 (Data/Links.csv). Flags.csv와 같은 때에 읽는다. 비우면 쌍이 없는 것으로 본다")]
-        [SerializeField] private TextAsset _linksCsv;
-        [Tooltip("기억의 자리를 잇는 실 (IrisMaze 아래의 MemoryThread). 비우면 기억 잇기를 쓰지 않는다")]
-        [SerializeField] private MemoryThread _thread;
 
         [Header("상태")]
         [SerializeField, FormerlySerializedAs("mode")] private Mode _mode = Mode.Talk;
@@ -88,9 +83,6 @@ namespace EyeMaze
         [SerializeField, Range(0.01f, 1f)] private float _burdenLimit = 1f;
         [Tooltip("지금 진행 중인 엔딩 id")]
         [SerializeField, FormerlySerializedAs("currentEnding")] private string _currentEnding;
-        // 진엔딩에 그 인물의 모든 쌍 잇기를 요구하는 옵션 추가
-        [Tooltip("켜면 신뢰와 열쇠 파편 조건을 채워도 이 인물의 Links.csv 쌍을 모두 잇지 않았으면 half 엔딩이 된다")]
-        [SerializeField] private bool _truthNeedsAllLinks = true;
         // 케이스의 회차 CSV에서 읽은 열쇠 파편 Flag ID (비면 파편 조건 없음)
         private string _keyFlag = "";
 
@@ -137,9 +129,6 @@ namespace EyeMaze
         // 회상을 본 파편 자리의 표시 색 추가
         [Tooltip("회상을 본 파편 자리(기억의 자리)에 남는 표시 색")]
         [SerializeField] private Color _seenMarkColor = new Color(0.6f, 0.95f, 1f, 0.45f);
-        // 이은 뒤의 기억의 자리 색 추가
-        [Tooltip("다른 기억과 이은 뒤의 기억의 자리 표시 색")]
-        [SerializeField] private Color _linkedMarkColor = Color.white;
 
         [Header("부담감")]
         [Tooltip("지금 부담감 (0~1). 들여다보는 동안 차오르고, 가득 차면 leave 엔딩이 된다")]
@@ -197,12 +186,6 @@ namespace EyeMaze
         [SerializeField] private ClientEmotion _emotion = ClientEmotion.Calm;
         [Tooltip("눈 표현이 바뀌는 시간(초)")]
         [SerializeField] private float _emotionEyeSeconds = 1f;
-        [Tooltip("눈이 변하기 시작한 뒤 미로 사물이 바뀌기까지의 시간(초)")]
-        [SerializeField] private float _emotionMazeDelay = 1f;
-        [Tooltip("사물이 나타나고 사라지는 시간(초)")]
-        [SerializeField] private float _propFadeSeconds = 0.6f;
-        [Tooltip("사물이 바뀐 뒤 미로의 흐려짐과 무관하게 선명하게 보이는 시간(초)")]
-        [SerializeField] private float _propRevealSeconds = 1.5f;
         [Tooltip("시선 피함으로 동공이 비켜날 수 있는 최대 거리")]
         [SerializeField] private float _gazeShiftMax = 0.05f;
 
@@ -282,22 +265,11 @@ namespace EyeMaze
         [NonSerialized] private readonly EmotionLook _lookTo = new EmotionLook();
         [NonSerialized] private readonly EmotionLook _lookNow = new EmotionLook();
         [NonSerialized] private float _lookT = -1f;
-        // 사물 표시를 바꾸기까지 남은 시간(음수면 기다리지 않음), 시선 피함 적용 비율, 지금 손님의 사물 목록
-        [NonSerialized] private float _propDelayT = -1f;
+        // 시선 피함 적용 비율
         [NonSerialized] private float _gazeShiftWeight = 1f;
-        [NonSerialized] private readonly List<MazeProp> _props = new List<MazeProp>();
-        // 어지러움 연출로 흔들고 있는 벽과 이번 프레임에 흔들 벽
-        [NonSerialized] private readonly List<MazeWall> _wobbling = new List<MazeWall>();
-        [NonSerialized] private readonly Dictionary<MazeWall, (float amp, float speed)> _wobbleNow = new Dictionary<MazeWall, (float amp, float speed)>();
         // 회상 중인 파편, 시선이 칸을 벗어날 때까지 줍지 않는 새로 나타난 파편
         [NonSerialized] private MemoryFragment _flashbackFragment;
         [NonSerialized] private readonly List<MemoryFragment> _pickupWait = new List<MemoryFragment>();
-        // 시선이 서 있는 기억의 자리, 잇는 중인 두 기억과 쌍, 이은 쌍의 결과 플래그
-        [NonSerialized] private MemoryFragment _spotUnderCursor;
-        [NonSerialized] private MemoryFragment _linkFrom;
-        [NonSerialized] private MemoryFragment _linkTo;
-        [NonSerialized] private MemoryLinkScript.Link _linkPair;
-        [NonSerialized] private readonly HashSet<string> _linkedResults = new HashSet<string>();
 
         /// <summary>화면에 보여줄 선택지 하나 (뒤로가기 포함)</summary>
         public struct ChoiceView
@@ -415,8 +387,6 @@ namespace EyeMaze
             Flags.LoadDefinitions(_flagsCsv);
             // 회상 대본을 Flags.csv와 같은 때에 읽는다
             FlashbackScript.Load(_flashbacksCsv);
-            // 이어지는 쌍을 Flags.csv와 같은 때에 읽는다
-            MemoryLinkScript.Load(_linksCsv);
             EyeHooks.Repaint();
         }
 
@@ -428,19 +398,18 @@ namespace EyeMaze
             if (Application.isPlaying) _cursor.SnapTo(_startRing, _startSector);
             // 씬에 저장된 상담은 LoadCase를 거치지 않으므로 Play 시작 때 그 상담의 시작 감정으로 맞춘다.
             if (Application.isPlaying) ResetEmotion();
-            // 씬에 저장된 상담으로 시작해도 사물 칸을 피한 미로로 새로 만든다.
+            // 씬에 저장된 상담으로 시작해도 층 문 플래그가 들어간 미로로 새로 만든다.
             if (Application.isPlaying && _activeCase != null) RebuildMaze(_activeCase, true);
         }
 
         /// <summary>
-        /// 손님의 막음, 밀어냄 사물 칸(감정과 무관)을 미로에 알리고, generate가 켜져 있으면 그 손님의 시드로 미로를 새로 만든다.
-        /// c(손님)와 generate를 사용하며, 미로의 사물 칸 목록과 벽을 바꾼다.
+        /// 손님의 층 문 플래그를 미로에 알리고, generate가 켜져 있으면 그 손님의 시드로 미로를 새로 만든다.
+        /// c(손님)와 generate를 사용하며, 미로의 문 플래그 목록과 벽을 바꾼다.
         /// </summary>
         private void RebuildMaze(ClientCase c, bool generate)
         {
             // 이 손님의 층 문을 여는 플래그를 미로에 알린다.
             _maze.SetGateFlags(c.GateFlags);
-            _maze.SetLayoutProps(c.Props());
             if (generate) _maze.Generate(c.MazeSeed);
         }
 
@@ -451,13 +420,11 @@ namespace EyeMaze
             Flags.LoadDefinitions(_flagsCsv);
             // 회상 대본을 Flags.csv와 같은 때에 읽는다
             FlashbackScript.Load(_flashbacksCsv);
-            // 이어지는 쌍을 Flags.csv와 같은 때에 읽는다
-            MemoryLinkScript.Load(_linksCsv);
         }
 
         /// <summary>
         /// 계산 플래그의 condition에서 쓰는 수치를 알려준다.
-        /// name(trust / dilation / spring)을 사용하며, 지금 상대의 값 또는 null을 반환한다.
+        /// name(trust / dilation)을 사용하며, 지금 상대의 값 또는 null을 반환한다.
         /// </summary>
         private float? FlagValue(string name)
         {
@@ -506,8 +473,6 @@ namespace EyeMaze
             _tearCue.Tick(dt, _mode != Mode.Ending && (_restRequested || _restAccepted), _maze, _eye, _pupil);
             // 휴식 신호 뒤에 감정 전환을 진행하고 눈 표현을 전달한다.
             TickEmotion(dt);
-            // 시선이 다가오면 휴대폰이 뒤집히고, 피아노 둘레 벽이 흔들린다.
-            TickPropReactions();
 
             // 벽에 부딪힌 뒤 밀려남, 대기 시간, 초점 요동을 진행한다.
             TickKnockback(dt);
@@ -570,10 +535,6 @@ namespace EyeMaze
             ClientCase[] all = FindObjectsByType<ClientCase>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (ClientCase other in all)
                 foreach (GameObject g in other.FragmentGroups)
-                    if (g != null && g.activeSelf != (other == c)) g.SetActive(other == c);
-            // 불러온 손님의 사물 묶음만 켜고 다른 손님의 사물 묶음은 끈다
-            foreach (ClientCase other in all)
-                foreach (GameObject g in other.PropGroups)
                     if (g != null && g.activeSelf != (other == c)) g.SetActive(other == c);
 
             if (_maze != null) RebuildMaze(c, Application.isPlaying || _maze.Seed != c.MazeSeed);
@@ -639,8 +600,6 @@ namespace EyeMaze
             _velocity = Vector2.zero;
             if (_cursor != null) _cursor.Visible = true;
             _lastLayer = _maze != null && _cursor != null ? _maze.LayerOfRing(_cursor.Ring) : -1;
-            // 지금 손님의 사물을 모으고 지금 감정에 맞춰 표시를 정한다.
-            SyncProps();
             _message = Strings.Get("msg.gaze_on", ("name", Strings.Name(Name)));
         }
 
@@ -689,16 +648,14 @@ namespace EyeMaze
         /// <summary>
         /// 이번 이동에서 막힌 축의 벽 쪽 속도가 충분하면 부딪힘을 시작한다. 막힌 축의 반대 방향을 밀려나는 방향으로 정한다.
         /// mazeVelocity(미로 기준 속도), _hitRadial, _hitTangent를 사용하며, _knockbackDir, _knockbackT, _bumpCooldownT, _velocity를 바꾼다.
-        /// 부딪히면 _bumpFlash도 올린다. 같은 프레임에 밀어냄 사물로 밀려나기 시작했으면 다른 축의 벽 방향만 더해 정규화한다. _bumpEnabled가 꺼져 있으면 아무것도 하지 않는다.
+        /// 부딪히면 _bumpFlash도 올린다. _bumpEnabled가 꺼져 있으면 아무것도 하지 않는다.
         /// </summary>
         private void TryStartBump(Vector2 mazeVelocity)
         {
             if (!_bumpEnabled) return;
             // 파편을 읽기 시작한 프레임에는 밀려남을 시작하지 않는다.
             if (_mode != Mode.Gaze || _inAbyss || _reading) return;
-            // 같은 프레임에 밀어냄 사물로 밀려나기 시작했으면 벽 부딪힘을 건너뛰던 것을 다른 축의 벽 방향을 더해 정규화하게 바꿨다.
-            bool propPushNow = _knockbackT == 0f;
-            if (!propPushNow && (_bumpCooldownT > 0f || _knockbackT >= 0f)) return;
+            if (_bumpCooldownT > 0f || _knockbackT >= 0f) return;
             if (_hitRadial == 0 && _hitTangent == 0) return;
 
             float rad = _cursor.Angle * Mathf.Deg2Rad;
@@ -709,13 +666,6 @@ namespace EyeMaze
             // 벽을 따라 미끄러지거나 살짝 닿은 축은 거르고, 세게 막힌 축만 반대로 밀어낸다.
             if (_hitRadial != 0 && Mathf.Abs(Vector2.Dot(mazeVelocity, radialU)) >= _bumpMinSpeed) dir.x = -_hitRadial;
             if (_hitTangent != 0 && Mathf.Abs(Vector2.Dot(mazeVelocity, tangentU)) >= _bumpMinSpeed) dir.y = -_hitTangent;
-            // 사물이 이미 민 축은 빼고, 남은 벽 축이 있을 때만 사물 방향과 합친다.
-            if (propPushNow)
-            {
-                if (_knockbackDir.x != 0f) dir.x = 0f;
-                if (_knockbackDir.y != 0f) dir.y = 0f;
-                if (dir != Vector2.zero) dir += new Vector2(Mathf.Sign(_knockbackDir.x) * (_knockbackDir.x != 0f ? 1f : 0f), Mathf.Sign(_knockbackDir.y) * (_knockbackDir.y != 0f ? 1f : 0f));
-            }
             if (dir == Vector2.zero) return;
 
             _knockbackDir = dir.normalized;
@@ -981,34 +931,7 @@ namespace EyeMaze
             int trust = _person != null ? _person.Trust : 0;
             // key_flag가 정해져 있으면 그 파편을 주웠을 때만 충족된다. 파편을 못 찾았으면 충족되지 않는다.
             bool keyOk = string.IsNullOrEmpty(_keyFlag) ? _keyFragment == null || _keyFragment.Collected : _keyFragment != null && _keyFragment.Collected;
-            // 옵션이 켜져 있으면 이 인물의 쌍을 모두 이어야 truth가 된다
-            bool linksOk = !_truthNeedsAllLinks || AllCaseLinksDone();
-            StartEnding(trust >= _truthTrust && keyOk && linksOk ? "truth" : "half", null);
-        }
-
-        /// <summary>
-        /// 지금 손님의 파편으로 이루어진 쌍을 모두 이었는지 확인한다. 쌍이 없으면 항상 true다.
-        /// _activeCase와 _linkedResults를 사용하며, 잇지 않은 쌍이 없으면 true를 반환한다.
-        /// </summary>
-        private bool AllCaseLinksDone()
-        {
-            foreach (MemoryLinkScript.Link l in CaseLinks())
-                if (!_linkedResults.Contains(l.Result)) return false;
-            return true;
-        }
-
-        /// <summary>
-        /// Links.csv에서 a와 b가 모두 지금 손님의 파편 플래그인 쌍을 모은다.
-        /// _activeCase와 읽은 쌍 목록을 사용하며, 그 쌍 목록을 반환한다. 손님이 없으면 빈 목록이다.
-        /// </summary>
-        private List<MemoryLinkScript.Link> CaseLinks()
-        {
-            var list = new List<MemoryLinkScript.Link>();
-            if (_activeCase == null) return list;
-            var flags = new HashSet<string>(_activeCase.Fragments().Select(f => f.Flag));
-            foreach (MemoryLinkScript.Link l in MemoryLinkScript.Links)
-                if (flags.Contains(l.A) && flags.Contains(l.B)) list.Add(l);
-            return list;
+            StartEnding(trust >= _truthTrust && keyOk ? "truth" : "half", null);
         }
 
         /// <summary>
@@ -1318,12 +1241,6 @@ namespace EyeMaze
         public void ChooseOption2() => ChooseOption(2);
 
         /// <summary>
-        /// 네 번째 선택지(보통 뒤로가기)를 고른다. UI 버튼에서 쓴다.
-        /// 입력값은 없으며, ChooseOption(3)과 같은 상태를 바꾼다.
-        /// </summary>
-        public void ChooseOption3() => ChooseOption(3);
-
-        /// <summary>
         /// 공통 선택지를 고르고 대화를 시작 장면으로 되돌린다. 신뢰, 동공, 파편, 이야기 기록은 그대로 둔다.
         /// 입력값은 없으며, 지금 장면과 지나온 장면 목록, 문구를 바꾼다.
         /// </summary>
@@ -1391,7 +1308,7 @@ namespace EyeMaze
             DialogueScript script = Script;
             _currentNodeId = script != null && script.Root != null ? script.Root.Id : "";
             _nodeHistory.Clear();
-            // 이 대화의 선택지가 켜는 플래그는 만남을 다시 시작하면 끈다 (단서처럼 필드에서 켠 플래그는 유지).
+            // 이 대화의 선택지가 켜는 플래그는 만남을 다시 시작하면 끈다 (필드에서 켠 플래그는 유지).
             if (script != null) foreach (string f in script.FlagsSet()) Flags.Set(f, false);
             _message = IntroText;
             _blinkAmount = 0f;
@@ -1425,8 +1342,6 @@ namespace EyeMaze
             foreach (MemoryFragment f in Fragments) f.Collected = false;
             // 기억의 자리를 지우고, 회상 뒤에 나타나는 파편을 다시 숨긴다
             ResetFlashbackFragments();
-            // 든 실을 없애고, 이 손님 쌍의 결과 플래그와 이은 뒤 남은 실을 되돌린다
-            ResetLinks();
             if (_maze != null) foreach (MazeLayer l in _maze.Layers) l.Offset = 0;
             if (_cursor != null) { _cursor.SnapTo(_startRing, _startSector); _cursor.Visible = false; }
         }
@@ -1449,29 +1364,12 @@ namespace EyeMaze
             }
         }
 
-        /// <summary>
-        /// 든 실을 없애고, 지금 손님 쌍 중 이은 쌍의 결과 플래그를 끄며, 그 파편들의 이은 뒤 남은 실을 지운다.
-        /// _thread, _activeCase, _linkedResults를 사용하며, 결과 플래그, _linkedResults, _spotUnderCursor, 실 상태를 바꾼다.
-        /// </summary>
-        private void ResetLinks()
-        {
-            _spotUnderCursor = null;
-            if (_thread != null) _thread.Release();
-            if (_activeCase == null) return;
-            foreach (MemoryLinkScript.Link l in CaseLinks())
-            {
-                if (!_linkedResults.Remove(l.Result)) continue;
-                Flags.Set(l.Result, false);
-            }
-            if (_thread != null) _thread.ClearLinked(_activeCase.Fragments());
-        }
-
         // 감정
 
         /// <summary>
-        /// 감정을 바꾸고 눈 표현 전환을 시작한다. 사물 표시는 _emotionMazeDelay초 뒤에 바꾼다.
+        /// 감정을 바꾸고 눈 표현 전환을 시작한다.
         /// 전환 중에 다시 바뀌면 진행 중인 전환을 끝 상태로 건너뛴다. 같은 감정이거나 에디트 모드면 아무것도 하지 않는다.
-        /// emotion을 사용하며, _emotion과 눈 표현 전환 상태, 사물 표시를 바꾼다.
+        /// emotion을 사용하며, _emotion과 눈 표현 전환 상태를 바꾼다.
         /// </summary>
         private void ChangeEmotion(ClientEmotion emotion)
         {
@@ -1481,24 +1379,17 @@ namespace EyeMaze
                 _lookNow.CopyFrom(_lookTo);
                 _lookT = -1f;
             }
-            if (_propDelayT >= 0f)
-            {
-                _propDelayT = -1f;
-                FadeProps();
-            }
-            foreach (MazeProp p in _props) p.Finish();
 
             _emotion = emotion;
             _lookFrom.CopyFrom(_lookNow);
             _lookTo.CopyFrom(LookOf(emotion));
             _lookT = 0f;
-            _propDelayT = Mathf.Max(0f, _emotionMazeDelay);
         }
 
         /// <summary>
-        /// 감정 전환을 한 프레임 진행하고 눈 표현을 눈 그림과 동공에 전달한다. 기다린 시간이 지나면 사물 표시를 바꾼다.
+        /// 감정 전환을 한 프레임 진행하고 눈 표현을 눈 그림과 동공에 전달한다.
         /// 들여다보는 동안은 시선 피함을 0으로 두고, 대화로 돌아오면 _emotionEyeSeconds초에 걸쳐 되돌린다.
-        /// dt와 전환 상태를 사용하며, _lookNow, _lookT, _propDelayT, _gazeShiftWeight와 눈 그림, 동공의 감정 값을 바꾼다.
+        /// dt와 전환 상태를 사용하며, _lookNow, _lookT, _gazeShiftWeight와 눈 그림, 동공의 감정 값을 바꾼다.
         /// </summary>
         private void TickEmotion(float dt)
         {
@@ -1509,15 +1400,6 @@ namespace EyeMaze
                 float t = Mathf.Clamp01(_lookT / eyeSeconds);
                 _lookNow.Lerp(_lookFrom, _lookTo, Mathf.SmoothStep(0f, 1f, t));
                 if (t >= 1f) _lookT = -1f;
-            }
-            if (_propDelayT >= 0f)
-            {
-                _propDelayT -= dt;
-                if (_propDelayT <= 0f)
-                {
-                    _propDelayT = -1f;
-                    FadeProps();
-                }
             }
             _gazeShiftWeight = _mode == Mode.Gaze ? 0f : Mathf.MoveTowards(_gazeShiftWeight, 1f, dt / eyeSeconds);
             ApplyEmotionLook();
@@ -1539,50 +1421,16 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 감정을 지금 손님의 시작 감정으로 되돌리고, 눈 표현과 사물 표시를 연출 없이 그 감정에 맞춘다.
-        /// _activeCase를 사용하며, _emotion, 전환 상태, _props와 사물 표시, 눈 그림과 동공의 감정 값을 바꾼다.
+        /// 감정을 지금 손님의 시작 감정으로 되돌리고, 눈 표현을 연출 없이 그 감정에 맞춘다.
+        /// _activeCase를 사용하며, _emotion, 전환 상태, 눈 그림과 동공의 감정 값을 바꾼다.
         /// </summary>
         private void ResetEmotion()
         {
             if (_activeCase != null) _emotion = _activeCase.StartEmotion;
             _lookT = -1f;
-            _propDelayT = -1f;
             _gazeShiftWeight = 1f;
             _lookNow.CopyFrom(LookOf(_emotion));
-            CollectProps();
-            foreach (MazeProp p in _props) p.SetShown(p.ShowsIn(_emotion));
             ApplyEmotionLook();
-        }
-
-        /// <summary>
-        /// 지금 손님의 사물을 다시 모으고, 사물 표시를 기다리는 중이 아니면 지금 감정과 다른 사물만 연출 없이 맞춘다.
-        /// _activeCase, _emotion, _propDelayT를 사용하며, _props와 사물 표시를 바꾼다.
-        /// </summary>
-        private void SyncProps()
-        {
-            CollectProps();
-            if (_propDelayT >= 0f) return;
-            foreach (MazeProp p in _props)
-                if (p.Visible != p.ShowsIn(_emotion)) p.SetShown(p.ShowsIn(_emotion));
-        }
-
-        /// <summary>
-        /// 각 사물을 지금 감정에서 보일지에 따라 _propFadeSeconds초에 걸쳐 나타내거나 사라지게 한다.
-        /// _emotion, _propFadeSeconds, _propRevealSeconds를 사용하며, 사물의 표시 상태를 바꾼다.
-        /// </summary>
-        private void FadeProps()
-        {
-            foreach (MazeProp p in _props) p.FadeTo(p.ShowsIn(_emotion), _propFadeSeconds, _propRevealSeconds);
-        }
-
-        /// <summary>
-        /// 지금 손님의 사물 묶음에서 사물을 모은다.
-        /// _activeCase를 사용하며, _props를 다시 채운다.
-        /// </summary>
-        private void CollectProps()
-        {
-            _props.Clear();
-            if (_activeCase != null) _props.AddRange(_activeCase.Props());
         }
 
         /// <summary>
@@ -1705,8 +1553,7 @@ namespace EyeMaze
             {
                 // 반시계 방향으로 움직인다.
                 if (target <= d - mDeg) { a += dDeg; return; }
-                // 사물이 막은 칸막이 길목은 지나지 않음
-                if (CanCrossRadial(ring, s, 1)) { KeepInBand(ref r, ring); a += dDeg; return; }
+                if (_maze.IsRadialOpen(ring, s)) { KeepInBand(ref r, ring); a += dDeg; return; }
                 a = s * d + Mathf.Max(local, d - mDeg);
                 // 반시계 방향으로 가다 막혔음을 기록한다.
                 _hitTangent = 1;
@@ -1715,8 +1562,7 @@ namespace EyeMaze
             {
                 // 시계 방향으로 움직인다.
                 if (target >= mDeg) { a += dDeg; return; }
-                // 사물이 막은 칸막이 길목은 지나지 않음
-                if (CanCrossRadial(ring, s, -1)) { KeepInBand(ref r, ring); a += dDeg; return; }
+                if (_maze.IsRadialOpen(ring, _maze.Mod(s - 1))) { KeepInBand(ref r, ring); a += dDeg; return; }
                 a = s * d + Mathf.Min(local, mDeg);
                 // 시계 방향으로 가다 막혔음을 기록한다.
                 _hitTangent = -1;
@@ -1726,16 +1572,11 @@ namespace EyeMaze
         /// <summary>
         /// 원호 통로를 지날 수 있는지 판단한다. 통로 가장자리에 걸쳐 있으면 살짝 가운데로 끌어당긴다.
         /// arcRing, sector, r, a(참조)를 사용하며, 지날 수 있으면 true를 반환하고 a를 보정한다.
-        /// 이 원호 길목을 사물이 막고 있으면 지나지 않는다.
         /// </summary>
         private bool CanCrossArc(int arcRing, int sector, float r, ref float a)
         {
             if (!_maze.IsArcOpen(arcRing, sector, out MazeGate gate)) return false;
             if (gate != null && !gate.CanPass(_person)) { GateBlocked(gate); return false; }
-            // 이 원호 길목을 사물이 막고 있으면 지나지 않음. 사물 판정은 GateBlocked를 부르지 않는다.
-            int from = _maze.RingAt(r);
-            int to = from == arcRing ? arcRing + 1 : arcRing;
-            if (PropBlocksFace(MazeWall.Kind.Arc, arcRing, sector, new Vector2(to < from ? -1f : 1f, 0f))) return false;
 
             float d = _maze.SectorDeg;
             float mDeg = _wallMargin / Mathf.Max(0.2f, r) * Mathf.Rad2Deg;
@@ -1753,116 +1594,6 @@ namespace EyeMaze
         {
             float m = _wallMargin;
             r = Mathf.Clamp(r, _maze.RingInner(ring) + m, _maze.RingOuter(ring) - m);
-        }
-
-        /// <summary>
-        /// 칸막이 벽을 넘어 옆 칸으로 갈 수 있는지 판단한다. 칸막이 길목을 사물이 막고 있으면 지나지 않는다.
-        /// ring, sector(지금 칸), dir(+1 반시계, -1 시계)을 사용하며, 지날 수 있으면 true를 반환한다. 밀어냄 사물이면 밀려남을 시작한다.
-        /// </summary>
-        private bool CanCrossRadial(int ring, int sector, int dir)
-        {
-            int boundary = _maze.Mod(dir > 0 ? sector : sector - 1);
-            if (!_maze.IsRadialOpen(ring, boundary)) return false;
-            // 이 칸막이 길목을 사물이 막고 있으면 지나지 않음
-            return !PropBlocksFace(MazeWall.Kind.Radial, ring, boundary, new Vector2(0f, -dir));
-        }
-
-        /// <summary>
-        /// 지나려는 길목을 막고 있는 사물이 있으면 막는다. 밀어냄 사물이면 밀려남을 시작한다.
-        /// kind, ring, worldSector(화면 기준 면), pushDir(밀려나는 방향, x 바깥쪽, y 반시계)을 사용하며, 막았으면 true를 반환한다.
-        /// </summary>
-        private bool PropBlocksFace(MazeWall.Kind kind, int ring, int worldSector, Vector2 pushDir)
-        {
-            foreach (MazeProp p in _props)
-            {
-                if (!p.Blocks || p.PassageKind != kind || p.PassageRing != ring || p.WorldPassageSector != worldSector) continue;
-                if (p.Kind == MazePropKind.Push) StartPropPush(pushDir);
-                // 막은 사물이 무엇이고 왜 막는지 적은 글을 보인다
-                ShowPropBlockedText(p);
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 들여다보는 동안 사물의 반응을 처리한다. 시선이 다가오면 다가가면 막음 사물을 뒤집고, 어지러움 사물 주변 벽을 흔든다.
-        /// _mode, _reading, _cursor, _props, _maze를 사용하며, 사물의 뒤집힘 상태와 벽 흔들림을 바꾼다. 들여다보지 않으면 흔들림을 모두 멈춘다.
-        /// </summary>
-        private void TickPropReactions()
-        {
-            bool gazing = _mode == Mode.Gaze && !_reading && _cursor != null && _maze != null;
-            _wobbleNow.Clear();
-            if (gazing)
-            {
-                Vector3 gaze = _cursor.transform.position;
-                foreach (MazeProp p in _props)
-                {
-                    if (p.CanFlip && Vector2.Distance(gaze, p.PassageCenterWorld) <= p.FlipDistance) p.Flip();
-                    if (p.DizzyRadius > 0f && p.Visible) CollectWobble(p, gaze);
-                }
-            }
-            foreach (MazeWall w in _wobbling)
-                if (w != null && !_wobbleNow.ContainsKey(w)) w.SetWobble(0f, 0f);
-            _wobbling.Clear();
-            foreach (KeyValuePair<MazeWall, (float amp, float speed)> pair in _wobbleNow)
-            {
-                pair.Key.SetWobble(pair.Value.amp, pair.Value.speed);
-                _wobbling.Add(pair.Key);
-            }
-        }
-
-        /// <summary>
-        /// 시선이 어지러움 사물에 가까우면 그 사물 둘레의 벽마다 흔들림 폭을 정한다. 시선이 사물에 가까울수록, 벽이 사물에 가까울수록 크다.
-        /// p(사물), gaze(시선 월드 위치), _maze의 벽을 사용하며, _wobbleNow에 벽별 가장 큰 폭과 빠르기를 기록한다.
-        /// </summary>
-        private void CollectWobble(MazeProp p, Vector3 gaze)
-        {
-            Vector3 center = p.PassageCenterWorld;
-            float near = 1f - Vector2.Distance(gaze, center) / p.DizzyRadius;
-            if (near <= 0f) return;
-            foreach (MazeWall w in _maze.GetComponentsInChildren<MazeWall>())
-            {
-                float wd = Vector2.Distance(w.transform.TransformPoint(w.MidLocal), center);
-                if (wd > p.DizzyRadius) continue;
-                float amp = p.DizzyAmplitude * near * (1f - wd / p.DizzyRadius);
-                if (!_wobbleNow.TryGetValue(w, out (float amp, float speed) old) || old.amp < amp) _wobbleNow[w] = (amp, p.DizzySpeed);
-            }
-        }
-
-        /// <summary>
-        /// 밀어냄 사물에 닿아 밀려남과 번쩍임을 시작한다. _bumpEnabled와 무관하며 부담감과 초점 요동은 바꾸지 않는다.
-        /// dir(밀려나는 방향, x 바깥쪽, y 반시계)과 _bumpCooldown을 사용하며, _knockbackDir, _knockbackT, _bumpCooldownT, _velocity, _bumpFlash를 바꾼다.
-        /// </summary>
-        private void StartPropPush(Vector2 dir)
-        {
-            // 밀려나는 중에는 새로 밀어내지 않는다. 대기 시간을 채워 같은 프레임의 벽 부딪힘이 겹치지 않게 한다.
-            if (!Application.isPlaying || _mode != Mode.Gaze || _inAbyss || _reading) return;
-            // 먼저 막힌 축 하나로만 밀던 것을 같은 프레임에 두 축이 막히면 두 방향을 더해 정규화하게 바꿨다.
-            if (_knockbackT == 0f)
-            {
-                float x = dir.x != 0f ? dir.x : Mathf.Sign(_knockbackDir.x) * (_knockbackDir.x != 0f ? 1f : 0f);
-                float y = dir.y != 0f ? dir.y : Mathf.Sign(_knockbackDir.y) * (_knockbackDir.y != 0f ? 1f : 0f);
-                _knockbackDir = new Vector2(x, y).normalized;
-                return;
-            }
-            if (_knockbackT >= 0f) return;
-            _knockbackDir = dir;
-            _knockbackT = 0f;
-            _bumpCooldownT = _bumpCooldown;
-            _velocity = Vector2.zero;
-            _bumpFlash = Mathf.Max(_bumpFlash, 0.6f);
-        }
-
-        /// <summary>
-        /// 사물에 막혔을 때 그 사물의 글을 문구로 보인다. key가 비었거나 글이 없으면 아무것도 하지 않는다.
-        /// prop의 BlockedKey와 Loc/UI.csv를 사용하며, 문구를 바꾼다.
-        /// </summary>
-        private void ShowPropBlockedText(MazeProp prop)
-        {
-            if (!Application.isPlaying || string.IsNullOrEmpty(prop.BlockedKey)) return;
-            string text = Personalize(Strings.Get(prop.BlockedKey, ""));
-            // 같은 글이 이미 보이면 다시 쓰지 않아 글자가 처음부터 다시 찍히지 않게 한다.
-            if (text.Length > 0 && _message != text) _message = text;
         }
 
         /// <summary>
@@ -1953,16 +1684,14 @@ namespace EyeMaze
                 f.Collected = true;
                 if (Application.isPlaying) CheckUnlockedChoices();
                 // 회상 방과 대본이 있으면 글 대신 회상을 재생한다
-                bool flashback = Application.isPlaying && _flashback != null && _flashback.CanPlay(f.Flag, f.Flag);
+                bool flashback = Application.isPlaying && _flashback != null && _flashback.CanPlay(f.Flag);
                 if (!flashback) _message = Strings.Get("msg.fragment", ("title", f.Title), ("text", f.Text));
                 if (Application.isPlaying) { _reading = true; _readT = 0f; _velocity = Vector2.zero; StopBump(); }
                 if (!flashback) continue;
                 _flashbackFragment = f;
-                _flashback.Play(f.Flag, f.Flag, FinishFlashback);
+                _flashback.Play(f.Flag, FinishFlashback);
                 return;
             }
-            // 파편을 줍지 않았으면 기억의 자리 진입으로 실을 들거나 잇는다
-            CheckMemorySpot();
         }
 
         /// <summary>
@@ -1994,7 +1723,7 @@ namespace EyeMaze
         /// 파편에 다시 재생할 회상(회상 방과 대본)이 있는지 판단한다.
         /// fragment의 플래그와 _flashback을 사용하며, 재생할 수 있으면 true를 반환한다.
         /// </summary>
-        public bool CanReplay(MemoryFragment fragment) => _flashback != null && _flashback.CanPlay(fragment.Flag, fragment.Flag);
+        public bool CanReplay(MemoryFragment fragment) => _flashback != null && _flashback.CanPlay(fragment.Flag);
 
         /// <summary>
         /// 이미 본 파편의 회상을 처음부터 다시 재생한다. 재생하는 동안 읽기 상태로 두어 이동과 입력을 멈춘다.
@@ -2007,7 +1736,7 @@ namespace EyeMaze
             _readT = 0f;
             _velocity = Vector2.zero;
             StopBump();
-            _flashback.Play(fragment.Flag, fragment.Flag, FinishReplay);
+            _flashback.Play(fragment.Flag, FinishReplay);
         }
 
         /// <summary>
@@ -2015,96 +1744,6 @@ namespace EyeMaze
         /// 입력값은 없으며, _reading을 바꾼다.
         /// </summary>
         private void FinishReplay() => _reading = false;
-
-        /// <summary>
-        /// 시선이 새로 들어간 기억의 자리를 처리한다. 실이 없으면 들고, 다른 자리면 쌍을 찾아 잇거나 실을 새로 든다.
-        /// 시선 위치, _spotUnderCursor, 든 실의 시작 기억, 이은 쌍 목록을 사용하며, _spotUnderCursor와 실 상태를 바꾸거나 잇기를 시작한다.
-        /// </summary>
-        private void CheckMemorySpot()
-        {
-            MemoryFragment spot = FindSpotUnderCursor();
-            bool entered = spot != null && spot != _spotUnderCursor;
-            _spotUnderCursor = spot;
-            if (!entered || !Application.isPlaying || _thread == null) return;
-            MemoryFragment from = _thread.From;
-            if (from == spot) return;
-            MemoryLinkScript.Link link = from != null ? MemoryLinkScript.Find(from.Flag, spot.Flag) : null;
-            // 이어지지 않는 쌍이거나 이미 이은 쌍이면 다른 반응 없이 이 자리에서 실을 새로 든다.
-            if (link == null || _linkedResults.Contains(link.Result))
-            {
-                _thread.Hold(spot);
-                return;
-            }
-            StartLink(from, spot, link);
-        }
-
-        /// <summary>
-        /// 시선이 서 있는 칸의 기억의 자리(회상을 본 파편)를 찾는다. 파편을 줍는 거리와 같은 기준을 쓴다.
-        /// 시선 위치와 지금 손님의 파편들을 사용하며, 찾은 파편 또는 null을 반환한다.
-        /// </summary>
-        private MemoryFragment FindSpotUnderCursor()
-        {
-            Vector3 pos = _cursor.LocalPos;
-            foreach (MemoryFragment f in Fragments)
-            {
-                if (!f.Seen || !f.Collected || f.Ring != _cursor.Ring || f.WorldSector != _cursor.Sector) continue;
-                if (Vector3.Distance(pos, _maze.CellLocal(f.Ring, f.WorldSector)) > _maze.RingWidth * 0.55f) continue;
-                return f;
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// 두 기억을 잇기 시작한다. 회상 방과 연결 회상 대본이 있고 room이 a나 b이면 연결 회상을 재생하고, 아니면 회상 없이 바로 잇는다.
-        /// from, to(이을 두 기억)와 link(쌍)를 사용하며, 잇는 중인 상태와 읽기 상태를 바꾸고 회상을 시작한다.
-        /// </summary>
-        private void StartLink(MemoryFragment from, MemoryFragment to, MemoryLinkScript.Link link)
-        {
-            _linkFrom = from;
-            _linkTo = to;
-            _linkPair = link;
-            bool roomOk = link.Room == link.A || link.Room == link.B;
-            if (!roomOk || _flashback == null || !_flashback.CanPlay(link.Result, link.Room))
-            {
-                CompleteLink();
-                return;
-            }
-            _reading = true;
-            _readT = 0f;
-            _velocity = Vector2.zero;
-            StopBump();
-            _flashback.Play(link.Result, link.Room, FinishLinkFlashback);
-        }
-
-        /// <summary>
-        /// 연결 회상이 끝났을 때 읽기 상태를 끝내고 미로를 다시 만든 뒤, 회상 뒤 감정을 바꾸고 잇기를 마친다.
-        /// _linkPair와 연결 회상 대본의 emotion_after를 사용하며, _reading, 미로, _emotion과 잇기 결과를 바꾼다.
-        /// </summary>
-        private void FinishLinkFlashback()
-        {
-            _reading = false;
-            RespawnMaze();
-            FlashbackScript.Flashback script = FlashbackScript.Find(_linkPair.Result);
-            if (script != null && script.EmotionAfter.HasValue) ChangeEmotion(script.EmotionAfter.Value);
-            CompleteLink();
-        }
-
-        /// <summary>
-        /// 잇기를 마친다. 결과 플래그를 켜고 실을 없애며, 두 기억의 이은 상태를 켜고 두 자리 사이에 실을 남긴다.
-        /// _linkFrom, _linkTo, _linkPair, _linkedMarkColor를 사용하며, 플래그, _linkedResults, 파편의 이은 상태, 실 상태를 바꾸고 잇는 중인 상태를 비운다.
-        /// </summary>
-        private void CompleteLink()
-        {
-            Flags.Set(_linkPair.Result, true);
-            _linkedResults.Add(_linkPair.Result);
-            _linkFrom.MarkLinked(_linkedMarkColor);
-            _linkTo.MarkLinked(_linkedMarkColor);
-            _thread.Release();
-            _thread.AddLinked(_linkFrom, _linkTo);
-            _linkFrom = null;
-            _linkTo = null;
-            _linkPair = null;
-        }
 
         /// <summary>
         /// 시선이 칸을 벗어난 새로 나타난 파편을 다시 주울 수 있게 한다.
@@ -2129,8 +1768,6 @@ namespace EyeMaze
             if (script != null && script.EmotionAfter.HasValue) ChangeEmotion(script.EmotionAfter.Value);
             ShowFragmentsAfter(f.Flag);
             f.MarkSeen(_seenMarkColor);
-            // 회상이 끝난 자리는 벗어났다 다시 들어올 때 실을 든다
-            _spotUnderCursor = f;
         }
 
         /// <summary>

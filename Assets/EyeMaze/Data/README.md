@@ -7,12 +7,11 @@
 
 ```
 Data/
-  Flags.csv            ← 플래그 목록 + 파편/단서 힌트 글 (전체 공용)
+  Flags.csv            ← 플래그 목록 + 파편 힌트 글 (전체 공용)
   Loc/UI.csv           ← 공용 문구와 번역 (오프닝, 안내, 시스템 메시지, 층 이름, 잠긴 문)
   Loc/LocConfig.asset  ← 지원 언어와 시작 언어 규칙
   Dialogue/            ← 인물·회차 파일. 한 파일에 필드 대사(talk), 상담 선택지(dialogue), 엔딩·문구(ending)를 함께 둔다
     Eunjae_Day1.csv    ← 은재 1회차 (은재 어머니의 필드 대사 포함)
-    Jisu_Day1.csv      ← 지수 1회차
 ```
 
 CSV를 저장하면 Unity가 자동으로 다시 읽고 검사합니다. 오류는 Console과 **메뉴 EyeMaze → 플래그 관리자** 창에 나옵니다.
@@ -26,28 +25,27 @@ CSV를 저장하면 Unity가 자동으로 다시 읽고 검사합니다. 오류�
 |---|---|
 | id | 플래그 이름. 영문 소문자, 숫자, `_`만 사용 (공백, `|`, 쉼표 금지) |
 | description | 설명 (기획 메모) |
-| source | 어디서 켜지는지 메모 (파편 / 단서 / 대화 / 계산) |
+| source | 어디서 켜지는지 메모 (파편 / 대화 / 계산) |
 | condition | 비워 두면 일반 플래그입니다. 채우면 **계산 플래그**가 됩니다 (아래 참고) |
-| title | 파편/단서 이름 (화면에 보이는 이름) |
-| text | 파편을 주웠을 때 / 단서를 살펴봤을 때 나오는 **힌트 글** |
+| title | 파편 이름 (화면에 보이는 이름) |
+| text | 파편을 주웠을 때 나오는 **힌트 글** |
 | memo | 자유 |
 
 플래그가 켜지는 곳은 세 군데입니다.
 1. **기억 파편**을 주우면: 파편 인스펙터의 `Flag` 칸
-2. **필드 단서**를 살펴보면: 단서 인스펙터의 `Flag` 칸
-3. **대화 선택지**를 고르면: 인물·회차 CSV의 `set` 칸
+2. **대화 선택지**를 고르면: 인물·회차 CSV의 `set` 칸
+3. **필드 대사**를 끝까지 보면: 인물·회차 CSV `talk` 줄의 `set` 칸
 
 ### 계산 플래그 (condition)
 수치 조건이나 "아직 안 했을 때" 같은 조건도 **플래그로 이름을 붙여** 씁니다. 대화 CSV에는 계속 이름만 적습니다.
 
 | id | condition | 뜻 |
 |---|---|---|
-| trust_3 | `trust>=3` | 신뢰 3 이상 |
-| pupil_open | `dilation>=0.5` | 동공 50% 이상 |
+| trust_le_m2 | `trust<=-2` | 신뢰 -2 이하 |
 | not_asked_piano | `!asked_piano` | asked_piano가 **꺼져** 있을 때 |
 | eunjae_piano_ready | `trust>=2 & clue_sheet_music` | 둘 다 만족 (`&` = 그리고) |
 
-- 쓸 수 있는 수치: `trust`(신뢰), `dilation`(동공 0~1), `spring`(태엽)
+- 쓸 수 있는 수치: `trust`(신뢰), `dilation`(동공 0~1)
 - 비교: `>=` `<=` `>` `<` `==` `!=`
 - 다른 플래그 이름이나 `!플래그`를 `&`로 섞어도 됩니다.
 - 계산 플래그는 지금 값으로 계속 계산되므로, `set`으로 켤 수 없고 플래그 관리자에서 체크할 수도 없습니다.
@@ -56,7 +54,7 @@ CSV를 저장하면 Unity가 자동으로 다시 읽고 검사합니다. 오류�
 Flags.csv에 없는 이름을 쓰면 검사 오류가 납니다(오타 방지).
 
 ### 힌트 글 (title / text)
-파편과 단서는 각각 플래그 하나와 연결돼 있으므로, 그 플래그 줄의 `title`, `text`에 힌트 글을 적습니다.
+파편은 각각 플래그 하나와 연결돼 있으므로, 그 플래그 줄의 `title`, `text`에 힌트 글을 적습니다.
 비워 두면 씬 인스펙터에 적힌 글을 씁니다.
 
 ## 2. Dialogue/인물_DayN.csv — 한 인물의 한 회차
@@ -64,13 +62,13 @@ Flags.csv에 없는 이름을 쓰면 검사 오류가 납니다(오타 방지).
 인물 한 명의 한 회차(예: `Eunjae_Day1.csv`)에 필요한 대사를 한 파일에 둡니다. 머리글은 아래와 같습니다.
 
 ```
-section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest,ending_need,emotion
+section,actor,id,situation,text,response,need,set,trust,dilation,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest,ending_need,emotion
 ```
 
 | 열 | 뜻 |
 |---|---|
 | section | 이 줄이 속한 단계. `talk`(필드에서 말 걸었을 때), `dialogue`(눈 속 상담 선택지), `ending`(엔딩과 사람별 문구) 중 하나 |
-| actor | 누구의 줄인지. `talk`는 대사를 하는 필드 NPC의 actor ID(`EunjaeMom`, `Eunjae`, `Jisu`), `dialogue`·`ending`은 상담 인물 ID(파일마다 한 명) |
+| actor | 누구의 줄인지. `talk`는 대사를 하는 필드 NPC의 actor ID(`EunjaeMom`, `Eunjae`), `dialogue`·`ending`은 상담 인물 ID(파일마다 한 명) |
 | id | 단계 안의 묶음 이름. `talk`는 대화 이름, `dialogue`는 장면, `ending`은 엔딩 id. 같은 section·actor 안에서만 겹치지 않으면 됩니다 |
 
 - 줄은 `talk`, `dialogue`, `ending` 순서로 모아 적습니다. 한 단계 안의 묶음·줄 순서는 그대로 지킵니다.
@@ -92,12 +90,11 @@ section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,end
 | set | 고르면 켜지는 플래그 (`\|`로 여러 개) | `asked_piano` |
 | trust | 신뢰 변화 (정수) | `1` / `-1` |
 | dilation | 동공 변화 (-1 ~ 1) | `0.15` |
-| spring | 태엽 변화 (-8 ~ 8) | `2` |
 | goto | 고르면 이동할 장면 id. 비우면 그 장면에 머뭅니다 | `phone` |
 | ending | 고르면 바로 이 엔딩으로 끝. 같은 파일 ending 단계의 id (goto와 같이 쓰지 않음) | `delete` |
 | rest | 채우면 고른 뒤 눈물 신호가 나타나고, Q를 누르면 이 대사가 나온다 (비우면 없음) | `"…잠시 쉬어도 될까요?"` |
-| ending_need | `ending`이 있는 선택지에만. 채우면 고른 뒤 이 플래그가 모두 켜져 있을 때만 엔딩으로 가고, 아니면 결과와 goto로 진행합니다. 이때는 goto와 같이 쓸 수 있습니다 (need는 선택지가 열리는 조건) | `trust_le_m3` |
-| emotion | 고른 뒤 내담자의 감정. `calm`(평온), `guarded`(경계), `anxious`(불안), `sad`(슬픔), `relieved`(안도) 중 하나. 비우면 감정을 바꾸지 않습니다. 감정이 바뀌면 눈이 먼저 변하고 이어서 미로 사물이 바뀝니다 (EMO-01) | `anxious` |
+| ending_need | `ending`이 있는 선택지에만. 채우면 고른 뒤 이 플래그가 모두 켜져 있을 때만 엔딩으로 가고, 아니면 결과와 goto로 진행합니다. 이때는 goto와 같이 쓸 수 있습니다 (need는 선택지가 열리는 조건) | `trust_le_m2` |
+| emotion | 고른 뒤 내담자의 감정. `calm`(평온), `guarded`(경계), `anxious`(불안), `sad`(슬픔), `relieved`(안도) 중 하나. 비우면 감정을 바꾸지 않습니다. 감정이 바뀌면 눈 표현이 바뀝니다 | `anxious` |
 | back | 뒤로가기 문구 바꾸기 (아래 참고). 장면의 아무 줄에나 씁니다 | `잠깐, 다른 얘기를 해도 될까요?` |
 | memo | 자유. 게임에서 읽지 않습니다 | |
 
@@ -110,15 +107,15 @@ section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,end
 - **시작 장면이 아닌 모든 장면**에 자동으로 마지막 선택지 `다른 질문을 해볼까요?`가 붙습니다. 고르면 바로 전 장면으로 돌아갑니다.
 - 문구를 바꾸려면 그 장면의 `back` 칸에 원하는 문구를 적습니다.
 - 그 장면에서 뒤로 못 가게 하려면 `back` 칸에 `-`를 적습니다.
-- 좋은 말(신뢰/동공/태엽이 오르는 선택지)은 한 번만 수치가 오릅니다. 뒤로 갔다가 같은 선택지로 다시 들어가면 수치 변화 없이 장면만 이동합니다.
+- 좋은 말(신뢰/동공이 오르는 선택지)은 한 번만 수치가 오릅니다. 뒤로 갔다가 같은 선택지로 다시 들어가면 수치 변화 없이 장면만 이동합니다.
 
 ### 허브 구조 예시
 ```
-section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back
-dialogue,Eunjae,hub,은재가 창밖을 본다.,요즘 피아노는 치세요?,…,,,0,0,0,piano,,
-dialogue,Eunjae,hub,,그 휴대폰 얘기 해도 될까요?,…,eunjae_phone_flipped,,1,0.1,0,phone,,
-dialogue,Eunjae,piano,손가락이 멈춘다.,그 곡 기억나요?,…,,asked_piano,1,0.1,2,,,
-dialogue,Eunjae,phone,휴대폰을 쥔다.,뒤집어 둔 이유가 있죠?,…,asked_piano,,1,0.2,0,,,그 얘긴 나중에 할까요?
+section,actor,id,situation,text,response,need,set,trust,dilation,goto,ending,back
+dialogue,Eunjae,hub,은재가 창밖을 본다.,요즘 피아노는 치세요?,…,,,0,0,piano,,
+dialogue,Eunjae,hub,,그 휴대폰 얘기 해도 될까요?,…,eunjae_phone_flipped,,1,0.1,phone,,
+dialogue,Eunjae,piano,손가락이 멈춘다.,그 곡 기억나요?,…,,asked_piano,1,0.1,,,
+dialogue,Eunjae,phone,휴대폰을 쥔다.,뒤집어 둔 이유가 있죠?,…,asked_piano,,1,0.2,,,그 얘긴 나중에 할까요?
 ```
 → `piano`, `phone`에는 뒤로가기가 자동으로 붙어 `hub`로 돌아갑니다. `phone`의 질문은 `piano`에서 `asked_piano`를 켜야 열립니다.
 
@@ -138,10 +135,10 @@ dialogue,Eunjae,phone,휴대폰을 쥔다.,뒤집어 둔 이유가 있죠?,…,a
 
 - 말을 걸면 그 actor의 대화 중 **위에서부터** need가 모두 켜진 첫 대화가 나옵니다. 그래서 "다시 말 걸었을 때"처럼 조건이 있는 대화를 위쪽에 둡니다.
 - 예약된 id:
-  - `enter`: 컷신으로 들어와서 하는 말 (은재 어머니의 첫 대사, 지수가 앉은 뒤 첫마디 등)
+  - `enter`: 컷신으로 들어와서 하는 말 (은재 어머니의 첫 대사 등)
   - `reveal`: 이 사람과 이야기한 뒤 다음 사람이 들어올 때의 서술
   - `rest`: 휴식 신호 중 쉬어 주고 상담실로 돌아온 직후의 리액션
-- 상담 손님(은재, 지수)은 상담이 끝난 뒤에만 자기 actor의 talk 대화가 나옵니다. 맞는 대화가 없으면 엔딩의 after가 나옵니다.
+- 상담 손님(은재)은 상담이 끝난 뒤에만 자기 actor의 talk 대화가 나옵니다. 맞는 대화가 없으면 엔딩의 after가 나옵니다.
 
 ```
 section,actor,id,need,set,speaker,text

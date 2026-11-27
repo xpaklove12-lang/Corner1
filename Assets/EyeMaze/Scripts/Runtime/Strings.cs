@@ -6,7 +6,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 공용 문구 표 (Data/Loc/UI.csv). 열: key, context, maxlen, ko, en, ja, note, 언어_ok, ko_synced.
-    /// 태엽/조작 안내, 시스템 메시지, 오프닝 독백, 잠긴 문, 층 이름처럼 특정 사람에 속하지 않는 글을 둔다.
+    /// 조작 안내, 시스템 메시지, 오프닝 독백, 잠긴 문, 층 이름처럼 특정 사람에 속하지 않는 글을 둔다.
     /// 같은 key를 여러 줄에 쓰면 여러 줄짜리 글(예: 오프닝 독백)이 된다.
     /// 글 안의 {name} 같은 칸은 게임이 채운다 (key마다 쓸 수 있는 칸은 note에 적어 둔다).
     /// 현재 언어 칸이 비어 있으면 ko 칸을, 표에 없는 key는 코드에 적힌 기본 글을 쓴다.
@@ -260,8 +260,5 @@ namespace EyeMaze
             foreach (Csv.Row r in rows) lines.Add(Pick(r, Loc.SOURCE_LANGUAGE));
             return string.Join("\n", lines);
         }
-
-        /// <summary>표에 있는 key들 (에디터 검사용)</summary>
-        public static IEnumerable<string> Keys { get { Ensure(); return Table.Keys; } }
     }
 }

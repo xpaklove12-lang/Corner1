@@ -41,7 +41,6 @@ namespace EyeMaze
         [NonSerialized] private float _emotionTrembleSpeed = 28f;
         [NonSerialized] private Vector2 _emotionShift;
 
-        public float Pulse { get => _pulse; set => _pulse = value; }
         /// <summary>동공 떨림 세기 (0~1). 0이면 원래 자리로 돌아온다.</summary>
         public float Tremble { get => _tremble; set => _tremble = Mathf.Clamp01(value); }
         /// <summary>감정 표현의 동공 떨림 거리. 휴식 신호 떨림과 함께 있으면 큰 쪽을 쓴다.</summary>

@@ -1,0 +1,17 @@
+{87568907-aa9c-47ab-ad29-513c22398b63} bank:/Master
+{1f4ba9d3-dbe7-0be9-2b60-dbc2d3ca8dfb} bank:/Master.strings
+{f1d76451-4fd4-4502-a8a6-c8922424b3f4} bank:/Music
+{02b34a82-490b-4d30-a688-6868096de230} bank:/SFX
+{066d7a0e-dd9c-423a-ba69-9a1763b1ef5a} bus:/
+{03154fae-1ab8-4b55-8a4c-5dea9865d170} bus:/AMB
+{499e2ce5-ca98-40a9-83a0-62f64d4cda2e} bus:/BGM
+{4e04a3c9-d770-4265-8cf9-070d7d638f61} bus:/Reverb
+{f143cc51-52d5-4140-9e26-5cfef4aa263d} bus:/SFX
+{3ff1c7dc-eea4-4432-b5b7-03fa195ca701} bus:/UI
+{dfb7c668-42b5-4ab2-a883-0aab02231d37} event:/Test/Beep
+{56661e4b-26d8-450c-83bf-aa91e7943bfe} snapshot:/Paused
+{c614b2e2-1f4f-4b8b-9b41-7f9451c70ad1} vca:/AMB
+{ceccc839-c1c6-45af-a945-0ff1951ef50c} vca:/BGM
+{d0f322f5-e7e3-4f71-8b1c-66fefc32e0e4} vca:/Master
+{af4ffa0b-566c-4e80-8af8-6d2170f93922} vca:/SFX
+{6b9f4e1a-2b8f-4b66-a691-8f75f87b9045} vca:/UI

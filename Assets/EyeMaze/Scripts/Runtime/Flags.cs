@@ -8,16 +8,17 @@ namespace EyeMaze
 {
     /// <summary>
     /// 플래그 관리자. 게임 전체에서 켜진 플래그(문자열 id)를 기억한다.
-    /// 기억 파편을 줍거나, 단서를 살펴보거나, 대화 선택지(set 칸)를 고르면 켜지고,
+    /// 기억 파편을 줍거나, 대화 선택지(set 칸)를 고르면 켜지고,
     /// 대화 선택지의 need 칸은 여기서 켜져 있는지를 본다.
     ///
     /// Flags.csv에서 condition 칸을 채운 플래그는 "계산 플래그"다. 직접 켜지 않고, 볼 때마다 조건으로 계산한다.
-    /// 예) trust_3 = trust>=3,  not_asked = !asked_piano,  ready = trust>=2 &amp; clue_sheet_music
+    /// 예) trust_le_m2 = trust&lt;=-2,  not_asked = !asked_piano,  ready = trust>=2 &amp; clue_sheet_music
     /// </summary>
     public static class Flags
     {
+        // 선택지 spring 수치 제거
         /// <summary>condition에서 쓸 수 있는 수치 이름 (값은 디렉터가 Values로 알려준다)</summary>
-        public static readonly string[] KnownValues = { "trust", "dilation", "spring" };
+        public static readonly string[] KnownValues = { "trust", "dilation" };
 
         private static readonly HashSet<string> On = new HashSet<string>();
         private static readonly Dictionary<string, Condition> Computed = new Dictionary<string, Condition>();
@@ -32,9 +33,6 @@ namespace EyeMaze
 
         /// <summary>수치 이름(trust 등)의 지금 값을 알려준다. 모르는 이름이면 null</summary>
         public static Func<string, float?> Values { get; set; }
-
-        /// <summary>직접 켜진 플래그들 (계산 플래그 제외)</summary>
-        public static IReadOnlyCollection<string> AllOn { get { Build(); return On; } }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
@@ -75,13 +73,13 @@ namespace EyeMaze
         public static void ReloadDefinitions() => LoadDefinitions(_defsAsset, true);
 
         /// <summary>
-        /// 플래그에 붙은 힌트 제목(Flags.csv의 title 칸)을 가져온다. 파편/단서 이름으로 쓴다.
+        /// 플래그에 붙은 힌트 제목(Flags.csv의 title 칸)을 가져온다. 파편 이름으로 쓴다.
         /// id를 사용하며, 제목 또는 (없으면) null을 반환한다.
         /// </summary>
         public static string TitleOf(string id) => !string.IsNullOrEmpty(id) && Titles.TryGetValue(id, out string t) ? t : null;
 
         /// <summary>
-        /// 플래그에 붙은 힌트 글(Flags.csv의 text 칸)을 가져온다. 파편을 줍거나 단서를 살펴볼 때 나오는 글이다.
+        /// 플래그에 붙은 힌트 글(Flags.csv의 text 칸)을 가져온다. 파편을 주울 때 나오는 글이다.
         /// id를 사용하며, 글 또는 (없으면) null을 반환한다.
         /// </summary>
         public static string TextOf(string id) => !string.IsNullOrEmpty(id) && Texts.TryGetValue(id, out string t) ? t : null;
@@ -136,7 +134,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 모든 플래그를 끈 뒤, 씬의 파편/단서 상태에서 다시 채운다.
+        /// 모든 플래그를 끈 뒤, 씬의 파편 상태에서 다시 채운다.
         /// 입력값은 없으며, 켜진 플래그 목록을 바꾼다.
         /// </summary>
         public static void ResetAll()
@@ -148,7 +146,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 처음 한 번, 씬에 저장된 파편(collected)과 단서(examined) 상태를 플래그로 옮긴다.
+        /// 처음 한 번, 씬에 저장된 파편(collected) 상태를 플래그로 옮긴다.
         /// 에디트 모드에서 스크립트가 다시 컴파일돼도 상태가 맞게 유지된다.
         /// </summary>
         private static void Build()
@@ -157,13 +155,11 @@ namespace EyeMaze
             _built = true;
             foreach (MemoryFragment f in UnityEngine.Object.FindObjectsByType<MemoryFragment>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (f.Collected && !string.IsNullOrEmpty(f.Flag)) On.Add(f.Flag);
-            foreach (FieldClue c in UnityEngine.Object.FindObjectsByType<FieldClue>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                if (c.Examined && !string.IsNullOrEmpty(c.Flag)) On.Add(c.Flag);
         }
 
         /// <summary>
         /// 계산 플래그의 조건. &amp;로 이어진 항이 모두 참이면 참이다.
-        /// 항: 플래그 이름 / !플래그 이름 / 수치 비교(trust&gt;=3, dilation&lt;0.5, spring==0 …)
+        /// 항: 플래그 이름 / !플래그 이름 / 수치 비교(trust&gt;=3, dilation&lt;0.5 …)
         /// </summary>
         public class Condition
         {
@@ -182,9 +178,6 @@ namespace EyeMaze
 
             /// <summary>조건 안에서 쓰는 다른 플래그 이름들 (검사용)</summary>
             public IEnumerable<string> FlagNames { get { foreach (Term t in _terms) if (t.Kind != Kind.Compare) yield return t.Name; } }
-
-            /// <summary>조건 안에서 쓰는 수치 이름들 (검사용)</summary>
-            public IEnumerable<string> ValueNames { get { foreach (Term t in _terms) if (t.Kind == Kind.Compare) yield return t.Name; } }
 
             /// <summary>
             /// 조건 글을 읽는다.
