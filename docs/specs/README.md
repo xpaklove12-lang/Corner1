@@ -16,6 +16,7 @@
 | `EDITOR` | [`dialogue-editor.md`](dialogue-editor.md) | 인물·회차별 통합 CSV 대사를 텍스트와 노드 뷰에서 편집하는 도구 |
 | `OPEN` | [`opening.md`](opening.md) | 시작 독백과 첫 손님 입장 |
 | `FIELD` | [`field.md`](field.md) | 필드 인물의 전신 모습, 걷기·앉기·퇴장 표시, 주인공 외형, 말을 걸 수 있는 NPC 테두리 |
+| `LOC` | [`localization.md`](localization.md) | 언어 선택과 폰트, UI·대화 문구의 번역 파일, 번역 갱신·가져오기·검사 도구 |
 
 ## 2. 옛 번호 대응
 

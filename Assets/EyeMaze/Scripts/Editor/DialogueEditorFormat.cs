@@ -44,6 +44,11 @@ namespace EyeMaze.EditorTools
         public const string GOTO = "goto";
         public const string ENDING = "ending";
         public const string TEXT = "text";
+        /// <summary>공용 문구 파일의 원문 칸. 모델에서는 text 칸으로 다룬다 (EDITOR-40).</summary>
+        private const string STRINGS_SOURCE = "ko";
+        /// <summary>공용 문구 파일의 메모 칸. 모델에서는 memo 칸으로 다룬다 (EDITOR-40).</summary>
+        private const string STRINGS_NOTE = "note";
+        private const string STRINGS_KEY = "key";
 
         /// <summary>인물·회차 CSV의 머리글 순서</summary>
         public static readonly string[] DAY_COLUMNS =
@@ -53,7 +58,8 @@ namespace EyeMaze.EditorTools
             "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need", "emotion",
         };
 
-        private static readonly string[] STRINGS_COLUMNS = { "key", "text", "memo" };
+        /// <summary>공용 문구 파일(Data/Loc/UI.csv)의 기본 머리글 순서 (스펙 LOC-05, EDITOR-40)</summary>
+        private static readonly string[] STRINGS_COLUMNS = { STRINGS_KEY, "context", "maxlen", STRINGS_SOURCE, "en", "ja", STRINGS_NOTE, "en_ok", "ja_ok", "ko_synced" };
 
         /// <summary>단계를 CSV에 적는 순서</summary>
         public static readonly string[] SECTIONS = { Csv.SECTION_TALK, Csv.SECTION_DIALOGUE, Csv.SECTION_ENDING };
@@ -195,7 +201,13 @@ namespace EyeMaze.EditorTools
                     if (section == Csv.SECTION_TALK && g.Get(c).Length > 0) g.Fields[c] = MergeList(g.Get(c), v);
                     else if (g.Get(c).Length == 0) g.Fields[c] = v;
                 }
-                if (r[s.BodyColumn].Length == 0 && kind != DialogueEditorKind.Strings) continue;
+                if (kind == DialogueEditorKind.Strings)
+                {
+                    if (doc.Columns.Count == 0) doc.Columns.AddRange(r.ColumnNames());
+                    g.Items.Add(ReadStringsItem(r));
+                    continue;
+                }
+                if (r[s.BodyColumn].Length == 0) continue;
                 var item = new DialogueEditorDocument.Item();
                 item.Fields[s.BodyColumn] = r[s.BodyColumn];
                 foreach (string c in s.ItemColumns) if (r[c].Length > 0) item.Fields[c] = r[c];
@@ -204,6 +216,67 @@ namespace EyeMaze.EditorTools
             }
             Normalize(doc);
             return doc;
+        }
+
+        /// <summary>
+        /// 공용 문구 파일의 한 줄을 항목으로 읽는다. ko 칸은 text로, note 칸은 memo로 두고,
+        /// 언어 칸·context·maxlen·_ok·ko_synced처럼 편집기가 보이지 않는 칸은 그 이름 그대로 보관한다 (EDITOR-40).
+        /// 옛 형식(key, text, memo) 줄이면 text와 memo를 그대로 읽는다.
+        /// r을 사용하며, 새 항목을 반환한다.
+        /// </summary>
+        private static DialogueEditorDocument.Item ReadStringsItem(Csv.Row r)
+        {
+            var item = new DialogueEditorDocument.Item();
+            item.Fields[TEXT] = r.Has(STRINGS_SOURCE) ? r[STRINGS_SOURCE] : r[TEXT];
+            string note = r.Has(STRINGS_NOTE) ? r[STRINGS_NOTE] : r[MEMO];
+            if (note.Length > 0) item.Fields[MEMO] = note;
+            foreach (string c in r.ColumnNames())
+                if (!IsStringsModelColumn(c) && r[c].Length > 0) item.Fields[c] = r[c];
+            return item;
+        }
+
+        /// <summary>
+        /// 공용 문구 파일에서 편집기가 직접 다루는 칸인지 본다.
+        /// column을 사용하며, key·원문·메모 칸(옛 이름 포함)이면 true를 반환한다.
+        /// </summary>
+        private static bool IsStringsModelColumn(string column) =>
+            column == STRINGS_KEY || column == STRINGS_SOURCE || column == STRINGS_NOTE || column == TEXT || column == MEMO;
+
+        /// <summary>
+        /// 텍스트로 다시 읽은 공용 문구 모델에, 텍스트에 보이지 않는 칸(언어 칸 등)을 이전 모델에서 옮긴다.
+        /// 같은 key 안에서 몇 번째 줄인지로 짝을 맞춘다. 공용 문구가 아니면 아무것도 하지 않는다 (EDITOR-40).
+        /// from(이전 모델)과 to(새 모델)를 사용하며, to의 머리글 순서와 항목 칸을 바꾼다.
+        /// </summary>
+        public static void CarryHiddenColumns(DialogueEditorDocument from, DialogueEditorDocument to)
+        {
+            if (from == null || to == null || to.Kind != DialogueEditorKind.Strings) return;
+            to.Columns.Clear();
+            to.Columns.AddRange(from.Columns);
+            foreach (DialogueEditorDocument.Group g in to.Groups)
+            {
+                DialogueEditorDocument.Group old = from.Find(g.Section, g.Actor, g.Id);
+                if (old == null) continue;
+                for (int k = 0; k < g.Items.Count && k < old.Items.Count; k++)
+                    foreach (KeyValuePair<string, string> f in old.Items[k].Fields)
+                        if (!IsStringsModelColumn(f.Key)) g.Items[k].Fields[f.Key] = f.Value;
+            }
+        }
+
+        /// <summary>
+        /// 공용 문구 파일을 쓸 머리글을 정한다. 읽은 파일의 머리글을 쓰되, 기본 열 중 빠진 것은 뒤에 더한다.
+        /// doc을 사용하며, 머리글 목록을 반환한다.
+        /// </summary>
+        private static string[] StringsColumns(DialogueEditorDocument doc)
+        {
+            var list = new List<string>();
+            foreach (string c in doc.Columns)
+            {
+                // 옛 형식의 text·memo는 ko·note로 바꿔 쓴다.
+                string name = c == TEXT ? STRINGS_SOURCE : c == MEMO ? STRINGS_NOTE : c;
+                if (!list.Contains(name)) list.Add(name);
+            }
+            foreach (string c in STRINGS_COLUMNS) if (!list.Contains(c)) list.Add(c);
+            return list.ToArray();
         }
 
         /// <summary>
@@ -592,7 +665,7 @@ namespace EyeMaze.EditorTools
         /// </summary>
         public static string WriteCsv(DialogueEditorDocument doc, List<int> rowLines)
         {
-            string[] columns = doc.Kind == DialogueEditorKind.Day ? DAY_COLUMNS : STRINGS_COLUMNS;
+            string[] columns = doc.Kind == DialogueEditorKind.Day ? DAY_COLUMNS : StringsColumns(doc);
             var sb = new StringBuilder();
             sb.Append(string.Join(",", columns)).Append("\r\n");
             foreach (DialogueEditorDocument.Group g in doc.Groups)
@@ -623,6 +696,17 @@ namespace EyeMaze.EditorTools
             foreach (string c in columns)
             {
                 string v;
+                // 공용 문구: 모델의 text·memo를 ko·note에, 보이지 않는 칸은 같은 이름으로 쓴다 (EDITOR-40).
+                if (s == StringsSchema)
+                {
+                    if (c == STRINGS_KEY) v = g.Id;
+                    else if (item == null) v = "";
+                    else if (c == STRINGS_SOURCE) v = item.Get(TEXT);
+                    else if (c == STRINGS_NOTE) v = item.Get(MEMO);
+                    else v = item.Get(c);
+                    cells.Add(Cell(v));
+                    continue;
+                }
                 if (c == Csv.SECTION) v = g.Section;
                 else if (c == Csv.ACTOR) v = g.Actor;
                 else if (c == s.IdColumn) v = g.Id;

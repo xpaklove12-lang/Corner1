@@ -36,7 +36,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("acceptInput")] private bool _acceptInput = true;
         [Tooltip("플래그 목록 (Data/Flags.csv). condition이 있는 계산 플래그를 여기서 읽는다")]
         [SerializeField] private TextAsset _flagsCsv;
-        [Tooltip("공용 문구 표 (Data/Strings.csv). 안내/시스템 문구를 여기서 읽는다")]
+        [Tooltip("공용 문구 표 (Data/Loc/UI.csv). 안내/시스템 문구를 여기서 읽는다")]
         [SerializeField] private TextAsset _stringsCsv;
         // 스펙 016: 회상 대본과 회상 재생기 연결 추가
         [Tooltip("회상 대본 (Data/Flashbacks.csv). Flags.csv와 같은 때에 읽는다")]
@@ -1832,7 +1832,7 @@ namespace EyeMaze
 
         /// <summary>
         /// 스펙 015 FR-020: 사물에 막혔을 때 그 사물의 글을 문구로 보인다. key가 비었거나 글이 없으면 아무것도 하지 않는다.
-        /// prop의 BlockedKey와 Strings.csv를 사용하며, 문구를 바꾼다.
+        /// prop의 BlockedKey와 Loc/UI.csv를 사용하며, 문구를 바꾼다.
         /// </summary>
         private void ShowPropBlockedText(MazeProp prop)
         {

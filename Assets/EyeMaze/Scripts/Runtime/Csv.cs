@@ -116,6 +116,17 @@ namespace EyeMaze
             }
 
             public bool Has(string column) => _columns.ContainsKey(column);
+
+            /// <summary>
+            /// 머리글의 열 이름을 파일에 적힌 순서대로 가져온다.
+            /// 입력값은 없으며, 열 이름 목록을 반환한다.
+            /// </summary>
+            public List<string> ColumnNames()
+            {
+                var list = new List<string>(_columns.Keys);
+                list.Sort((a, b) => _columns[a].CompareTo(_columns[b]));
+                return list;
+            }
         }
 
         private static readonly UTF8Encoding StrictUtf8 = new UTF8Encoding(false, true);

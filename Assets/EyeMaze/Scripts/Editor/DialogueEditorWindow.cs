@@ -106,7 +106,7 @@ namespace EyeMaze.EditorTools
             DrawToolbar();
             if (_doc == null)
             {
-                EditorGUILayout.HelpBox("편집할 CSV를 위에서 고르세요. 인물·회차 파일(Data/Dialogue/인물_DayN.csv)과 공용 Data/Strings.csv를 지원합니다.", MessageType.Info);
+                EditorGUILayout.HelpBox("편집할 CSV를 위에서 고르세요. 인물·회차 파일(Data/Dialogue/인물_DayN.csv)과 공용 Data/Loc/UI.csv를 지원합니다.", MessageType.Info);
                 return;
             }
             Rect body = GUILayoutUtility.GetRect(0f, 100000f, 0f, 100000f);
@@ -510,6 +510,8 @@ namespace EyeMaze.EditorTools
         {
             var issues = new List<DialogueEditorFormat.Issue>();
             DialogueEditorDocument parsed = DialogueEditorFormat.ParseText(_draft, _doc.Kind, _doc.AssetPath, issues);
+            // 스펙 EDITOR-40: 텍스트에 보이지 않는 언어 칸 등을 이전 모델에서 옮긴다.
+            DialogueEditorFormat.CarryHiddenColumns(_doc, parsed);
             string csv = HasError(issues) ? null : DialogueEditorFormat.Validate(parsed, issues);
             _issues.Clear();
             _issues.AddRange(issues);
@@ -899,6 +901,7 @@ namespace EyeMaze.EditorTools
             string text = DialogueEditorFormat.WriteText(changed);
             var issues = new List<DialogueEditorFormat.Issue>();
             DialogueEditorDocument parsed = DialogueEditorFormat.ParseText(text, changed.Kind, changed.AssetPath, issues);
+            DialogueEditorFormat.CarryHiddenColumns(changed, parsed);
             string csv = HasError(issues) ? null : DialogueEditorFormat.Validate(parsed, issues);
             _issues.Clear();
             if (HasError(issues))

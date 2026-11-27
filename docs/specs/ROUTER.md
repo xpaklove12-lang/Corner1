@@ -75,6 +75,14 @@
 | 편집기에서 노드·대사·엔딩·결과 추가와 삭제 | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-28~32, EDITOR-34, EDITOR-36 |
 | 선택지 결과(`response`)를 한 줄씩 넘겨 보여 주기 | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-33 |
 | 선택지를 고른 뒤 엔딩으로 갈지 가르는 `ending_need` | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-38 |
+| 대사 CSV의 번역용 줄 ID `tid`, 편집기에서 `Loc/UI.csv` 원문 편집 | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-39~40 |
+| 지원 언어 목록, 시작 언어, 언어 바꾸기 | [`localization.md`](localization.md) | LOC-01~04 |
+| 공용 문구 파일(`Loc/UI.csv`, 옛 `Strings.csv`)과 코드 속 화면 문구 | [`localization.md`](localization.md) | LOC-05~07 |
+| 씬 고정 라벨과 인스펙터 문구의 번역 | [`localization.md`](localization.md) | LOC-08~09 |
+| 문구 속 손님 이름·대명사(`{client}`), 화자 이름 번역 | [`localization.md`](localization.md) | LOC-10~11 |
+| 대화·파편 힌트·회상 대사의 번역 파일과 번역 key | [`localization.md`](localization.md) | LOC-12~15 |
+| 번역 파일 갱신, 번역 가져오기, 번역 검사 | [`localization.md`](localization.md) | LOC-16~18 |
+| 언어별 폰트, 번역 용어집 | [`localization.md`](localization.md) | LOC-19~20 |
 | 필드 인물의 전신 모습과 크기 | [`field.md`](field.md) | FIELD-01, FIELD-09 |
 | 필드 인물 걷기·앉기·퇴장 모습, 걷기 주기 | [`field.md`](field.md) | FIELD-02~04, FIELD-10 |
 | 어머니의 긴장된 입장 자세 | [`field.md`](field.md) | FIELD-05 |
@@ -116,7 +124,9 @@
 | `Runtime/GameFlowUI.cs` | [`opening.md`](opening.md)(문 앞 안내, `▼`), [`dialogue.md`](dialogue.md)(빨리감기 안내) |
 | `Runtime/Typewriter.cs` | [`dialogue.md`](dialogue.md), [`memory-fragments.md`](memory-fragments.md) |
 | `Runtime/Flags.cs` | [`dialogue.md`](dialogue.md)(문 플래그), [`memory-fragments.md`](memory-fragments.md)(파편 플래그) |
-| `Runtime/Strings.cs` | [`opening.md`](opening.md)(`Strings.csv` 문구), [`dialogue-editor.md`](dialogue-editor.md)(`Strings.csv` 편집) |
+| `Runtime/Strings.cs` | [`opening.md`](opening.md)(`Strings.csv` 문구), [`dialogue-editor.md`](dialogue-editor.md)(`Strings.csv` 편집), [`localization.md`](localization.md)(언어별 조회, LOC-05~06) |
+| `Runtime/GameSettings.cs`, `Runtime/LocConfig.cs`, `Runtime/Loc.cs`, `Editor/LocTools.cs`, `Runtime/LocalizedLabel.cs` (만들 예정) | [`localization.md`](localization.md) |
+| `Assets/EyeMaze/Data/Loc/` | [`localization.md`](localization.md) |
 | `Runtime/Shapes.cs` | [`blink-maze.md`](blink-maze.md), [`memory-fragments.md`](memory-fragments.md) |
 | `Runtime/MemoryFragment.cs`, `Runtime/FragmentFeedback.cs` | [`memory-fragments.md`](memory-fragments.md), [`emotion-maze.md`](emotion-maze.md)(사물 투명도 계산 공유) |
 | `Runtime/FlashbackPlayer.cs`, `Runtime/FlashbackRoom.cs`, `Runtime/FlashbackProp.cs`, `Runtime/FlashbackScript.cs` | [`memory-fragments.md`](memory-fragments.md)(MEM-06~24) |
@@ -141,9 +151,10 @@
 | `DLG` | [`dialogue.md`](dialogue.md) | DLG-01~44 |
 | `EMO` | [`emotion-maze.md`](emotion-maze.md) | EMO-01~20 |
 | `MEM` | [`memory-fragments.md`](memory-fragments.md) | MEM-01~44 (MEM-25~33 폐기) |
-| `EDITOR` | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-01~38 |
+| `EDITOR` | [`dialogue-editor.md`](dialogue-editor.md) | EDITOR-01~40 |
 | `OPEN` | [`opening.md`](opening.md) | OPEN-01~06 |
 | `FIELD` | [`field.md`](field.md) | FIELD-01~12 |
+| `LOC` | [`localization.md`](localization.md) | LOC-01~20 |
 
 옛 번호(`015`, `스펙 010 FR-017` 등)로 적힌 커밋이나 코드 주석은 [`README.md`](README.md) 2절 대응표로 새 ID를 찾는다.
 
@@ -162,3 +173,5 @@
 | 시간을 멈추는 새 창 추가 | 그 창의 영역 + `dialogue`(DLG-29)와 `memory-fragments`(MEM-41)의 입력 막기 규칙 |
 | 컷신 구간 추가 | `opening` 또는 해당 영역 + `dialogue`(빨리감기 허용 구간, DLG-32) |
 | 엔딩 조건 바꾸기 | `dialogue-editor`(EDITOR-21~25, EDITOR-38) + `burden`(BURDEN-03 leave 기준) |
+| 화면에 새 문구 추가 | 문구를 내는 영역 + `localization`(`Loc/UI.csv` key, LOC-05~07) |
+| 대사 CSV나 `Flashbacks.csv`에 새 글 칸 추가 | `dialogue-editor`(머리글) + `localization`(번역 대상 칸, LOC-13) + 그 칸을 쓰는 동작 영역 |

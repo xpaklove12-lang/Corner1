@@ -15,6 +15,7 @@
   - 텍스트·트리 뷰의 분할 너비와 트리 노드 크기 조절·유지, 노드 선택과 F2 ID 변경, 대사 행 선택과 Enter 본문 편집
   - 상담 선택지별 신뢰도·동공 변화량의 트리 전용 표시
   - 모든 엔딩 진입 경로의 조건 표시와 트리 안의 조건·수치 편집
+  - 번역용 줄 ID `tid`의 보존과 자동 부여, 공용 문구 파일 `Loc/UI.csv`의 원문 편집 (번역 자체는 `localization.md`)
 - 제외:
   - SUDS 엔진 도입과 `.sud` 파일 저장·내보내기
   - 게임 실행 시 대사 처리 방식 변경
@@ -68,6 +69,8 @@
 - **EDITOR-36** `[승인]` 노드 뷰에서 노드를 선택하고 Delete를 누르면 그 노드를 제거한다. 그룹 노드는 그룹 전체를, 결과 카드는 그 선택지의 `response`를, after 카드는 그 엔딩의 `after`를 지운다.
 - **EDITOR-37** `[승인]` 직접 엔딩 조건에 든 수치 계산 플래그(예: `trust_3`)를 클릭하면 비교와 수치를 인라인으로 고친다. 우클릭 메뉴에서는 비교만 바꿀 수 있다. 고친 결과는 이 선택지의 조건만 그 비교·수치의 계산 플래그로 바꾸며, Flags.csv의 원래 플래그는 바꾸지 않는다.
 - **EDITOR-38** `[승인]` 선택지에 `ending_need`(결과 분기 조건)를 둔다. `need`는 선택지가 열리는 조건이고, `ending_need`는 고른 뒤 `ending`으로 갈지 가르는 조건이다. `ending_need`가 모두 켜져 있으면 `ending`으로 가고, 아니면 `ending`이 없는 선택지처럼 결과와 `goto`로 진행한다. 트리의 엔딩 진입선은 `해금`(need)과 `엔딩 조건`(ending_need)을 따로 보이고, 두 조건 모두 EDITOR-25·EDITOR-35·EDITOR-37 방식으로 고친다.
+- **EDITOR-39** `[작성중]` 회차 CSV의 `tid` 열(`LOC-12`(`localization.md`))을 알려진 열로 읽고 저장할 때 보존한다. 텍스트 뷰에서는 각 Dialogue 선택지의 `[eye ...]` 줄과 Talk·Ending 행의 `[eye ...]` 줄에 `tid="..."`로 표시한다. 행을 옮기거나 본문·조건·수치를 고치거나 그룹 ID를 바꿔도 그 행의 `tid`는 바꾸지 않는다. 저장할 때 `tid`가 빈 행(새로 추가한 행 포함)에는 LOC-12 규칙으로 새 번호를 준다. 텍스트 뷰에서 줄을 복사해 같은 `tid`가 둘 이상 생기면 뒤쪽 행에 새 번호를 주고 경고 목록에 보인다. 사람이 `tid` 값을 직접 고치는 것은 오류로 막지 않는다.
+- **EDITOR-40** `[승인]` 편집기의 공용 문구 선택 항목은 `Strings.csv` 대신 `Loc/UI.csv`(`LOC-05`(`localization.md`))를 연다. 텍스트 뷰와 트리, 인라인 편집은 `ko` 칸을 지금의 `text` 칸처럼 다루고, `context`·`maxlen`·언어 칸·`note`·`_ok`·`ko_synced`는 읽어 두었다가 저장할 때 그대로 쓴다. 지금의 `memo`는 `note`로 다룬다.
 
 ### 예외 및 경계 조건
 
@@ -193,7 +196,7 @@ flowchart TD
 
 ### 인물·회차 CSV 형식
 
-- 경로는 `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`, `Jisu_Day1.csv`처럼 정한다. 공통 머리글은 `section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest,ending_need,emotion`다. `emotion`은 dialogue 행에서 그 선택지를 고른 뒤 내담자의 감정이며 값과 동작은 `EMO-01`~`EMO-20`(`emotion-maze.md`)을 따른다.
+- 경로는 `Assets/EyeMaze/Data/Dialogue/Eunjae_Day1.csv`, `Jisu_Day1.csv`처럼 정한다. 공통 머리글은 `section,actor,id,situation,text,response,need,set,trust,dilation,spring,goto,ending,back,title,after,speaker,memo,truth_trust,key_flag,leave_trust,burden_limit,rest,ending_need,emotion`다. `emotion`은 dialogue 행에서 그 선택지를 고른 뒤 내담자의 감정이며 값과 동작은 `EMO-01`~`EMO-20`(`emotion-maze.md`)을 따른다. EDITOR-39를 구현하면 머리글 끝에 `tid`를 더한다. `tid`는 번역용 줄 고정 ID이며 형식은 `LOC-12`(`localization.md`)를 따른다.
 - `section=talk`: `actor`는 대사를 실행하는 FieldNPC의 안정적인 ID(`EunjaeMom`, `Eunjae`, `Jisu`), `id`는 기존 `group`, `text`는 기존 대사다. `speaker`, `need`, `set`, `memo`는 기존 의미를 유지한다. 같은 actor 안에서 그룹의 첫 등장 순서가 `TalkScript.Pick()` 우선순위다.
 - `section=dialogue`: `actor`는 상담 인물 ID, `id`는 기존 `node`, `text`는 선택지다. `situation`, `response`, `need`, `set`, 수치, `goto`, `ending`, `back`, `memo`는 기존 의미를 유지한다. `rest`는 그 선택지를 고르면 내담자가 쉬자고 청하는 대사다(`BURDEN-23`(`burden.md`)). `ending_need`는 `ending`이 있는 선택지에만 쓰는 결과 분기 조건이다(EDITOR-38). 첫 dialogue 노드가 상담 시작 노드다.
 - `section=ending`: `actor`는 상담 인물 ID, `id`는 기존 엔딩 id 또는 `@intro`·`@idle`·`@abyss`, `text`는 기존 `line`이다. `title`, `situation`, `after`, `memo`는 기존 의미를 유지한다. `truth` 첫 행에는 정수 `truth_trust`와 파편의 Flag ID `key_flag`, `leave` 첫 행에는 정수 `leave_trust`와 0 초과 1 이하의 실수 `burden_limit`을 기록한다. `half` 조건은 `truth`의 반대로 계산하므로 별도 열을 갖지 않는다. 빈 `key_flag`는 파편 조건이 없다는 뜻이다.
@@ -207,7 +210,8 @@ flowchart TD
 - `Dialogue`: `:node` 뒤 `[eye situation="..." back="..."]`를 표시한다. 각 선택지는 `* 선택지 글`, 이어서 **Tab 한 개** 들여쓴 `[eye response="..." need="..." set="..." trust=0 dilation=0 spring=0 memo="..."]`, 마지막으로 필요할 때 같은 깊이의 `[goto 대상]` 또는 `[eye ending="..."]`를 둔다. 둘 다 없으면 현재 노드에 머문다. `back`은 노드의 첫 CSV 행에 기록한다.
 - `Talk`: `[eye section="talk" actor="EunjaeMom"]` 같은 단계 명령 아래 `:group` 뒤 `[eye need="..." set="..."]`를 표시한다. 각 행은 `[eye speaker="..." memo="..."]`와 `Line: 대사`의 쌍이다. 빈 speaker, `-`, `???`는 CSV 값을 그대로 기록한다. 같은 actor의 그룹 순서는 `TalkScript.Pick()`의 우선순위이므로 유지한다.
 - `Ending`: `[eye section="ending" actor="Eunjae"]` 같은 단계 명령 아래 `:id` 뒤 `[eye title="..." situation="..." after="..."]`를 표시한다. `:truth`에는 `truth_trust`, `key_flag`, `:leave`에는 `leave_trust`, `burden_limit`을 같은 `[eye ...]` 명령에 적는다. 각 행은 `[eye memo="..."]`와 `Line: 대사`의 쌍이다. `@intro`, `@idle`, `@abyss`는 title·situation·after가 없는 라벨로 표시한다.
-- `Strings.csv`는 기존처럼 별도 파일에서 편집한다. 인물·회차 트리에는 넣지 않는다.
+- `Strings.csv`는 기존처럼 별도 파일에서 편집한다. 인물·회차 트리에는 넣지 않는다. EDITOR-40을 구현하면 이 파일은 `Loc/UI.csv`이고 본문은 `ko` 칸이다.
+- EDITOR-39를 구현하면 Dialogue 선택지와 Talk·Ending 행의 `[eye ...]` 줄에 `tid="jisu_day1_0005"`처럼 `tid`를 적는다. 값이 빈 행은 `tid`를 쓰지 않는다.
 - `[eye ...]`의 문자열은 큰따옴표로 감싸고 `\"`, `\\`, `\n`을 이스케이프한다. `need`·`set`의 여러 값은 기존 CSV처럼 `|`로 구분하고 수치는 불변 문화권 표기로 쓴다. `*`와 `Line:` 뒤 본문도 실제 줄바꿈을 `\n`으로 표시한다. 지원하지 않는 명령·속성은 오류로 처리한다.
 - Tab은 분기 아래 명령을 들여쓰는 한 단계다. 선택지 `*`는 줄 맨 앞, 그 선택지에 속한 명령은 Tab 정확히 한 개 뒤에 둔다. 텍스트 뷰에서 Tab은 실제 탭 문자를 넣고 Shift+Tab은 현재 줄의 탭 한 개를 뺀다. 기존 공백 들여쓰기 텍스트도 읽되, 편집기에서 다시 표시할 때 Tab으로 정규화한다. Tab을 여러 번 넣어 중첩 선택지를 만드는 기능은 포함하지 않으며, 두 번째 Tab으로 시작하는 명령은 오류로 표시한다.
 
@@ -221,6 +225,8 @@ flowchart TD
 | EDITOR-13, EDITOR-16 ~ EDITOR-20, EDITOR-22 ~ EDITOR-32, EDITOR-34 ~ EDITOR-37 | `Assets/EyeMaze/Scripts/Editor/DialogueEditorGraph.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorWindow.cs` | 메서드는 확인하지 못함 |
 | EDITOR-21 | `Assets/EyeMaze/Scripts/Runtime/ClientCase.cs`, `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueData.cs` | 메서드는 확인하지 못함 |
 | EDITOR-33, EDITOR-38 | `Assets/EyeMaze/Scripts/Runtime/EyeMazeDirector.cs`, `Assets/EyeMaze/Scripts/Runtime/DialogueScript.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorGraph.cs` | 메서드는 확인하지 못함 |
+| EDITOR-39 | `Assets/EyeMaze/Scripts/Editor/DialogueEditorFormat.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorDocument.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorWindow.cs` | `DialogueEditorFormat.DAY_COLUMNS` (아직 구현하지 않음) |
+| EDITOR-40 | `Assets/EyeMaze/Scripts/Editor/DialogueEditorFormat.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorDocument.cs`, `Assets/EyeMaze/Scripts/Editor/DialogueEditorWindow.cs`, `Assets/EyeMaze/Scripts/Runtime/Csv.cs` | `DialogueEditorFormat.STRINGS_COLUMNS`, `ReadStringsItem`, `StringsColumns`, `CarryHiddenColumns`, `WriteRow`, `DialogueEditorDocument.Columns`, `DialogueEditorWindow.ApplyDraft`, `ApplyGraphEdit`, `Csv.Row.ColumnNames` |
 
 ### 구조
 
@@ -253,7 +259,7 @@ flowchart TD
 
 - **부르는 것**: 기존 `Csv`, `DialogueScript`, `TalkScript`, `EndingScript`, `Strings`, `DialogueData`, 열린 씬의 `ClientCase`·`MemoryFragment`, `Flags.csv`
 - **불리는 것**: 회차 CSV를 읽는 `ClientCase`, `FieldNPC`, `EyeMazeDirector`(dialogue)가 이 스펙의 CSV 형식을 따른다.
-- **다른 스펙의 데이터**: `emotion` 열은 `EMO-01`~`EMO-20`(`emotion-maze.md`), `rest` 열과 Talk `rest` 그룹은 `BURDEN-23`~`BURDEN-36`(`burden.md`)을 따른다. 기억 파편 노드는 `MEM-06`~`MEM-24`(`memory-fragments.md`)의 파편을 읽는다.
+- **다른 스펙의 데이터**: `emotion` 열은 `EMO-01`~`EMO-20`(`emotion-maze.md`), `rest` 열과 Talk `rest` 그룹은 `BURDEN-23`~`BURDEN-36`(`burden.md`)을 따른다. 기억 파편 노드는 `MEM-06`~`MEM-24`(`memory-fragments.md`)의 파편을 읽는다. `tid` 열과 `Loc/UI.csv` 형식은 `LOC-05`, `LOC-12`(`localization.md`)를 따른다.
 
 ## 7. 검증 방법
 
@@ -295,6 +301,8 @@ flowchart TD
 - **EDITOR-36**: 새로 추가한 상담 장면을 다른 선택지의 `goto`로 이은 뒤 선택해 Delete를 누르면 텍스트와 CSV에서 그 장면이 사라지고 그 `goto`가 비며, Ctrl+Z 한 번으로 돌아온다. 결과 카드와 after 카드를 Delete로 지우면 각 칸이 빈다. `truth` 엔딩에서는 Delete가 거절된다.
 - **EDITOR-37**: 은재 `red_eyes`의 직접 엔딩 조건에 `trust_3`이 있을 때 `trust_3`을 클릭해 `>=5`를 입력하면 그 선택지 need의 `trust_3`이 `trust_5`로 바뀌고, Flags.csv에 `trust_5,신뢰 5 이상,계산,trust>=5` 줄이 생기며 `trust_3` 줄은 그대로다. 우클릭에서 `trust_5 비교/<=`를 고르면 `trust_le_5`로 바뀐다. `>=0.5`처럼 이미 있는 조건(`pupil_open`과 같은 `dilation>=0.5`)이면 새 줄 없이 그 플래그를 쓴다.
 - **EDITOR-38**: 은재 `red_eyes`의 음성 메시지 선택지를 `need=eunjae_voicemail`, `ending_need=trust_le_m3`로 두면 파편만 주워도 선택지가 열린다. Play Mode에서 신뢰가 -3 이하일 때 고르면 `delete` 엔딩으로, 아니면 결과를 보이고 장면에 머문다. 트리 진입선에 `해금 eunjae_voicemail`과 `엔딩 조건 trust_le_m3`가 따로 보이고 각각 고칠 수 있다.
+- **EDITOR-39**: 지수 Day1을 열어 선택지 하나를 다른 장면으로 옮기고 본문을 고친 뒤 저장하면 CSV에서 그 행의 `tid`가 그대로다. 우클릭으로 새 선택지를 더하고 저장하면 그 행에 파일 안 가장 큰 번호 다음 `tid`가 생긴다. 텍스트 뷰에서 선택지 블록을 복사해 붙이면 붙인 쪽에 새 `tid`가 생기고 경고가 보인다.
+- **EDITOR-40**: 공용 문구 항목을 열면 `Loc/UI.csv`의 `ko` 글이 보인다. 한 줄의 글을 고쳐 저장하면 그 줄의 `ko`만 바뀌고 `en`·`ja`·`context`·`maxlen`·`note`·`_ok`·`ko_synced`는 그대로다.
 
 ## 8. 알려진 문제
 
@@ -302,6 +310,8 @@ flowchart TD
 - 범위의 제외 항목 "게임 실행 시 대사 처리 방식 변경"과 EDITOR-33(결과 줄을 한 줄씩 넘김), EDITOR-38(`ending_need` 분기)이 서로 어긋나 보인다. 본문은 옛 스펙대로 옮겼다.
 - 엔딩 조건 판정의 `half`는 별도 열 없이 `truth`의 반대로 계산한다.
 - 5절 코드 위치의 메서드 이름은 확인하지 못했다.
+- 범위의 제외 항목 "CSV 주석, 미사용 열 … 원문 보존"에 따라 편집기는 모르는 열을 저장할 때 지운다. EDITOR-39 구현 전에 회차 CSV에 `tid`를 적으면 편집기 저장 때 사라진다.
+- EDITOR-40: 텍스트 뷰에 보이지 않는 칸(언어 칸, `context`, `maxlen`, `_ok`, `ko_synced`)은 같은 key 안에서 몇 번째 줄인지로 이전 모델의 값을 옮긴다. 텍스트 뷰에서 `opening`처럼 여러 줄인 key의 중간에 줄을 넣거나 줄 순서를 바꾸면, 그 뒤 줄들의 번역이 한 줄씩 어긋난다. 노드 뷰의 행 추가는 같은 모델에서 옮기므로 어긋나지 않는다.
 
 ## 9. 미결 사항
 

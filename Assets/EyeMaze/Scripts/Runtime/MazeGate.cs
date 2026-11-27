@@ -41,7 +41,7 @@ namespace EyeMaze
         /// <summary>연출 중 문 색에 곱하는 투명도. 통과 판정에는 쓰지 않는다.</summary>
         public float VisualAlpha { get => _visualAlpha; set => _visualAlpha = value; }
         /// <summary>
-        /// 막혔을 때 문구. Strings.csv의 gate.pupil(동공 문) / gate.first(첫 문) / gate.deep(그 안쪽 문)이 있으면 그걸 쓴다.
+        /// 막혔을 때 문구. Loc/UI.csv의 gate.pupil(동공 문) / gate.first(첫 문) / gate.deep(그 안쪽 문)이 있으면 그걸 쓴다.
         /// </summary>
         public string LockedMessage => Strings.Get(_requiredDilation >= 0f ? "gate.pupil" : _order <= 1 ? "gate.first" : "gate.deep", _lockedMessage);
 

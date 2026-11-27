@@ -29,7 +29,7 @@ namespace EyeMaze
         private readonly List<MazeGate> _gateBuffer = new List<MazeGate>();
 
         public int Index => _index;
-        /// <summary>층 이름. Strings.csv의 layer.0, layer.1 … 이 있으면 그걸 쓴다.</summary>
+        /// <summary>층 이름. Loc/UI.csv의 layer.0, layer.1 … 이 있으면 그걸 쓴다.</summary>
         public string DisplayName => Strings.Get("layer." + _index, _displayName);
         public int Offset { get => _offset; set => _offset = value; }
         /// <summary>깜빡임 회전 때 화면에만 더하는 각도(도). 벽 판정에는 쓰지 않는다.</summary>

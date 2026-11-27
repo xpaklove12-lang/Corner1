@@ -84,7 +84,7 @@ namespace EyeMaze
 
         // 스펙 015 FR-020: 막혔을 때 보일 글의 key 추가
         [Header("막혔을 때 글")]
-        [Tooltip("이 사물에 막혔을 때 보일 글의 Strings.csv key. 비우면 글을 보이지 않는다")]
+        [Tooltip("이 사물에 막혔을 때 보일 글의 Loc/UI.csv key. 비우면 글을 보이지 않는다")]
         [SerializeField] private string _blockedKey;
 
         [NonSerialized] private bool _visible;
