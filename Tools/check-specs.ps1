@@ -1,8 +1,9 @@
 ﻿# 스펙 규칙 검사: docs/specs가 docs/CONTRIBUTING.md의 규칙을 지키는지 확인한다.
 # 사람이 직접 돌리지 않는다. 커밋 훅(.githooks)과 GitHub 자동 검사(.github/workflows/spec-check.yml)가 부른다.
 # -CommitMessageFile을 주면 커밋 제목의 괄호가 요구사항 ID 형식인지도 본다(.githooks/commit-msg).
+# -Fix를 주면 각 스펙의 "진행 현황"을 기능 목록에 맞춰 다시 쓰고 git add 한다(.githooks/pre-commit).
 # 종료 코드: 0 통과(경고는 통과), 1 규칙 위반.
-param([string]$CommitMessageFile = '')
+param([string]$CommitMessageFile = '', [switch]$Fix)
 
 $ErrorActionPreference = 'Stop'
 # Git 창(UTF-8)에서 안내 글이 깨지지 않게 출력 인코딩을 맞춘다.
@@ -83,6 +84,43 @@ foreach ($name in $registered.Keys) {
     if (-not $done.Success) { $errors.Add("docs/specs/$name 에 '## 완료' 절이 없다.") }
     if ($text -notmatch '(?ms)^## 흐름[ \t]*\n.*?^```mermaid') {
         $errors.Add("docs/specs/$name 에 '## 흐름' 절과 Mermaid 차트가 없다.")
+    }
+
+    # 진행 현황: 기능 제목과 상태 태그로 만든다. 손으로 고치지 않는다.
+    # -Fix(커밋 훅)이면 다시 써서 커밋에 넣고, 아니면(CI) 어긋날 때 실패한다.
+    $items = New-Object System.Collections.Generic.List[object]
+    foreach ($part in @(@{ Body = $done; State = '완료' }, @{ Body = $progress; State = '' })) {
+        if (-not $part.Body.Success) { continue }
+        foreach ($m in [regex]::Matches($part.Body.Groups[1].Value, '(?m)^### (.+?) \(([A-Z]+)-(\d{2,3})\)(.*)$')) {
+            $state = $part.State
+            if (-not $state) { $state = if ($m.Groups[4].Value -match '\[개발중\]') { '개발중' } else { '제안' } }
+            $items.Add([pscustomobject]@{ Name = $m.Groups[1].Value; Id = "$($m.Groups[2].Value)-$($m.Groups[3].Value)"; State = $state; Num = [int]$m.Groups[3].Value })
+        }
+    }
+    $statusLines = New-Object System.Collections.Generic.List[string]
+    foreach ($it in ($items | Sort-Object Num)) {
+        if ($it.State -eq '완료') { $statusLines.Add("- [x] $($it.Name) ($($it.Id))") }
+        else { $statusLines.Add("- [ ] $($it.Name) ($($it.Id)) — $($it.State)") }
+    }
+    $counts = foreach ($st in @('완료', '개발중', '제안')) { "$st $(@($items | Where-Object { $_.State -eq $st }).Count)" }
+    $statusBlock = "## 진행 현황`n`n$($counts -join ' · ')`n`n" + ($(if ($statusLines.Count) { $statusLines -join "`n" } else { '없음' })) + "`n`n"
+    $current = [regex]::Match($text, '(?ms)^## 진행 현황[ \t]*\n.*?(?=^## )')
+    if (-not $current.Success -or $current.Value -ne $statusBlock) {
+        if ($Fix) {
+            if ($current.Success) { $text = $text.Remove($current.Index, $current.Length).Insert($current.Index, $statusBlock) }
+            else {
+                $flow = [regex]::Match($text, '(?m)^## 흐름')
+                $at = if ($flow.Success) { $flow.Index } else { 0 }
+                $text = $text.Insert($at, $statusBlock)
+            }
+            $raw = Read-Utf8 $path
+            $out = if ($raw.Contains("`r`n")) { $text.Replace("`n", "`r`n") } else { $text }
+            [IO.File]::WriteAllText($path, $out, (New-Object Text.UTF8Encoding($false)))
+            git -C $root add -- $path
+            Write-Output "docs/specs/$name 의 진행 현황을 맞췄다."
+        } else {
+            $errors.Add("docs/specs/$name 의 진행 현황이 기능 목록과 다르다. 커밋 훅(git config core.hooksPath .githooks)이 커밋할 때 맞춘다.")
+        }
     }
 
     # 요구사항은 "### 기능 이름 (ID)" 제목이다. 접두어, 중복, 다음 번호를 본다.
