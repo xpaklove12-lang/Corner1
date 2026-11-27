@@ -31,6 +31,10 @@ namespace EyeMaze
         // 층 문을 여는 플래그 목록 추가
         [Tooltip("층 문을 여는 플래그. 0번이 1층으로 들어가는 문이다. 비우면 그 문은 신뢰로 열린다")]
         [SerializeField] private string[] _gateFlags = new string[0];
+        [Tooltip("켜지면 손님의 의심이 풀린 것으로 보고 미로의 숨은 벽을 보여 주는 플래그. 비우면 숨은 벽이 처음부터 보인다")]
+        [SerializeField] private string _doubtFlag = "";
+        [Tooltip("이 손님의 홍채 무늬 장. 파편을 읽을 때마다 앞에서부터 한 장씩 숨은 벽으로 막히고, 다 모으면 무늬가 완성된다")]
+        [SerializeField] private List<IrisPatternSheet> _irisPattern = new List<IrisPatternSheet>();
 
         // 시작 감정과 감정별 눈 표현 추가
         [Header("감정")]
@@ -63,6 +67,8 @@ namespace EyeMaze
         // 시작 감정 공개
         // 문 플래그 목록 공개
         public string[] GateFlags => _gateFlags;
+        public string DoubtFlag => _doubtFlag;
+        public List<IrisPatternSheet> IrisPattern => _irisPattern;
         public ClientEmotion StartEmotion => _startEmotion;
         public string IntroMessage => EndingData?.Text(EndingScript.Intro) ?? _introMessage;
         public string IdleSituation => EndingData?.Text(EndingScript.Idle) ?? _idleSituation;

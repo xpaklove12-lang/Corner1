@@ -26895,6 +26895,56 @@ MonoBehaviour:
   _gateFlags:
   - eunjae_gate_1
   - eunjae_gate_2
+  _doubtFlag: eunjae_gate_1
+  _irisPattern:
+  - _name: "\ub3d9\uacf5 \uc0b4"
+    _shape: 0
+    _symmetry: 4
+    _ring: 5
+    _span: 1
+    _sector: 1
+    _width: 1
+    _direction: 1
+  - _name: "\ub3d9\uacf5 \ub760"
+    _shape: 1
+    _symmetry: 4
+    _ring: 4
+    _span: 1
+    _sector: 1
+    _width: 2
+    _direction: 1
+  - _name: "\uac00\uc6b4\ub370 \uc0b4"
+    _shape: 0
+    _symmetry: 4
+    _ring: 3
+    _span: 1
+    _sector: 3
+    _width: 1
+    _direction: 1
+  - _name: "\uac00\uc6b4\ub370 \ub760"
+    _shape: 1
+    _symmetry: 4
+    _ring: 2
+    _span: 1
+    _sector: 3
+    _width: 2
+    _direction: 1
+  - _name: "\ubc14\uae65 \uc0b4"
+    _shape: 0
+    _symmetry: 4
+    _ring: 1
+    _span: 1
+    _sector: 1
+    _width: 1
+    _direction: 1
+  - _name: "\ubc14\uae65 \ub760"
+    _shape: 1
+    _symmetry: 4
+    _ring: 0
+    _span: 1
+    _sector: 1
+    _width: 2
+    _direction: 1
   _startEmotion: 1
   _emotionLooks:
   - _emotion: 0
