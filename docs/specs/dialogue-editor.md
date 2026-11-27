@@ -29,11 +29,11 @@ CSV 하나가 유일한 원본이다. `section`으로 Talk·Dialogue·Ending 행
 
 - **EDITOR-01** `EyeMaze/대사 편집기`에서 인물·회차 CSV(`Dialogue/<인물>_DayN.csv`)를 열면 `section`·`actor`·`id`로 Talk·Dialogue·Ending 행을 나눠 한 모델로 읽고, 값과 순서를 보존한다. 공용 `Strings.csv`도 따로 열 수 있다.
 - **EDITOR-02** 텍스트 뷰는 SUDS식 표기와 `[eye ...]`를 쓰고, 라벨·선택지·대사·명령·오류 줄을 색으로 구분하며, Tab으로 들여쓴다.
-- **EDITOR-03** 노드 트리는 등장 Talk에서 상담, 분기, 엔딩까지 위에서 아래로 잇고, 이 회차 손님의 파편을 왼쪽에 의존선과 함께 보인다.
+- **EDITOR-03** 노드 트리(`DialogueEditorGraph`)는 등장 Talk에서 상담, 분기, 엔딩까지 위에서 아래로 잇고, 이 회차 손님의 파편을 왼쪽에 의존선과 함께 보인다.
 - **EDITOR-04** 트리에서 연결선과 카드를 끌어 `goto`와 순서를 바꾸고, 우클릭으로 선택지·대사·그룹·`after`를 더하며, F2와 Enter로 ID·본문·화자·파편 문구를 바로 고치고, Delete로 지운다.
-- **EDITOR-05** 올바른 편집은 두 뷰를 갱신하고 CSV를 바로 저장·재임포트한다. 오류가 있으면 줄과 이유를 보이고 마지막 정상 상태를 유지한다.
-- **EDITOR-09** Ctrl+Z·Ctrl+Y로 그 파일의 편집을 되돌리고 다시 한다.
-- **EDITOR-10** Ctrl+휠로 트리를 확대·축소하고, 분할선과 상자 크기를 끌어 바꾼다. 화면 설정은 다시 열어도 남는다.
+- **EDITOR-05** `DialogueEditorFormat.Validate`를 통과한 편집은 두 뷰를 갱신하고 CSV를 바로 저장·재임포트한다. 오류가 있으면 줄과 이유를 보이고 마지막 정상 상태를 유지한다.
+- **EDITOR-09** Ctrl+Z·Ctrl+Y(`UndoEdit`, `RedoEdit`)로 그 파일의 편집을 되돌리고 다시 한다.
+- **EDITOR-10** Ctrl+휠로 트리를 확대·축소하고, 분할선과 상자 크기를 끌어 바꾼다. 화면 설정은 `EditorPrefs`에 저장되어 다시 열어도 남는다.
 - **EDITOR-12** 씬의 상담(`ClientCase`)과 필드 인물(`FieldNPC`)은 연결된 회차 CSV로 상담, 엔딩, actor별 필드 대사를 실행한다.
 - **EDITOR-20** 선택지 아래에 `trust`·`dilation` 변화가 보이고(둘 다 0이면 "수치 변화 없음"), 클릭해 고친다.
 - **EDITOR-21** `truth`·`half`·`leave` 엔딩 조건(신뢰 기준, 부담 기준, 열쇠 파편 `key_flag`)과 선택지의 직접 엔딩 조건(`need`, `ending_need`)을 트리의 진입선에 보이고 고친다. 게임은 이 값으로 엔딩을 판정한다.

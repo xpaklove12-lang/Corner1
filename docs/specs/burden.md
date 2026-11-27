@@ -32,7 +32,7 @@ flowchart TD
 - **BURDEN-01** 들여다보는 중이고 심연 밖이며 파편을 읽지 않고 깜빡임 중이 아닐 때 부담감이 찬다. 다 차는 시간은 `_burdenFillSeconds`에 신뢰 1마다 `_burdenSecondsPerTrust`초가 더해진다.
 - **BURDEN-02** 좋은 말을 처음 고르면 부담감이 `_burdenRelief`만큼 줄고, 안 좋은 말을 고르면 `_burdenWrongChoice`만큼 오른다. 결과 문구에 "(부담이 조금 줄었다.)", "(부담이 조금 늘었다.)"가 붙는다.
 - **BURDEN-03** 부담감이 leave 기준값(회차 CSV `burden_limit`, 기본 1)에 닿으면 `_burdenEndLine`으로 leave 엔딩을 시작한다. leave 엔딩이 없으면 같은 문구로 시선을 거두게 한다.
-- **BURDEN-04** Q로 자리를 떠났다 돌아와도 부담감은 남는다. 리셋(R)과 손님 전환은 부담감과 휴식 신호를 처음으로 되돌린다.
+- **BURDEN-04** Q로 자리를 떠났다 돌아와도 부담감은 남는다. 리셋(R, `ResetAll`)과 손님 전환은 부담감과 휴식 신호를 처음으로 되돌린다.
 - **BURDEN-05** 만남 UI의 "부담감" 글 아래 막대가 부담감을 보이고, 값이 갑자기 바뀌면 `_burdenAnimSpeed`로 따라간다. 디렉터 인스펙터 상태 줄에도 `부담감 N%`가 보인다.
 - **BURDEN-10** `_bumpEnabled`(기본 꺼짐)를 켜면, 벽이나 잠긴 문에 `_bumpMinSpeed` 이상으로 부딪힐 때 막힌 면 반대로 `_knockbackDistance`만큼 밀려나고 미로 초점이 지지직 흔들리며 시선이 번쩍인다. 일반 벽 부딪힘은 부담감을 바꾸지 않는다.
 - **BURDEN-21** 잠긴 문에 `_gatePushWindow`초 안에 `_gatePushCount`번 막히면 부담감이 `_gatePushBurden`만큼 오른다. `_bumpEnabled`와 무관하다.

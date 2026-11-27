@@ -98,6 +98,13 @@ foreach ($name in $registered.Keys) {
         $seen[$id] = $true
     }
 
+    # 요구사항에는 코드를 찾을 이름(필드, key, 메뉴 등)을 백틱으로 하나 이상 넣는다.
+    foreach ($m in [regex]::Matches($text, '(?m)^-\s*\*\*([A-Z]+-\d{2,3})\*\*(.*)$')) {
+        if (($m.Groups[2].Value -replace '`\[(제안|개발중)\]`', '') -notmatch '`[^`]+`') {
+            $warnings.Add("docs/specs/$name 의 $($m.Groups[1].Value) 에 코드를 찾을 이름이 없다. Inspector 필드, 문구 key, 메뉴 경로 같은 이름을 넣는다.")
+        }
+    }
+
     if ($progress.Success) {
         foreach ($m in [regex]::Matches($progress.Groups[1].Value, '(?m)^-\s*\*\*([A-Z]+-\d{2,3})\*\*(.*)$')) {
             if ($m.Groups[2].Value -notmatch '^\s*`\[(제안|개발중)\]`') {
