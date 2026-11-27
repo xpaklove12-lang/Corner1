@@ -21,9 +21,9 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("line")] private LineRenderer _line;
 
         [NonSerialized] private int _drawnKey = int.MinValue;
-        // 스펙 010: 연출 중 벽 색에 곱할 투명도 추가
+        // BLINK-26, BLINK-37: 연출 중 벽 색에 곱할 투명도 추가
         [NonSerialized] private float _visualAlpha = 1f;
-        // 스펙 015: 어지러움 연출로 벽을 흔드는 폭과 빠르기 추가
+        // EMO-19: 어지러움 연출로 벽을 흔드는 폭과 빠르기 추가
         [NonSerialized] private float _wobble;
         [NonSerialized] private float _wobbleSpeed;
         private IrisMaze _maze;
@@ -35,7 +35,7 @@ namespace EyeMaze
         public float VisualAlpha { get => _visualAlpha; set => _visualAlpha = value; }
 
         /// <summary>
-        /// 스펙 015: 벽 가운데의 층 기준 위치. 원호 벽은 두 고리 사이 원 위, 방사 벽은 고리 가운데다.
+        /// EMO-19: 벽 가운데의 층 기준 위치. 원호 벽은 두 고리 사이 원 위, 방사 벽은 고리 가운데다.
         /// 위치 정보와 미로 모양을 사용하며, 층 기준 위치를 반환한다. 미로가 없으면 원점이다.
         /// </summary>
         public Vector3 MidLocal
@@ -50,7 +50,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 벽을 흔들리게 그린다. 그림만 바꾸고 벽 판정은 바꾸지 않는다.
+        /// EMO-19: 벽을 흔들리게 그린다. 그림만 바꾸고 벽 판정은 바꾸지 않는다.
         /// amplitude(흔들림 폭, 0이면 멈춤)와 speed를 사용하며, _wobble과 _wobbleSpeed를 바꾼다.
         /// </summary>
         public void SetWobble(float amplitude, float speed)
@@ -79,8 +79,8 @@ namespace EyeMaze
         {
             if (_maze == null) _maze = GetComponentInParent<IrisMaze>();
             if (_maze == null || _line == null) return;
-            // 스펙 010: 표시 투명도가 바뀌어도 다시 칠하도록 키에 포함
-            // 스펙 015: 흔들림 폭도 키에 넣고, 흔들리는 동안에는 매 프레임 다시 그린다.
+            // BLINK-26, BLINK-37: 표시 투명도가 바뀌어도 다시 칠하도록 키에 포함
+            // EMO-19: 흔들림 폭도 키에 넣고, 흔들리는 동안에는 매 프레임 다시 그린다.
             int key = HashCode.Combine(_kind, _ring, _sector, _maze.GeometryKey, _maze.WallColor, _maze.WallWidthNow, _visualAlpha, _wobble);
             if (key == _drawnKey && _wobble <= 0f) return;
             _drawnKey = key;
@@ -95,7 +95,7 @@ namespace EyeMaze
                 Shapes.SetPoints(_line, new[] { Shapes.Polar(_maze.RingOuter(_ring), a), Shapes.Polar(_maze.RingInner(_ring), a) }, false);
             }
             _line.widthMultiplier = _maze.WallWidthNow;
-            // 스펙 010: 벽 색에 표시 투명도를 곱함
+            // BLINK-26, BLINK-37: 벽 색에 표시 투명도를 곱함
             Color color = _maze.WallColor;
             color.a *= _visualAlpha;
             Shapes.SetColor(_line, color);
@@ -103,7 +103,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 흔들리는 벽을 그린다. 원호 벽은 점마다 반지름 방향으로, 방사 벽은 선에 수직 방향으로 시간에 따라 물결치듯 밀어 그린다.
+        /// EMO-19: 흔들리는 벽을 그린다. 원호 벽은 점마다 반지름 방향으로, 방사 벽은 선에 수직 방향으로 시간에 따라 물결치듯 밀어 그린다.
         /// d(칸 각도), _wobble, _wobbleSpeed와 시간을 사용하며, _line의 점 목록을 바꾼다.
         /// </summary>
         private void DrawWobbling(float d)

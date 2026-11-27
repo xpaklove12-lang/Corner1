@@ -81,6 +81,7 @@ namespace EyeMaze
             }
         }
 
+        // OPEN-06: 한 줄이 다 찍히면 ▼를 오르내리게 보인다.
         /// <summary>
         /// 넘김 삼각형을 켜거나 끄고, 켜져 있으면 제자리에서 위아래로 오르내리게 한다.
         /// on과 _markBob, _markBobSpeed를 사용하며, _advanceMark의 enabled와 anchoredPosition을 바꾼다.

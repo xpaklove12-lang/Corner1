@@ -11,6 +11,7 @@ namespace EyeMaze
     {
         private static readonly int _timeId = Shader.PropertyToID("_FastForwardTime");
 
+        // DLG-39: 화면 가운데에서 깜빡이는 ▶▶
         [Header("연결")]
         [Tooltip("오버레이 전체를 나타내고 숨기는 CanvasGroup")]
         [SerializeField] private CanvasGroup _group;
@@ -38,6 +39,7 @@ namespace EyeMaze
             if (_group.alpha <= 0f) return;
 
             // 셰이더는 배속의 영향을 받지 않도록 실제 시간으로 줄 배치를 바꾼다.
+            // DLG-38: 가로줄 셰이더에 실제 시간을 넘긴다.
             Shader.SetGlobalFloat(_timeId, Time.unscaledTime);
             // ▶▶는 켜고 끄지 않고 불투명도를 사인 곡선으로 부드럽게 오르내린다.
             float wave = 0.5f + 0.5f * Mathf.Cos(Time.unscaledTime / _markPulseSeconds * 2f * Mathf.PI);

@@ -90,6 +90,7 @@ namespace EyeMaze
         public bool IsMoving => _walking || _sitT >= 0f;
         public TextAsset TalkCsv => _talkCsv;
         public string DialogueActorId => _dialogueActorId;
+        // EDITOR-12: 회차 CSV에서 이 actor의 Talk 행만 읽는다.
         public TalkScript Talk => TalkScript.Get(_talkCsv, _dialogueActorId);
 
         /// <summary>앉았을 때 몸 중심 위치 (seatPoint가 있으면 그 위, 없으면 씬에 놓인 원래 자리)</summary>
@@ -214,7 +215,7 @@ namespace EyeMaze
             return true;
         }
 
-        // 스펙 007: 대화 기록에서 만남 상대의 얼굴을 찾도록 공개
+        // DLG-30: 대화 기록에서 만남 상대의 얼굴을 찾도록 공개
         /// <summary>
         /// 이름으로 씬의 다른 사람 초상화를 찾는다 (speaker 칸에 다른 사람 이름을 쓴 줄, 대화 기록의 얼굴용).
         /// name을 사용하며, 찾은 초상화 또는 null을 반환한다.

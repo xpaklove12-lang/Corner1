@@ -18,7 +18,7 @@ namespace EyeMaze
         [Tooltip("1을 넣으면 한 번 움찔 수축했다가 돌아온다")]
         [SerializeField, FormerlySerializedAs("pulse"), Range(0f, 1f)] private float _pulse;
 
-        // 스펙 011: 동공 떨림 설정 추가
+        // BURDEN-24: 동공 떨림 설정 추가
         [Header("떨림")]
         [Tooltip("동공이 떨리는 거리")]
         [SerializeField] private float _trembleDistance = 0.05f;
@@ -32,11 +32,11 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("shown"), HideInInspector] private float _shown = -1f;
 
         [NonSerialized] private int _drawnKey = int.MinValue;
-        // 스펙 011: 떨림 세기와 떨리기 전 위치 추가
+        // BURDEN-24: 떨림 세기와 떨리기 전 위치 추가
         [NonSerialized] private float _tremble;
         [NonSerialized] private bool _trembling;
         [NonSerialized] private Vector3 _restPosition;
-        // 스펙 015: 감정 표현의 떨림 거리, 빠르기, 시선 피함 추가
+        // EMO-03: 감정 표현의 떨림 거리, 빠르기, 시선 피함 추가
         [NonSerialized] private float _emotionTrembleDistance;
         [NonSerialized] private float _emotionTrembleSpeed = 28f;
         [NonSerialized] private Vector2 _emotionShift;
@@ -57,7 +57,7 @@ namespace EyeMaze
 
         void Update()
         {
-            // 스펙 011: 신호 중에는 동공을 제자리 주변에서 떨리게 한다.
+            // BURDEN-24: 신호 중에는 동공을 제자리 주변에서 떨리게 한다.
             if (Application.isPlaying) ApplyTremble();
             float target = TargetRadius;
             if (_shown < 0f || !Application.isPlaying) _shown = target;
@@ -91,7 +91,7 @@ namespace EyeMaze
         /// </summary>
         private void ApplyTremble()
         {
-            // 스펙 015: 휴식 신호 떨림과 감정 떨림 중 큰 쪽을 쓰고 시선 피함을 더한다
+            // EMO-11: 휴식 신호 떨림과 감정 떨림 중 큰 쪽을 쓰고 시선 피함을 더한다
             float tearDistance = _trembleDistance * _tremble;
             bool emotionWins = _emotionTrembleDistance > tearDistance;
             float distance = emotionWins ? _emotionTrembleDistance : tearDistance;
@@ -107,7 +107,7 @@ namespace EyeMaze
                 _restPosition = transform.localPosition;
                 _trembling = true;
             }
-            // 스펙 015: 떨림 거리와 빠르기를 큰 쪽 값으로 바꾸고 시선 피함을 더함
+            // EMO-11: 떨림 거리와 빠르기를 큰 쪽 값으로 바꾸고 시선 피함을 더함
             float t = Time.time * speed;
             var offset = new Vector3(Mathf.PerlinNoise(t, 0f) - 0.5f, Mathf.PerlinNoise(0f, t) - 0.5f, 0f) * (2f * distance);
             transform.localPosition = _restPosition + offset + (Vector3)_emotionShift;

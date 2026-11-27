@@ -38,6 +38,7 @@ namespace EyeMaze
         /// <summary>빨리감기가 적용 중인지.</summary>
         public static bool IsFastForwarding => _current != null && _current._active;
 
+        // DLG-37: 컷신 중 필드 안내에 붙일 빨리감기 안내
         /// <summary>필드 컷신 중이면 빨리감기 안내 문구, 그 밖에는 null.</summary>
         public static string Hint => _current != null && _current.isActiveAndEnabled && FieldCutscene.IsPlaying
                                      ? Strings.Get("hint.fast_forward", _current._hintText) : null;
@@ -56,6 +57,7 @@ namespace EyeMaze
             _autoAdvanceInterval = Mathf.Max(0f, _autoAdvanceInterval);
         }
 
+        // DLG-32, DLG-33: 컷신 구간에서 키를 누르는 동안만 배속한다.
         void Update()
         {
             // 대화 기록 창이 열려 있으면 그 창의 일시정지를 따르고, timeScale과 진행 상태를 건드리지 않는다.
@@ -65,6 +67,7 @@ namespace EyeMaze
             SetActive(inSegment && Held());
             if (!_active) return;
 
+            // DLG-34: 찍히는 글을 바로 끝까지 보인다.
             Typewriter.SkipAll();
             AutoAdvance(Time.unscaledDeltaTime);
         }
@@ -107,6 +110,7 @@ namespace EyeMaze
             if (!ready) { _advanceTimer = 0f; return; }
 
             _advanceTimer += dt;
+            // DLG-35: 줄이 다 보이고 간격이 지나면 자동으로 넘긴다.
             if (_advanceTimer < _autoAdvanceInterval) return;
             _advanceTimer = 0f;
             if (monologue) _monologue.Advance();

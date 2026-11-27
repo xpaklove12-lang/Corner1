@@ -5,7 +5,7 @@ using UnityEngine;
 namespace EyeMaze
 {
     /// <summary>
-    /// 스펙 007: 플레이 중 화면에 나온 대사를 모아 두는 기록.
+    /// DLG-24: 플레이 중 화면에 나온 대사를 모아 두는 기록.
     /// 필드 대화, 만남 대화, 엔딩 대사를 순서대로 담고, 대화 기록 창(DialogueLogUI)이 읽어서 보여준다.
     /// Play Mode가 끝날 때까지 손님이 바뀌거나 리셋해도 남는다.
     /// </summary>

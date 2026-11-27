@@ -49,7 +49,7 @@ namespace EyeMaze.EditorTools
         public static readonly string[] DAY_COLUMNS =
         {
             "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring",
-            // 스펙 015: 선택지의 감정 열 emotion 추가
+            // EMO-15: 선택지의 감정 열 emotion 추가
             "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need", "emotion",
         };
 
@@ -72,7 +72,7 @@ namespace EyeMaze.EditorTools
             IdColumn = "id",
             BodyColumn = TEXT,
             GroupColumns = new[] { "situation", "back" },
-            // 스펙 015: 선택지 속성에 emotion 추가
+            // EMO-15: 선택지 속성에 emotion 추가
             ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "spring", "memo", "ending", "rest", "ending_need", "emotion" },
             NumberColumns = new[] { "trust", "dilation", "spring" },
         };
@@ -162,6 +162,7 @@ namespace EyeMaze.EditorTools
 
         // ---------------------------------------------------------------- CSV → 모델
 
+        // EDITOR-11: section, actor, id로 행을 나누고 값과 순서를 보존한다.
         /// <summary>
         /// CSV를 공통 모델로 읽는다. 같은 section·actor·id의 행은 처음 나온 그룹에 순서대로 모으고, 그룹 칸은 처음 적힌 값을 쓴다.
         /// asset, kind, path를 사용하며, 새 문서를 반환하고 읽기 문제는 errors에 남긴다.
@@ -332,6 +333,7 @@ namespace EyeMaze.EditorTools
 
         // ---------------------------------------------------------------- 텍스트 → 모델
 
+        // EDITOR-02: 텍스트 뷰의 SUDS식 표기를 공통 모델로 읽는다.
         /// <summary>
         /// SUDS식 텍스트를 공통 모델로 읽는다. 문법 문제는 줄 번호와 함께 issues에 남긴다.
         /// text, kind, path를 사용하며, 읽은 문서를 반환한다. issues에 오류가 있으면 그 문서는 쓰지 않는다.
@@ -731,6 +733,7 @@ namespace EyeMaze.EditorTools
             return null;
         }
 
+        // EDITOR-27: 이 회차를 쓰는 손님의 파편 플래그를 모은다.
         /// <summary>
         /// 이 회차 손님의 파편 Flag ID를 모은다. 같은 Flag가 둘 이상인 것은 빼서 열쇠 파편 후보로 쓰지 않는다.
         /// path를 사용하며, (손님, 고유한 Flag 목록)을 반환한다. 손님이 없으면 (null, 빈 목록)이다.
@@ -854,6 +857,7 @@ namespace EyeMaze.EditorTools
             return list;
         }
 
+        // EDITOR-05: UTF-8 BOM과 CRLF로 저장하고 내용이 같으면 다시 쓰지 않는다.
         /// <summary>
         /// CSV 글을 UTF-8(BOM 포함)로 파일에 쓰고 다시 임포트한다. 내용이 같으면 쓰지 않는다.
         /// path와 csv를 사용하며, 파일을 썼으면 true를 반환한다.

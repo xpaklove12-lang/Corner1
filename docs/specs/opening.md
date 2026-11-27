@@ -4,6 +4,21 @@
 
 주인공의 독백으로 이야기의 전제를 알리고, 초인종과 혼잣말로 첫 손님이 왔음을 느끼게 한다. 플레이어가 문을 열어 은재 어머니를 맞고, 사연을 들은 뒤 은재와 마주 앉는다.
 
+## 흐름
+
+```mermaid
+flowchart TD
+    A[시작 독백 7줄 OPEN-01] --> B["띵-동 OPEN-02"]
+    B --> C[혼잣말 A, B OPEN-02]
+    C --> D["문 앞 안내 OPEN-03"]
+    D -->|문과 상호작용| E[어머니 등장, 서로 한 걸음 OPEN-04]
+    E -->|_talkDelay초| F[어머니 대사 10줄 OPEN-05]
+    F --> G[어머니 퇴장, 은재 착석, 서술 3줄 OPEN-05]
+    G --> H[은재 상담 시작]
+```
+
+필드 컷신은 `FieldCutscene`이 단계별로 진행하고, 그동안 플레이어 이동과 상호작용을 막는다. 문 대기 단계만 플레이어가 움직일 수 있다. 대사 원문은 CSV에 두고 Inspector 값은 CSV에 줄이 없을 때의 예비값이다.
+
 ## 진행 중
 
 없음
@@ -17,7 +32,31 @@
 - **OPEN-05** 두 이동이 끝나고 `_talkDelay`초 뒤 어머니 대사(`Eunjae_Day1.csv`의 talk `enter`) 10줄이 나온다. 첫 줄 이름은 `???`다. 이어서 퇴장, 은재 입장·착석, 서술 3줄(`reveal`)이 나온다.
 - **OPEN-06** 필드 대사창은 줄이 다 찍히면 오른쪽 아래에 `▼`가 오르내리고, 찍히는 동안은 숨긴다.
 
-## 메모
+---
 
-- 대사 원문은 `Data/Strings.csv`와 `Dialogue/Eunjae_Day1.csv`가 기준이다.
-- `띵-동`과 `▼`는 TextMeshPro 규칙의 예외로 uGUI 레거시 `Text`(Galmuri11)를 쓴다.
+## 자세히
+
+### 주의
+
+- `OPEN-03` 문 대기 중 아무리 기다려도 어머니는 자동으로 들어오지 않는다.
+- `OPEN-04` 이동 중 반복 입력으로 어머니가 다시 나타나거나 대사가 중복 시작되지 않는다. 한 걸음 거리와 시간은 씬 값을 쓰고 재생 시작 때 덮어쓰지 않는다.
+- `OPEN-05` 한쪽 이동이 먼저 끝나도 둘 다 끝나기 전에는 대기 시간을 세지 않는다. 첫 줄 이름 가리기는 CSV `speaker` 칸의 `???`로 정한다.
+
+### 하지 않는 것
+
+- 문짝과 손잡이 열림 연출을 넣지 않는다.
+- 호출 글씨를 씬의 `TextMesh`로 두지 않는다.
+- TextMeshPro를 쓰지 않는다. 한글 TMP 폰트 에셋이 없어 uGUI 레거시 `Text`(Galmuri11)를 쓴다. `AGENTS.md` TMP 규칙의 예외다.
+- 혼잣말 A 뒤에 창을 닫았다 B를 열지 않는다. 같은 창에 이어진다.
+- `띵-동`을 독백 직후 말고는 보이지 않는다.
+
+### 구성
+
+- `띵-동`은 화면 전체로 늘어난 `필드 UI` 아래 uGUI `Text`이고, `FieldDoor`가 문 월드 위치와 Inspector 오프셋으로 화면 위치를 맞춘다.
+- `▼`는 `텍스트 상자/속지` 아래 uGUI `Text`이고 `GameFlowUI._advanceMark`로 연결한다.
+- 문 안내는 새 UI 없이 `GameFlowUI._fieldHint`를 쓴다.
+- 대사 원문은 `Data/Strings.csv`(`opening`, `field.call_first`, `field.call_second`, `hint.door`)와 `Dialogue/Eunjae_Day1.csv`의 talk `enter`, `reveal`이다.
+
+### 메모
+
+- `_inwardSign`의 뜻은 확인하지 못함.

@@ -14,6 +14,8 @@ $statusPath = Join-Path $specDir 'STATUS.md'
 $metaFiles = @('README.md', '_TEMPLATE.md', 'STATUS.md')
 $errors = New-Object System.Collections.Generic.List[string]
 $board = New-Object System.Collections.Generic.List[object]
+$doneIds = New-Object System.Collections.Generic.List[string]
+$warnings = New-Object System.Collections.Generic.List[string]
 
 function Read-Utf8([string]$Path) {
     return [IO.File]::ReadAllText($Path, [Text.Encoding]::UTF8)
@@ -87,6 +89,9 @@ foreach ($name in $registered.Keys) {
     $done = [regex]::Match($text, '(?ms)^## 완료[ \t]*\n(.*?)(?=^## |\z)')
     if (-not $progress.Success) { $errors.Add("docs/specs/$name 에 '## 진행 중' 절이 없다.") }
     if (-not $done.Success) { $errors.Add("docs/specs/$name 에 '## 완료' 절이 없다.") }
+    if ($text -notmatch '(?ms)^## 흐름[ \t]*\n.*?^```mermaid') {
+        $errors.Add("docs/specs/$name 에 '## 흐름' 절과 Mermaid 차트가 없다.")
+    }
 
     # 파일 전체의 요구사항 줄로 접두어, 중복, 다음 번호를 본다.
     $seen = @{}
@@ -119,6 +124,21 @@ foreach ($name in $registered.Keys) {
         foreach ($m in [regex]::Matches($done.Groups[1].Value, '(?m)^-\s*\*\*([A-Z]+-\d{2,3})\*\*\s*`\[')) {
             $errors.Add("docs/specs/$name 완료의 $($m.Groups[1].Value) 에 상태 태그가 남아 있다. 완료 줄에는 태그를 쓰지 않는다.")
         }
+        # 줄 끝에 "(데이터)"를 붙인 요구사항은 CSV 데이터로 충족되므로 코드 주석을 찾지 않는다.
+        foreach ($m in [regex]::Matches($done.Groups[1].Value, '(?m)^-\s*\*\*([A-Z]+-\d{2,3})\*\*(.*)$')) {
+            if ($m.Groups[2].Value.TrimEnd() -notmatch '\(데이터\)$') { $doneIds.Add($m.Groups[1].Value) }
+        }
+    }
+}
+
+# 완료 ID가 코드 주석에 있는지 본다. 데이터만 정하는 요구사항도 있으므로 경고만 한다.
+# GitHub 검사처럼 Assets가 없는 체크아웃에서는 건너뛴다.
+$assetsDir = Join-Path $root 'Assets'
+if (Test-Path $assetsDir) {
+    $code = (Get-ChildItem $assetsDir -Recurse -Include '*.cs', '*.shader' | ForEach-Object { Read-Utf8 $_.FullName }) -join "`n"
+    $missing = @($doneIds | Where-Object { $code -notmatch ('(?<![A-Z])' + [regex]::Escape($_) + '(?!\d)') })
+    if ($missing.Count -gt 0) {
+        $warnings.Add("완료 ID $($missing.Count)개가 코드 주석에 없다(구현한 곳에 ID 주석을 단다): $($missing -join ', ')")
     }
 }
 
@@ -149,6 +169,7 @@ if ($WriteStatus) {
     $errors.Add('docs/specs/STATUS.md가 스펙과 다르다. Tools/check-specs.ps1 -WriteStatus로 다시 만든다.')
 }
 
+$warnings | ForEach-Object { Write-Output "[경고] $_" }
 if ($errors.Count -gt 0) {
     Write-Output "[스펙 규칙 위반 $($errors.Count)건] 규칙은 docs/CONTRIBUTING.md를 본다."
     $errors | ForEach-Object { Write-Output " - $_" }

@@ -33,12 +33,15 @@ namespace EyeMaze
         [SerializeField] private Text _returnLabel;
         [SerializeField, FormerlySerializedAs("gazeButtonLabel")] private Text _gazeButtonLabel;
 
+        // BURDEN-05: 채움의 세로 스케일이 부담감 값을 따른다.
+        // BURDEN-08: 부담감이 갑자기 바뀌면 막대가 이 속도로 따라간다.
         [Header("부담감")]
         [Tooltip("부담감 막대의 채움. 피벗을 아래에 두고 세로 스케일로 채운다")]
         [SerializeField] private RectTransform _burdenFill;
         [Tooltip("대화로 부담감이 갑자기 바뀔 때 막대가 따라가는 속도 (초당 0~1 비율)")]
         [SerializeField] private float _burdenAnimSpeed = 0.5f;
-        // 스펙 006: 깜빡일 때 가릴 부담감 표시 참조와 현재 투명도 추가
+        // BLINK-16: 깜빡일 때 가릴 부담감 표시 참조와 현재 투명도 추가
+        // BURDEN-07: 막대 위의 "부담감" 글은 씬에 두고, 깜빡일 때 막대와 함께 가린다.
         [Tooltip("깜빡일 때 함께 가려지는 부담감 막대와 글")]
         [SerializeField] private Graphic[] _burdenGraphics = new Graphic[0];
 
@@ -59,7 +62,7 @@ namespace EyeMaze
         [NonSerialized] private float _trustShown = float.NaN;
         [NonSerialized] private float _burdenAlpha = -1f;
 
-        // 스펙 012: 기억 목록 줄 강조 시간과 현재 강조 상태 추가
+        // MEM-04: 기억 목록 줄 강조 시간과 현재 강조 상태 추가
         [Header("기억 목록 강조")]
         [Tooltip("새로 얻은 파편 줄이 원래 색으로 돌아오는 시간(초)")]
         [SerializeField] private float _highlightSeconds = 0.6f;
@@ -68,7 +71,7 @@ namespace EyeMaze
         [NonSerialized] private string _highlightTitle;
         [NonSerialized] private Color _highlightColor;
 
-        // 스펙 019: 단서로 선택지가 열렸을 때 관찰 중지 버튼 글의 맥동 색과 주기 추가
+        // MEM-36: 단서로 선택지가 열렸을 때 관찰 중지 버튼 글의 맥동 색과 주기 추가
         [Header("단서 해금 안내")]
         [Tooltip("관찰 중지 버튼 글이 맥동할 때 오가는 색")]
         [SerializeField] private Color _gazePulseColor = new Color(0.85f, 0.35f, 0.1f, 1f);
@@ -78,7 +81,7 @@ namespace EyeMaze
         [NonSerialized] private bool _baseColorSaved;
         [NonSerialized] private Color _gazeLabelBaseColor;
 
-        // 스펙 019: 기억 목록을 줄마다 누를 수 있는 버튼으로 표시
+        // MEM-38: 기억 목록을 줄마다 누를 수 있는 버튼으로 표시
         [Header("기억 목록 줄")]
         [Tooltip("주운 파편을 한 줄씩 보여 주는 버튼. 비우면 기억 목록 글 하나로 보여 준다")]
         [SerializeField] private Button[] _memoryRows = new Button[0];
@@ -88,11 +91,11 @@ namespace EyeMaze
 
         [NonSerialized] private readonly List<MemoryFragment> _rowFragments = new List<MemoryFragment>();
 
-        // 스펙 006: 깜빡임 전체 화면 페이드 필드 제거
+        // BLINK-13: 깜빡임 전체 화면 페이드 필드 제거
 
         void Awake()
         {
-            // 스펙 019: 줄 버튼 클릭은 Play를 시작할 때 한 번만 연결한다.
+            // MEM-38: 줄 버튼 클릭은 Play를 시작할 때 한 번만 연결한다.
             if (!Application.isPlaying) return;
             for (int i = 0; i < _memoryRows.Length; i++)
             {
@@ -101,7 +104,7 @@ namespace EyeMaze
             }
         }
 
-        // 스펙 012: 파편 획득과 연출 정리 이벤트 구독
+        // MEM-04, MEM-05: 파편 획득과 연출 정리 이벤트 구독
         void OnEnable()
         {
             MemoryFragment.PickedUp += OnFragmentPickedUp;
@@ -140,21 +143,21 @@ namespace EyeMaze
             {
                 MazeLayer layer = d.CursorLayer;
                 sit = Strings.Get("ui.gaze_situation", "{name}의 눈 속 — {layer}", ("name", p != null ? p.DisplayName : ""), ("layer", layer != null ? layer.DisplayName : ""));
-                // 스펙 011: 신호 중 들여다보면 대화로 돌아오라는 온보딩 문구를 추가
+                // BURDEN-36: 신호 중 들여다보면 대화로 돌아오라는 온보딩 문구를 추가
                 if (d.RestRequested) sit += "\n" + Strings.Get("ui.rest_hint_gaze", "{name}가 하고 싶은 말이 있는 거 같다. 잠시 관찰을 멈춰보자.", ("name", p != null ? p.DisplayName : ""));
-                // 스펙 019 FR-002: 단서로 선택지가 열렸으면 대화로 돌아갈 이유를 알린다
+                // MEM-35: 단서로 선택지가 열렸으면 대화로 돌아갈 이유를 알린다
                 if (d.NewTalkReady) sit += "\n" + Strings.Get("ui.new_talk_hint", "(새로 꺼낼 수 있는 이야기가 생겼다. 관찰을 멈춰보자.)");
             }
-            // 스펙 011: 신호 중에는 장면 설명 자리에 쉬자는 대사를 표시
-            // 스펙 011: 쉬게 해 줄 때임을 알리는 온보딩 문구를 대사 아래에 추가
+            // BURDEN-27: 신호 중에는 장면 설명 자리에 쉬자는 대사를 표시
+            // BURDEN-27: 쉬게 해 줄 때임을 알리는 온보딩 문구를 대사 아래에 추가
             else if (d.RestRequested) sit = d.RestLine + "\n" + Strings.Get("ui.rest_hint_talk", "(잠시 쉴 시간이 필요한 거 같다.)");
             else sit = node != null ? node.Situation : d.IdleSituation;
             // 공용 문구 속 이름과 대명사를 지금 손님에 맞춘다.
             sit = d.Personalize(sit);
             Set(_situation, string.IsNullOrEmpty(sit) ? "" : _situationPrefix + sit);
             Set(_message, Prefixed(d.Personalize(d.Message), _messagePrefix));
-            // 스펙 012: 새로 얻은 파편 줄을 강조해 표시
-            // 스펙 019 FR-007: 줄 버튼이 있으면 머리글만 글로 쓰고 파편은 줄 버튼으로 보인다
+            // MEM-04: 새로 얻은 파편 줄을 강조해 표시
+            // MEM-38: 줄 버튼이 있으면 머리글만 글로 쓰고 파편은 줄 버튼으로 보인다
             if (_memoryRows.Length == 0) Set(_memories, HighlightedSummary(d.CollectedSummary()));
             else UpdateMemoryRows(d);
             if (!_baseColorSaved) SaveBaseColor();
@@ -184,7 +187,7 @@ namespace EyeMaze
                 if (_burdenFill.localScale != scale) _burdenFill.localScale = scale;
             }
 
-            // 스펙 006: 눈꺼풀이 닫히는 만큼 부담감 막대와 글을 가린다.
+            // BLINK-16: 눈꺼풀이 닫히는 만큼 부담감 막대와 글을 가린다.
             float burdenAlpha = 1f - d.BlinkAmount;
             if (!Mathf.Approximately(burdenAlpha, _burdenAlpha))
             {
@@ -197,12 +200,12 @@ namespace EyeMaze
                 _returnButton.gameObject.SetActive(showReturn);
             if (showReturn)
             {
-                // 스펙 004: 보이는 선택지 바로 다음 번호와 자리에 표시
+                // DLG-07: 보이는 선택지 바로 다음 번호와 자리에 표시
                 Set(_returnLabel, $"{choices.Count + 1}. {d.ReturnText}");
                 PlaceReturnButton(choices.Count);
             }
 
-            // 스펙 004: 들어갈 때는 마음 읽기, 나올 때는 관찰 중지로 표시
+            // DLG-12: 들어갈 때는 마음 읽기, 나올 때는 관찰 중지로 표시
             Set(_gazeButtonLabel, d.CurrentMode == EyeMazeDirector.Mode.Gaze ? Strings.Get("ui.gaze_button_gaze", "관찰 중지 (Space)") : Strings.Get("ui.gaze_button", "마음 읽기 (Space)"));
             UpdateGazeLabelPulse(d);
             Set(_hint, d.IsReading
@@ -213,7 +216,7 @@ namespace EyeMaze
                 // 시선 조작 안내에서 금색 문, 하늘색 점 설명 삭제
                 ? Strings.Get("hint.gaze", "WASD / 방향키로 이동   ·   Space 관찰 중지")
                 : d.CurrentMode == EyeMazeDirector.Mode.Ending ? (d.HeartFinished ? Strings.Get("hint.ending_done", "Space  돌아가기") : Strings.Get("hint.ending", "Space  계속"))
-                // 스펙 004: Q 안내를 잠시 휴식하기로 표시
+                // DLG-12: Q 안내를 잠시 휴식하기로 표시
                 : Strings.Get("hint.talk", "Space = 마음 읽기   ·   숫자키 대화   ·   Q 잠시 휴식하기"));
         }
 
@@ -229,7 +232,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 019: 관찰 버튼 글의 씬 저장 색을 기억해 맥동이 끝났을 때 되돌릴 기준으로 삼는다.
+        /// MEM-36: 관찰 버튼 글의 씬 저장 색을 기억해 맥동이 끝났을 때 되돌릴 기준으로 삼는다.
         /// _gazeButtonLabel을 사용하며, _gazeLabelBaseColor와 _baseColorSaved를 바꾼다.
         /// </summary>
         private void SaveBaseColor()
@@ -239,7 +242,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 019 FR-003: 해금 안내 중 들여다보는 동안 관찰 중지 버튼 글의 색을 원래 색과 강조 색 사이에서 오가게 하고, 아니면 원래 색으로 되돌린다.
+        /// MEM-36: 해금 안내 중 들여다보는 동안 관찰 중지 버튼 글의 색을 원래 색과 강조 색 사이에서 오가게 하고, 아니면 원래 색으로 되돌린다.
         /// d의 모드와 NewTalkReady, _gazePulseColor, _newTalkPulseSeconds를 사용하며, _gazeButtonLabel의 색을 바꾼다.
         /// </summary>
         private void UpdateGazeLabelPulse(EyeMazeDirector d)
@@ -255,7 +258,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 019 FR-007: 기억 목록의 머리글을 쓰고, 주운 파편을 줄 버튼에 하나씩 채운 뒤 남는 줄을 숨긴다. 새로 얻은 파편의 줄은 색을 강조한다.
+        /// MEM-38: 기억 목록의 머리글을 쓰고, 주운 파편을 줄 버튼에 하나씩 채운 뒤 남는 줄을 숨긴다. 새로 얻은 파편의 줄은 색을 강조한다.
         /// d의 파편 목록과 요약 글, _highlightT를 사용하며, _memories 글, 줄 버튼의 활성 상태와 글, 글 색, _rowFragments, _highlightT를 바꾼다.
         /// </summary>
         private void UpdateMemoryRows(EyeMazeDirector d)
@@ -268,7 +271,7 @@ namespace EyeMaze
             string summary = d.CollectedSummary();
             Set(_memories, _rowFragments.Count == 0 ? summary : summary.Substring(0, summary.IndexOf('\n')));
 
-            // 스펙 012 FR-004: 줄 색이 원래 색에서 파편 색으로 갔다가 돌아온다
+            // MEM-04: 줄 색이 원래 색에서 파편 색으로 갔다가 돌아온다
             if (_highlightT > 0f) _highlightT = Mathf.Max(0f, _highlightT - Time.deltaTime);
             float progress = 1f - _highlightT / Mathf.Max(0.01f, _highlightSeconds);
             Color highlight = Color.Lerp(_memories.color, _highlightColor, Mathf.Sin(progress * Mathf.PI));
@@ -287,7 +290,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 019 FR-008: 눌린 줄의 파편으로 요약 패널을 연다.
+        /// MEM-39: 눌린 줄의 파편으로 요약 패널을 연다.
         /// row(줄 번호)와 _rowFragments를 사용하며, 요약 패널의 상태를 바꾼다.
         /// </summary>
         private void OpenRecap(int row)
@@ -309,7 +312,7 @@ namespace EyeMaze
         {
             if (_highlightT <= 0f) return summary;
             _highlightT = Mathf.Max(0f, _highlightT - Time.deltaTime);
-            // 스펙 012: 줄 색이 원래 색에서 파편 색으로 갔다가 원래 색으로 돌아오도록 계산
+            // MEM-04: 줄 색이 원래 색에서 파편 색으로 갔다가 원래 색으로 돌아오도록 계산
             float progress = 1f - _highlightT / Mathf.Max(0.01f, _highlightSeconds);
             Color color = Color.Lerp(_memories.color, _highlightColor, Mathf.Sin(progress * Mathf.PI));
             string hex = ColorUtility.ToHtmlStringRGBA(color);
@@ -385,7 +388,7 @@ namespace EyeMaze
         // 원래 버튼들이 차지하던 세로 범위 (anchor y). 보이는 버튼 수에 맞춰 이 안을 나눠 쓴다.
         [System.NonSerialized] private float _bandMin = -1f, _bandMax = -1f, _bandGap;
         [System.NonSerialized] private int _laidOut = -1;
-        // 스펙 004: 공통 선택지 버튼의 씬 저장 자리 기억
+        // DLG-07: 공통 선택지 버튼의 씬 저장 자리 기억
         [System.NonSerialized] private bool _returnAnchorSaved;
         [System.NonSerialized] private Vector2 _returnAnchorMin;
         [System.NonSerialized] private Vector2 _returnAnchorMax;

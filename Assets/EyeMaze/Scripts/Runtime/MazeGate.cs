@@ -19,7 +19,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("requiredTrust")] private int _requiredTrust = 1;
         [Tooltip("필요한 동공 열림 0~1 (-1 = 조건 없음)")]
         [SerializeField, FormerlySerializedAs("requiredDilation")] private float _requiredDilation = -1f;
-        // 스펙 018: 선택지가 켜는 플래그로 여는 조건과 문 번호 추가
+        // DLG-40: 선택지가 켜는 플래그로 여는 조건과 문 번호 추가
         [Tooltip("이 문을 여는 플래그 (비우면 플래그 조건 없음). 적혀 있으면 신뢰는 보지 않는다")]
         [SerializeField] private string _requiredFlag = "";
         [Tooltip("바깥에서 몇 번째 층 문인지. 막혔을 때 문구를 고르는 데 쓴다")]
@@ -32,7 +32,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("openColor")] private Color _openColor = new Color(0.6f, 1f, 0.7f, 0.45f);
 
         [NonSerialized] private int _drawnKey = int.MinValue;
-        // 스펙 010: 연출 중 문 색에 곱할 투명도 추가
+        // BLINK-26, BLINK-37: 연출 중 문 색에 곱할 투명도 추가
         [NonSerialized] private float _visualAlpha = 1f;
         private IrisMaze _maze;
 
@@ -69,9 +69,9 @@ namespace EyeMaze
         public bool CanPass(Person p)
         {
             if (p == null) return true;
-            // 스펙 018: 여는 플래그가 적힌 문은 그 플래그로만 판단하고 신뢰는 보지 않는다.
+            // DLG-40: 여는 플래그가 적힌 문은 그 플래그로만 판단하고 신뢰는 보지 않는다.
             bool byFlag = !string.IsNullOrEmpty(_requiredFlag);
-            // 스펙 004: 안 좋은 말의 감점이 문을 막지 않도록 GateTrust로 판단
+            // DLG-21: 안 좋은 말의 감점이 문을 막지 않도록 GateTrust로 판단
             bool trustOk = byFlag ? Flags.IsOn(_requiredFlag) : _requiredTrust < 0 || p.GateTrust >= _requiredTrust;
             bool dilOk = _requiredDilation < 0f || p.Dilation >= _requiredDilation;
             return trustOk && dilOk;
@@ -85,7 +85,7 @@ namespace EyeMaze
             if (_maze == null) _maze = GetComponentInParent<IrisMaze>();
             if (_maze == null || _line == null) return;
             bool open = CanPass(_maze.Person);
-            // 스펙 010: 표시 투명도가 바뀌어도 다시 칠하도록 키에 포함
+            // BLINK-26, BLINK-37: 표시 투명도가 바뀌어도 다시 칠하도록 키에 포함
             int key = HashCode.Combine(_ring, _sector, _maze.GeometryKey, open, _maze.WallAlpha, _maze.Focus, HashCode.Combine(_lockedColor, _openColor), _visualAlpha);
             if (key == _drawnKey) return;
             _drawnKey = key;
@@ -94,7 +94,7 @@ namespace EyeMaze
             Shapes.SetArc(_line, _maze.RingInner(_ring), _sector * d + d * 0.12f, (_sector + 1) * d - d * 0.12f, 6);
             _line.widthMultiplier = _maze.WallWidthNow * (open ? 1.2f : 2.4f);
             Color c = open ? _openColor : _lockedColor;
-            // 스펙 010: 문 색에 표시 투명도를 곱함
+            // BLINK-26, BLINK-37: 문 색에 표시 투명도를 곱함
             c.a *= Mathf.Lerp(0.5f, 1f, _maze.WallAlpha) * _maze.FocusAlpha * _visualAlpha;
             Shapes.SetColor(_line, c);
             _line.sortingOrder = 6;

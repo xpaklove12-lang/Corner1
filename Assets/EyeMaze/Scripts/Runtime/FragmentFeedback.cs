@@ -133,6 +133,7 @@ namespace EyeMaze
         /// </summary>
         private void UpdateRings(float dt)
         {
+            // MEM-03: 주운 자리에서 고리가 퍼지며 사라진다.
             float duration = Mathf.Max(0.01f, _ringSeconds);
             for (int i = _activeRings.Count - 1; i >= 0; i--)
             {

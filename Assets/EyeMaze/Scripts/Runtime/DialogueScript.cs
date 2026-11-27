@@ -32,11 +32,11 @@ namespace EyeMaze
             public int Spring;
             public string Goto;
             public string Ending;
-            /// <summary>스펙 014 FR-038: 고른 뒤 ending으로 갈지 가르는 조건. 비면 고르는 즉시 ending으로 간다.</summary>
+            /// <summary>EDITOR-38: 고른 뒤 ending으로 갈지 가르는 조건. 비면 고르는 즉시 ending으로 간다.</summary>
             public string[] EndingNeed = Array.Empty<string>();
-            // 스펙 011: 내담자가 쉬자고 할 때의 대사 추가
+            // BURDEN-23: 내담자가 쉬자고 할 때의 대사 추가
             public string Rest;
-            // 스펙 015: 고른 뒤 내담자의 감정 추가 (비었거나 정해지지 않은 값이면 null)
+            // EMO-02: 고른 뒤 내담자의 감정 추가 (비었거나 정해지지 않은 값이면 null)
             public ClientEmotion? Emotion;
             public int Line;
         }
@@ -144,7 +144,7 @@ namespace EyeMaze
                     Ending = r["ending"],
                     EndingNeed = r.List("ending_need"),
                     Rest = Text(r["rest"]),
-                    // 스펙 015: emotion 칸을 감정으로 읽는다
+                    // EMO-02: emotion 칸을 감정으로 읽는다
                     Emotion = ReadEmotion(r, s.Errors),
                     Line = r.Line,
                 });
@@ -172,7 +172,7 @@ namespace EyeMaze
         private static string Text(string s) => s.Replace("\\n", "\n");
 
         /// <summary>
-        /// 스펙 015: 선택지 행의 emotion 칸을 감정으로 읽는다. 정해지지 않은 값은 오류로 남기고 감정을 바꾸지 않는다.
+        /// EMO-02: 선택지 행의 emotion 칸을 감정으로 읽는다. 정해지지 않은 값은 오류로 남기고 감정을 바꾸지 않는다.
         /// r과 errors를 사용하며, 감정 또는 (비었거나 틀린 값이면) null을 반환한다.
         /// </summary>
         private static ClientEmotion? ReadEmotion(Csv.Row r, List<string> errors)

@@ -13,11 +13,11 @@ namespace EyeMaze
     [ExecuteAlways]
     public class EyeVisual : MonoBehaviour
     {
-        // 스펙 006: 눈꺼풀 덮개 그리기 상수 추가
+        // BLINK-12: 눈꺼풀 덮개 그리기 상수 추가
         private const int COVER_COLUMNS = 33;
         private const int COVER_SORTING_ORDER = 21;
         private const float COVER_MARGIN = 0.05f;
-        // 스펙 011: 눈물 메시 그리기 상수 추가
+        // BURDEN-25: 눈물 메시 그리기 상수 추가
         private const int TEAR_SORTING_ORDER = 20;
         private const float TEAR_WAVE_FREQUENCY = 9f;
 
@@ -43,7 +43,7 @@ namespace EyeMaze
 
         [Header("눈꺼풀 / 속눈썹")]
         [SerializeField, FormerlySerializedAs("lidColor")] private Color _lidColor = Color.white;
-        // 스펙 006: 눈을 감을 때 덮는 색 추가
+        // BLINK-12: 눈을 감을 때 덮는 색 추가
         [Tooltip("눈을 감을 때 눈 안쪽을 덮는 색")]
         [SerializeField] private Color _lidCoverColor = Color.black;
         [Tooltip("윗눈꺼풀 선 두께")]
@@ -60,7 +60,7 @@ namespace EyeMaze
         [Tooltip("초점. 0이면 어둡고 테두리가 번져 보인다")]
         [SerializeField, FormerlySerializedAs("focus"), Range(0f, 1f)] private float _focus = 1f;
 
-        // 스펙 011: 눈물 모양과 색 설정 추가
+        // BURDEN-25: 눈물 모양과 색 설정 추가
         [Header("눈물")]
         [SerializeField] private Color _tearColor = new Color(0.62f, 0.8f, 1f, 0.45f);
         [Tooltip("가득 찼을 때 눈 높이 대비 수위")]
@@ -78,23 +78,23 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("lashes")] private LineRenderer[] _lashes = new LineRenderer[0];
 
         [NonSerialized] private int _drawnKey = int.MinValue;
-        // 스펙 006: 눈꺼풀 닫힘 정도와 덮개 메시 상태 추가
+        // BLINK-12: 눈꺼풀 닫힘 정도와 덮개 메시 상태 추가
         [NonSerialized] private float _closed;
         [NonSerialized] private Mesh _coverMesh;
         [NonSerialized] private MeshRenderer _coverRenderer;
         [NonSerialized] private Vector3[] _coverVertices;
         [NonSerialized] private Color[] _coverColors;
-        // 스펙 006: 깜빡임 중 힙 할당을 막는 재사용 배열과 눈꺼풀 캐시 키 추가
+        // BLINK-12: 깜빡임 중 힙 할당을 막는 재사용 배열과 눈꺼풀 캐시 키 추가
         [NonSerialized] private int _drawnLidKey = int.MinValue;
         [NonSerialized] private Vector3[] _lidPoints;
         [NonSerialized] private readonly Vector3[] _lashPoints = new Vector3[2];
-        // 스펙 011: 눈물 수위와 메시 상태 추가
+        // BURDEN-25: 눈물 수위와 메시 상태 추가
         [NonSerialized] private float _tearLevel;
         [NonSerialized] private Mesh _tearMesh;
         [NonSerialized] private MeshRenderer _tearRenderer;
         [NonSerialized] private Vector3[] _tearVertices;
         [NonSerialized] private Color[] _tearColors;
-        // 스펙 015: 감정 표현의 눈꺼풀 닫힘, 홍채 색조, 눈물 수위 추가
+        // EMO-03: 감정 표현의 눈꺼풀 닫힘, 홍채 색조, 눈물 수위 추가
         [NonSerialized] private float _emotionClosed;
         [NonSerialized] private Color _emotionTint = Color.clear;
         [NonSerialized] private float _emotionTearLevel;
@@ -108,7 +108,7 @@ namespace EyeMaze
         /// <summary>감정 표현의 눈물 수위 (0~1). 휴식 신호 눈물과 함께 있으면 큰 쪽으로 그린다.</summary>
         public float EmotionTearLevel { get => _emotionTearLevel; set => _emotionTearLevel = Mathf.Clamp01(value); }
 
-        // 스펙 015: 그릴 때 쓰는 눈꺼풀 닫힘과 눈물 수위 (기존 값과 감정 값 중 큰 쪽)
+        // EMO-03, EMO-11: 그릴 때 쓰는 눈꺼풀 닫힘과 눈물 수위 (기존 값과 감정 값 중 큰 쪽)
         private float DrawnClosed => Mathf.Max(_closed, _emotionClosed);
         private float DrawnTearLevel => Mathf.Max(_tearLevel, _emotionTearLevel);
 
@@ -125,7 +125,7 @@ namespace EyeMaze
         public Vector3 UpperEdge(float t)
         {
             float x = Mathf.Lerp(-_scleraWidth * 0.5f, _scleraWidth * 0.5f, t);
-            // 스펙 015: 깜빡임과 감정의 눈꺼풀 닫힘 중 큰 값으로 그림
+            // EMO-03: 깜빡임과 감정의 눈꺼풀 닫힘 중 큰 값으로 그림
             float y = _scleraHeight * 0.5f * _lens.Evaluate(Mathf.Clamp01(t)) * (1f - DrawnClosed);
             return new Vector3(x, y, 0f);
         }
@@ -135,17 +135,17 @@ namespace EyeMaze
 
         void Update()
         {
-            // 스펙 011: 수면이 일렁이므로 눈 모양 캐시와 상관없이 매 프레임 그린다.
+            // BURDEN-25: 수면이 일렁이므로 눈 모양 캐시와 상관없이 매 프레임 그린다.
             DrawTear();
             float irisRadius = _maze != null ? _maze.OuterRadius : 3f;
-            // 스펙 015: 감정의 홍채 색조가 바뀌어도 다시 그림
+            // EMO-03: 감정의 홍채 색조가 바뀌어도 다시 그림
             int key = HashCode.Combine(
                 HashCode.Combine(_scleraWidth, _scleraHeight, _scleraColor, _irisColor, _rimColor, irisRadius, _focus, _irisDiscPadding),
                 HashCode.Combine(_rimWidth, _lidColor, _lidWidth, _lidOvershoot, _lashCount, _lashLength, _lashWidth, _lashSpread),
                 _lashes != null ? _lashes.Length : 0, _emotionTint);
-            // 스펙 006: 깜빡임 중에는 눈꺼풀 부분만 다시 그린다.
+            // BLINK-12: 깜빡임 중에는 눈꺼풀 부분만 다시 그린다.
             bool shapeChanged = key != _drawnKey;
-            // 스펙 015: 감정의 눈꺼풀 닫힘이 바뀌어도 눈꺼풀을 다시 그림
+            // EMO-03: 감정의 눈꺼풀 닫힘이 바뀌어도 눈꺼풀을 다시 그림
             int lidKey = HashCode.Combine(key, _closed, _emotionClosed, _lidCoverColor);
             if (!shapeChanged && lidKey == _drawnLidKey) return;
             _drawnKey = key;
@@ -153,7 +153,7 @@ namespace EyeMaze
 
             float f = _focus * _focus * (3f - 2f * _focus);
             var dimSclera = Color.Lerp(_scleraColor * 0.45f, _scleraColor, f); dimSclera.a = _scleraColor.a;
-            // 스펙 015: 홍채 색에 감정 색조를 알파만큼 섞음
+            // EMO-03: 홍채 색에 감정 색조를 알파만큼 섞음
             Color iris = Color.Lerp(_irisColor, new Color(_emotionTint.r, _emotionTint.g, _emotionTint.b, _irisColor.a), _emotionTint.a);
             var dimIris = Color.Lerp(new Color(0.22f, 0.2f, 0.19f, _irisColor.a), iris, f);
             var softRim = _rimColor; softRim.a *= Mathf.Lerp(0.25f, 1f, f);
@@ -230,7 +230,7 @@ namespace EyeMaze
                 }
             }
 
-            // 스펙 006: 흰자와 미로를 덮는 눈꺼풀 그리기
+            // BLINK-12: 흰자와 미로를 덮는 눈꺼풀 그리기
             DrawCover();
         }
 
@@ -242,7 +242,7 @@ namespace EyeMaze
         {
             if (!Application.isPlaying || _sclera == null) return;
             if (_coverMesh == null) CreateCover();
-            // 스펙 015: 깜빡임과 감정의 눈꺼풀 닫힘 중 큰 값으로 덮음
+            // EMO-03: 깜빡임과 감정의 눈꺼풀 닫힘 중 큰 값으로 덮음
             float closed = DrawnClosed;
             _coverRenderer.enabled = closed > 0f;
             if (!_coverRenderer.enabled) return;
@@ -311,7 +311,7 @@ namespace EyeMaze
         private void DrawTear()
         {
             if (!Application.isPlaying || _sclera == null) return;
-            // 스펙 015: 휴식 신호와 감정의 눈물 수위 중 큰 값으로 그림
+            // EMO-11: 휴식 신호와 감정의 눈물 수위 중 큰 값으로 그림
             float level = DrawnTearLevel;
             if (_tearMesh == null)
             {

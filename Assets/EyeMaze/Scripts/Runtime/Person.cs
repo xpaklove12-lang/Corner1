@@ -12,7 +12,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("trust")] private int _trust;
         [Tooltip("동공 크기. 높을수록 마음이 열려 있음")]
         [SerializeField, FormerlySerializedAs("dilation"), Range(0f, 1f)] private float _dilation = 0.2f;
-        // 스펙 004: 옳은 대답으로 얻은 신뢰 누적값 추가
+        // DLG-20: 옳은 대답으로 얻은 신뢰 누적값 추가
         [System.NonSerialized] private int _earnedTrust;
 
         public string DisplayName { get => _displayName; set => _displayName = value; }

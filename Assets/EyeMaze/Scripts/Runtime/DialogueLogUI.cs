@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace EyeMaze
 {
     /// <summary>
-    /// 스펙 007: 대화 기록 창. L 키나 게임패드 Select로 열고 닫으며, 열린 동안 게임을 멈추고 기록을 보여준다.
+    /// DLG-28: 대화 기록 창. L 키나 게임패드 Select로 열고 닫으며, 열린 동안 게임을 멈추고 기록을 보여준다.
     /// 메신저처럼 플레이어가 고른 말은 오른쪽 말풍선, 상대의 말은 왼쪽 얼굴과 말풍선(위에 이름), 서술은 가운데 글로 보여준다.
     /// 줄 칸은 프리팹에 미리 만들어 두고, 여기서는 켜고 끄며 글과 색만 바꾼다.
     /// </summary>
@@ -38,6 +38,7 @@ namespace EyeMaze
             public LayoutElement BodyLayout => _bodyLayout;
         }
 
+        // DLG-31: 프리팹에 미리 만든 줄 칸을 연결한다.
         [Header("연결")]
         [Tooltip("여닫는 창. 기본으로 꺼 둔다")]
         [SerializeField] private GameObject _window;

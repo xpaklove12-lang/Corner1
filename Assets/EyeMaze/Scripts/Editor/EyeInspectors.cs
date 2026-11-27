@@ -16,6 +16,7 @@ namespace EyeMaze.EditorTools
 
             EditorGUILayout.LabelField("Play 없이 바로 플레이", EditorStyles.boldLabel);
             if (p != null)
+                // BURDEN-06: 상태 줄에 부담감을 보인다.
                 EditorGUILayout.LabelField($"모드 {d.CurrentMode} · 신뢰 {p.Trust} · 동공 {p.Dilation * 100f:0}% · 부담감 {d.Burden * 100f:0}%", EditorStyles.miniBoldLabel);
 
             DialogueScript.Node node = d.CurrentNode;
@@ -27,7 +28,7 @@ namespace EyeMaze.EditorTools
             {
                 string g = d.CurrentMode == EyeMazeDirector.Mode.Gaze ? "시선 거두기" : "눈을 들여다보기";
                 if (GUILayout.Button(g, GUILayout.Height(26))) EyeEditorOps.Run("들여다보기", d.ToggleGaze, roots);
-                // 스펙 006: 회전값이 씬에 저장되지 않게 깜빡임 버튼 제거
+                // 회전값이 씬에 저장되지 않게 깜빡임 버튼 제거
             }
 
             // 이동 패드
@@ -64,7 +65,7 @@ namespace EyeMaze.EditorTools
                     if (GUILayout.Button(label)) EyeEditorOps.Run("대화 선택", () => d.ChooseOption(idx), roots);
                 }
             }
-            // 스펙 004: 공통 선택지를 보이는 선택지 다음 번호로 표시
+            // DLG-13: 공통 선택지를 보이는 선택지 다음 번호로 표시
             if (d.CanReturnToStart && GUILayout.Button($"{d.CurrentChoices().Count + 1}. {d.ReturnText}"))
                 EyeEditorOps.Run("처음 이야기로", d.ReturnToStart, roots);
 

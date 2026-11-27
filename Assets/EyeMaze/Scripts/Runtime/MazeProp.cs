@@ -50,7 +50,7 @@ namespace EyeMaze
         [SerializeField] private bool _fitToPassage;
         [Tooltip("그림 가로 길이를 통로 폭의 몇 배로 맞출지")]
         [SerializeField, Range(0.3f, 1.5f)] private float _passageFill = 0.9f;
-        // 스펙 015: 그림이 옆 통로를 덮지 않도록 두께 상한과 막힌 범위 표시선 추가
+        // EMO-17: 그림이 옆 통로를 덮지 않도록 두께 상한과 막힌 범위 표시선 추가
         [Tooltip("그림 두께(통로를 따라가는 방향)의 상한. 고리 폭의 몇 배까지 허용할지")]
         [SerializeField, Range(0.2f, 1f)] private float _thicknessFill = 0.6f;
         [Tooltip("막고 있는 동안 막힌 길목 전체에 긋는 선의 색")]
@@ -82,7 +82,7 @@ namespace EyeMaze
         [Tooltip("벽 흔들림 빠르기")]
         [SerializeField] private float _dizzySpeed = 6f;
 
-        // 스펙 015 FR-020: 막혔을 때 보일 글의 key 추가
+        // EMO-20: 막혔을 때 보일 글의 key 추가
         [Header("막혔을 때 글")]
         [Tooltip("이 사물에 막혔을 때 보일 글의 Strings.csv key. 비우면 글을 보이지 않는다")]
         [SerializeField] private string _blockedKey;
@@ -103,7 +103,7 @@ namespace EyeMaze
         [NonSerialized] private int _passageSector;
         [NonSerialized] private MazeWall _openedWall;
         [NonSerialized] private bool _flipped;
-        // 스펙 015: 막힌 길목 표시선 렌더러 추가
+        // EMO-17: 막힌 길목 표시선 렌더러 추가
         [NonSerialized] private LineRenderer _barrier;
         // 뒤집힘 진행도 (0~1). 뒤집히지 않았으면 0이다.
         [NonSerialized] private float _flipT;
@@ -121,6 +121,7 @@ namespace EyeMaze
 
         /// <summary>디렉터가 정한 표시 여부. 사라지기 시작하면 바로 false가 된다.</summary>
         public bool Visible => _visible;
+        // EMO-05: 사라지기 시작한 사물은 길을 막지 않는다.
         /// <summary>지금 보이고 이동 판정에 쓰이는지. 에디트 모드에서는 항상 보이는 것으로 본다.</summary>
         public bool Solid => isActiveAndEnabled && (!Application.isPlaying || _visible);
         /// <summary>지금 맡은 길목을 막거나 밀어내는지. 다가가면 막음 사물은 뒤집힌 뒤에만 막는다.</summary>
@@ -194,6 +195,7 @@ namespace EyeMaze
             DrawBarrier(alpha);
         }
 
+        // EMO-09: 보일 감정 목록이 비면 항상 보인다.
         /// <summary>
         /// 감정에서 이 사물이 보이는지 판단한다.
         /// emotion과 _showIn을 사용하며, 목록이 비었거나 감정이 목록에 있으면 true를 반환한다.
@@ -238,7 +240,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 다가가면 막음 사물을 뒤집기 시작한다. 이 순간부터 길목을 막는다.
+        /// EMO-18: 다가가면 막음 사물을 뒤집기 시작한다. 이 순간부터 길목을 막는다.
         /// 입력값은 없으며, _flipped와 _flipT를 바꾼다.
         /// </summary>
         public void Flip()
@@ -249,7 +251,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 미로를 만들 때 맡은 면을 정한다. 길 냄 사물은 열 벽도 함께 받는다.
+        /// EMO-16: 미로를 만들 때 맡은 면을 정한다. 길 냄 사물은 열 벽도 함께 받는다.
         /// kind, ring, localSector(자기 층 기준), wall을 사용하며, 맡은 면 정보와 열 벽을 바꾼다.
         /// </summary>
         public void AssignPassage(MazeWall.Kind kind, int ring, int localSector, MazeWall wall)
@@ -262,7 +264,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 맡은 면을 비운다. 그 층의 벽을 새로 만들기 전에 쓴다.
+        /// EMO-16: 맡은 면을 비운다. 그 층의 벽을 새로 만들기 전에 쓴다.
         /// 입력값은 없으며, 맡은 면 정보와 열 벽 참조를 비운다.
         /// </summary>
         public void ClearPassage()
@@ -286,7 +288,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 맡은 면 가운데의 부모 기준 위치를 구한다. 방사 면은 고리 가운데, 원호 면은 두 고리 사이 원 위다.
+        /// EMO-17: 맡은 면 가운데의 부모 기준 위치를 구한다. 방사 면은 고리 가운데, 원호 면은 두 고리 사이 원 위다.
         /// 맡은 면 정보와 미로 모양을 사용하며, 부모 기준 위치를 반환한다.
         /// </summary>
         private Vector3 PassageCenterLocal()
@@ -298,7 +300,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 통로를 가로지르는 방향(부모 기준 단위 벡터)과 통로 폭을 구한다. 방사 면은 반지름 방향과 고리 폭, 원호 면은 원 둘레 방향과 칸의 호 길이다.
+        /// EMO-17: 통로를 가로지르는 방향(부모 기준 단위 벡터)과 통로 폭을 구한다. 방사 면은 반지름 방향과 고리 폭, 원호 면은 원 둘레 방향과 칸의 호 길이다.
         /// 맡은 면 정보와 미로 모양을 사용하며, across와 width를 돌려준다.
         /// </summary>
         private void PassageAcross(out Vector3 across, out float width)
@@ -316,7 +318,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 사물을 놓는다. 맡은 면이 없으면 기준 칸 가운데에 두고, 있으면 면 가운데에 둔다.
+        /// EMO-17: 사물을 놓는다. 맡은 면이 없으면 기준 칸 가운데에 두고, 있으면 면 가운데에 둔다.
         /// _fitToPassage가 켜져 있으면 통로를 가로지르게 돌리고 통로 폭에 맞춰 크기를 정한다. 다가가면 막음 사물은 뒤집히기 전 통로 가장자리에 작게 놓였다가 뒤집히며 가운데로 커진다.
         /// 맡은 면, 설정값, 뒤집힘 진행도를 사용하며, transform의 위치, 회전, 크기를 바꾼다.
         /// </summary>
@@ -362,7 +364,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 길 냄 사물이 맡은 벽을 Play Mode에서 보이는 동안 끄고, 사라지기 시작하면 다시 켠다.
+        /// EMO-08: 길 냄 사물이 맡은 벽을 Play Mode에서 보이는 동안 끄고, 사라지기 시작하면 다시 켠다.
         /// _openedWall과 _visible을 사용하며, 벽 오브젝트의 활성 상태를 바꾼다.
         /// </summary>
         private void UpdateOpenedWall()
@@ -373,7 +375,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 길 냄 사물이 맡은 벽 자리에 통로 방향으로 오선 다섯 줄을 그린다. 다른 사물이거나 면이 없으면 지운다.
+        /// EMO-08: 길 냄 사물이 맡은 벽 자리에 통로 방향으로 오선 다섯 줄을 그린다. 다른 사물이거나 면이 없으면 지운다.
         /// alpha와 맡은 면, _staffColor를 사용하며, 저장되지 않는 자식 LineRenderer를 만들거나 점과 색을 바꾼다.
         /// </summary>
         private void DrawStaff(float alpha)
@@ -421,7 +423,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 사물이 길목을 막고 있는 동안 막힌 길목 전체를 가로지르는 선을 그어, 보이는 범위와 막히는 범위를 같게 한다. 막지 않으면 숨긴다.
+        /// EMO-17: 사물이 길목을 막고 있는 동안 막힌 길목 전체를 가로지르는 선을 그어, 보이는 범위와 막히는 범위를 같게 한다. 막지 않으면 숨긴다.
         /// alpha, Blocks, 맡은 면, _barrierColor, _barrierWidth를 사용하며, 저장되지 않는 자식 LineRenderer를 만들거나 점과 색을 바꾼다.
         /// </summary>
         private void DrawBarrier(float alpha)
@@ -453,7 +455,7 @@ namespace EyeMaze
         /// <summary>오선 렌더러 오브젝트를 지운다. _staff를 비운다.</summary>
         private void DestroyStaff()
         {
-            // 스펙 015: 막힘 선도 함께 지운다
+            // EMO-17: 막힘 선도 함께 지운다
             if (_barrier != null)
             {
                 if (Application.isPlaying) Destroy(_barrier.gameObject);

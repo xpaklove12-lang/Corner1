@@ -113,6 +113,7 @@ namespace EyeMaze
                     if (!OpeningMonologue.IsPlaying) { _step = Step.CallFirst; _timer = _firstCallDelay; _door.ShowBell(true); }
                     break;
 
+                // OPEN-02: 띵-동 뒤 혼잣말 A, B를 한 창에 잇는다.
                 case Step.CallFirst:
                     _timer -= Time.deltaTime;
                     // 두 혼잣말은 한 대화로 이어서, 대사창을 닫지 않고 넘김 입력으로 다음 줄을 보인다.
@@ -121,11 +122,13 @@ namespace EyeMaze
                             () => { _step = Step.WaitDoor; _door.Ring(); });
                     break;
 
+                // OPEN-03: 플레이어가 문을 열 때까지 기다린다.
                 case Step.WaitDoor:
                     // 플레이어가 문을 열어 줄 때까지 자동으로 진행하지 않는다.
                     if (_door.Answered) BeginArrival();
                     break;
 
+                // OPEN-04: 플레이어는 물러서고 어머니는 잠시 서 있다가 한 걸음 들어온다.
                 case Step.Arrive:
                     StepPlayer(Time.deltaTime);
                     // 어머니는 출입구에 잠시 서 있다가 걷기 시작한다. 걷기 시작은 한 번만 한다.
@@ -137,6 +140,7 @@ namespace EyeMaze
                     if (_motherArrived && _playerStepT >= 1f) { _step = Step.Pause; _timer = _talkDelay; }
                     break;
 
+                // OPEN-05: 두 이동이 끝난 뒤 _talkDelay초를 기다려 어머니 대사를 시작한다.
                 case Step.Pause:
                     _timer -= Time.deltaTime;
                     if (_timer <= 0f) _step = Step.Talk;
