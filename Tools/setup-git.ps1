@@ -25,6 +25,6 @@ if (-not $tool) {
 }
 $toolPath = $tool.Replace('\', '/')
 git -C $root config merge.unityyamlmerge.name 'Unity SmartMerge (UnityYAMLMerge)'
-git -C $root config merge.unityyamlmerge.driver "'$toolPath' merge -p %O %B %A %A"
+git -C $root config merge.unityyamlmerge.driver "'$toolPath' merge -h -p --fallback none %O %B %A %A"
 git -C $root config merge.unityyamlmerge.recursive binary
 Write-Output "씬·프리팹 병합: $toolPath"
