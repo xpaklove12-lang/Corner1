@@ -5,7 +5,7 @@ using UnityEngine;
 namespace EyeMaze
 {
     /// <summary>
-    /// 현재 언어를 정하고 보관한다. 스펙 LOC-01~LOC-04.
+    /// 현재 언어를 정하고 보관한다.
     /// 시작할 때 저장값, 운영체제 언어, 대체 언어 순서로 언어를 고르고, 플레이어가 바꿀 때만 저장한다.
     /// 설정을 받기 전에는 원문 언어(ko)를 쓴다.
     /// </summary>
@@ -19,7 +19,7 @@ namespace EyeMaze
         private static string _current = SOURCE_LANGUAGE;
         private static bool _initialized;
 
-        /// <summary>현재 언어가 바뀐 뒤 알린다. 고정 라벨이 글을 다시 넣을 때 쓴다 (LOC-03).</summary>
+        /// <summary>현재 언어가 바뀐 뒤 알린다. 고정 라벨이 글을 다시 넣을 때 쓴다.</summary>
         public static event Action LanguageChanged;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -67,7 +67,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 시작 언어를 고른다. 저장값, 운영체제 언어, 대체 언어 순서로 목록에 있는 첫 코드를 쓴다 (LOC-02).
+        /// 시작 언어를 고른다. 저장값, 운영체제 언어, 대체 언어 순서로 목록에 있는 첫 코드를 쓴다.
         /// config를 사용하며, 고른 언어 코드를 반환한다. 고른 값은 저장하지 않는다.
         /// </summary>
         private static string StartLanguage(LocConfig config)
@@ -83,7 +83,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 운영체제 언어를 언어 코드로 바꾼다 (스펙 4절 운영체제 언어 대응).
+        /// 운영체제 언어를 언어 코드로 바꾼다.
         /// language를 사용하며, 언어 코드 또는 대응이 없으면 빈 문자열을 반환한다.
         /// </summary>
         public static string FromSystemLanguage(SystemLanguage language)
@@ -101,7 +101,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 플레이어가 고른 언어로 바꾸고 저장한다 (LOC-02, LOC-04).
+        /// 플레이어가 고른 언어로 바꾸고 저장한다.
         /// code를 사용하며, 목록에 있으면 현재 언어와 PlayerPrefs를 바꾸고 true를 반환한다.
         /// </summary>
         public static bool SetLanguage(string code)

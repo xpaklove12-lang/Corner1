@@ -44,9 +44,9 @@ namespace EyeMaze.EditorTools
         public const string GOTO = "goto";
         public const string ENDING = "ending";
         public const string TEXT = "text";
-        /// <summary>공용 문구 파일의 원문 칸. 모델에서는 text 칸으로 다룬다 (EDITOR-40).</summary>
+        /// <summary>공용 문구 파일의 원문 칸. 모델에서는 text 칸으로 다룬다.</summary>
         private const string STRINGS_SOURCE = "ko";
-        /// <summary>공용 문구 파일의 메모 칸. 모델에서는 memo 칸으로 다룬다 (EDITOR-40).</summary>
+        /// <summary>공용 문구 파일의 메모 칸. 모델에서는 memo 칸으로 다룬다.</summary>
         private const string STRINGS_NOTE = "note";
         private const string STRINGS_KEY = "key";
 
@@ -54,11 +54,11 @@ namespace EyeMaze.EditorTools
         public static readonly string[] DAY_COLUMNS =
         {
             "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring",
-            // 스펙 015: 선택지의 감정 열 emotion 추가
+            // 선택지의 감정 열 emotion 추가
             "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need", "emotion",
         };
 
-        /// <summary>공용 문구 파일(Data/Loc/UI.csv)의 기본 머리글 순서 (스펙 LOC-05, EDITOR-40)</summary>
+        /// <summary>공용 문구 파일(Data/Loc/UI.csv)의 기본 머리글 순서</summary>
         private static readonly string[] STRINGS_COLUMNS = { STRINGS_KEY, "context", "maxlen", STRINGS_SOURCE, "en", "ja", STRINGS_NOTE, "en_ok", "ja_ok", "ko_synced" };
 
         /// <summary>단계를 CSV에 적는 순서</summary>
@@ -78,7 +78,7 @@ namespace EyeMaze.EditorTools
             IdColumn = "id",
             BodyColumn = TEXT,
             GroupColumns = new[] { "situation", "back" },
-            // 스펙 015: 선택지 속성에 emotion 추가
+            // 선택지 속성에 emotion 추가
             ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "spring", "memo", "ending", "rest", "ending_need", "emotion" },
             NumberColumns = new[] { "trust", "dilation", "spring" },
         };
@@ -212,7 +212,7 @@ namespace EyeMaze.EditorTools
                 var item = new DialogueEditorDocument.Item();
                 item.Fields[s.BodyColumn] = r[s.BodyColumn];
                 foreach (string c in s.ItemColumns) if (r[c].Length > 0) item.Fields[c] = r[c];
-                // 스펙 EDITOR-41: 편집기가 모르는 열(tid, 메모 열 등)은 그 이름 그대로 보관했다가 저장할 때 다시 쓴다.
+                // 편집기가 모르는 열(tid, 메모 열 등)은 그 이름 그대로 보관했다가 저장할 때 다시 쓴다.
                 foreach (string c in doc.Columns)
                     if (IsHiddenColumn(kind, c) && r[c].Length > 0) item.Fields[c] = r[c];
                 if (section == Csv.SECTION_DIALOGUE && r[GOTO].Length > 0) item.Fields[GOTO] = r[GOTO];
@@ -224,7 +224,7 @@ namespace EyeMaze.EditorTools
 
         /// <summary>
         /// 공용 문구 파일의 한 줄을 항목으로 읽는다. ko 칸은 text로, note 칸은 memo로 두고,
-        /// 언어 칸·context·maxlen·_ok·ko_synced처럼 편집기가 보이지 않는 칸은 그 이름 그대로 보관한다 (EDITOR-40).
+        /// 언어 칸·context·maxlen·_ok·ko_synced처럼 편집기가 보이지 않는 칸은 그 이름 그대로 보관한다.
         /// 옛 형식(key, text, memo) 줄이면 text와 memo를 그대로 읽는다.
         /// r을 사용하며, 새 항목을 반환한다.
         /// </summary>
@@ -241,7 +241,7 @@ namespace EyeMaze.EditorTools
 
         /// <summary>
         /// 텍스트 뷰에 보이지 않고 그대로 보관만 하는 열인지 본다.
-        /// 인물·회차 CSV는 알려진 머리글(DAY_COLUMNS)에 없는 열, 공용 문구는 key·원문·메모가 아닌 열이다 (EDITOR-40, EDITOR-41).
+        /// 인물·회차 CSV는 알려진 머리글(DAY_COLUMNS)에 없는 열, 공용 문구는 key·원문·메모가 아닌 열이다.
         /// kind와 column을 사용하며, 보관만 하는 열이면 true를 반환한다.
         /// </summary>
         private static bool IsHiddenColumn(DialogueEditorKind kind, string column) =>
@@ -256,7 +256,7 @@ namespace EyeMaze.EditorTools
 
         /// <summary>
         /// 텍스트로 다시 읽은 모델에, 텍스트에 보이지 않는 칸(공용 문구의 언어 칸, 회차 CSV의 모르는 열)을 이전 모델에서 옮긴다.
-        /// 같은 그룹(section·actor·id 또는 key) 안에서 몇 번째 줄인지로 짝을 맞춘다 (EDITOR-40, EDITOR-41).
+        /// 같은 그룹(section·actor·id 또는 key) 안에서 몇 번째 줄인지로 짝을 맞춘다.
         /// from(이전 모델)과 to(새 모델)를 사용하며, to의 머리글 순서와 항목 칸을 바꾼다.
         /// </summary>
         public static void CarryHiddenColumns(DialogueEditorDocument from, DialogueEditorDocument to)
@@ -275,7 +275,7 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// 인물·회차 CSV를 쓸 머리글을 정한다. 알려진 머리글 뒤에, 읽은 파일에 있던 모르는 열을 파일 순서대로 붙인다 (EDITOR-41).
+        /// 인물·회차 CSV를 쓸 머리글을 정한다. 알려진 머리글 뒤에, 읽은 파일에 있던 모르는 열을 파일 순서대로 붙인다.
         /// doc을 사용하며, 머리글 목록을 반환한다.
         /// </summary>
         private static string[] DayColumns(DialogueEditorDocument doc)
@@ -719,7 +719,7 @@ namespace EyeMaze.EditorTools
             foreach (string c in columns)
             {
                 string v;
-                // 공용 문구: 모델의 text·memo를 ko·note에, 보이지 않는 칸은 같은 이름으로 쓴다 (EDITOR-40).
+                // 공용 문구: 모델의 text·memo를 ko·note에, 보이지 않는 칸은 같은 이름으로 쓴다.
                 if (s == StringsSchema)
                 {
                     if (c == STRINGS_KEY) v = g.Id;

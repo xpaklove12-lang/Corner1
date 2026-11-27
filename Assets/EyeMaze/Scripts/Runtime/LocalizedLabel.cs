@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace EyeMaze
 {
     /// <summary>
-    /// 코드가 글을 넣지 않는 고정 라벨에 붙여 Loc/UI.csv key의 현재 언어 글을 넣는다 (스펙 LOC-08).
+    /// 코드가 글을 넣지 않는 고정 라벨에 붙여 Loc/UI.csv key의 현재 언어 글을 넣는다.
     /// 켜질 때와 현재 언어가 바뀔 때 글을 다시 넣는다. 씬에 적힌 글은 편집용 미리보기로만 남는다.
     /// </summary>
     public class LocalizedLabel : MonoBehaviour

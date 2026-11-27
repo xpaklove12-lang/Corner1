@@ -5,7 +5,7 @@ using UnityEngine;
 namespace EyeMaze
 {
     /// <summary>
-    /// 공용 문구 표 (Data/Loc/UI.csv). 열: key, context, maxlen, ko, en, ja, note, 언어_ok, ko_synced. 스펙 LOC-05, LOC-06.
+    /// 공용 문구 표 (Data/Loc/UI.csv). 열: key, context, maxlen, ko, en, ja, note, 언어_ok, ko_synced.
     /// 태엽/조작 안내, 시스템 메시지, 오프닝 독백, 잠긴 문, 층 이름처럼 특정 사람에 속하지 않는 글을 둔다.
     /// 같은 key를 여러 줄에 쓰면 여러 줄짜리 글(예: 오프닝 독백)이 된다.
     /// 글 안의 {name} 같은 칸은 게임이 채운다 (key마다 쓸 수 있는 칸은 note에 적어 둔다).
@@ -17,9 +17,9 @@ namespace EyeMaze
         /// <summary>원문 칸. 옛 형식(key, text, memo) 파일이면 text 칸을 원문으로 읽는다.</summary>
         public const string SOURCE_COLUMN = Loc.SOURCE_LANGUAGE;
         private const string OLD_SOURCE_COLUMN = "text";
-        /// <summary>화자·대상 이름 번역 key 앞부분. name.원래이름 (LOC-11)</summary>
+        /// <summary>화자·대상 이름 번역 key 앞부분. name.원래이름</summary>
         public const string NAME_PREFIX = "name.";
-        /// <summary>손님 3인칭 번역 key 앞부분. pron.원래이름 (LOC-10)</summary>
+        /// <summary>손님 3인칭 번역 key 앞부분. pron.원래이름</summary>
         public const string PRONOUN_PREFIX = "pron.";
         private const string NARRATION_SPEAKER = "-";
         private const string UNKNOWN_SPEAKER = "???";
@@ -108,7 +108,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 한 줄에서 lang 언어의 글을 고른다. 그 언어 칸이 비어 있으면 원문 칸을 쓴다 (LOC-06).
+        /// 한 줄에서 lang 언어의 글을 고른다. 그 언어 칸이 비어 있으면 원문 칸을 쓴다.
         /// r과 lang을 사용하며, 줄바꿈 표기 \n을 실제 줄바꿈으로 바꾼 글을 반환한다.
         /// </summary>
         private static string Pick(Csv.Row r, string lang)
@@ -147,7 +147,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// key의 현재 언어 글을 가져온다. 표에 반드시 있어야 하는 key에 쓴다 (LOC-07).
+        /// key의 현재 언어 글을 가져온다. 표에 반드시 있어야 하는 key에 쓴다.
         /// 표에 없으면 key 이름을 그대로 보이고, 같은 key는 한 번만 경고한다.
         /// key와 vars를 사용하며, 완성된 글을 반환한다.
         /// </summary>
@@ -161,7 +161,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 화자·대상의 원래 이름을 현재 언어 이름으로 바꾼다. name.원래이름 key가 없으면 원래 이름을 쓴다 (LOC-11).
+        /// 화자·대상의 원래 이름을 현재 언어 이름으로 바꾼다. name.원래이름 key가 없으면 원래 이름을 쓴다.
         /// 빈 이름, 서술(-), ???는 바꾸지 않는다. 초상화 찾기 같은 판정에는 원래 이름을 그대로 쓴다.
         /// original을 사용하며, 화면에 보일 이름을 반환한다.
         /// </summary>
@@ -172,7 +172,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 글 속 {name} 칸을 value로 채운다. {name|이/가}처럼 조사를 함께 적으면 value의 끝 글자 받침에 맞는 쪽을 붙인다 (LOC-10).
+        /// 글 속 {name} 칸을 value로 채운다. {name|이/가}처럼 조사를 함께 적으면 value의 끝 글자 받침에 맞는 쪽을 붙인다.
         /// 앞쪽은 받침이 있을 때, 뒤쪽은 없을 때 쓴다. 뒤쪽이 "로"이면 ㄹ 받침에도 뒤쪽을 쓴다.
         /// s, name, value를 사용하며, 채운 글을 반환한다.
         /// </summary>

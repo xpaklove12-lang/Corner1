@@ -6,7 +6,7 @@ using UnityEngine;
 namespace EyeMaze
 {
     /// <summary>
-    /// 스펙 007: 플레이 중 화면에 나온 대사를 모아 두는 기록.
+    /// 플레이 중 화면에 나온 대사를 모아 두는 기록.
     /// 필드 대화, 만남 대화, 엔딩 대사를 순서대로 담고, 대화 기록 창(DialogueLogUI)이 읽어서 보여준다.
     /// Play Mode가 끝날 때까지 손님이 바뀌거나 리셋해도 남는다.
     /// </summary>
@@ -14,8 +14,8 @@ namespace EyeMaze
     {
         /// <summary>
         /// 기록 한 줄. IsPlayer면 플레이어가 고른 말, 아니고 Speaker가 비어 있으면 서술이다. Portrait는 말한 사람 얼굴.
-        /// 글은 남길 때의 글자열이 아니라 글을 가져오는 방법(TextSource)으로 보관해, 읽을 때마다 현재 언어로 다시 가져온다 (스펙 LOC-03).
-        /// Speaker는 원래 이름이며, 화면에 그릴 때 현재 언어 이름으로 바꾼다 (LOC-11).
+        /// 글은 남길 때의 글자열이 아니라 글을 가져오는 방법(TextSource)으로 보관해, 읽을 때마다 현재 언어로 다시 가져온다.
+        /// Speaker는 원래 이름이며, 화면에 그릴 때 현재 언어 이름으로 바꾼다.
         /// </summary>
         public readonly struct Entry
         {
@@ -78,7 +78,7 @@ namespace EyeMaze
             Add(speaker, () => text, isPlayer, portrait);
 
         /// <summary>
-        /// 기록 끝에 대사 한 줄을 더한다. 글은 textSource로 보관해 기록 창이 그릴 때마다 현재 언어로 다시 가져온다 (스펙 LOC-03).
+        /// 기록 끝에 대사 한 줄을 더한다. 글은 textSource로 보관해 기록 창이 그릴 때마다 현재 언어로 다시 가져온다.
         /// textSource에는 번역을 거쳐 글을 돌려주는 대상(선택지, 장면 등)을 붙잡아 두고, 남길 때의 글자열을 붙잡지 않는다.
         /// Play Mode가 아니거나 글이 비었거나 바로 앞 기록과 같으면 더하지 않는다.
         /// speaker(비면 서술, 원래 이름), textSource, isPlayer, portrait를 사용하며, _entries와 Version을 바꾼다.

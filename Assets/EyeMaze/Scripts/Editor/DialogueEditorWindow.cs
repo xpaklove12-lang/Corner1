@@ -510,7 +510,7 @@ namespace EyeMaze.EditorTools
         {
             var issues = new List<DialogueEditorFormat.Issue>();
             DialogueEditorDocument parsed = DialogueEditorFormat.ParseText(_draft, _doc.Kind, _doc.AssetPath, issues);
-            // 스펙 EDITOR-40: 텍스트에 보이지 않는 언어 칸 등을 이전 모델에서 옮긴다.
+            // 텍스트에 보이지 않는 언어 칸 등을 이전 모델에서 옮긴다.
             DialogueEditorFormat.CarryHiddenColumns(_doc, parsed);
             string csv = HasError(issues) ? null : DialogueEditorFormat.Validate(parsed, issues);
             _issues.Clear();

@@ -37,7 +37,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("seed")] private int _seed = 7;
         [Tooltip("막다른 길을 줄이기 위해 추가로 뚫는 벽 비율")]
         [SerializeField, FormerlySerializedAs("loopChance"), Range(0f, 0.4f)] private float _loopChance = 0.08f;
-        // 스펙 015: 사물이 막은 길목을 돌아가는 길의 최대 길이 추가
+        // 사물이 막은 길목을 돌아가는 길의 최대 길이 추가
         [Tooltip("사물이 막은 길목의 양쪽 칸을 잇는 우회로의 최대 칸 수. 이보다 길면 가까운 벽을 하나 열어 짧은 우회로를 만든다")]
         [SerializeField, Range(2, 12)] private int _maxDetourCells = 6;
         [SerializeField, FormerlySerializedAs("pupilDilationRequired"), Range(0f, 1f)] private float _pupilDilationRequired = 0.75f;
@@ -45,9 +45,9 @@ namespace EyeMaze
         [Header("연결")]
         [SerializeField, FormerlySerializedAs("person")] private Person _person;
 
-        // 스펙 015: 미로를 만들 때 길목이나 벽을 맡길 사물 목록
+        // 미로를 만들 때 길목이나 벽을 맡길 사물 목록
         [NonSerialized] private readonly List<MazeProp> _layoutProps = new List<MazeProp>();
-        // 스펙 018: 층 문을 여는 플래그 목록. 0번이 1층으로 들어가는 문이다.
+        // 층 문을 여는 플래그 목록. 0번이 1층으로 들어가는 문이다.
         [NonSerialized] private readonly List<string> _gateFlags = new List<string>();
 
         public int Rings => _rings;
@@ -58,7 +58,7 @@ namespace EyeMaze
         public float WallAlpha { get => _wallAlpha; set => _wallAlpha = value; }
         public float Focus { get => _focus; set => _focus = value; }
         public Person Person => _person;
-        // 스펙 010: 연출 오브젝트가 같은 선 재질을 쓰도록 공개
+        // 연출 오브젝트가 같은 선 재질을 쓰도록 공개
         public Material LineMaterial => _lineMaterial;
 
         public float FocusAlpha => Mathf.Lerp(0.12f, 1f, _focus * _focus);
@@ -210,7 +210,7 @@ namespace EyeMaze
         // 생성
 
         /// <summary>
-        /// 스펙 018: 층 문을 여는 플래그 목록을 정한다. 다음 Generate부터 문을 만들 때 넣는다.
+        /// 층 문을 여는 플래그 목록을 정한다. 다음 Generate부터 문을 만들 때 넣는다.
         /// flags(0번이 1층으로 들어가는 문)를 사용하며, _gateFlags를 바꾼다.
         /// </summary>
         public void SetGateFlags(IEnumerable<string> flags)
@@ -220,7 +220,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 미로를 만들 때 길목이나 벽을 맡길 사물을 정한다. 다음 Generate부터 적용된다.
+        /// 미로를 만들 때 길목이나 벽을 맡길 사물을 정한다. 다음 Generate부터 적용된다.
         /// props를 사용하며, _layoutProps를 바꾼다.
         /// </summary>
         public void SetLayoutProps(IEnumerable<MazeProp> props)
@@ -292,7 +292,7 @@ namespace EyeMaze
                 }
                 foreach (MazeWall w in walls.Values)
                     if (w.gameObject.activeSelf && rng.NextDouble() < _loopChance) w.gameObject.SetActive(false);
-                // 스펙 015: 이 층 사물에게 길목과 벽을 맡긴다.
+                // 이 층 사물에게 길목과 벽을 맡긴다.
                 AssignProps(walls, r0, r1, layerIndex, rng);
 
                 // 바깥 층과의 경계는 이 층 소속이고 문이 하나 있다.
@@ -308,7 +308,7 @@ namespace EyeMaze
                     string locked = layerIndex == 1
                         ? "단단히 닫힌 문이다. 은재가 조금 더 마음을 열어야 한다."
                         : "더 깊은 곳은 아직 잠겨 있다.";
-                    // 스펙 018: 문 플래그가 있으면 선택지로 여는 문, 없으면 신뢰로 여는 문을 만든다.
+                    // 문 플래그가 있으면 선택지로 여는 문, 없으면 신뢰로 여는 문을 만든다.
                     string flag = layerIndex - 1 < _gateFlags.Count ? _gateFlags[layerIndex - 1] : "";
                     bool byFlag = !string.IsNullOrEmpty(flag);
                     MakeGate(container, rb, gs, byFlag ? $"문 {layerIndex} (선택지로 열림)" : $"문 {layerIndex} (신뢰 {layerIndex} 필요)",
@@ -334,7 +334,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 층 안 칸 cur의 이웃 칸과 그 사이 벽의 키를 모은다. 같은 고리의 양옆과 같은 층 안의 안쪽, 바깥쪽 칸이다.
+        /// 층 안 칸 cur의 이웃 칸과 그 사이 벽의 키를 모은다. 같은 고리의 양옆과 같은 층 안의 안쪽, 바깥쪽 칸이다.
         /// cur, r0, r1(층의 첫, 끝 고리)을 사용하며, nbrs를 다시 채운다.
         /// </summary>
         private void CollectNeighbors((int r, int s) cur, int r0, int r1, List<(int r, int s, (MazeWall.Kind, int, int) key)> nbrs)
@@ -349,7 +349,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 이 층 사물에게 면을 맡긴다. 막음, 밀어냄, 다가가면 막음 사물은 기준 칸에 맞닿은 열린 면 가운데 길목 하나를 받는다. 가장 바깥 고리와 맞닿은 원호 면은 받지 않는다.
+        /// 이 층 사물에게 면을 맡긴다. 막음, 밀어냄, 다가가면 막음 사물은 기준 칸에 맞닿은 열린 면 가운데 길목 하나를 받는다. 가장 바깥 고리와 맞닿은 원호 면은 받지 않는다.
         /// 막아도 그 길목의 양쪽 칸이 _maxDetourCells칸 안의 우회로로 이어지는 길목만 고르고, 없으면 기준 칸의 열린 면 하나를 고른 뒤 벽 하나를 열어 짧은 우회로를 만들고 맡긴다. 길 냄 사물은 기준 칸에 맞닿은 닫힌 벽 하나를 받고, 없으면 같은 층에서 두 칸 거리까지 찾는다.
         /// walls, r0, r1, layerIndex, rng와 _layoutProps를 사용하며, 사물의 맡은 면과 벽의 활성 상태를 바꾼다.
         /// </summary>
@@ -366,7 +366,7 @@ namespace EyeMaze
                 if (p.Kind == MazePropKind.OpenPath) continue;
                 List<(MazeWall.Kind, int, int)> faces = FacesOf((p.Ring, Mod(p.Sector)), r0, r1, walls, rng);
                 faces.RemoveAll(f => walls[f].gameObject.activeSelf || used.Contains(f));
-                // 스펙 015: 가장 바깥 고리와 맞닿은 원호 면은 맡기지 않음. 그림이 호 길이에 맞춰 커져 바깥 통로를 덮기 때문이다.
+                // 가장 바깥 고리와 맞닿은 원호 면은 맡기지 않음. 그림이 호 길이에 맞춰 커져 바깥 통로를 덮기 때문이다.
                 faces.RemoveAll(f => f.Item1 == MazeWall.Kind.Arc && f.Item2 == 0);
                 // 막아도 바로 양쪽 칸이 짧은 우회로로 이어지는 길목을 고른다. 여럿이면 우회로가 가장 짧은 길목이다.
                 (MazeWall.Kind, int, int)? pick = null;
@@ -419,7 +419,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 칸에 맞닿은 층 안의 면(양옆 방사 벽, 같은 층 안의 위아래 원호 벽)을 rng 순서로 섞어 모은다. rng가 null이면 섞지 않는다.
+        /// 칸에 맞닿은 층 안의 면(양옆 방사 벽, 같은 층 안의 위아래 원호 벽)을 rng 순서로 섞어 모은다. rng가 null이면 섞지 않는다.
         /// cell, r0, r1, walls, rng를 사용하며, 벽 키 목록을 반환한다.
         /// </summary>
         private List<(MazeWall.Kind, int, int)> FacesOf((int r, int s) cell, int r0, int r1, Dictionary<(MazeWall.Kind, int, int), MazeWall> walls, System.Random rng)
@@ -442,7 +442,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 벽 키가 잇는 두 칸을 구한다. 원호 벽은 고리 r과 r+1, 방사 벽은 칸 s와 s+1 사이다.
+        /// 벽 키가 잇는 두 칸을 구한다. 원호 벽은 고리 r과 r+1, 방사 벽은 칸 s와 s+1 사이다.
         /// key를 사용하며, 두 칸을 돌려준다.
         /// </summary>
         private ((int r, int s) a, (int r, int s) b) CellsOf((MazeWall.Kind kind, int r, int s) key)
@@ -451,7 +451,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: from 칸에서 열린 면(꺼진 벽)으로만 이동해 닿는 층 안의 칸과 그 거리를 구한다. blocked의 면은 지나지 않는다.
+        /// from 칸에서 열린 면(꺼진 벽)으로만 이동해 닿는 층 안의 칸과 그 거리를 구한다. blocked의 면은 지나지 않는다.
         /// walls, blocked, from, r0, r1을 사용하며, 칸별 거리 사전을 반환한다.
         /// </summary>
         private Dictionary<(int r, int s), int> Reach(Dictionary<(MazeWall.Kind, int, int), MazeWall> walls, HashSet<(MazeWall.Kind, int, int)> blocked, (int r, int s) from, int r0, int r1)
@@ -476,7 +476,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 막은 길목 face의 양쪽 칸이 다른 열린 면으로 몇 칸 만에 이어지는지 구한다. blocked의 면은 지나지 않는다.
+        /// 막은 길목 face의 양쪽 칸이 다른 열린 면으로 몇 칸 만에 이어지는지 구한다. blocked의 면은 지나지 않는다.
         /// walls, blocked, face, r0, r1을 사용하며, 이동 칸 수를 반환한다. 이어지지 않으면 int.MaxValue다.
         /// </summary>
         private int DetourLength(Dictionary<(MazeWall.Kind, int, int), MazeWall> walls, HashSet<(MazeWall.Kind, int, int)> blocked, (MazeWall.Kind, int, int) face, int r0, int r1)
@@ -486,7 +486,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 가까운 우회로가 없을 때 길목과 열 벽을 함께 고른다. 후보 길목마다 닫힌 벽을 하나씩 열어 보고, 이 길목과 앞서 맡긴 길목들의 우회로 가운데 가장 긴 것이 가장 짧아지는 조합을 고른다.
+        /// 가까운 우회로가 없을 때 길목과 열 벽을 함께 고른다. 후보 길목마다 닫힌 벽을 하나씩 열어 보고, 이 길목과 앞서 맡긴 길목들의 우회로 가운데 가장 긴 것이 가장 짧아지는 조합을 고른다.
         /// 그래도 _maxDetourCells보다 길면 같은 방법으로 벽을 세 개까지 더 연다. 다른 사물이 맡은 면(used)은 열지 않는다.
         /// walls, blocked, used, assigned, faces, r0, r1, rng를 사용하며, 고른 길목을 반환하고 벽의 활성 상태를 바꾼다. 우회로를 만들 수 없으면 null을 반환한다.
         /// </summary>
@@ -540,7 +540,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: face와 앞서 맡긴 길목들의 우회로 가운데 가장 긴 칸 수를 구한다. blocked의 면은 지나지 않는다.
+        /// face와 앞서 맡긴 길목들의 우회로 가운데 가장 긴 칸 수를 구한다. blocked의 면은 지나지 않는다.
         /// walls, blocked, assigned, face, r0, r1을 사용하며, 가장 긴 우회로 칸 수를 반환한다.
         /// </summary>
         private int WorstDetour(Dictionary<(MazeWall.Kind, int, int), MazeWall> walls, HashSet<(MazeWall.Kind, int, int)> blocked, List<(MazeWall.Kind, int, int)> assigned, (MazeWall.Kind, int, int) face, int r0, int r1)

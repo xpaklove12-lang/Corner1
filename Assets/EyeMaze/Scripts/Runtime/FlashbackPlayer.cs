@@ -37,10 +37,10 @@ namespace EyeMaze
         [SerializeField] private float _coverFadeSeconds = 0.5f;
         [Tooltip("장면 그림이 방 테두리 크기로 줄어드는 시간(초)")]
         [SerializeField] private float _enterSeconds = 2f;
-        // 스펙 016: 줄어드는 그림이 흐려지기 시작하는 시점 추가
+        // 줄어드는 그림이 흐려지기 시작하는 시점 추가
         [Tooltip("장면 그림이 줄어드는 시간 중 흐려지기 시작하는 지점 (0이면 줄어들기 시작할 때부터 함께 흐려진다)")]
         [SerializeField, Range(0f, 0.9f)] private float _enterFadeStart = 0.35f;
-        // 스펙 016: 진입 연출의 가속 곡선, 방이 다가오는 카메라 배율 추가
+        // 진입 연출의 가속 곡선, 방이 다가오는 카메라 배율 추가
         [Tooltip("장면 그림이 줄어드는 빠르기 곡선 (가로 0~1 시간, 세로 0~1 진행)")]
         [SerializeField] private AnimationCurve _enterCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
         [Tooltip("진입을 시작할 때 방 카메라 크기 배율. 1보다 크면 방이 멀리서 다가오듯 보인다")]
@@ -87,7 +87,7 @@ namespace EyeMaze
 
         /// <summary>회상 연출이 미로 투명도에 곱하는 값. 회상 중이 아니면 1</summary>
         public float MazeAlpha => _mazeAlpha;
-        // 스펙 016: 데이터 검사가 FindRoom과 같은 방을 고르도록 방 목록 공개
+        // 데이터 검사가 FindRoom과 같은 방을 고르도록 방 목록 공개
         /// <summary>회상 방 목록. 같은 플래그의 방이 여럿이면 앞의 방이 재생된다</summary>
         public FlashbackRoom[] Rooms => _rooms;
 
@@ -200,14 +200,14 @@ namespace EyeMaze
         {
             EnterRoom();
             AimCoverAtFrame();
-            // 스펙 016: 방을 조금 멀리서 시작해 그림이 줄어드는 동안 다가오게 한다.
+            // 방을 조금 멀리서 시작해 그림이 줄어드는 동안 다가오게 한다.
             _camera.orthographicSize = _room.CameraSize * _enterCameraZoom;
             _phase = Phase.Enter;
             _phaseT = 0f;
         }
 
         /// <summary>
-        /// 스펙 016: 장면 그림이 방 테두리를 가로와 세로 모두 덮도록 줄어들 배율과 기준점을 정한다. 그림 비율을 지키며 테두리를 덮는 가장 작은 크기를 고른다.
+        /// 장면 그림이 방 테두리를 가로와 세로 모두 덮도록 줄어들 배율과 기준점을 정한다. 그림 비율을 지키며 테두리를 덮는 가장 작은 크기를 고른다.
         /// _room.Frame, _camera, _cameraView와 장면 그림의 화면 영역을 사용하며, _coverFit과 장면 그림의 기준점을 바꾼다.
         /// </summary>
         private void AimCoverAtFrame()
@@ -229,7 +229,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 016: 월드 위치를 카메라 화면을 띄운 _cameraView 위의 화면 위치로 바꾼다.
+        /// 월드 위치를 카메라 화면을 띄운 _cameraView 위의 화면 위치로 바꾼다.
         /// world, _camera, _cameraView를 사용하며, 화면 공간의 위치를 반환한다.
         /// </summary>
         private Vector3 WorldToCanvas(Vector3 world)
@@ -311,7 +311,7 @@ namespace EyeMaze
             // 수정(016): 사물 이름만 보이던 안내에 누를 키를 함께 보인다.
             string hint = near != null ? string.Format(_hintFormat, near.HintText) : "";
             if (_hintText.text != hint) _hintText.text = hint;
-            // 스펙 016: 안내 글을 화면 아래 고정 위치 대신 가까운 사물 위에 띄운다.
+            // 안내 글을 화면 아래 고정 위치 대신 가까운 사물 위에 띄운다.
             if (near != null) PlaceHint(near.HintPoint);
             if (press && near != null) Interact(near);
         }
@@ -352,7 +352,7 @@ namespace EyeMaze
                 OpenLines(step.Lines, LineKind.Step);
                 return;
             }
-            // 스펙 016 FR-009: 이미 쓴 사물은 쓴 뒤의 글을 보여 앞선 단계와 어긋나지 않게 한다
+            // 이미 쓴 사물은 쓴 뒤의 글을 보여 앞선 단계와 어긋나지 않게 한다
             string lookText = WasUsed(prop) && !string.IsNullOrEmpty(prop.LookTextAfter) ? prop.LookTextAfter : prop.LookText;
             if (string.IsNullOrEmpty(lookText)) return;
             var look = new List<FlashbackScript.Line> { new FlashbackScript.Line { Speaker = "", Text = lookText } };
@@ -360,7 +360,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 016 FR-009: 이 사물을 쓰는 단계를 이미 한 번이라도 지났는지 판단한다.
+        /// 이 사물을 쓰는 단계를 이미 한 번이라도 지났는지 판단한다.
         /// prop의 id와 _script의 단계, _stepIndex를 사용하며, 지났으면 true를 반환한다.
         /// </summary>
         private bool WasUsed(FlashbackProp prop)
@@ -398,7 +398,7 @@ namespace EyeMaze
             Typewriter.SetText(_bodyText, line.Text);
             if (_lineKind == LineKind.Look) return;
             Sprite portrait = string.IsNullOrEmpty(line.Speaker) ? null : FieldNPC.PortraitOf(line.Speaker);
-            // 스펙 LOC-03: 줄 글자열이 아니라 줄을 붙잡아 두어, 기록 창이 현재 언어로 다시 읽게 한다.
+            // 줄 글자열이 아니라 줄을 붙잡아 두어, 기록 창이 현재 언어로 다시 읽게 한다.
             DialogueLog.Add(line.Speaker, () => line.Text, false, portrait);
         }
 
@@ -463,7 +463,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 016: 안내 글을 월드 위치가 화면에 보이는 자리로 옮긴다.
+        /// 안내 글을 월드 위치가 화면에 보이는 자리로 옮긴다.
         /// worldPoint, _camera, _cameraView를 사용하며, _hintText의 위치를 바꾼다.
         /// </summary>
         private void PlaceHint(Vector3 worldPoint)

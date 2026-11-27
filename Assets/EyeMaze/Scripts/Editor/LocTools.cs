@@ -5,7 +5,7 @@ using UnityEditor;
 namespace EyeMaze.EditorTools
 {
     /// <summary>
-    /// 개발 확인용 언어 바꾸기 창 (메뉴 EyeMaze/번역/언어 바꾸기). 스펙 LOC-04.
+    /// 개발 확인용 언어 바꾸기 창 (메뉴 EyeMaze/번역/언어 바꾸기).
     /// 현재 언어, 저장된 언어, 운영체제 언어를 보여 주고, 언어를 고르거나 저장된 언어를 지운다.
     /// Play 중이면 곧바로 바뀌고, 아니면 저장만 되어 다음 Play부터 그 언어로 시작한다.
     /// </summary>

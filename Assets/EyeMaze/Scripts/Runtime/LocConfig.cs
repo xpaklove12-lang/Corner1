@@ -6,7 +6,7 @@ using UnityEngine;
 namespace EyeMaze
 {
     /// <summary>
-    /// 언어 설정 에셋 (Data/Loc/LocConfig.asset). 스펙 LOC-01, LOC-02.
+    /// 언어 설정 에셋 (Data/Loc/LocConfig.asset).
     /// 지원 언어 목록과, 저장값이 없을 때 시작 언어를 고르는 규칙을 둔다. 첫 항목이 원문 언어(ko)다.
     /// </summary>
     [CreateAssetMenu(menuName = "EyeMaze/언어 설정", fileName = "LocConfig")]
@@ -20,7 +20,7 @@ namespace EyeMaze
             [SerializeField] private string _code = "";
             [Tooltip("그 언어로 쓴 언어 이름. 예: 한국어, English, 日本語")]
             [SerializeField] private string _name = "";
-            [Tooltip("이 언어의 화면 글 폰트. 비우면 씬에 지정된 폰트를 쓴다 (LOC-19)")]
+            [Tooltip("이 언어의 화면 글 폰트. 비우면 씬에 지정된 폰트를 쓴다")]
             [SerializeField] private Font _font;
 
             public string Code => _code;

@@ -7,7 +7,7 @@ namespace EyeMaze.EditorTools
     {
         /// <summary>인물·회차 CSV (Data/Dialogue/인물_DayN.csv). talk·dialogue·ending 행을 함께 가진다.</summary>
         Day,
-        /// <summary>공용 문구 표 (Data/Loc/UI.csv). 스펙 EDITOR-40</summary>
+        /// <summary>공용 문구 표 (Data/Loc/UI.csv).</summary>
         Strings,
     }
 
@@ -61,7 +61,7 @@ namespace EyeMaze.EditorTools
         public DialogueEditorKind Kind;
         public string AssetPath = "";
         public readonly List<Group> Groups = new List<Group>();
-        /// <summary>공용 문구 파일의 머리글 순서. 저장할 때 언어 칸 같은 편집기가 보이지 않는 열도 이 순서로 쓴다 (EDITOR-40).</summary>
+        /// <summary>공용 문구 파일의 머리글 순서. 저장할 때 언어 칸 같은 편집기가 보이지 않는 열도 이 순서로 쓴다.</summary>
         public readonly List<string> Columns = new List<string>();
 
         /// <summary>
