@@ -69,6 +69,21 @@ namespace IntroCuttoon
                 return;
             }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // CUT-33: 확인용 임시 키. 숫자패드 1~5로 그 쪽 첫 칸으로 바로 간다. 나중에 지운다.
+            if (keyboard != null)
+            {
+                for (int i = 0; i < _pages.Length && i < 9; i++)
+                {
+                    if (keyboard[Key.Numpad1 + i].wasPressedThisFrame)
+                    {
+                        JumpToPage(i);
+                        return;
+                    }
+                }
+            }
+#endif
+
             bool advancePressed =
                 (keyboard != null && (keyboard.spaceKey.wasPressedThisFrame
                     || keyboard.enterKey.wasPressedThisFrame
@@ -171,6 +186,27 @@ namespace IntroCuttoon
             _state = PlayState.Showing;
             _timer = 0f;
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        /// <summary>
+        /// CUT-33 확인용 임시 기능. 모든 쪽, 칸, 연출, 암전을 처음 상태로 되돌린 뒤 index 쪽의 첫 칸을 연다.
+        /// _state를 Showing으로, _pageIndex를 index로 바꾸고 하단 쪽 번호를 갱신한다. 나중에 지운다.
+        /// </summary>
+        private void JumpToPage(int index)
+        {
+            foreach (CuttoonPage page in _pages)
+            {
+                page.ResetPage();
+                page.Alpha = 0f;
+            }
+
+            _blackout.alpha = 0f;
+            _pageIndex = index;
+            CurrentPage.Alpha = 1f;
+            OpenNextPanel();
+            UpdatePageText();
+        }
+#endif
 
         /// <summary>
         /// 칸 보기 상태에서 매 프레임 할 일을 처리한다.
