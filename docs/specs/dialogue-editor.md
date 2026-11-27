@@ -4,25 +4,6 @@
 
 제작자가 한 인물·회차의 등장 대화, 상담 선택지, 결말을 CSV 하나와 두 뷰(텍스트, 노드 트리)에서 함께 편집하고 흐름을 확인한다. 엔딩 조건, 선택지 수치, 파편 문구도 같은 창에서 고친다.
 
-## 진행 현황
-
-완료 13 · 개발중 0 · 제안 1
-
-- [x] 대사 편집기 창 (EDITOR-01)
-- [x] 텍스트 뷰 (EDITOR-02)
-- [x] 노드 트리 (EDITOR-03)
-- [x] 트리에서 편집하기 (EDITOR-04)
-- [x] 저장과 오류 (EDITOR-05)
-- [x] 실행 취소 (EDITOR-06)
-- [x] 화면 조절 (EDITOR-07)
-- [x] 게임 연결 (EDITOR-08)
-- [x] 선택지 수치 (EDITOR-09)
-- [x] 결말 조건 (EDITOR-10)
-- [x] 여러 줄 결과 (EDITOR-11)
-- [x] 기억 파편 추가 (EDITOR-12)
-- [x] 모르는 칸 보존 (EDITOR-13)
-- [ ] 대사 번역 번호 보존 (EDITOR-14) — 제안
-
 ## 흐름
 
 ```mermaid
@@ -40,16 +21,7 @@ flowchart TD
 
 인물·회차마다 대사 파일 하나가 원본이다. 텍스트와 트리는 같은 내용을 두 가지로 보여 주므로, 어느 쪽에서 고쳐도 같은 검사를 거쳐 같은 파일에 저장된다. 트리의 위치나 크기 같은 화면 설정은 대사 파일에 들어가지 않는다.
 
-## 진행 중
-
-### 대사 번역 번호 보존 (EDITOR-14) `[제안]`
-
-대사 파일의 번역 번호(tid, `LOC-08`)를 읽고 저장할 때 그대로 지킨다.
-
-- 줄을 옮기거나 고쳐도 번호는 바뀌지 않고, 새로 만든 줄에만 새 번호를 준다.
-- 확인: 지수 Day1 줄을 옮기고 고쳐 저장해도 번호가 그대로다.
-
-## 완료
+## 기능
 
 ### 대사 편집기 창 (EDITOR-01)
 
@@ -173,7 +145,6 @@ Ctrl+휠로 트리를 확대·축소하고, 두 뷰의 너비와 상자 크기�
 | EDITOR-10 | `DialogueEditorGraph.BuildSegments`, `EyeMazeDirector.TouchCore` |
 | EDITOR-11 | `DialogueEditorGraph.BuildResponseMenu`, `EyeMazeDirector.NextResponseLine` |
 | EDITOR-12 | `DialogueEditorWindow.CreateFragment` |
-| EDITOR-14 | |
 | EDITOR-13 | `DialogueEditorFormat.CarryHiddenColumns` |
 
 ### 메모

@@ -1,6 +1,6 @@
 # 스펙 목록
 
-작업 절차와 쓰는 법은 [`../CONTRIBUTING.md`](../CONTRIBUTING.md), 양식은 [`_TEMPLATE.md`](_TEMPLATE.md)에 있다. 진행 중인 것은 각 스펙의 "진행 중" 절에 있다. 화면에 나오는 대사 원문 목록은 [`../story/DialogueInventory.md`](../story/DialogueInventory.md)에 있다.
+작업 절차와 쓰는 법은 [`../CONTRIBUTING.md`](../CONTRIBUTING.md), 양식은 [`_TEMPLATE.md`](_TEMPLATE.md)에 있다. 영역 스펙에는 그 영역의 역할과 완료된 기능만 있다. 진행 중인 작업과 승인은 [`../tasks/`](../tasks/README.md)에 있다. 화면에 나오는 대사 원문 목록은 [`../story/DialogueInventory.md`](../story/DialogueInventory.md)에 있다.
 
 ## 영역
 

@@ -1,9 +1,8 @@
 ﻿# 스펙 규칙 검사: docs/specs가 docs/CONTRIBUTING.md의 규칙을 지키는지 확인한다.
 # 사람이 직접 돌리지 않는다. 커밋 훅(.githooks)과 GitHub 자동 검사(.github/workflows/spec-check.yml)가 부른다.
 # -CommitMessageFile을 주면 커밋 제목의 괄호가 요구사항 ID 형식인지도 본다(.githooks/commit-msg).
-# -Fix를 주면 각 스펙의 "진행 현황"을 기능 목록에 맞춰 다시 쓰고 git add 한다(.githooks/pre-commit).
 # 종료 코드: 0 통과(경고는 통과), 1 규칙 위반.
-param([string]$CommitMessageFile = '', [switch]$Fix)
+param([string]$CommitMessageFile = '')
 
 $ErrorActionPreference = 'Stop'
 # Git 창(UTF-8)에서 안내 글이 깨지지 않게 출력 인코딩을 맞춘다.
@@ -15,6 +14,7 @@ $errors = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
 $clueNames = New-Object System.Collections.Generic.List[object]
 $doneIds = @{}
+$nextNumbers = @{}
 
 function Read-Utf8([string]$Path) {
     return [IO.File]::ReadAllText($Path, [Text.Encoding]::UTF8)
@@ -78,90 +78,38 @@ foreach ($name in $registered.Keys) {
     }
     $nextNumber = [int]$next.Groups[2].Value
 
-    $progress = [regex]::Match($text, '(?ms)^## 진행 중[ \t]*\n(.*?)(?=^## |\z)')
-    $done = [regex]::Match($text, '(?ms)^## 완료[ \t]*\n(.*?)(?=^## |\z)')
-    if (-not $progress.Success) { $errors.Add("docs/specs/$name 에 '## 진행 중' 절이 없다.") }
-    if (-not $done.Success) { $errors.Add("docs/specs/$name 에 '## 완료' 절이 없다.") }
+    $nextNumbers[$prefix] = $nextNumber
+    $features = [regex]::Match($text, '(?ms)^## 기능[ \t]*\n(.*?)(?=^## |\z)')
+    if (-not $features.Success) { $errors.Add("docs/specs/$name 에 '## 기능' 절이 없다.") }
     if ($text -notmatch '(?ms)^## 흐름[ \t]*\n.*?^```mermaid') {
         $errors.Add("docs/specs/$name 에 '## 흐름' 절과 Mermaid 차트가 없다.")
     }
-
-    # 진행 현황: 기능 제목과 상태 태그로 만든다. 손으로 고치지 않는다.
-    # -Fix(커밋 훅)이면 다시 써서 커밋에 넣고, 아니면(CI) 어긋날 때 실패한다.
-    $items = New-Object System.Collections.Generic.List[object]
-    foreach ($part in @(@{ Body = $done; State = '완료' }, @{ Body = $progress; State = '' })) {
-        if (-not $part.Body.Success) { continue }
-        foreach ($m in [regex]::Matches($part.Body.Groups[1].Value, '(?m)^### (.+?) \(([A-Z]+)-(\d{2,3})\)(.*)$')) {
-            $state = $part.State
-            if (-not $state) { $state = if ($m.Groups[4].Value -match '\[개발중\]') { '개발중' } else { '제안' } }
-            $items.Add([pscustomobject]@{ Name = $m.Groups[1].Value; Id = "$($m.Groups[2].Value)-$($m.Groups[3].Value)"; State = $state; Num = [int]$m.Groups[3].Value })
-        }
-    }
-    $statusLines = New-Object System.Collections.Generic.List[string]
-    foreach ($it in ($items | Sort-Object Num)) {
-        if ($it.State -eq '완료') { $statusLines.Add("- [x] $($it.Name) ($($it.Id))") }
-        else { $statusLines.Add("- [ ] $($it.Name) ($($it.Id)) — $($it.State)") }
-    }
-    $counts = foreach ($st in @('완료', '개발중', '제안')) { "$st $(@($items | Where-Object { $_.State -eq $st }).Count)" }
-    $statusBlock = "## 진행 현황`n`n$($counts -join ' · ')`n`n" + ($(if ($statusLines.Count) { $statusLines -join "`n" } else { '없음' })) + "`n`n"
-    $current = [regex]::Match($text, '(?ms)^## 진행 현황[ \t]*\n.*?(?=^## )')
-    if (-not $current.Success -or $current.Value -ne $statusBlock) {
-        if ($Fix) {
-            if ($current.Success) { $text = $text.Remove($current.Index, $current.Length).Insert($current.Index, $statusBlock) }
-            else {
-                $flow = [regex]::Match($text, '(?m)^## 흐름')
-                $at = if ($flow.Success) { $flow.Index } else { 0 }
-                $text = $text.Insert($at, $statusBlock)
-            }
-            $raw = Read-Utf8 $path
-            $out = if ($raw.Contains("`r`n")) { $text.Replace("`n", "`r`n") } else { $text }
-            [IO.File]::WriteAllText($path, $out, (New-Object Text.UTF8Encoding($false)))
-            git -C $root add -- $path
-            Write-Output "docs/specs/$name 의 진행 현황을 맞췄다."
-        } else {
-            $errors.Add("docs/specs/$name 의 진행 현황이 기능 목록과 다르다. 커밋 훅(git config core.hooksPath .githooks)이 커밋할 때 맞춘다.")
-        }
+    foreach ($old in @('진행 중', '진행 현황', '완료')) {
+        if ($text -match "(?m)^## $old[ \t]*$") { $errors.Add("docs/specs/$name 에 '## $old' 절이 있다. 진행 상태는 docs/tasks의 작업 문서에서 관리하고, 스펙에는 '## 기능'만 둔다.") }
     }
 
-    # 요구사항은 "### 기능 이름 (ID)" 제목이다. 접두어, 중복, 다음 번호를 본다.
+    # 기능은 "### 기능 이름 (ID)" 제목이다. 접두어, 중복, 다음 번호를 본다. 스펙에는 상태 태그를 쓰지 않는다.
     $reqPattern = '(?m)^### (.+?) \(([A-Z]+)-(\d{2,3})\)(.*)$'
     $seen = @{}
-    foreach ($m in [regex]::Matches($text, $reqPattern)) {
-        $id = "$($m.Groups[2].Value)-$($m.Groups[3].Value)"
-        if ($m.Groups[2].Value -ne $prefix) {
-            $errors.Add("docs/specs/$name 의 $id 는 이 파일의 접두어 $prefix 와 다르다.")
+    if ($features.Success) {
+        foreach ($m in [regex]::Matches($features.Groups[1].Value, $reqPattern)) {
+            $id = "$($m.Groups[2].Value)-$($m.Groups[3].Value)"
+            if ($m.Groups[2].Value -ne $prefix) { $errors.Add("docs/specs/$name 의 $id 는 이 파일의 접두어 $prefix 와 다르다.") }
+            if ($seen.ContainsKey($id)) { $errors.Add("docs/specs/$name 에서 $id 가 두 번 나온다. 브랜치를 합치다 번호가 겹쳤다면 늦게 합친 쪽이 다음 번호로 바꾼다.") }
+            if ([int]$m.Groups[3].Value -ge $nextNumber) { $errors.Add("docs/specs/$name 의 $id 가 다음 번호보다 작지 않다. 다음 번호를 올린다.") }
+            if ($m.Groups[4].Value -match '\[(제안|개발중|완료)\]') { $errors.Add("docs/specs/$name 의 $id 제목에 상태 태그가 있다. 상태는 작업 문서에만 쓴다.") }
+            $seen[$id] = $true
+            $doneIds[$id] = $true
         }
-        if ($seen.ContainsKey($id)) {
-            $errors.Add("docs/specs/$name 에서 $id 가 두 번 나온다. 브랜치를 합치다 번호가 겹쳤다면 늦게 합친 쪽이 다음 번호로 바꾼다.")
-        }
-        if ([int]$m.Groups[3].Value -ge $nextNumber) {
-            $errors.Add("docs/specs/$name 의 $id 가 다음 번호보다 작지 않다. 다음 번호를 올린다.")
-        }
-        $seen[$id] = $true
     }
     if ($text -match '(?m)^\s*-\s*\*\*[A-Z]+-\d{2,3}\*\*') {
         $errors.Add("docs/specs/$name 에 옛 형식 요구사항 줄(- **ID**)이 있다. ""### 기능 이름 (ID)"" 제목으로 쓴다.")
     }
 
-    if ($progress.Success) {
-        foreach ($m in [regex]::Matches($progress.Groups[1].Value, $reqPattern)) {
-            if ($m.Groups[4].Value -notmatch '^\s*`\[(제안|개발중)\]`\s*$') {
-                $errors.Add("docs/specs/$name 진행 중의 $($m.Groups[2].Value)-$($m.Groups[3].Value) 제목 끝에 상태 태그(``[제안]``, ``[개발중]``)가 없다.")
-            }
-        }
-    }
-    if ($done.Success) {
-        foreach ($m in [regex]::Matches($done.Groups[1].Value, $reqPattern)) {
-            $doneIds["$($m.Groups[2].Value)-$($m.Groups[3].Value)"] = $true
-            if ($m.Groups[4].Value.Trim()) {
-                $errors.Add("docs/specs/$name 완료의 $($m.Groups[2].Value)-$($m.Groups[3].Value) 제목에 상태 태그가 남아 있다.")
-            }
-        }
-    }
-
     # 코드 단서 표: 요구사항마다 한 줄. 이름은 아래에서 코드와 대조한다.
     $clue = [regex]::Match($text, '(?ms)^### 코드 단서[ \t]*\n(.*?)(?=^#{2,3} |\z)')
     if (-not $clue.Success) {
+        if ($seen.Count -eq 0) { continue }
         $warnings.Add("docs/specs/$name 에 '### 코드 단서' 표가 없다.")
     } else {
         $rows = @{}
@@ -171,6 +119,39 @@ foreach ($name in $registered.Keys) {
         }
         foreach ($id in $seen.Keys) {
             if (-not $rows.ContainsKey($id)) { $warnings.Add("docs/specs/$name 코드 단서 표에 $id 줄이 없다.") }
+        }
+    }
+}
+
+# 작업 문서(docs/tasks): 진행 상태와 승인은 여기서만 관리한다.
+# 파일 이름은 "<첫 ID>-<영어 이름>.md", 첫 줄은 "# [상태] 이름", 대상 줄에 ID를 쓴다.
+$taskDir = Join-Path $root 'docs/tasks'
+$openOwner = @{}
+if (Test-Path $taskDir) {
+    foreach ($f in Get-ChildItem $taskDir -Filter '*.md' | Sort-Object Name) {
+        if (@('README.md', '_TEMPLATE.md') -contains $f.Name) { continue }
+        $tname = "docs/tasks/$($f.Name)"
+        $t = (Read-Utf8 $f.FullName) -replace "`r`n", "`n"
+        $fileId = [regex]::Match($f.Name, '^([A-Z]+-\d{2,3})-[a-z0-9-]+\.md$')
+        if (-not $fileId.Success) { $errors.Add("$tname 이름은 '<첫 ID>-<소문자 영어 이름>.md'여야 한다(예: LOC-08-dialogue-translation.md)."); continue }
+        $head = [regex]::Match($t, '^﻿?# \[(제안|개발중|완료)\] .+')
+        if (-not $head.Success) { $errors.Add("$tname 첫 줄은 '# [제안] 이름', '# [개발중] 이름', '# [완료] 이름' 중 하나여야 한다."); continue }
+        $state = $head.Groups[1].Value
+        $target = [regex]::Match($t, '(?m)^대상: ([^·\n]+)')
+        if (-not $target.Success) { $errors.Add("$tname 에 '대상: ID, ID' 줄이 없다."); continue }
+        $ids = @([regex]::Matches($target.Groups[1].Value, '[A-Z]+-\d{2,3}') | ForEach-Object { $_.Value })
+        if ($ids -notcontains $fileId.Groups[1].Value) { $errors.Add("$tname 파일 이름의 ID $($fileId.Groups[1].Value)가 대상 줄에 없다.") }
+        if ($t -notmatch '(?m)^## 무엇을 만드나') { $errors.Add("$tname 에 '## 무엇을 만드나' 절이 없다.") }
+        foreach ($id in $ids) {
+            $p = $id.Split('-')[0]
+            if (-not $nextNumbers.ContainsKey($p)) { $errors.Add("$tname 의 $id 접두어 $p 가 스펙 목록에 없다."); continue }
+            if ([int]$id.Split('-')[1] -ge $nextNumbers[$p]) { $errors.Add("$tname 의 $id 가 그 영역 스펙의 다음 번호보다 작지 않다. 영역 스펙의 다음 번호를 올린다.") }
+            if ($state -eq '완료') {
+                if (-not $doneIds.ContainsKey($id)) { $errors.Add("$tname 은 완료인데 $id 가 영역 스펙의 '기능'에 없다. 기능을 스펙에 옮긴다.") }
+            } else {
+                if ($openOwner.ContainsKey($id)) { $errors.Add("$id 를 진행 중인 작업 둘($($openOwner[$id]), $tname)이 함께 맡았다. 하나로 합치거나 번호를 나눈다.") }
+                $openOwner[$id] = $tname
+            }
         }
     }
 }
@@ -190,7 +171,7 @@ if (Test-Path $assetsDir) {
         $errors.Add("코드에 요구사항 ID나 스펙 번호를 쓰지 않는다. 스펙과의 연결은 커밋 제목의 ID로 한다: $($found -join ', ')")
     }
 
-    # 완료 요구사항의 코드 단서 이름이 코드에 있는지 본다. 진행 중인 요구사항은 아직 코드가 없을 수 있어 보지 않는다.
+    # 스펙 기능의 코드 단서 이름이 코드에 있는지 본다.
     # 경로(/ 포함)는 Assets/EyeMaze/Data 아래 파일로 본다.
     foreach ($c in ($clueNames | Where-Object { $doneIds.ContainsKey($_.Id) })) {
         $ok = $true
