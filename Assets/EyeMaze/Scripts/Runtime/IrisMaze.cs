@@ -37,7 +37,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("seed")] private int _seed = 7;
         [Tooltip("막다른 길을 줄이기 위해 추가로 뚫는 벽 비율")]
         [SerializeField, FormerlySerializedAs("loopChance"), Range(0f, 0.4f)] private float _loopChance = 0.08f;
-        // EMO-16: 사물이 막은 길목을 돌아가는 길의 최대 길이 추가
+        // 사물이 막은 길목을 돌아가는 길의 최대 길이 추가
         [Tooltip("사물이 막은 길목의 양쪽 칸을 잇는 우회로의 최대 칸 수. 이보다 길면 가까운 벽을 하나 열어 짧은 우회로를 만든다")]
         [SerializeField, Range(2, 12)] private int _maxDetourCells = 6;
         [SerializeField, FormerlySerializedAs("pupilDilationRequired"), Range(0f, 1f)] private float _pupilDilationRequired = 0.75f;
@@ -47,7 +47,7 @@ namespace EyeMaze
 
         // 미로를 만들 때 길목이나 벽을 맡길 사물 목록
         [NonSerialized] private readonly List<MazeProp> _layoutProps = new List<MazeProp>();
-        // DLG-40: 층 문을 여는 플래그 목록. 0번이 1층으로 들어가는 문이다.
+        // 층 문을 여는 플래그 목록. 0번이 1층으로 들어가는 문이다.
         [NonSerialized] private readonly List<string> _gateFlags = new List<string>();
 
         public int Rings => _rings;
@@ -58,7 +58,7 @@ namespace EyeMaze
         public float WallAlpha { get => _wallAlpha; set => _wallAlpha = value; }
         public float Focus { get => _focus; set => _focus = value; }
         public Person Person => _person;
-        // BLINK-29: 연출 오브젝트가 같은 선 재질을 쓰도록 공개
+        // 연출 오브젝트가 같은 선 재질을 쓰도록 공개
         public Material LineMaterial => _lineMaterial;
 
         public float FocusAlpha => Mathf.Lerp(0.12f, 1f, _focus * _focus);

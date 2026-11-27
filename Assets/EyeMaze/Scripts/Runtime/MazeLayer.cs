@@ -18,10 +18,10 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("displayName")] private string _displayName = "층";
         [Tooltip("현재 회전량 (칸 단위, 반시계 +)")]
         [SerializeField, FormerlySerializedAs("offset")] private int _offset;
-        // BLINK-05: 깜빡임 층 회전 설정 제거
+        // 깜빡임 층 회전 설정 제거
 
         private IrisMaze _maze;
-        // BLINK-17: 깜빡임 회전 때 화면에만 더하는 각도 추가
+        // 깜빡임 회전 때 화면에만 더하는 각도 추가
         private float _blinkVisualDeg;
         // 벽과 문에 전달한 표시 투명도와 조회용 목록 추가
         private float _wallVisualAlpha = 1f;

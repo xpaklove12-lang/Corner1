@@ -33,15 +33,12 @@ namespace EyeMaze
         [SerializeField] private Text _returnLabel;
         [SerializeField, FormerlySerializedAs("gazeButtonLabel")] private Text _gazeButtonLabel;
 
-        // BURDEN-05: 채움의 세로 스케일이 부담감 값을 따른다.
-        // 부담감이 갑자기 바뀌면 막대가 이 속도로 따라간다.
         [Header("부담감")]
         [Tooltip("부담감 막대의 채움. 피벗을 아래에 두고 세로 스케일로 채운다")]
         [SerializeField] private RectTransform _burdenFill;
         [Tooltip("대화로 부담감이 갑자기 바뀔 때 막대가 따라가는 속도 (초당 0~1 비율)")]
         [SerializeField] private float _burdenAnimSpeed = 0.5f;
-        // BLINK-12: 깜빡일 때 가릴 부담감 표시 참조와 현재 투명도 추가
-        // 막대 위의 "부담감" 글은 씬에 두고, 깜빡일 때 막대와 함께 가린다.
+        // 깜빡일 때 가릴 부담감 표시 참조와 현재 투명도 추가
         [Tooltip("깜빡일 때 함께 가려지는 부담감 막대와 글")]
         [SerializeField] private Graphic[] _burdenGraphics = new Graphic[0];
 
@@ -62,7 +59,7 @@ namespace EyeMaze
         [NonSerialized] private float _trustShown = float.NaN;
         [NonSerialized] private float _burdenAlpha = -1f;
 
-        // MEM-02: 기억 목록 줄 강조 시간과 현재 강조 상태 추가
+        // 기억 목록 줄 강조 시간과 현재 강조 상태 추가
         [Header("기억 목록 강조")]
         [Tooltip("새로 얻은 파편 줄이 원래 색으로 돌아오는 시간(초)")]
         [SerializeField] private float _highlightSeconds = 0.6f;
@@ -71,7 +68,7 @@ namespace EyeMaze
         [NonSerialized] private string _highlightTitle;
         [NonSerialized] private Color _highlightColor;
 
-        // MEM-34: 단서로 선택지가 열렸을 때 관찰 중지 버튼 글의 맥동 색과 주기 추가
+        // 단서로 선택지가 열렸을 때 관찰 중지 버튼 글의 맥동 색과 주기 추가
         [Header("단서 해금 안내")]
         [Tooltip("관찰 중지 버튼 글이 맥동할 때 오가는 색")]
         [SerializeField] private Color _gazePulseColor = new Color(0.85f, 0.35f, 0.1f, 1f);
@@ -81,7 +78,7 @@ namespace EyeMaze
         [NonSerialized] private bool _baseColorSaved;
         [NonSerialized] private Color _gazeLabelBaseColor;
 
-        // MEM-38: 기억 목록을 줄마다 누를 수 있는 버튼으로 표시
+        // 기억 목록을 줄마다 누를 수 있는 버튼으로 표시
         [Header("기억 목록 줄")]
         [Tooltip("주운 파편을 한 줄씩 보여 주는 버튼. 비우면 기억 목록 글 하나로 보여 준다")]
         [SerializeField] private Button[] _memoryRows = new Button[0];
@@ -143,7 +140,7 @@ namespace EyeMaze
             {
                 MazeLayer layer = d.CursorLayer;
                 sit = Strings.Get("ui.gaze_situation", "{name}의 눈 속 — {layer}", ("name", p != null ? p.DisplayName : ""), ("layer", layer != null ? layer.DisplayName : ""));
-                // BURDEN-23: 신호 중 들여다보면 대화로 돌아오라는 온보딩 문구를 추가
+                // 신호 중 들여다보면 대화로 돌아오라는 온보딩 문구를 추가
                 if (d.RestRequested) sit += "\n" + Strings.Get("ui.rest_hint_gaze", "{name}가 하고 싶은 말이 있는 거 같다. 잠시 관찰을 멈춰보자.", ("name", p != null ? p.DisplayName : ""));
                 // 단서로 선택지가 열렸으면 대화로 돌아갈 이유를 알린다
                 if (d.NewTalkReady) sit += "\n" + Strings.Get("ui.new_talk_hint", "(새로 꺼낼 수 있는 이야기가 생겼다. 관찰을 멈춰보자.)");
@@ -200,12 +197,12 @@ namespace EyeMaze
                 _returnButton.gameObject.SetActive(showReturn);
             if (showReturn)
             {
-                // DLG-07: 보이는 선택지 바로 다음 번호와 자리에 표시
+                // 보이는 선택지 바로 다음 번호와 자리에 표시
                 Set(_returnLabel, $"{choices.Count + 1}. {d.ReturnText}");
                 PlaceReturnButton(choices.Count);
             }
 
-            // DLG-02: 들어갈 때는 마음 읽기, 나올 때는 관찰 중지로 표시
+            // 들어갈 때는 마음 읽기, 나올 때는 관찰 중지로 표시
             Set(_gazeButtonLabel, d.CurrentMode == EyeMazeDirector.Mode.Gaze ? Strings.Get("ui.gaze_button_gaze", "관찰 중지 (Space)") : Strings.Get("ui.gaze_button", "마음 읽기 (Space)"));
             UpdateGazeLabelPulse(d);
             Set(_hint, d.IsReading

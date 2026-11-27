@@ -38,7 +38,7 @@ flowchart TD
 - **BURDEN-21** 잠긴 문에 `_gatePushWindow`초 안에 `_gatePushCount`번 막히면 부담감이 `_gatePushBurden`만큼 오른다. `_bumpEnabled`와 무관하다.
 - **BURDEN-23** `rest` 칸이 있는 선택지를 처음 고르면 휴식 신호가 켜진다. 동공이 떨리고 눈물이 차오르며 눈과 미로가 흐려지고, 상황 칸에 `rest` 대사와 "(잠시 쉴 시간이 필요한 거 같다.)", 들여다보는 중에는 "{name}가 하고 싶은 말이 있는 거 같다. 잠시 관찰을 멈춰보자."가 보인다.
 - **BURDEN-28** 신호 중 Q를 누르면 쉬어 주기를 승낙하고 필드로 나가 그 손님의 `rest` talk 묶음을 보여 준다. 다시 만나면 부담감이 `_burdenRestRelief`만큼 줄고 신호가 가라앉는다. 신호 없이 Q를 누르면 부담감은 그대로다.
-- **BURDEN-34** 지수의 `jisu_autopay_25` 선택지에 쉬자는 대사가, 회차 CSV `rest` talk 묶음에 쉬어 준 뒤의 리액션이 있다. (데이터)
+- **BURDEN-34** 지수의 `jisu_autopay_25` 선택지에 쉬자는 대사가, 회차 CSV `rest` talk 묶음에 쉬어 준 뒤의 리액션이 있다.
 
 ---
 

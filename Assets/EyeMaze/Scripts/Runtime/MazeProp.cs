@@ -50,7 +50,7 @@ namespace EyeMaze
         [SerializeField] private bool _fitToPassage;
         [Tooltip("그림 가로 길이를 통로 폭의 몇 배로 맞출지")]
         [SerializeField, Range(0.3f, 1.5f)] private float _passageFill = 0.9f;
-        // EMO-16: 그림이 옆 통로를 덮지 않도록 두께 상한과 막힌 범위 표시선 추가
+        // 그림이 옆 통로를 덮지 않도록 두께 상한과 막힌 범위 표시선 추가
         [Tooltip("그림 두께(통로를 따라가는 방향)의 상한. 고리 폭의 몇 배까지 허용할지")]
         [SerializeField, Range(0.2f, 1f)] private float _thicknessFill = 0.6f;
         [Tooltip("막고 있는 동안 막힌 길목 전체에 긋는 선의 색")]
@@ -82,7 +82,7 @@ namespace EyeMaze
         [Tooltip("벽 흔들림 빠르기")]
         [SerializeField] private float _dizzySpeed = 6f;
 
-        // EMO-20: 막혔을 때 보일 글의 key 추가
+        // 막혔을 때 보일 글의 key 추가
         [Header("막혔을 때 글")]
         [Tooltip("이 사물에 막혔을 때 보일 글의 Strings.csv key. 비우면 글을 보이지 않는다")]
         [SerializeField] private string _blockedKey;
@@ -121,7 +121,6 @@ namespace EyeMaze
 
         /// <summary>디렉터가 정한 표시 여부. 사라지기 시작하면 바로 false가 된다.</summary>
         public bool Visible => _visible;
-        // EMO-04: 사라지기 시작한 사물은 길을 막지 않는다.
         /// <summary>지금 보이고 이동 판정에 쓰이는지. 에디트 모드에서는 항상 보이는 것으로 본다.</summary>
         public bool Solid => isActiveAndEnabled && (!Application.isPlaying || _visible);
         /// <summary>지금 맡은 길목을 막거나 밀어내는지. 다가가면 막음 사물은 뒤집힌 뒤에만 막는다.</summary>
@@ -195,7 +194,6 @@ namespace EyeMaze
             DrawBarrier(alpha);
         }
 
-        // 보일 감정 목록이 비면 항상 보인다.
         /// <summary>
         /// 감정에서 이 사물이 보이는지 판단한다.
         /// emotion과 _showIn을 사용하며, 목록이 비었거나 감정이 목록에 있으면 true를 반환한다.
@@ -240,7 +238,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// EMO-06: 다가가면 막음 사물을 뒤집기 시작한다. 이 순간부터 길목을 막는다.
+        /// 다가가면 막음 사물을 뒤집기 시작한다. 이 순간부터 길목을 막는다.
         /// 입력값은 없으며, _flipped와 _flipT를 바꾼다.
         /// </summary>
         public void Flip()

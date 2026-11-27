@@ -12,12 +12,12 @@ namespace EyeMaze
     [ExecuteAlways]
     public class MemoryFragment : MonoBehaviour
     {
-        // MEM-01: 저해상도에서도 형태가 보이도록 마름모 본체의 대각선 배율과 폭 곡선 추가
+        // 저해상도에서도 형태가 보이도록 마름모 본체의 대각선 배율과 폭 곡선 추가
         private const float BODY_SIZE_RATIO = 0.46f;
         private static readonly AnimationCurve DIAMOND_WIDTH = new AnimationCurve(
             new Keyframe(0f, 0f, 0f, 2f), new Keyframe(0.5f, 1f, 2f, -2f), new Keyframe(1f, 0f, -2f, 0f));
 
-        // MEM-02: 획득 순간과 연출 정리를 알리는 이벤트 추가
+        // 획득 순간과 연출 정리를 알리는 이벤트 추가
         public static event Action<MemoryFragment> PickedUp;
         public static event Action FeedbackCleared;
 
@@ -34,7 +34,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("collected")] private bool _collected;
         [Tooltip("주우면 켜지는 플래그 id (Data/Flags.csv에 적힌 것). 대화 CSV의 need 칸에서 쓴다")]
         [SerializeField] private string _flag;
-        // MEM-17: 회상이 끝난 뒤에 나타나는 추가 파편 조건 추가
+        // 회상이 끝난 뒤에 나타나는 추가 파편 조건 추가
         [Tooltip("이 플래그의 회상이 끝난 뒤에 미로에 나타난다. 비우면 처음부터 있다")]
         [SerializeField] private string _appearAfter;
 

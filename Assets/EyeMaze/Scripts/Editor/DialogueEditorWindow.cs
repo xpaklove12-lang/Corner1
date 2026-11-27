@@ -70,7 +70,6 @@ namespace EyeMaze.EditorTools
         private int _highlightLine = -1;
         private bool _scrollToHighlight;
 
-        // EDITOR-01: EyeMaze/대사 편집기 창을 연다.
         [MenuItem("EyeMaze/대사 편집기")]
         private static void Open()
         {
@@ -133,7 +132,6 @@ namespace EyeMaze.EditorTools
             return Mathf.Floor(Mathf.Clamp(width * _split, MIN_VIEW_WIDTH, width - MIN_VIEW_WIDTH - 4f));
         }
 
-        // EDITOR-10: 분할선을 끌어 두 뷰의 너비를 바꾼다.
         /// <summary>
         /// 두 뷰 사이 분할선을 끌어 너비 비율을 바꾸고, 놓을 때 에디터 설정에 저장한다.
         /// handle과 body를 사용하며, _split을 바꾼다.
@@ -381,7 +379,6 @@ namespace EyeMaze.EditorTools
             return style;
         }
 
-        // EDITOR-02: 문법 요소별로 색을 입힌다.
         /// <summary>
         /// 텍스트 뷰의 각 줄에 문법별 색 태그를 붙인다. 라벨은 청록, 선택지는 노랑, Line: 대사는 기본색,
         /// [eye]는 보라, [goto]는 파랑, 오류가 난 줄은 빨강이다. 글자 자체는 바꾸지 않는다.
@@ -424,7 +421,6 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private static string EscapeRichText(string s) => s.IndexOf('<') < 0 ? s : s.Replace("<", "<\u200B");
 
-        // Tab과 Shift+Tab으로 들여쓰기를 바꾼다.
         /// <summary>
         /// 텍스트 입력 중 Tab과 Shift+Tab을 받아 커서가 있는 줄 맨 앞의 탭 문자를 하나 넣거나 뺀다.
         /// 기본 동작(포커스 이동)은 막는다. 이벤트와 에디터 텍스트 편집기를 사용하며, _draft를 바꾼다.
@@ -505,7 +501,6 @@ namespace EyeMaze.EditorTools
             _graph.CompleteCreate(ok, _doc);
         }
 
-        // EDITOR-05: 검사를 통과한 초안만 저장하고 재임포트한다.
         /// <summary>
         /// 텍스트 초안을 해석·검사해 문제가 없으면 공통 모델을 바꾸고 CSV에 저장한다.
         /// 문제가 있으면 마지막 정상 모델과 CSV를 그대로 두고 초안도 저장하지 않는다.
@@ -550,7 +545,6 @@ namespace EyeMaze.EditorTools
             _historyIndex = 0;
         }
 
-        // EDITOR-34: Flags.csv 줄과 씬 파편 오브젝트를 만든다.
         /// <summary>
         /// 새 기억 파편을 만든다. Flags.csv에 파편 플래그 줄을 넣고, 열린 씬의 group(그 층 파편 묶음)에 기존 파편을 복제한 오브젝트를 둔다.
         /// client(이 회차 손님)와 group을 사용하며, 성공 여부와 오류, 새 파편을 반환하고 Flags.csv·실행 취소 기록·씬을 바꾼다.
@@ -670,7 +664,6 @@ namespace EyeMaze.EditorTools
             catch (IOException ex) { error = "Flags.csv 저장 실패: " + ex.Message; return false; }
         }
 
-        // EDITOR-04: 파편 획득 문구를 Flags.csv에 저장한다.
         /// <summary>
         /// 파편 Flag ID의 획득 문구를 Flags.csv에 저장하고 대화 편집과 같은 기록에 추가한다.
         /// </summary>
@@ -781,7 +774,6 @@ namespace EyeMaze.EditorTools
             return true;
         }
 
-        // EDITOR-09: Ctrl+Z, Ctrl+Y로 편집을 되돌리고 다시 한다.
         /// <summary>
         /// 창 안에서 Ctrl+Z, Ctrl+Y(Mac은 Cmd)를 받아 실행 취소·다시 실행한다. Unity 단축키가 먼저 받으면 아래 단축키 메서드가 같은 일을 한다.
         /// 이벤트를 사용하며, 처리하면 이벤트를 사용 처리한다.

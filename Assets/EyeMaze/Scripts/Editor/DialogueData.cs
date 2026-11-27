@@ -18,7 +18,7 @@ namespace EyeMaze.EditorTools
         public const string DataFolder = "Assets/EyeMaze/Data";
         public const string FlagsPath = DataFolder + "/Flags.csv";
         public const string DialogueFolder = DataFolder + "/Dialogue";
-        // MEM-11: 회상 대본 경로와 권장 최대 줄 수 추가
+        // 회상 대본 경로와 권장 최대 줄 수 추가
         // 상수 이름 FlashbacksPath → FLASHBACKS_PATH
         public const string FLASHBACKS_PATH = DataFolder + "/Flashbacks.csv";
         private const int FLASHBACK_MAX_LINES = 12;
@@ -265,7 +265,7 @@ namespace EyeMaze.EditorTools
                 if (string.IsNullOrEmpty(f.Flag)) Warn($"파편 '{f.Title}'에 플래그가 없다.", f);
                 else if (!known.Contains(f.Flag)) Err($"파편 '{f.Title}'의 플래그 '{f.Flag}'가 Flags.csv에 없다.", f);
             }
-            // EMO-16: 막음 사물과 같은 칸에 놓인 파편을 오류로 알린다
+            // 막음 사물과 같은 칸에 놓인 파편을 오류로 알린다
             foreach (ClientCase c in cases)
             {
                 List<MemoryFragment> fragments = c.Fragments();
@@ -302,7 +302,7 @@ namespace EyeMaze.EditorTools
             var errors = new List<string>();
             Dictionary<string, FlashbackScript.Flashback> flashbacks = FlashbackScript.Parse(asset, errors);
             foreach (string e in errors) err("Flashbacks.csv: " + e, asset);
-            // MEM-08: 후보 방을 합치지 않고 FindRoom처럼 실제 재생될 방 하나만 본다
+            // 후보 방을 합치지 않고 FindRoom처럼 실제 재생될 방 하나만 본다
             FlashbackRoom[] rooms = PlayerRooms();
             foreach (IGrouping<string, FlashbackRoom> g in rooms.GroupBy(r => r.Flag).Where(g => g.Count() > 1))
                 warn($"회상 방 플래그 '{g.Key}'를 쓰는 방이 {g.Count()}개다. 회상 재생기 목록의 첫 방 '{g.First().name}'만 재생된다.", g.First());
@@ -389,7 +389,7 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// MEM-23: 사물이 추가 사물 묶음 set 아래에 있는지 확인한다.
+        /// 사물이 추가 사물 묶음 set 아래에 있는지 확인한다.
         /// p와 set을 사용하며, set이 있고 p가 그 아래에 있으면 true를 반환한다.
         /// </summary>
         private static bool InSet(FlashbackProp p, GameObject set) => set != null && p.transform.IsChildOf(set.transform);
@@ -426,7 +426,7 @@ namespace EyeMaze.EditorTools
             string actor = Path.GetFileNameWithoutExtension(path);
             int day = actor.LastIndexOf("_Day", System.StringComparison.Ordinal);
             if (day > 0) actor = actor.Substring(0, day);
-            // EMO-15: 새 파일 머리글에 emotion 추가
+            // 새 파일 머리글에 emotion 추가
             var columns = new List<string> { "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "spring", "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need", "emotion" };
             var sb = new System.Text.StringBuilder(string.Join(",", columns)).Append("\r\n");
             void Row(string section, string id, params (string column, string value)[] cells)

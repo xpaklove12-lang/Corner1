@@ -112,7 +112,6 @@ namespace EyeMaze
                 }
             }
 
-            // BLINK-29: 바뀌지 않은 벽의 잔상을 지운다.
             // 전후로 같은 자리에 켜져 있는 벽은 바뀌지 않았으므로 잔상을 지운다.
             for (int i = _ghosts.Count - 1; i >= 0; i--)
             {
@@ -140,7 +139,6 @@ namespace EyeMaze
             ApplyReachFades();
         }
 
-        // 잔상과 파문을 지우고 새 벽의 표시값을 되돌린다.
         /// <summary>
         /// 잔상과 파문을 지우고 새 벽의 표시값을 원래대로 되돌린다.
         /// 입력값은 없으며, 연출 중이 아니면 아무 일도 하지 않는다. _ghosts, _changedWalls, _ripple, _maze를 비운다.
@@ -232,7 +230,6 @@ namespace EyeMaze
             return line;
         }
 
-        // 바뀐 새 벽과 문은 처음에 보이지 않게 둔다.
         /// <summary>
         /// 새로 나타나는 벽이나 문을 목록에 넣고 숨긴다.
         /// layer, target, wall, gate, key를 사용하며, _changedWalls와 대상의 VisualAlpha를 바꾼다.

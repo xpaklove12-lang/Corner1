@@ -13,11 +13,11 @@ namespace EyeMaze
     [ExecuteAlways]
     public class EyeVisual : MonoBehaviour
     {
-        // BLINK-12: 눈꺼풀 덮개 그리기 상수 추가
+        // 눈꺼풀 덮개 그리기 상수 추가
         private const int COVER_COLUMNS = 33;
         private const int COVER_SORTING_ORDER = 21;
         private const float COVER_MARGIN = 0.05f;
-        // BURDEN-23: 눈물 메시 그리기 상수 추가
+        // 눈물 메시 그리기 상수 추가
         private const int TEAR_SORTING_ORDER = 20;
         private const float TEAR_WAVE_FREQUENCY = 9f;
 
@@ -94,7 +94,7 @@ namespace EyeMaze
         [NonSerialized] private MeshRenderer _tearRenderer;
         [NonSerialized] private Vector3[] _tearVertices;
         [NonSerialized] private Color[] _tearColors;
-        // EMO-03: 감정 표현의 눈꺼풀 닫힘, 홍채 색조, 눈물 수위 추가
+        // 감정 표현의 눈꺼풀 닫힘, 홍채 색조, 눈물 수위 추가
         [NonSerialized] private float _emotionClosed;
         [NonSerialized] private Color _emotionTint = Color.clear;
         [NonSerialized] private float _emotionTearLevel;

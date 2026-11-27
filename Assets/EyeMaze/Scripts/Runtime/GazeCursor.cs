@@ -26,7 +26,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("applied"), HideInInspector] private bool _applied;
 
         [NonSerialized] private int _drawnKey = int.MinValue;
-        // BLINK-17: 깜빡임 회전 때 화면에만 더하는 각도 추가
+        // 깜빡임 회전 때 화면에만 더하는 각도 추가
         [NonSerialized] private float _blinkVisualDeg;
         private IrisMaze _maze;
 

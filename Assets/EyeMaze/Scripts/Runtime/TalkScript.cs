@@ -17,7 +17,7 @@ namespace EyeMaze
     {
         public const string Enter = "enter";
         public const string Reveal = "reveal";
-        // BURDEN-28: 쉬어 주고 돌아온 직후의 리액션 묶음 추가
+        // 쉬어 주고 돌아온 직후의 리액션 묶음 추가
         public const string Rest = "rest";
 
         /// <summary>speaker 칸에 이 값을 쓰면 이름 없는 서술이 된다</summary>

@@ -18,7 +18,7 @@ namespace EyeMaze
         [Tooltip("1을 넣으면 한 번 움찔 수축했다가 돌아온다")]
         [SerializeField, FormerlySerializedAs("pulse"), Range(0f, 1f)] private float _pulse;
 
-        // BURDEN-23: 동공 떨림 설정 추가
+        // 동공 떨림 설정 추가
         [Header("떨림")]
         [Tooltip("동공이 떨리는 거리")]
         [SerializeField] private float _trembleDistance = 0.05f;
@@ -36,7 +36,7 @@ namespace EyeMaze
         [NonSerialized] private float _tremble;
         [NonSerialized] private bool _trembling;
         [NonSerialized] private Vector3 _restPosition;
-        // EMO-03: 감정 표현의 떨림 거리, 빠르기, 시선 피함 추가
+        // 감정 표현의 떨림 거리, 빠르기, 시선 피함 추가
         [NonSerialized] private float _emotionTrembleDistance;
         [NonSerialized] private float _emotionTrembleSpeed = 28f;
         [NonSerialized] private Vector2 _emotionShift;

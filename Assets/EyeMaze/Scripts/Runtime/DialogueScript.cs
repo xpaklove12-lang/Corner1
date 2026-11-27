@@ -32,11 +32,11 @@ namespace EyeMaze
             public int Spring;
             public string Goto;
             public string Ending;
-            /// <summary>EDITOR-21: 고른 뒤 ending으로 갈지 가르는 조건. 비면 고르는 즉시 ending으로 간다.</summary>
+            /// <summary>고른 뒤 ending으로 갈지 가르는 조건. 비면 고르는 즉시 ending으로 간다.</summary>
             public string[] EndingNeed = Array.Empty<string>();
-            // BURDEN-23: 내담자가 쉬자고 할 때의 대사 추가
+            // 내담자가 쉬자고 할 때의 대사 추가
             public string Rest;
-            // EMO-01: 고른 뒤 내담자의 감정 추가 (비었거나 정해지지 않은 값이면 null)
+            // 고른 뒤 내담자의 감정 추가 (비었거나 정해지지 않은 값이면 null)
             public ClientEmotion? Emotion;
             public int Line;
         }

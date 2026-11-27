@@ -19,7 +19,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("requiredTrust")] private int _requiredTrust = 1;
         [Tooltip("필요한 동공 열림 0~1 (-1 = 조건 없음)")]
         [SerializeField, FormerlySerializedAs("requiredDilation")] private float _requiredDilation = -1f;
-        // DLG-40: 선택지가 켜는 플래그로 여는 조건과 문 번호 추가
+        // 선택지가 켜는 플래그로 여는 조건과 문 번호 추가
         [Tooltip("이 문을 여는 플래그 (비우면 플래그 조건 없음). 적혀 있으면 신뢰는 보지 않는다")]
         [SerializeField] private string _requiredFlag = "";
         [Tooltip("바깥에서 몇 번째 층 문인지. 막혔을 때 문구를 고르는 데 쓴다")]
@@ -32,7 +32,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("openColor")] private Color _openColor = new Color(0.6f, 1f, 0.7f, 0.45f);
 
         [NonSerialized] private int _drawnKey = int.MinValue;
-        // BLINK-17, BLINK-29: 연출 중 문 색에 곱할 투명도 추가
+        // 연출 중 문 색에 곱할 투명도 추가
         [NonSerialized] private float _visualAlpha = 1f;
         private IrisMaze _maze;
 
@@ -71,7 +71,7 @@ namespace EyeMaze
             if (p == null) return true;
             // 여는 플래그가 적힌 문은 그 플래그로만 판단하고 신뢰는 보지 않는다.
             bool byFlag = !string.IsNullOrEmpty(_requiredFlag);
-            // DLG-20: 안 좋은 말의 감점이 문을 막지 않도록 GateTrust로 판단
+            // 안 좋은 말의 감점이 문을 막지 않도록 GateTrust로 판단
             bool trustOk = byFlag ? Flags.IsOn(_requiredFlag) : _requiredTrust < 0 || p.GateTrust >= _requiredTrust;
             bool dilOk = _requiredDilation < 0f || p.Dilation >= _requiredDilation;
             return trustOk && dilOk;

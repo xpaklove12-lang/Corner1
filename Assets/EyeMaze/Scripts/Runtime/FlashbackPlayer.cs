@@ -37,7 +37,7 @@ namespace EyeMaze
         [SerializeField] private float _coverFadeSeconds = 0.5f;
         [Tooltip("장면 그림이 방 테두리 크기로 줄어드는 시간(초)")]
         [SerializeField] private float _enterSeconds = 2f;
-        // MEM-08: 줄어드는 그림이 흐려지기 시작하는 시점 추가
+        // 줄어드는 그림이 흐려지기 시작하는 시점 추가
         [Tooltip("장면 그림이 줄어드는 시간 중 흐려지기 시작하는 지점 (0이면 줄어들기 시작할 때부터 함께 흐려진다)")]
         [SerializeField, Range(0f, 0.9f)] private float _enterFadeStart = 0.35f;
         // 진입 연출의 가속 곡선, 방이 다가오는 카메라 배율 추가
@@ -229,7 +229,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// MEM-11: 월드 위치를 카메라 화면을 띄운 _cameraView 위의 화면 위치로 바꾼다.
+        /// 월드 위치를 카메라 화면을 띄운 _cameraView 위의 화면 위치로 바꾼다.
         /// world, _camera, _cameraView를 사용하며, 화면 공간의 위치를 반환한다.
         /// </summary>
         private Vector3 WorldToCanvas(Vector3 world)
@@ -288,7 +288,6 @@ namespace EyeMaze
         {
             _phase = Phase.Room;
             _phaseT = 0f;
-            // 방에 들어오면 도입 줄을 먼저 보인다.
             if (_script.Intro.Count > 0) OpenLines(_script.Intro, LineKind.Intro);
             else if (_script.Steps.Count == 0) BeginExit();
         }
@@ -307,7 +306,6 @@ namespace EyeMaze
                 return;
             }
             FieldPlayer actor = _room.Actor;
-            // 글 칸이 닫혀 있으면 좌우 키로 내담자가 걷는다.
             actor.Steer(new Vector2(moveX, 0f), dt);
             FlashbackProp near = FindNearest();
             // 수정(016): 사물 이름만 보이던 안내에 누를 키를 함께 보인다.
@@ -342,7 +340,6 @@ namespace EyeMaze
             return best;
         }
 
-        // 지금 단계 사물이면 대본을, 아니면 살펴보기 글만 보인다.
         /// <summary>
         /// 사물에 상호작용한다. 지금 단계의 사물이면 그 단계의 줄을, 아니면 살펴보기 글 한 줄을 보여 준다.
         /// prop과 지금 단계를 사용하며, 글 칸 상태를 바꾼다. 살펴보기 글이 비어 있으면 아무것도 하지 않는다.
@@ -401,11 +398,9 @@ namespace EyeMaze
             Typewriter.SetText(_bodyText, line.Text);
             if (_lineKind == LineKind.Look) return;
             Sprite portrait = string.IsNullOrEmpty(line.Speaker) ? null : FieldNPC.PortraitOf(line.Speaker);
-            // 회상 대본 줄을 대화 기록에 남긴다.
             DialogueLog.Add(line.Speaker, line.Text, false, portrait);
         }
 
-        // 단계 끝이면 글 칸을 닫고 다음 단계로 간다.
         /// <summary>
         /// 다음 줄로 넘긴다. 묶음의 마지막 줄이었으면 글 칸을 닫고, 단계 줄이었으면 다음 단계로 넘어가며, 남은 단계가 없으면 회상을 끝낸다.
         /// _lines, _lineIndex, _lineKind, _stepIndex를 사용하며, 글 칸과 단계 번호, 재생 단계를 바꾼다.

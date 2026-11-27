@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace EyeMaze
 {
     /// <summary>
-    /// MEM-38: 기억 목록에서 고른 파편의 요약 패널. 제목과 획득 문구를 보여 주고, 회상이 있으면 다시 재생한다.
+    /// 기억 목록에서 고른 파편의 요약 패널. 제목과 획득 문구를 보여 주고, 회상이 있으면 다시 재생한다.
     /// 패널이 열려 있는 동안 게임 시간을 멈춘다.
     /// </summary>
     public class FragmentRecapUI : MonoBehaviour
@@ -59,7 +59,6 @@ namespace EyeMaze
             if (!IsOpen || DialogueLog.BlocksInput) return;
             Keyboard kb = Keyboard.current;
             Gamepad pad = Gamepad.current;
-            // 닫기, Esc, 패드 B로 요약 창을 닫는다.
             bool back = (kb != null && kb.escapeKey.wasPressedThisFrame) || (pad != null && pad.buttonEast.wasPressedThisFrame);
             if (back) Close();
         }

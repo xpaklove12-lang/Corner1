@@ -12,8 +12,6 @@ $specDir = Join-Path $root 'docs/specs'
 $metaFiles = @('README.md', '_TEMPLATE.md')
 $errors = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
-$doneIds = New-Object System.Collections.Generic.List[string]
-$allIds = @{}
 
 function Read-Utf8([string]$Path) {
     return [IO.File]::ReadAllText($Path, [Text.Encoding]::UTF8)
@@ -98,7 +96,6 @@ foreach ($name in $registered.Keys) {
             $errors.Add("docs/specs/$name 의 $id 가 다음 번호보다 작지 않다. 다음 번호를 올린다.")
         }
         $seen[$id] = $true
-        $allIds[$id] = $true
     }
 
     if ($progress.Success) {
@@ -113,29 +110,22 @@ foreach ($name in $registered.Keys) {
             if ($m.Groups[2].Value -match '^\s*`\[') {
                 $errors.Add("docs/specs/$name 완료의 $($m.Groups[1].Value) 에 상태 태그가 남아 있다. 완료 줄에는 태그를 쓰지 않는다.")
             }
-            # 줄 끝에 "(데이터)"를 붙인 요구사항은 CSV 데이터로 충족되므로 코드 주석을 찾지 않는다.
-            if ($m.Groups[2].Value.TrimEnd() -notmatch '\(데이터\)$') { $doneIds.Add($m.Groups[1].Value) }
         }
     }
 }
 
-# 코드 주석의 요구사항 ID를 본다. GitHub 검사처럼 Assets가 없는 체크아웃에서는 건너뛴다.
+# 코드에는 요구사항 ID와 스펙 번호를 쓰지 않는다. 스펙을 고칠 때 코드까지 고치지 않게 하기 위해서다.
+# GitHub 검사처럼 Assets가 없는 체크아웃에서는 건너뛴다.
 $assetsDir = Join-Path $root 'Assets'
 if (Test-Path $assetsDir) {
     $prefixPattern = ($prefixOwner.Keys | Sort-Object) -join '|'
-    $codeIds = @{}
+    $found = New-Object System.Collections.Generic.List[string]
     foreach ($f in Get-ChildItem $assetsDir -Recurse -Include '*.cs', '*.shader') {
-        foreach ($m in [regex]::Matches((Read-Utf8 $f.FullName), "(?<![A-Z])(?:$prefixPattern)-\d{2,3}(?!\d)")) {
-            if (-not $codeIds.ContainsKey($m.Value)) { $codeIds[$m.Value] = $f.Name }
-        }
+        $m = [regex]::Match((Read-Utf8 $f.FullName), "(?<![A-Z])(?:$prefixPattern)-\d{2,3}(?!\d)|스펙 ?\d{3}")
+        if ($m.Success) { $found.Add("$($f.Name)($($m.Value))") }
     }
-    $missing = @($doneIds | Where-Object { -not $codeIds.ContainsKey($_) })
-    if ($missing.Count -gt 0) {
-        $warnings.Add("완료 ID $($missing.Count)개가 코드 주석에 없다. 그 요구사항을 판단하거나 시작하는 곳에 ID 주석을 단다: $($missing -join ', ')")
-    }
-    $orphans = @($codeIds.Keys | Where-Object { -not $allIds.ContainsKey($_) } | Sort-Object | ForEach-Object { "$_($($codeIds[$_]))" })
-    if ($orphans.Count -gt 0) {
-        $warnings.Add("코드 주석에 스펙에 없는 ID가 있다. 지운 요구사항이면 주석에서 ID를 뗀다: $($orphans -join ', ')")
+    if ($found.Count -gt 0) {
+        $errors.Add("코드에 요구사항 ID나 스펙 번호를 쓰지 않는다. 스펙과의 연결은 커밋 제목의 ID로 한다: $($found -join ', ')")
     }
 }
 

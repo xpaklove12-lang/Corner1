@@ -20,10 +20,10 @@ namespace EyeMaze
     {
         public enum Mode { Talk, Gaze, Ending }
 
-        // BLINK-01: 기본 후보를 F6 자물쇠 맞춤으로 지정
+        // 기본 후보를 F6 자물쇠 맞춤으로 지정
         private const int BLINK_DEFAULT_PRESET_INDEX = 1;
 
-        // EMO-03: 손님에게 그 감정의 눈 표현이 없을 때 쓰는 기본 표현
+        // 손님에게 그 감정의 눈 표현이 없을 때 쓰는 기본 표현
         private static readonly EmotionLook DEFAULT_EMOTION_LOOK = new EmotionLook();
 
         [Header("연결")]
@@ -38,7 +38,7 @@ namespace EyeMaze
         [SerializeField] private TextAsset _flagsCsv;
         [Tooltip("공용 문구 표 (Data/Strings.csv). 안내/시스템 문구를 여기서 읽는다")]
         [SerializeField] private TextAsset _stringsCsv;
-        // MEM-08: 회상 대본과 회상 재생기 연결 추가
+        // 회상 대본과 회상 재생기 연결 추가
         [Tooltip("회상 대본 (Data/Flashbacks.csv). Flags.csv와 같은 때에 읽는다")]
         [SerializeField] private TextAsset _flashbacksCsv;
         [Tooltip("파편 회상을 재생하는 회상 화면. 비우면 모든 파편이 글로 나온다")]
@@ -114,10 +114,10 @@ namespace EyeMaze
         // 자동 깜빡임 기본값을 F6 후보로 지정
         [Tooltip("시간 경과 깜빡임에 쓸 후보 번호 (0부터). 1은 F6 후보")]
         [SerializeField] private int _blinkPresetIndex = BLINK_DEFAULT_PRESET_INDEX;
-        // BLINK-29: 벽 변화 연출 설정 추가
+        // 벽 변화 연출 설정 추가
         [SerializeField] private MazeWallChangeEffect _wallChange = new MazeWallChangeEffect();
         [SerializeField, FormerlySerializedAs("blinkAmount"), Range(0f, 1f)] private float _blinkAmount;
-        // BLINK-05: 회전량을 칸 단위로 바꾸고 누적 각도 제한과 뜬 직후 유예 추가
+        // 회전량을 칸 단위로 바꾸고 누적 각도 제한과 뜬 직후 유예 추가
         [Tooltip("깜빡임 한 번에 미로가 도는 최소 칸 수")]
         [SerializeField] private int _blinkTurnMinSectors = 1;
         [Tooltip("깜빡임 한 번에 미로가 도는 최대 칸 수")]
@@ -130,7 +130,7 @@ namespace EyeMaze
         [Header("파편 읽은 뒤")]
         [Tooltip("파편을 다 읽고 나면 지금 층을 뺀 나머지 층의 벽을 무작위로 다시 만든다 (멈춰 있는 동안 길을 외우지 못하게)")]
         [SerializeField, FormerlySerializedAs("respawnMazeAfterReading")] private bool _respawnMazeAfterReading = true;
-        // MEM-17: 회상을 본 파편 자리의 표시 색 추가
+        // 회상을 본 파편 자리의 표시 색 추가
         [Tooltip("회상을 본 파편 자리(기억의 자리)에 남는 표시 색")]
         [SerializeField] private Color _seenMarkColor = new Color(0.6f, 0.95f, 1f, 0.45f);
         // 이은 뒤의 기억의 자리 색 추가
@@ -146,19 +146,19 @@ namespace EyeMaze
         [SerializeField] private float _burdenSecondsPerTrust = 17.2f;
         [Tooltip("좋은 말을 처음 했을 때 줄어드는 양")]
         [SerializeField, Range(0f, 1f)] private float _burdenRelief = 0.25f;
-        // BURDEN-02: 안 좋은 말을 했을 때 늘어나는 양 추가
+        // 안 좋은 말을 했을 때 늘어나는 양 추가
         [Tooltip("안 좋은 말을 했을 때 늘어나는 양")]
         [SerializeField, Range(0f, 1f)] private float _burdenWrongChoice = 0.1f;
         [Tooltip("가득 찼을 때 엔딩 앞에 보이는 한 줄. '은재'는 지금 손님 이름으로 바뀐다")]
         [SerializeField, TextArea(1, 3)] private string _burdenEndLine = "은재가 시선을 피했다. 더는 마주 보기 힘든 것 같다.";
-        // BURDEN-28: 휴식 신호를 보고 쉬어 주었을 때의 감소량, 문구, 눈 연출 추가
+        // 휴식 신호를 보고 쉬어 주었을 때의 감소량, 문구, 눈 연출 추가
         [Tooltip("휴식 신호를 보고 쉬어 준 뒤 돌아왔을 때 줄어드는 양")]
         [SerializeField, Range(0f, 1f)] private float _burdenRestRelief = 0.4f;
         [Tooltip("쉬어 주고 돌아왔을 때 보이는 문구. '은재'는 지금 손님 이름으로 바뀐다")]
         [SerializeField, TextArea(1, 3)] private string _restReturnMessage = "은재의 얼굴이 조금 편해졌다.\n(부담이 줄었다.)";
         [SerializeField] private ClientTearCue _tearCue = new ClientTearCue();
 
-        // BURDEN-10: 벽 부딪힘 밀려남 설정
+        // 벽 부딪힘 밀려남 설정
         [Header("벽 부딪힘")]
         // 부딪힘 부담감 증가를 툴팁에서 뺌
         [Tooltip("켜면 벽이나 잠긴 문에 세게 부딪혔을 때 밀려남, 지지직 연출, 번쩍임이 일어난다. 끄면 기존처럼 멈추거나 미끄러지기만 한다")]
@@ -171,7 +171,7 @@ namespace EyeMaze
         [SerializeField] private float _knockbackSeconds = 0.18f;
         [Tooltip("한 번 부딪힌 뒤 다시 부딪힘으로 치기까지 기다리는 시간(초)")]
         [SerializeField] private float _bumpCooldown = 0.45f;
-        // BURDEN-21: 부딪힘마다 오르던 부담감을 잠긴 문 반복 접촉 설정으로 바꿈
+        // 부딪힘마다 오르던 부담감을 잠긴 문 반복 접촉 설정으로 바꿈
         [Tooltip("부담감이 오르는 잠긴 문 접촉 횟수")]
         [SerializeField] private int _gatePushCount = 3;
         [Tooltip("접촉 횟수를 세는 제한 시간(초). 첫 접촉 뒤 이 시간이 지나면 다시 센다")]
@@ -187,8 +187,7 @@ namespace EyeMaze
         [Tooltip("초당 초점이 튀는 횟수")]
         [SerializeField] private float _glitchRate = 20f;
 
-        // EMO-04: 감정 상태와 감정 전환 연출 설정 추가
-        // 나타나거나 사라진 뒤 이 시간 동안 미로가 흐려도 선명하게 보인다.
+        // 감정 상태와 감정 전환 연출 설정 추가
         [Header("감정")]
         [Tooltip("지금 손님의 감정. 상담을 시작하면 손님의 시작 감정이 되고, 선택지의 emotion 값으로 바뀐다")]
         [SerializeField] private ClientEmotion _emotion = ClientEmotion.Calm;
@@ -220,14 +219,14 @@ namespace EyeMaze
         [NonSerialized] private float _mazeTurnDeg;
         [NonSerialized] private float _blinkTurnFrom;
         [NonSerialized] private float _blinkTurnDelta;
-        // BLINK-17: 화면 회전 진행 상태와 재생 중인 후보, 층 목록 추가
+        // 화면 회전 진행 상태와 재생 중인 후보, 층 목록 추가
         [NonSerialized] private bool _blinkTurning;
         [NonSerialized] private MazeLayer[] _blinkLayers = Array.Empty<MazeLayer>();
         [NonSerialized] private BlinkTurnPreset _activePreset;
         [NonSerialized] private float _blinkOpenFrom;
         // 눈을 뜬 직후 입력 유예 시간 추가
         [NonSerialized] private float _blinkRecoverT;
-        // BLINK-12: 눈꺼풀 값을 전달할 눈 그림 참조 추가
+        // 눈꺼풀 값을 전달할 눈 그림 참조 추가
         [NonSerialized] private EyeVisual _eye;
         // 이번 이동에서 막힌 축과 방향(+1 바깥쪽/반시계, -1 안쪽/시계, 0 막히지 않음)
         [NonSerialized] private int _hitRadial;
@@ -251,28 +250,28 @@ namespace EyeMaze
         [NonSerialized] private List<string> _endingLines;
         [NonSerialized] private readonly HashSet<string> _usedOptions = new HashSet<string>();
         [NonSerialized] private bool _reading;
-        // BLINK-39: 파편을 읽은 뒤의 벽 변화 연출 경과 시간(음수면 재생 중 아님)
+        // 파편을 읽은 뒤의 벽 변화 연출 경과 시간(음수면 재생 중 아님)
         [NonSerialized] private float _respawnEffectT = -1f;
-        // MEM-34: 파편을 줍기 전에 잠겨 있던 선택지와 해금 안내 상태
+        // 파편을 줍기 전에 잠겨 있던 선택지와 해금 안내 상태
         [NonSerialized] private readonly List<(DialogueScript.Node node, int index)> _lockedChoices = new List<(DialogueScript.Node node, int index)>();
         [NonSerialized] private bool _newTalkReady;
         [NonSerialized] private float _readT;
         [NonSerialized] private bool _typingPrev;
         [NonSerialized] private bool _acceptedLastFrame;
         [NonSerialized] private readonly List<ChoiceView> _choices = new List<ChoiceView>();
-        // EDITOR-32: 여러 줄 결과를 한 줄씩 넘기는 상태
+        // 여러 줄 결과를 한 줄씩 넘기는 상태
         [NonSerialized] private readonly List<string> _responseLines = new List<string>();
         [NonSerialized] private int _responseIndex;
         [NonSerialized] private string _pendingGoto;
         [NonSerialized] private int _responseDoneFrame = -1;
-        // DLG-14: 화면에 보이는 선택지의 CSV 순번 목록 추가
+        // 화면에 보이는 선택지의 CSV 순번 목록 추가
         [NonSerialized] private readonly List<int> _visibleChoiceIndices = new List<int>();
-        // BURDEN-23: 휴식 신호, 대사 표시, 승낙 상태 추가
+        // 휴식 신호, 대사 표시, 승낙 상태 추가
         [NonSerialized] private bool _restRequested;
         [NonSerialized] private bool _restAccepted;
         [NonSerialized] private string _restLine;
         [NonSerialized] private Pupil _pupil;
-        // DLG-24: 마지막으로 상황 문구를 대화 기록에 남긴 장면 추가
+        // 마지막으로 상황 문구를 대화 기록에 남긴 장면 추가
         [NonSerialized] private DialogueScript.Node _loggedNode;
         // 눈 표현 전환의 시작, 목표, 지금 값과 경과 시간(음수면 전환 중 아님)
         [NonSerialized] private readonly EmotionLook _lookFrom = new EmotionLook();
@@ -283,7 +282,7 @@ namespace EyeMaze
         [NonSerialized] private float _propDelayT = -1f;
         [NonSerialized] private float _gazeShiftWeight = 1f;
         [NonSerialized] private readonly List<MazeProp> _props = new List<MazeProp>();
-        // EMO-19: 어지러움 연출로 흔들고 있는 벽과 이번 프레임에 흔들 벽
+        // 어지러움 연출로 흔들고 있는 벽과 이번 프레임에 흔들 벽
         [NonSerialized] private readonly List<MazeWall> _wobbling = new List<MazeWall>();
         [NonSerialized] private readonly Dictionary<MazeWall, (float amp, float speed)> _wobbleNow = new Dictionary<MazeWall, (float amp, float speed)>();
         // 회상 중인 파편, 시선이 칸을 벗어날 때까지 줍지 않는 새로 나타난 파편
@@ -333,7 +332,6 @@ namespace EyeMaze
         /// <summary>이 신뢰 이하가 되면 손님이 떠난다 (지금 손님 기준, 음수)</summary>
         public int LeaveTrust => _leaveTrust;
 
-        // DLG-07: 선택지가 숨겨져도 표시 조건은 같다.
         /// <summary>대화 중이고 시작 장면이 아니며 4번 칸이 비어 있으면 처음 이야기로 돌아가는 공통 선택지를 고를 수 있다.</summary>
         public bool CanReturnToStart
         {
@@ -350,7 +348,7 @@ namespace EyeMaze
         public bool InAbyss => _mode == Mode.Gaze && _inAbyss;
         /// <summary>단서를 봐서 선택지가 새로 열렸고 아직 대화로 돌아가지 않았는지</summary>
         public bool NewTalkReady => _newTalkReady;
-        /// <summary>MEM-38: 파편 요약 패널을 열 수 있는 상태인지</summary>
+        /// <summary>파편 요약 패널을 열 수 있는 상태인지</summary>
         public bool CanOpenRecap => Application.isPlaying && _acceptInput && _mode != Mode.Ending && !_inAbyss && !_reading
             && !IsReadingResponse && !FlashbackPlayer.IsPlaying && _blinkPhase < 0f && !_wallChange.IsPlaying && !DialogueLog.BlocksInput;
 
@@ -411,7 +409,7 @@ namespace EyeMaze
         {
             Strings.Load(_stringsCsv);
             Flags.LoadDefinitions(_flagsCsv);
-            // MEM-11: 회상 대본을 Flags.csv와 같은 때에 읽는다
+            // 회상 대본을 Flags.csv와 같은 때에 읽는다
             FlashbackScript.Load(_flashbacksCsv);
             // 이어지는 쌍을 Flags.csv와 같은 때에 읽는다
             MemoryLinkScript.Load(_linksCsv);
@@ -424,7 +422,7 @@ namespace EyeMaze
         {
             // 씬에 저장된 시선 위치와 무관하게 Play는 시작 칸에서 시작한다.
             if (Application.isPlaying) _cursor.SnapTo(_startRing, _startSector);
-            // EMO-16: 씬에 저장된 상담은 LoadCase를 거치지 않으므로 Play 시작 때 그 상담의 시작 감정으로 맞춘다.
+            // 씬에 저장된 상담은 LoadCase를 거치지 않으므로 Play 시작 때 그 상담의 시작 감정으로 맞춘다.
             if (Application.isPlaying) ResetEmotion();
             // 씬에 저장된 상담으로 시작해도 사물 칸을 피한 미로로 새로 만든다.
             if (Application.isPlaying && _activeCase != null) RebuildMaze(_activeCase, true);
@@ -436,7 +434,7 @@ namespace EyeMaze
         /// </summary>
         private void RebuildMaze(ClientCase c, bool generate)
         {
-            // DLG-40: 이 손님의 층 문을 여는 플래그를 미로에 알린다.
+            // 이 손님의 층 문을 여는 플래그를 미로에 알린다.
             _maze.SetGateFlags(c.GateFlags);
             _maze.SetLayoutProps(c.Props());
             if (generate) _maze.Generate(c.MazeSeed);
@@ -504,7 +502,7 @@ namespace EyeMaze
             _tearCue.Tick(dt, _mode != Mode.Ending && (_restRequested || _restAccepted), _maze, _eye, _pupil);
             // 휴식 신호 뒤에 감정 전환을 진행하고 눈 표현을 전달한다.
             TickEmotion(dt);
-            // EMO-06: 시선이 다가오면 휴대폰이 뒤집히고, 피아노 둘레 벽이 흔들린다.
+            // 시선이 다가오면 휴대폰이 뒤집히고, 피아노 둘레 벽이 흔들린다.
             TickPropReactions();
 
             // 벽에 부딪힌 뒤 밀려남, 대기 시간, 초점 요동을 진행한다.
@@ -525,7 +523,7 @@ namespace EyeMaze
             }
             if (_reading) _readT += dt;
 
-            // DLG-28: 대화 기록 창이 열려 있으면 입력을 받지 않는다.
+            // 대화 기록 창이 열려 있으면 입력을 받지 않는다.
             // 파편 요약 패널이 열려 있어도 입력을 받지 않는다.
             if (!_acceptInput || DialogueLog.BlocksInput || FragmentRecapUI.BlocksInput)
             {
@@ -619,7 +617,7 @@ namespace EyeMaze
             _velocity = Vector2.zero;
             if (_cursor != null) _cursor.Visible = true;
             _lastLayer = _maze != null && _cursor != null ? _maze.LayerOfRing(_cursor.Ring) : -1;
-            // EMO-01: 지금 손님의 사물을 모으고 지금 감정에 맞춰 표시를 정한다.
+            // 지금 손님의 사물을 모으고 지금 감정에 맞춰 표시를 정한다.
             SyncProps();
             _message = Strings.Get("msg.gaze_on", "{name}의 눈을 들여다본다.", ("name", Name));
         }
@@ -687,7 +685,6 @@ namespace EyeMaze
             Vector2 dir = Vector2.zero;
 
             // 벽을 따라 미끄러지거나 살짝 닿은 축은 거르고, 세게 막힌 축만 반대로 밀어낸다.
-            // 벽 쪽 속도가 _bumpMinSpeed 이상일 때만 부딪힘이 된다.
             if (_hitRadial != 0 && Mathf.Abs(Vector2.Dot(mazeVelocity, radialU)) >= _bumpMinSpeed) dir.x = -_hitRadial;
             if (_hitTangent != 0 && Mathf.Abs(Vector2.Dot(mazeVelocity, tangentU)) >= _bumpMinSpeed) dir.y = -_hitTangent;
             // 사물이 이미 민 축은 빼고, 남은 벽 축이 있을 때만 사물 방향과 합친다.
@@ -701,12 +698,10 @@ namespace EyeMaze
 
             _knockbackDir = dir.normalized;
             _knockbackT = 0f;
-            // 부딪힌 뒤 대기 시간 동안 새로 부딪히지 않는다.
             _bumpCooldownT = _bumpCooldown;
             _velocity = Vector2.zero;
 
             // 일반 벽도 잠긴 문과 같이 시선을 번쩍이게 한다. 잠긴 문 문구는 GateBlocked가 이미 띄웠다.
-            // 일반 벽에 부딪혀도 시선이 번쩍인다.
             _bumpFlash = Mathf.Max(_bumpFlash, 0.6f);
             StartGlitch();
             // 일반 벽 부딪힘으로는 부담감을 바꾸지 않는다. 잠긴 문 반복 접촉은 GateBlocked에서 센다.
@@ -847,14 +842,12 @@ namespace EyeMaze
             OnMoved();
         }
 
-        // BLINK-03: 단서 말풍선을 닫을 때는 깜빡이지 않고 벽만 다시 만든다.
         /// <summary>
         /// 파편을 읽은 뒤 지금 시선이 있는 층을 뺀 나머지 층의 벽을 무작위로 새로 만든다. Play 중에는 바뀌는 모습을 파문 교차 전환으로 보여 준다.
         /// 지금 시선의 층을 사용하며, 미로의 벽과 문구, _wallChange의 연출 상태, _respawnEffectT를 바꾼다.
         /// </summary>
         public void RespawnMaze()
         {
-            // 꺼져 있으면 벽을 다시 만들지 않는다.
             if (!_respawnMazeAfterReading || _maze == null) return;
             int keep = _cursor != null ? _maze.LayerOfRing(_cursor.Ring) : -1;
             // 깜빡임이나 다른 벽 변화 연출과 겹치지 않을 때만 옛 벽을 잔상으로 남긴다.
@@ -867,7 +860,6 @@ namespace EyeMaze
                 _wallChange.Tick(0f);
                 _respawnEffectT = 0f;
             }
-            // 벽이 바뀌었음을 알린다.
             _message = Strings.Get("msg.respawn", "다른 층의 길이 바뀌었다.");
         }
 
@@ -924,14 +916,12 @@ namespace EyeMaze
         private void TickBurden(float dt)
         {
             int trust = _person != null ? Mathf.Max(0, _person.Trust) : 0;
-            // BURDEN-01: 신뢰가 높을수록 부담감이 느리게 찬다.
             float seconds = Mathf.Max(0.1f, _burdenFillSeconds + _burdenSecondsPerTrust * trust);
             _burden = Mathf.Min(1f, _burden + dt / seconds);
             if (_burden < _burdenLimit) return;
             EndByBurden();
         }
 
-        // BURDEN-03: 부담감이 기준값에 닿으면 leave 엔딩으로 끝낸다.
         /// <summary>
         /// 부담감이 가득 차서 상담을 끝낸다. leave 엔딩이 없는 손님이면 시선만 거둔다.
         /// _burdenEndLine과 지금 손님의 엔딩 목록을 사용하며, 모드를 엔딩 또는 대화로 바꾼다.
@@ -970,7 +960,6 @@ namespace EyeMaze
             bool keyOk = string.IsNullOrEmpty(_keyFlag) ? _keyFragment == null || _keyFragment.Collected : _keyFragment != null && _keyFragment.Collected;
             // 옵션이 켜져 있으면 이 인물의 쌍을 모두 이어야 truth가 된다
             bool linksOk = !_truthNeedsAllLinks || AllCaseLinksDone();
-            // EDITOR-21: 회차 CSV의 기준값과 열쇠 파편으로 truth와 half를 가른다.
             StartEnding(trust >= _truthTrust && keyOk && linksOk ? "truth" : "half", null);
         }
 
@@ -1121,7 +1110,6 @@ namespace EyeMaze
             return good && !story;
         }
 
-        // 신뢰나 동공이 내려가고 오르는 값이 없는 말이 안 좋은 말이다.
         /// <summary>
         /// 안 좋은 말(신뢰 또는 동공이 내려가고 오르는 값이 없는 선택지)인지 판단한다.
         /// c의 Trust와 Dilation을 사용하며, 안 좋은 말이면 true를 반환한다.
@@ -1164,7 +1152,6 @@ namespace EyeMaze
                     DialogueLog.Add(Name, Personalize(o.Response), false, FieldNPC.PortraitOf(Name));
                     ShowResponse(o.Response, "", o.Goto, null);
                 }
-                // 이미 한 좋은 말은 수치를 다시 주지 않는다.
                 else _message = Strings.Get("msg.already", "이미 한 이야기다. {name}는 다음 말을 기다리고 있다.", ("name", Name));
                 return;
             }
@@ -1172,18 +1159,16 @@ namespace EyeMaze
             // 고른 말을 대화 기록에 남긴다.
             DialogueLog.Add("", Personalize(o.Text), true);
 
-            // DLG-20: 선택 전에 열려 있던 문 수를 기억
+            // 선택 전에 열려 있던 문 수를 기억
             int openBefore = OpenGateCount();
             if (_person != null)
             {
                 _person.Trust += o.Trust;
                 // 옳은 대답의 신뢰를 문 판정용으로 따로 누적
                 if (o.Trust > 0) _person.EarnedTrust += o.Trust;
-                // DLG-03: 선택지는 신뢰와 동공만 바꾼다.
                 _person.Dilation = Mathf.Clamp01(_person.Dilation + o.Dilation);
             }
             float burdenBefore = _burden;
-            // 좋은 말을 처음 고르면 부담감이 준다.
             if (helpful) _burden = Mathf.Max(0f, _burden - _burdenRelief);
             // 안 좋은 말을 고르면 부담감을 올린다.
             if (IsWrongChoice(o)) _burden = Mathf.Min(1f, _burden + _burdenWrongChoice);
@@ -1315,7 +1300,6 @@ namespace EyeMaze
         /// </summary>
         public void ChooseOption3() => ChooseOption(3);
 
-        // 신뢰, 동공, 파편, 회전, 고른 기록은 그대로 두고 첫 장면으로 돌아간다.
         /// <summary>
         /// 공통 선택지를 고르고 대화를 시작 장면으로 되돌린다. 신뢰, 동공, 파편, 이야기 기록은 그대로 둔다.
         /// 입력값은 없으며, 지금 장면과 지나온 장면 목록, 문구를 바꾼다.
@@ -1326,7 +1310,6 @@ namespace EyeMaze
             // CSV 대화의 시작 장면으로 돌아가고 지나온 장면 목록을 비운다.
             _currentNodeId = Script.Root.Id;
             _nodeHistory.Clear();
-            // 돌아갔음을 알리는 문구
             _message = _returnMessage;
         }
 
@@ -1342,7 +1325,6 @@ namespace EyeMaze
                 + (got.Length > 0 ? string.Join("\n", got) : Strings.Get("ui.fragments_none", "· 아직 없음"));
         }
 
-        // DLG-02: 처음 만남과 다시 만남의 안내 문구를 고른다.
         /// <summary>
         /// 만남을 시작할 때 안내 문구를 보여준다. 휴식 신호를 보고 쉬어 준 뒤라면 부담감을 줄이고 돌아온 문구를 보여준다.
         /// first(처음 만나는지)와 _restAccepted를 사용하며, 문구와 _burden, _restAccepted를 바꾼다.
@@ -1381,7 +1363,6 @@ namespace EyeMaze
             _endingLines = null;
             _responseLines.Clear();
             _pendingGoto = null;
-            // 고른 말 기록은 리셋에서만 지운다.
             _usedOptions.Clear();
             if (_core != null) _core.ResetState();
             DialogueScript script = Script;
@@ -1393,7 +1374,7 @@ namespace EyeMaze
             _blinkAmount = 0f;
             _blinkPhase = -1f;
             _blinkElapsed = 0f;
-            // BLINK-10: 진행 중인 화면 회전 각도를 바로 지움
+            // 진행 중인 화면 회전 각도를 바로 지움
             ClearBlinkVisual();
             // 진행 중인 벽 변화 연출을 바로 정리
             _wallChange.Finish();
@@ -1404,7 +1385,7 @@ namespace EyeMaze
             StopBump();
             // 잠긴 문 접촉 횟수를 0으로 되돌린다.
             ResetGatePush();
-            // BURDEN-04: 휴식 상태와 눈물 신호를 바로 해제
+            // 휴식 상태와 눈물 신호를 바로 해제
             _restRequested = false;
             _restAccepted = false;
             _tearCue.Clear(_maze, _eye, _pupil);
@@ -1413,7 +1394,6 @@ namespace EyeMaze
             // 깜빡임으로 돌아간 미로를 원래 각도로 복원
             SetMazeTurn(0f);
             _blinkRecoverT = 0f;
-            // 리셋과 손님 전환만 부담감을 0으로 되돌린다. Q로 떠났다 돌아와도 남는다.
             _burden = 0f;
             _velocity = Vector2.zero;
             // 옳은 대답으로 얻은 신뢰도 함께 초기화
@@ -1608,7 +1588,7 @@ namespace EyeMaze
                 // 찍히는 중의 Space는 GameFlow가 글자를 다 보여주는 데 쓰고, 다 찍힌 뒤의 입력으로 계속한다.
                 bool next = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame))
                             || (pad != null && pad.buttonSouth.wasPressedThisFrame);
-                // MEM-06: 회상 중의 진행 키는 회상 재생기가 받으므로 읽기를 끝내지 않는다
+                // 회상 중의 진행 키는 회상 재생기가 받으므로 읽기를 끝내지 않는다
                 if (next && !FlashbackPlayer.IsPlaying && _readT > 0.3f && !Typewriter.AnyTyping && !_typingPrev) { _reading = false; RespawnMaze(); }
                 Steer(Vector2.zero, dt);
                 return;
@@ -1622,7 +1602,6 @@ namespace EyeMaze
 
                 // Space를 누르면 들여다보거나 시선을 거둔다. 만남 화면에 막 들어온 프레임의 누름은 무시한다.
                 // 결과 줄을 넘기는 동안 Space와 숫자는 받지 않는다. 줄 넘기기는 GameFlow가 한다.
-                // DLG-01: 만남에 막 들어온 프레임의 Space는 무시한다.
                 if (kb.spaceKey.wasPressedThisFrame && _acceptedLastFrame && !BlockTalkKeys) ToggleGaze();
                 if (kb.rKey.wasPressedThisFrame) ResetAll();
                 if (_mode == Mode.Talk && !BlockTalkKeys)
@@ -1775,7 +1754,7 @@ namespace EyeMaze
             {
                 if (!p.Blocks || p.PassageKind != kind || p.PassageRing != ring || p.WorldPassageSector != worldSector) continue;
                 if (p.Kind == MazePropKind.Push) StartPropPush(pushDir);
-                // EMO-20: 막은 사물이 무엇이고 왜 막는지 적은 글을 보인다
+                // 막은 사물이 무엇이고 왜 막는지 적은 글을 보인다
                 ShowPropBlockedText(p);
                 return true;
             }
@@ -1863,7 +1842,6 @@ namespace EyeMaze
             if (text.Length > 0 && _message != text) _message = text;
         }
 
-        // 잠긴 문에 막히면 잠김 문구와 번쩍임을 보인다.
         /// <summary>
         /// 잠긴 문에 막혔을 때 문구를 띄우고 시선을 번쩍이게 한다.
         /// gate를 사용하며, 문구와 _bumpFlash를 바꾼다.
@@ -1953,9 +1931,7 @@ namespace EyeMaze
                 if (Application.isPlaying) CheckUnlockedChoices();
                 // 회상 방과 대본이 있으면 글 대신 회상을 재생한다
                 bool flashback = Application.isPlaying && _flashback != null && _flashback.CanPlay(f.Flag, f.Flag);
-                // 회상이 없는 파편은 제목과 글을 문구로 보인다.
                 if (!flashback) _message = Strings.Get("msg.fragment", "파편 — {title}\n{text}", ("title", f.Title), ("text", f.Text));
-                // 주운 파편을 읽는 동안 이동, 부담감, 깜빡임, 밀려남이 멈춘다.
                 if (Application.isPlaying) { _reading = true; _readT = 0f; _velocity = Vector2.zero; StopBump(); }
                 if (!flashback) continue;
                 _flashbackFragment = f;
@@ -1998,7 +1974,7 @@ namespace EyeMaze
         public bool CanReplay(MemoryFragment fragment) => _flashback != null && _flashback.CanPlay(fragment.Flag, fragment.Flag);
 
         /// <summary>
-        /// MEM-43: 이미 본 파편의 회상을 처음부터 다시 재생한다. 재생하는 동안 읽기 상태로 두어 이동과 입력을 멈춘다.
+        /// 이미 본 파편의 회상을 처음부터 다시 재생한다. 재생하는 동안 읽기 상태로 두어 이동과 입력을 멈춘다.
         /// fragment의 플래그를 사용하며, 읽기 상태와 속도, 밀려남, 회상 재생 상태를 바꾼다.
         /// </summary>
         public void ReplayFlashback(MemoryFragment fragment)
@@ -2164,7 +2140,6 @@ namespace EyeMaze
             float delay = preset.LayerOrder == BlinkLayerOrder.Together ? 0f : Mathf.Max(0f, preset.LayerDelaySeconds);
             float openFrom = _blinkOpenFrom;
             // 회전이 아닌 후보는 벽 변화 연출을 재생한다.
-            // 회전 후보(F6)는 화면 회전 연출을 재생한다.
             bool changesWalls = preset.ChangeKind != BlinkChangeKind.Rotate;
 
             float prev = _blinkPhase;
@@ -2213,7 +2188,6 @@ namespace EyeMaze
             _wallChange.Begin();
         }
 
-        // 회전 후보는 벽, 문, 파편 구성을 바꾸지 않는다.
         /// <summary>
         /// 눈이 완전히 감긴 순간 미로를 시선과 함께 최종 각도로 확정하고 화면 회전을 준비한다.
         /// 이번 회전량과 미로의 층 목록을 사용하며, 미로의 회전각, _blinkLayers, _blinkTurning을 바꾼다.
@@ -2238,7 +2212,6 @@ namespace EyeMaze
                 MazeLayer layer = _blinkLayers[i];
                 float timeRatio = Mathf.Clamp01((elapsed - delay * i) / turn);
                 float progress = _activePreset.Curve.Evaluate(timeRatio);
-                // 번갈아 돌기 후보는 홀수 번째 층을 반대쪽에서 출발시킨다.
                 float side = _activePreset.AlternateLayers && layer.Index % 2 == 1 ? -1f : 1f;
                 float degrees = -_blinkTurnDelta * side * (1f - progress);
                 layer.BlinkVisualDeg = degrees;

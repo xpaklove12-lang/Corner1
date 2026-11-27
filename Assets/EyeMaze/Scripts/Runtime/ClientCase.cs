@@ -21,7 +21,6 @@ namespace EyeMaze
         [Tooltip("필드에 앉아 있는 이 사람")]
         [SerializeField, FormerlySerializedAs("npc")] private FieldNPC _npc;
 
-        // EDITOR-12: 이 손님의 상담과 엔딩을 읽는 회차 CSV
         [Header("눈 속")]
         [Tooltip("이 사람의 인물·회차 CSV (UTF-8, Data/Dialogue/인물_DayN.csv). 상담 대화와 엔딩·문구를 함께 읽는다")]
         [SerializeField] private TextAsset _dialogueCsv;
@@ -29,14 +28,14 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("fragmentGroups")] private List<GameObject> _fragmentGroups = new List<GameObject>();
         [Tooltip("미로 모양 (seed)")]
         [SerializeField, FormerlySerializedAs("mazeSeed")] private int _mazeSeed = 12345;
-        // EMO-04: 이 인물의 미로 사물 묶음 추가
+        // 이 인물의 미로 사물 묶음 추가
         [Tooltip("이 인물의 미로 사물 묶음들 (층마다 하나, 해당 MazeLayer 아래)")]
         [SerializeField] private List<GameObject> _propGroups = new List<GameObject>();
-        // DLG-40: 층 문을 여는 플래그 목록 추가
+        // 층 문을 여는 플래그 목록 추가
         [Tooltip("층 문을 여는 플래그. 0번이 1층으로 들어가는 문이다. 비우면 그 문은 신뢰로 열린다")]
         [SerializeField] private string[] _gateFlags = new string[0];
 
-        // EMO-01, EMO-03: 시작 감정과 감정별 눈 표현 추가
+        // 시작 감정과 감정별 눈 표현 추가
         [Header("감정")]
         [Tooltip("상담 시작 때의 감정")]
         [SerializeField] private ClientEmotion _startEmotion = ClientEmotion.Calm;

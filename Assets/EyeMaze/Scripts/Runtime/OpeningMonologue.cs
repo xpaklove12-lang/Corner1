@@ -77,7 +77,6 @@ namespace EyeMaze
             if (!_playing) return;
 
             // 빨리감기 배속이 줄 간격과 암전 해제에도 적용되도록 timeScale을 따른다.
-            // DLG-32: 배속 중에는 줄 간격과 암전 해제도 빨라진다.
             float dt = Time.deltaTime;
             if (_finishing)
             {
@@ -131,7 +130,6 @@ namespace EyeMaze
             }
         }
 
-        // OPEN-01: 시작 독백 7줄의 예비값. 원문은 Strings.csv의 opening이다.
         /// <summary>
         /// 스크립트에 적힌 기본 독백 대사를 만든다.
         /// 입력값은 없으며, 새 대사 목록을 반환한다.

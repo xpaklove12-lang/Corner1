@@ -62,7 +62,6 @@ namespace EyeMaze
             float water = Mathf.SmoothStep(0f, 1f, _amount);
             pupil.Tremble = Mathf.Clamp01(_amount * TREMBLE_RAMP);
             eye.TearLevel = water;
-            // BURDEN-23: 휴식 신호 동안 눈과 미로를 흐리게 한다.
             eye.Focus = Mathf.Lerp(_eyeBaseFocus, _tearBlurFocus, water);
             maze.Focus = Mathf.Lerp(_mazeBaseFocus, _tearBlurFocus, water);
         }

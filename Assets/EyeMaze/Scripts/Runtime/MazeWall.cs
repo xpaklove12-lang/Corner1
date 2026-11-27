@@ -21,9 +21,9 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("line")] private LineRenderer _line;
 
         [NonSerialized] private int _drawnKey = int.MinValue;
-        // BLINK-17, BLINK-29: 연출 중 벽 색에 곱할 투명도 추가
+        // 연출 중 벽 색에 곱할 투명도 추가
         [NonSerialized] private float _visualAlpha = 1f;
-        // EMO-19: 어지러움 연출로 벽을 흔드는 폭과 빠르기 추가
+        // 어지러움 연출로 벽을 흔드는 폭과 빠르기 추가
         [NonSerialized] private float _wobble;
         [NonSerialized] private float _wobbleSpeed;
         private IrisMaze _maze;
