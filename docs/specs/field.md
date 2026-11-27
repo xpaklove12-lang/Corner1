@@ -26,6 +26,9 @@ flowchart TD
 
 ## 자세히
 
+<details>
+<summary>개발자용: 고칠 때 볼 것 (주의, 하지 않는 것, 구성, 코드 단서, 메모)</summary>
+
 ### 주의
 
 - `FIELD-01` 인물이 보이지 않는 동안에는 스프라이트도 보이지 않는다. 스프라이트를 연결하지 않은 인물은 기존 표시를 유지한다.
@@ -45,3 +48,4 @@ flowchart TD
 - NPC의 `SpriteRenderer`에 테두리 머티리얼(`NpcInteractionOutline.mat`)을 연결한다. 소파 앞부분 가림은 `SofaForeground`가 맡는다.
 - 걷기 애셋은 GIF에서 프레임을 뽑고 OpenCV 광학 흐름으로 중간 동작을 보간해 발 기준점을 맞춘 스프라이트다.
 
+</details>

@@ -128,15 +128,21 @@ foreach ($name in $registered.Keys) {
 $taskDir = Join-Path $root 'docs/tasks'
 $openOwner = @{}
 if (Test-Path $taskDir) {
-    foreach ($f in Get-ChildItem $taskDir -Filter '*.md' | Sort-Object Name) {
+    $taskNames = @{}
+    foreach ($f in Get-ChildItem $taskDir -Filter '*.md' -Recurse | Sort-Object FullName) {
         if (@('README.md', '_TEMPLATE.md') -contains $f.Name) { continue }
-        $tname = "docs/tasks/$($f.Name)"
+        $inDone = $f.Directory.Name -eq 'done'
+        $tname = if ($inDone) { "docs/tasks/done/$($f.Name)" } else { "docs/tasks/$($f.Name)" }
+        if ($taskNames.ContainsKey($f.Name)) { $errors.Add("$tname 와 $($taskNames[$f.Name]) 의 파일 이름이 같다. 이름 뒤쪽을 이번 변경을 나타내는 말로 바꾼다.") }
+        $taskNames[$f.Name] = $tname
         $t = (Read-Utf8 $f.FullName) -replace "`r`n", "`n"
         $fileId = [regex]::Match($f.Name, '^([A-Z]+-\d{2,3})-[a-z0-9-]+\.md$')
         if (-not $fileId.Success) { $errors.Add("$tname 이름은 '<첫 ID>-<소문자 영어 이름>.md'여야 한다(예: LOC-08-dialogue-translation.md)."); continue }
         $head = [regex]::Match($t, '^﻿?# \[(제안|개발중|완료)\] .+')
         if (-not $head.Success) { $errors.Add("$tname 첫 줄은 '# [제안] 이름', '# [개발중] 이름', '# [완료] 이름' 중 하나여야 한다."); continue }
         $state = $head.Groups[1].Value
+        if ($inDone -and $state -ne '완료') { $errors.Add("$tname 은 done 폴더에 있는데 상태가 [$state]다. 끝난 작업만 done에 둔다.") }
+        if (-not $inDone -and $state -eq '완료') { $errors.Add("$tname 은 [완료]인데 done 폴더에 없다. docs/tasks/done/으로 옮긴다.") }
         $target = [regex]::Match($t, '(?m)^대상: ([^·\n]+)')
         if (-not $target.Success) { $errors.Add("$tname 에 '대상: ID, ID' 줄이 없다."); continue }
         $ids = @([regex]::Matches($target.Groups[1].Value, '[A-Z]+-\d{2,3}') | ForEach-Object { $_.Value })

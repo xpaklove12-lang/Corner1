@@ -95,25 +95,28 @@ Ctrl+휠로 트리를 확대·축소하고, 두 뷰의 너비와 상자 크기�
 
 ## 자세히
 
+<details>
+<summary>개발자용: 고칠 때 볼 것 (주의, 하지 않는 것, 구성, 코드 단서, 메모)</summary>
+
 ### 주의
 
+- `EDITOR-01` `id`는 같은 section·actor 안에서만 고유하다. `goto`는 같은 상담 actor의 Dialogue에서, `ending`은 Ending에서 찾는다. 저장은 알려진 열과 `memo`를 지키고, 주석이나 원래 서식은 지키지 않는다.
 - `EDITOR-03` Dialogue의 첫 노드가 상담 시작 노드다. 순서를 바꾸면 CSV 순서도 바뀐다. Talk에서 상담으로 가는 선은 안내선일 뿐 CSV에 `goto`를 만들지 않는다. `again`, `@intro`, `@idle`, `@abyss`는 보조 카드다.
 - `EDITOR-04` 연결선 끝을 노드에 놓으면 그 선택지의 `ending`을 지운다. 다른 section이나 actor로 잇거나 옮기는 것은 거절한다. 자동 뒤로가기는 CSV 행이 아니라 연결 대상이 아니다.
-- `EDITOR-05` 오류만 저장을 막고 경고(켜는 곳 없는 `need` 등)는 저장한다. 텍스트는 입력이 0.75초 멈추면 검사한다. 초안에 오류가 있거나 검사 대기 중이면 트리 편집, 우클릭 추가, F2, Enter 편집을 막는다. 저장은 UTF-8 BOM, CRLF이고 내용이 같으면 다시 쓰지 않는다.
+- `EDITOR-04` 예약 ID(`enter`, `reveal`, `rest`, `truth`, `half`, `leave`, `@`로 시작)와 `Loc/UI.csv` key는 이름을 바꾸거나 지울 수 없다. 중복, 빈 값, 공백·쉼표·따옴표가 든 ID는 확정하지 않는다.
+- `EDITOR-04` 그룹을 지우면 그 그룹을 가리키던 `goto`와 `ending`을 비운다. 파편 카드와 판정 카드는 지우지 않는다.
+- `EDITOR-05` 오류만 저장을 막고 경고(켜는 곳 없는 `need` 등)는 저장한다. 텍스트는 입력이 잠깐 멈추면 검사한다. 초안에 오류가 있거나 검사 대기 중이면 트리 편집, 우클릭 추가, F2, Enter 편집을 막는다. 저장은 UTF-8 BOM, CRLF이고 내용이 같으면 다시 쓰지 않는다.
 - `EDITOR-05` Dialogue 노드의 선택지는 최대 3개다. `goto`와 `ending`을 함께 쓰거나, 없는 대상을 가리키거나, 필수 ID가 비거나 겹치면 오류다.
 - `EDITOR-06` Ctrl+Z는 검사 전이나 오류 초안을 먼저 마지막 정상 글로 되돌린다. 취소 뒤 새로 편집하면 다시 실행 기록이 지워진다. 파일을 바꾸면 기록이 새로 시작한다.
-- `EDITOR-01` `id`는 같은 section·actor 안에서만 고유하다. `goto`는 같은 상담 actor의 Dialogue에서, `ending`은 Ending에서 찾는다. 저장은 알려진 열과 `memo`를 지키고, 주석이나 원래 서식은 지키지 않는다.
-- `EDITOR-04` 예약 ID(`enter`, `reveal`, `rest`, `truth`, `half`, `leave`, `@`로 시작)와 `Loc/UI.csv` key는 이름을 바꾸거나 지울 수 없다. 중복, 빈 값, 공백·쉼표·따옴표가 든 ID는 확정하지 않는다.
+- `EDITOR-09` 트리의 부담 기준은 백분율, 동공은 `%p`로 보이지만 CSV에는 0~1 실수로 저장한다.
 - `EDITOR-10` `truth`는 `trust >= truth_trust`이고 `key_flag` 파편을 주웠을 때, `half`는 그 반대다. `leave`는 선택 뒤 `trust <= leave_trust` 또는 들여다보는 동안 `burden >= burden_limit`이다. 선택지의 직접 엔딩은 낮은 신뢰 판정보다 먼저 실행된다.
 - `EDITOR-10` `truth_trust`, `leave_trust`는 정수, `burden_limit`은 0 초과 1 이하 실수다. `key_flag`는 그 손님 파편의 Flag ID이거나 비어야 하고, 아니면 저장 오류다.
-- `EDITOR-09` 트리의 부담 기준은 백분율, 동공은 `%p`로 보이지만 CSV에는 0~1 실수로 저장한다.
+- `EDITOR-10` 새 조건 변수 ID는 영문 소문자, 숫자, `_`만 쓴다.
+- `EDITOR-10` 조건 속 수치를 바로 고칠 수 있는 것은 `trust`, `dilation`, `spring`과 숫자의 비교 하나인 계산 플래그다. 맞는 플래그가 없으면 `trust_3`, `trust_le_m2`, `dilation_0_5` 같은 ID로 `Flags.csv`에 더한다.
+- `EDITOR-10` `ending`이 없는 선택지에 `ending_need`를 쓰면 오류다. 판정은 그 선택지의 수치와 `set`을 반영한 뒤 한다.
 - `EDITOR-11` `response` 안의 빈 결과 줄은 저장 오류다. 마지막 결과 줄을 지우면 `response`를 비운다.
 - `EDITOR-11` 결과 줄을 넘기는 동안 선택지 버튼을 숨기고 들여다보기와 숫자 선택을 받지 않는다. 수치 안내 문구는 마지막 줄 뒤에 붙인다.
 - `EDITOR-12` 씬에 그 손님이나 파편 묶음이 없거나 Play 중이면 메뉴를 끈다. 새 Flag ID는 `<인물>_fragment_N`이고, 같은 묶음의 기존 파편을 복제한다. 씬은 변경 표시만 하고 저장하지 않는다. 씬 추가는 Unity Undo, `Flags.csv` 변경은 창 Undo다.
-- `EDITOR-10` 새 조건 변수 ID는 영문 소문자, 숫자, `_`만 쓴다.
-- `EDITOR-04` 그룹을 지우면 그 그룹을 가리키던 `goto`와 `ending`을 비운다. 파편 카드와 판정 카드는 지우지 않는다.
-- `EDITOR-10` 대상은 `trust`, `dilation`, `spring`과 숫자의 비교 하나인 계산 플래그다. 맞는 플래그가 없으면 `trust_3`, `trust_le_m2`, `dilation_0_5` 같은 ID로 `Flags.csv`에 더한다.
-- `EDITOR-10` `ending`이 없는 선택지에 `ending_need`를 쓰면 오류다. 판정은 그 선택지의 수치와 `set`을 반영한 뒤 한다.
 
 ### 하지 않는 것
 
@@ -153,3 +156,5 @@ Ctrl+휠로 트리를 확대·축소하고, 두 뷰의 너비와 상자 크기�
 
 - EDITOR-10, EDITOR-11, 38은 편집기가 아니라 게임 실행 동작이다.
 - `half`는 열 없이 `truth`의 반대로 계산한다.
+
+</details>
