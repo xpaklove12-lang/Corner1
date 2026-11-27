@@ -38,7 +38,7 @@ namespace EyeMaze
             public LayoutElement BodyLayout => _bodyLayout;
         }
 
-        // DLG-31: 프리팹에 미리 만든 줄 칸을 연결한다.
+        // 프리팹에 미리 만든 줄 칸을 연결한다.
         [Header("연결")]
         [Tooltip("여닫는 창. 기본으로 꺼 둔다")]
         [SerializeField] private GameObject _window;

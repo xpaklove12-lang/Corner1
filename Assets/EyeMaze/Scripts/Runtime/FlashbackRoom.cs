@@ -15,7 +15,7 @@ namespace EyeMaze
         [SerializeField] private string _flag;
         [Tooltip("방에 들어가기 전에 먼저 나오는 장면 그림. 비우면 그림 없이 바로 방으로 들어간다")]
         [SerializeField] private Sprite _cover;
-        // MEM-09: 방으로 들어갈 때 장면 그림이 줄어들어 들어갈 방 테두리 추가
+        // MEM-08: 방으로 들어갈 때 장면 그림이 줄어들어 들어갈 방 테두리 추가
         [Tooltip("방으로 들어갈 때 장면 그림이 줄어들어 들어갈 방 테두리 (방 안의 FieldRoom)")]
         [SerializeField] private FieldRoom _frame;
 

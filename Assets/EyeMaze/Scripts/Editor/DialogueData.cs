@@ -18,7 +18,7 @@ namespace EyeMaze.EditorTools
         public const string DataFolder = "Assets/EyeMaze/Data";
         public const string FlagsPath = DataFolder + "/Flags.csv";
         public const string DialogueFolder = DataFolder + "/Dialogue";
-        // MEM-13: 회상 대본 경로와 권장 최대 줄 수 추가
+        // MEM-11: 회상 대본 경로와 권장 최대 줄 수 추가
         // 상수 이름 FlashbacksPath → FLASHBACKS_PATH
         public const string FLASHBACKS_PATH = DataFolder + "/Flashbacks.csv";
         private const int FLASHBACK_MAX_LINES = 12;
@@ -282,7 +282,7 @@ namespace EyeMaze.EditorTools
                 if (string.IsNullOrEmpty(c.Flag)) Warn($"단서 '{c.DisplayName}'에 플래그가 없다.", c);
                 else if (!known.Contains(c.Flag)) Err($"단서 '{c.DisplayName}'의 플래그 '{c.Flag}'가 Flags.csv에 없다.", c);
             }
-            // MEM-13: 회상 대본의 길이, 플래그, 사물 id를 검사한다
+            // 회상 대본의 길이, 플래그, 사물 id를 검사한다
             ValidateFlashbacks(known, Err, Warn);
             // 이어지는 쌍의 플래그, 기억의 자리, 연결 회상 대본, 재사용할 방을 검사한다
             ValidateLinks(known, Err);
@@ -290,7 +290,7 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// MEM-13: 회상 대본(Flashbacks.csv)을 검사한다. 대본 줄이 12줄을 넘으면 경고, flag가 Flags.csv에 없거나 prop이 그 방에 없으면 오류로 알린다.
+        /// 회상 대본(Flashbacks.csv)을 검사한다. 대본 줄이 12줄을 넘으면 경고, flag가 Flags.csv에 없거나 prop이 그 방에 없으면 오류로 알린다.
         /// 방은 FlashbackPlayer.FindRoom과 같은 규칙으로 실제 재생될 방 하나다. 원래 회상은 플래그가 같은 첫 방이고, 연결 회상은 Links.csv room의 첫 방(쌍이 없으면 그 이름의 추가 사물 묶음을 가진 첫 방)이다.
         /// 방이 없는 회상은 글로 나오므로 prop을 검사하지 않는다. 같은 플래그의 방이 둘 이상이면 경고한다.
         /// known(Flags.csv의 id), err, warn과 열린 씬의 회상 방, Links.csv를 사용하며, err와 warn으로 문제를 남긴다. 파일이 없으면 검사하지 않는다.
@@ -333,7 +333,7 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// MEM-08: 회상 재생기가 쓰는 회상 방 목록을 가져온다. 씬에 회상 재생기가 없으면 열린 씬의 모든 회상 방을 쓴다.
+        /// 회상 재생기가 쓰는 회상 방 목록을 가져온다. 씬에 회상 재생기가 없으면 열린 씬의 모든 회상 방을 쓴다.
         /// 열린 씬의 FlashbackPlayer와 FlashbackRoom을 사용하며, 빈 칸을 뺀 방 목록을 반환한다.
         /// </summary>
         private static FlashbackRoom[] PlayerRooms()
@@ -344,7 +344,7 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// MEM-08: FlashbackPlayer.FindRoom과 같은 규칙으로 플래그가 같은 첫 방을 찾는다.
+        /// FlashbackPlayer.FindRoom과 같은 규칙으로 플래그가 같은 첫 방을 찾는다.
         /// rooms와 flag를 사용하며, 찾은 방 또는 null을 반환한다.
         /// </summary>
         private static FlashbackRoom FirstRoom(FlashbackRoom[] rooms, string flag)
@@ -395,7 +395,7 @@ namespace EyeMaze.EditorTools
         private static bool InSet(FlashbackProp p, GameObject set) => set != null && p.transform.IsChildOf(set.transform);
 
         /// <summary>
-        /// MEM-23: 사물이 방의 추가 사물 묶음 중 하나에 속하는지 확인한다.
+        /// 사물이 방의 추가 사물 묶음 중 하나에 속하는지 확인한다.
         /// p와 room을 사용하며, 어느 추가 사물 묶음 아래에 있으면 true를 반환한다.
         /// </summary>
         private static bool InAnyExtraSet(FlashbackProp p, FlashbackRoom room) => room.ExtraSets.Any(g => InSet(p, g));
@@ -463,7 +463,7 @@ namespace EyeMaze.EditorTools
             TalkScript.Invalidate();
             EndingScript.Invalidate();
             Flags.ReloadDefinitions();
-            // MEM-13: 회상 대본도 다시 읽는다
+            // 회상 대본도 다시 읽는다
             FlashbackScript.Reload();
             // 이어지는 쌍도 다시 읽는다
             MemoryLinkScript.Reload();

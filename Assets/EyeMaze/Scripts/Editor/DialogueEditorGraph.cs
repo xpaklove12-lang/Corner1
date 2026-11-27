@@ -472,7 +472,7 @@ namespace EyeMaze.EditorTools
             return new Vector2(Mathf.Clamp(size.x, MIN_NODE_WIDTH, MAX_NODE_WIDTH), Mathf.Clamp(size.y, minHeight, MAX_NODE_HEIGHT));
         }
 
-        // EDITOR-03, EDITOR-13: Talk, Dialogue, Ending을 위에서 아래로 놓는다.
+        // EDITOR-03: Talk, Dialogue, Ending을 위에서 아래로 놓는다.
         /// <summary>
         /// 인물·회차 파일을 등장 Talk, 상담 트리, 엔딩 순서로 위에서 아래로 놓는다.
         /// doc을 사용하며, 배치 좌표가 정해진 상자 목록을 반환한다.
@@ -1211,7 +1211,7 @@ namespace EyeMaze.EditorTools
             e.Use();
         }
 
-        // EDITOR-26: 선택지 수치를 바로 고친다.
+        // 선택지 수치를 바로 고친다.
         /// <summary>
         /// 선택한 수치 열의 현재 값을 선택지 아래에서 인라인으로 고친다.
         /// </summary>
@@ -1291,7 +1291,7 @@ namespace EyeMaze.EditorTools
             return copy;
         }
 
-        // EDITOR-04: 카드를 옮기면 그룹 소속과 행 순서를 바꾼다.
+        // 카드를 옮기면 그룹 소속과 행 순서를 바꾼다.
         /// <summary>
         /// 끌던 행 카드를 놓는다. 같은 section·actor의 그룹이면 놓은 순서 위치로 그 행을 옮긴다.
         /// doc, boxes, p를 사용하며, 바뀐 복사본 또는 (바뀌지 않거나 거절하면) null을 반환한다.
@@ -1406,7 +1406,7 @@ namespace EyeMaze.EditorTools
             return null;
         }
 
-        // EDITOR-17: 클릭한 노드를 선택하고 텍스트 위치를 알린다.
+        // 클릭한 노드를 선택하고 텍스트 위치를 알린다.
         /// <summary>
         /// 노드 뷰 안을 클릭하면 노드·엔딩 카드·행을 선택하고, 빈 곳을 클릭하면 선택을 푼다. 뷰 밖을 클릭하면 키 입력을 받지 않는다.
         /// 이벤트는 사용 처리하지 않아 끌기·연결과 함께 동작한다. 대사 행을 더블 클릭하면 Enter처럼 본문 편집을 시작하고 그 클릭은 사용 처리한다.
@@ -1470,7 +1470,7 @@ namespace EyeMaze.EditorTools
             }
         }
 
-        // EDITOR-16: 상자 모서리를 끌어 크기를 바꾼다.
+        // EDITOR-10: 상자 모서리를 끌어 크기를 바꾼다.
         /// <summary>
         /// 그룹 상자 오른쪽 아래 모서리를 끌어 크기를 바꾸고, 놓을 때 저장한다. 크기는 배치 좌표계로 기억해 확대율과 상관없다.
         /// e, doc, boxes, inside를 사용하며, _resizeKey와 _resizeSize를 바꾼다.
@@ -1540,7 +1540,7 @@ namespace EyeMaze.EditorTools
             return null;
         }
 
-        // EDITOR-18: F2로 그룹 ID를 바꾼다.
+        // F2로 그룹 ID를 바꾼다.
         /// <summary>
         /// 선택한 그룹의 ID 인라인 편집을 시작한다. 공용 Strings의 key, 런타임 예약 ID, 텍스트 오류·검사 대기 중에는 시작하지 않고 이유를 보인다.
         /// doc과 editable을 사용하며, 인라인 상태를 바꾼다.
@@ -1561,7 +1561,7 @@ namespace EyeMaze.EditorTools
             _inlineFocus = true;
         }
 
-        // EDITOR-19: Enter나 더블 클릭으로 대사 본문을 바로 고친다.
+        // Enter나 더블 클릭으로 대사 본문을 바로 고친다.
         /// <summary>
         /// 선택한 행의 본문 인라인 편집을 시작한다. 행을 고르지 않았거나 텍스트 오류·검사 대기 중이면 시작하지 않고 이유를 보인다.
         /// doc과 editable을 사용하며, 인라인 상태와 행 스크롤을 바꾼다.
@@ -1603,7 +1603,7 @@ namespace EyeMaze.EditorTools
             _inlineFocus = true;
         }
 
-        // EDITOR-29: 엔딩 after 문구를 바로 고친다.
+        // 엔딩 after 문구를 바로 고친다.
         /// <summary>
         /// 선택한 엔딩의 after 문구를 카드 위에서 편집한다.
         /// </summary>
@@ -1634,7 +1634,7 @@ namespace EyeMaze.EditorTools
             _inlineFocus = true;
         }
 
-        // EDITOR-36: Delete로 선택한 노드를 지운다.
+        // Delete로 선택한 노드를 지운다.
         /// <summary>
         /// 선택한 노드를 지운 복사본을 만든다. 결과 카드는 response를, after 카드는 after를, 그룹 노드는 그룹 전체를 지운다.
         /// 예약 ID, 공용 Strings key, 텍스트 오류·검사 대기 중이면 지우지 않고 이유를 보인다.
@@ -1977,7 +1977,7 @@ namespace EyeMaze.EditorTools
             return response != null ? BottomCenter(response.Rect) : PortPosition(b, k);
         }
 
-        // EDITOR-22: 엔딩 진입선마다 실행 조건을 보인다.
+        // EDITOR-21: 엔딩 진입선마다 실행 조건을 보인다.
         /// <summary>
         /// 엔딩 진입선에 붙일 조건 글을 조각으로 만든다. truth·half는 신뢰 기준과 열쇠 파편, leave는 낮은 신뢰와 부담 기준,
         /// 선택지에서 바로 가는 엔딩은 그 선택지의 need 플래그(없으면 '선택 시 즉시')다. 고칠 수 있는 조각에는 편집 대상을 붙인다.
@@ -2168,7 +2168,7 @@ namespace EyeMaze.EditorTools
             }
         }
 
-        // EDITOR-23: 엔딩 조건 수치를 바로 고친다.
+        // 엔딩 조건 수치를 바로 고친다.
         /// <summary>
         /// 엔딩 기준값의 인라인 편집을 시작한다. 부담 기준은 백분율 숫자로 고친다.
         /// doc, target, group을 사용하며, 인라인 상태를 바꾼다.
@@ -2230,7 +2230,7 @@ namespace EyeMaze.EditorTools
             return copy;
         }
 
-        // EDITOR-24: truth의 열쇠 파편을 고른다.
+        // truth의 열쇠 파편을 고른다.
         /// <summary>
         /// 열쇠 파편 대상을 고르는 메뉴를 만든다. '없음'과 이 회차 손님의 파편 Flag(하나뿐인 것)만 고를 수 있다.
         /// doc과 truth(그룹 번호)를 사용하며, 메뉴를 반환한다. 고르면 key_flag를 바꾼 복사본을 _pending에 둔다.
@@ -2251,7 +2251,7 @@ namespace EyeMaze.EditorTools
             return menu;
         }
 
-        // EDITOR-25: 직접 엔딩 선택지의 need를 고친다.
+        // 직접 엔딩 선택지의 need를 고친다.
         /// <summary>
         /// 직접 엔딩 선택지의 need 플래그를 켜고 끄는 메뉴를 만든다. Flags.csv의 플래그마다 한 항목이고, 고를 때마다 하나를 더하거나 뺀다.
         /// doc, group, item을 사용하며, 메뉴를 반환한다. 고르면 need를 바꾼 복사본을 _pending에 둔다.
@@ -2309,7 +2309,7 @@ namespace EyeMaze.EditorTools
             return null;
         }
 
-        // EDITOR-35: 조건 변수를 더하거나 빼고 새로 만든다.
+        // 조건 변수를 더하거나 빼고 새로 만든다.
         /// <summary>
         /// 직접 엔딩 조건의 우클릭 메뉴를 만든다. 조건에 없는 플래그를 source별로 더하고, 조건의 플래그를 빼고, 새 조건 변수를 만든다.
         /// doc, group, item(선택지 행), editable을 사용하며, 메뉴를 반환한다. 고르면 need를 바꾼 복사본을 _pending에 두거나 ID 입력을 연다.
@@ -2413,7 +2413,7 @@ namespace EyeMaze.EditorTools
             }
         }
 
-        // EDITOR-37: 수치 계산 플래그의 비교와 수치를 고친다.
+        // 수치 계산 플래그의 비교와 수치를 고친다.
         /// <summary>
         /// 직접 엔딩 조건에 든 수치 계산 플래그의 비교·수치 입력을 시작한다. 입력창에는 '>=3'처럼 비교와 수치를 함께 보인다.
         /// doc, group, item, flag를 사용하며, 인라인 상태를 바꾼다.
@@ -2675,7 +2675,7 @@ namespace EyeMaze.EditorTools
             return Mathf.Clamp(line, 0, count - 1);
         }
 
-        // EDITOR-08, EDITOR-28: 우클릭으로 선택지와 대사를 넣고 화자를 고른다.
+        // 우클릭으로 선택지와 대사를 넣고 화자를 고른다.
         /// <summary>
         /// 그룹 또는 행의 추가 메뉴를 만든다. 행이 있으면 그 행 뒤에, 없으면(-1) 그룹 끝에 넣는 항목이다.
         /// doc, group, row, editable을 사용하며, 메뉴를 반환한다. 항목을 고르면 결과를 _pending에 둔다.
@@ -2745,7 +2745,7 @@ namespace EyeMaze.EditorTools
             return menu;
         }
 
-        // EDITOR-31, EDITOR-34: 빈 곳 우클릭으로 그룹이나 파편을 더한다.
+        // EDITOR-34: 빈 곳 우클릭으로 그룹이나 파편을 더한다.
         /// <summary>
         /// 빈 곳 우클릭 메뉴를 만든다. 인물·회차 파일이면 상담 장면, actor별 Talk 대화, 엔딩, 층별 기억 파편을 추가할 수 있다.
         /// 텍스트 오류·검사 대기 중에는 항목을 비활성화한다. doc과 editable을 사용하며, 메뉴를 반환한다.
@@ -3032,7 +3032,7 @@ namespace EyeMaze.EditorTools
             return true;
         }
 
-        // EDITOR-10: Ctrl+휠로 포인터 기준 확대, 축소한다.
+        // Ctrl+휠로 포인터 기준 확대, 축소한다.
         /// <summary>
         /// Ctrl(또는 Cmd)+휠로 확대율을 0.1씩 바꾸고, 포인터 아래 배치 좌표가 같은 화면 위치에 머물도록 화면 이동을 고친다.
         /// 일반 휠은 화면을 위아래로 옮긴다. e와 inside를 사용하며, _zoom과 _pan을 바꾼다.

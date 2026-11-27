@@ -108,8 +108,8 @@ namespace EyeMaze
             bool interact = false;
             bool leave = false;
             Vector2 move = Vector2.zero;
-            // DLG-29: 대화 기록 창이 열려 있으면 키 입력을 처리하지 않는다.
-            // MEM-41: 파편 요약 패널이 열려 있어도 키 입력을 처리하지 않는다.
+            // DLG-28: 대화 기록 창이 열려 있으면 키 입력을 처리하지 않는다.
+            // MEM-38: 파편 요약 패널이 열려 있어도 키 입력을 처리하지 않는다.
             bool blocked = DialogueLog.BlocksInput || FragmentRecapUI.BlocksInput;
             Keyboard kb = blocked ? null : Keyboard.current;
             Gamepad pad = blocked ? null : Gamepad.current;
@@ -140,7 +140,7 @@ namespace EyeMaze
                 // 수정(016): 패드로는 회상 글이 다 찍힐 때까지 기다려야 하던 것을 아래 버튼으로 줄 전체를 바로 보이게 바꿨다.
                 if (FlashbackPlayer.IsPlaying && pad.buttonSouth.wasPressedThisFrame && Typewriter.AnyTyping) Typewriter.SkipAll();
             }
-            // MEM-24: 회상이 재생되는 동안에는 Q(자리 떠나기)를 처리하지 않는다
+            // MEM-06: 회상이 재생되는 동안에는 Q(자리 떠나기)를 처리하지 않는다
             if (FlashbackPlayer.IsPlaying) leave = false;
 
             switch (_state)
@@ -210,7 +210,7 @@ namespace EyeMaze
             if (_state == State.Field) _fade = Mathf.MoveTowards(_fade, _fadeTarget, _fadeSpeed * dt);
         }
 
-        // BURDEN-32: 신호가 없으면 부담감을 바꾸지 않고 필드로 나간다.
+        // 신호가 없으면 부담감을 바꾸지 않고 필드로 나간다.
         /// <summary>
         /// 대화 중 자리를 뜬다. 휴식 신호가 있으면 쉬어 주기로 기록한 뒤 나간다.
         /// 디렉터의 휴식 신호를 사용하며, 디렉터의 휴식 상태와 화면 상태를 바꾼다.
@@ -408,7 +408,7 @@ namespace EyeMaze
                 if (ending != null && !string.IsNullOrEmpty(ending.AfterLine)) _currentNpc.LineAfterResolved = ending.AfterLine;
                 ShowConversation(_currentNpc.DisplayName, _currentNpc.Portrait, new List<string> { _currentNpc.LineAfterResolved }, null);
             }
-            // BURDEN-29: 쉬어 주고 돌아오면 상담실에서 내담자의 리액션을 보여 준다.
+            // 쉬어 주고 돌아오면 상담실에서 내담자의 리액션을 보여 준다.
             else if (_director != null && _director.RestAccepted && _currentNpc != null) _currentNpc.TryTalk(this, TalkScript.Rest, null, null);
             _returnResolved = false;
         }
@@ -424,7 +424,7 @@ namespace EyeMaze
             if (_convSpeakers != null && i < _convSpeakers.Count) _convSpeaker = _convSpeakers[i];
             if (_convPortraits != null && i < _convPortraits.Count) _fieldPortrait = _convPortraits[i];
             _fieldText = string.IsNullOrEmpty(_convSpeaker) ? line : $"{_convSpeaker}\n{line}";
-            // DLG-25: 글 상자에 나온 줄을 얼굴과 함께 대화 기록에 남긴다. 같은 줄을 다시 보여줘도 한 번만 남는다.
+            // DLG-24: 글 상자에 나온 줄을 얼굴과 함께 대화 기록에 남긴다. 같은 줄을 다시 보여줘도 한 번만 남는다.
             DialogueLog.Add(_convSpeaker, line, false, string.IsNullOrEmpty(_convSpeaker) ? null : _fieldPortrait);
         }
 

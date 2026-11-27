@@ -16,7 +16,7 @@ namespace EyeMaze.EditorTools
 
             EditorGUILayout.LabelField("Play 없이 바로 플레이", EditorStyles.boldLabel);
             if (p != null)
-                // BURDEN-06: 상태 줄에 부담감을 보인다.
+                // BURDEN-05: 상태 줄에 부담감을 보인다.
                 EditorGUILayout.LabelField($"모드 {d.CurrentMode} · 신뢰 {p.Trust} · 동공 {p.Dilation * 100f:0}% · 부담감 {d.Burden * 100f:0}%", EditorStyles.miniBoldLabel);
 
             DialogueScript.Node node = d.CurrentNode;
@@ -65,7 +65,7 @@ namespace EyeMaze.EditorTools
                     if (GUILayout.Button(label)) EyeEditorOps.Run("대화 선택", () => d.ChooseOption(idx), roots);
                 }
             }
-            // DLG-13: 공통 선택지를 보이는 선택지 다음 번호로 표시
+            // DLG-07: 공통 선택지를 보이는 선택지 다음 번호로 표시
             if (d.CanReturnToStart && GUILayout.Button($"{d.CurrentChoices().Count + 1}. {d.ReturnText}"))
                 EyeEditorOps.Run("처음 이야기로", d.ReturnToStart, roots);
 

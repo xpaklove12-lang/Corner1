@@ -15,12 +15,12 @@ namespace EyeMaze
         [SerializeField] private string _displayName = "무언가";
         [Tooltip("지금 단계의 사물이 아닐 때 보이는 살펴보기 글. 비우면 반응하지 않는다")]
         [SerializeField, TextArea(1, 3)] private string _lookText;
-        // MEM-15: 이 사물의 단계를 지난 뒤에 보일 살펴보기 글 추가
+        // MEM-11: 이 사물의 단계를 지난 뒤에 보일 살펴보기 글 추가
         [Tooltip("이 사물을 쓰는 단계를 한 번이라도 지난 뒤의 살펴보기 글. 비우면 위의 글을 그대로 쓴다")]
         [SerializeField, TextArea(1, 3)] private string _lookTextAfter;
         [Tooltip("내담자 가장자리에서 이 거리 안이면 상호작용할 수 있다")]
         [SerializeField] private float _interactRange = 0.9f;
-        // MEM-12: 사물마다 다른 행동 안내 글과 안내 글이 뜨는 위치 추가
+        // 사물마다 다른 행동 안내 글과 안내 글이 뜨는 위치 추가
         [Tooltip("가까이 갔을 때 안내 글에 보이는 행동. 비우면 이름을 쓴다")]
         [SerializeField] private string _actionText;
         [Tooltip("안내 글이 뜨는 위치. 사물 위치에서 더하는 거리")]

@@ -34,20 +34,20 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("collected")] private bool _collected;
         [Tooltip("주우면 켜지는 플래그 id (Data/Flags.csv에 적힌 것). 대화 CSV의 need 칸에서 쓴다")]
         [SerializeField] private string _flag;
-        // MEM-19: 회상이 끝난 뒤에 나타나는 추가 파편 조건 추가
+        // MEM-17: 회상이 끝난 뒤에 나타나는 추가 파편 조건 추가
         [Tooltip("이 플래그의 회상이 끝난 뒤에 미로에 나타난다. 비우면 처음부터 있다")]
         [SerializeField] private string _appearAfter;
 
         [Header("그림")]
         [SerializeField, FormerlySerializedAs("color")] private Color _color = new Color(0.6f, 0.95f, 1f, 1f);
         [SerializeField, FormerlySerializedAs("line")] private LineRenderer _line;
-        // MEM-20: 회상을 본 뒤 자리에 남는 사물 그림과 렌더러 추가
+        // 회상을 본 뒤 자리에 남는 사물 그림과 렌더러 추가
         [Tooltip("회상을 본 뒤 이 자리에 남는 사물 그림. 비우면 작은 마름모가 남는다")]
         [SerializeField] private Sprite _seenSprite;
         [Tooltip("사물 그림을 그릴 렌더러 (파편의 자식 오브젝트)")]
         [SerializeField] private SpriteRenderer _seenRenderer;
 
-        // MEM-01: 맥동 주기와 최소 밝기 설정 추가
+        // 맥동 주기와 최소 밝기 설정 추가
         [Header("맥동")]
         [Tooltip("맥동 한 주기(초)")]
         [SerializeField] private float _pulseSeconds = 1.6f;
@@ -56,7 +56,7 @@ namespace EyeMaze
 
         [NonSerialized] private int _drawnKey = int.MinValue;
         private IrisMaze _maze;
-        // MEM-20: 회상을 끝까지 봤는지, 기억의 자리 색, 디렉터가 나타나게 했는지
+        // 회상을 끝까지 봤는지, 기억의 자리 색, 디렉터가 나타나게 했는지
         [NonSerialized] private bool _seen;
         [NonSerialized] private Color _seenColor;
         [NonSerialized] private bool _appeared;
@@ -70,7 +70,7 @@ namespace EyeMaze
         public int Ring { get => _ring; set => _ring = value; }
         public int Sector { get => _sector; set => _sector = value; }
         public string Flag => _flag;
-        // MEM-19, MEM-20: 추가 파편 조건과 회상 본 상태 공개
+        // 추가 파편 조건과 회상 본 상태 공개
         public string AppearAfter => _appearAfter;
         public bool Seen => _seen;
         // 이은 상태 공개
@@ -82,7 +82,7 @@ namespace EyeMaze
             get => _collected;
             set
             {
-                // MEM-02: Play 중 값이 바뀔 때만 획득 또는 연출 정리를 알림
+                // Play 중 값이 바뀔 때만 획득 또는 연출 정리를 알림
                 bool changed = _collected != value;
                 _collected = value;
                 Flags.Set(_flag, value);
@@ -92,10 +92,10 @@ namespace EyeMaze
             }
         }
         public MazeLayer Layer => GetComponentInParent<MazeLayer>(true);
-        // MEM-01: 연출이 쓰는 파편 색, 본체 지름, 현재 표시 색 추가
+        // 연출이 쓰는 파편 색, 본체 지름, 현재 표시 색 추가
         public Color Tint => _color;
         public float BodyDiameter => _maze.RingWidth * BODY_SIZE_RATIO;
-        // MEM-01: 후광이 쓰는 맥동 없는 색과 맥동 파형(0~1) 추가
+        // 후광이 쓰는 맥동 없는 색과 맥동 파형(0~1) 추가
         public Color MazeColor
         {
             get
@@ -129,7 +129,7 @@ namespace EyeMaze
             }
         }
 
-        // MEM-19: 추가 파편은 디렉터가 나타나게 하기 전까지 꺼 둔다
+        // 추가 파편은 디렉터가 나타나게 하기 전까지 꺼 둔다
         void Awake()
         {
             if (Application.isPlaying && !string.IsNullOrEmpty(_appearAfter) && !_appeared) gameObject.SetActive(false);
@@ -138,12 +138,12 @@ namespace EyeMaze
         void OnEnable()
         {
             _drawnKey = int.MinValue;
-            // MEM-01: 켜진 프레임의 후광 갱신이 첫 Update보다 먼저 돌아도 미로를 쓸 수 있게 여기서 찾음
+            // 켜진 프레임의 후광 갱신이 첫 Update보다 먼저 돌아도 미로를 쓸 수 있게 여기서 찾음
             _maze = GetComponentInParent<IrisMaze>();
         }
         void OnValidate() { _drawnKey = int.MinValue; EyeHooks.Repaint(); }
 
-        // MEM-05: 손님 전환으로 파편 묶음이 꺼질 때 연출 정리를 알림
+        // 손님 전환으로 파편 묶음이 꺼질 때 연출 정리를 알림
         void OnDisable()
         {
             if (Application.isPlaying) FeedbackCleared?.Invoke();
@@ -153,11 +153,11 @@ namespace EyeMaze
         {
             if (_maze == null) _maze = GetComponentInParent<IrisMaze>();
             if (_maze == null || _line == null) return;
-            // MEM-20: 기억의 자리 상태와 색이 바뀌어도 다시 그린다
+            // 기억의 자리 상태와 색이 바뀌어도 다시 그린다
             int key = HashCode.Combine(HashCode.Combine(_ring, _sector, _maze.GeometryKey, _collected, _color, _maze.WallAlpha, _maze.Focus), _seen, _seenColor, _seenSprite);
             if (key == _drawnKey)
             {
-                // MEM-01: 그림이 그대로여도 Play 중에는 맥동 색을 매 프레임 갱신
+                // 그림이 그대로여도 Play 중에는 맥동 색을 매 프레임 갱신
                 if (Application.isPlaying && !_collected) Shapes.SetColor(_line, DrawColor);
                 return;
             }
@@ -167,17 +167,17 @@ namespace EyeMaze
             _sector = _maze.Mod(_sector);
             transform.localPosition = _maze.CellLocal(_ring, _sector);
             transform.localRotation = Quaternion.identity;
-            // MEM-01: 본체를 마름모로 그리고 표시 색을 공용 프로퍼티로 계산
+            // 본체를 마름모로 그리고 표시 색을 공용 프로퍼티로 계산
             DrawDiamond(_line, BodyDiameter);
             Shapes.SetColor(_line, DrawColor);
             _line.sortingOrder = 7;
             _line.enabled = !_collected;
-            // MEM-20: 회상을 본 파편은 자리에 사물 그림이나 작은 마름모를 남긴다
+            // 회상을 본 파편은 자리에 사물 그림이나 작은 마름모를 남긴다
             DrawSeenMark();
         }
 
         /// <summary>
-        /// MEM-20: 회상을 본 파편의 자리에 _seenSprite를, 없으면 본체 지름 절반 크기의 맥동 없는 마름모를 기억의 자리 색으로 그린다.
+        /// 회상을 본 파편의 자리에 _seenSprite를, 없으면 본체 지름 절반 크기의 맥동 없는 마름모를 기억의 자리 색으로 그린다.
         /// _seen, _seenColor, _seenSprite와 미로 투명도를 사용하며, _seenRenderer와 _line의 그림과 표시 상태를 바꾼다.
         /// </summary>
         private void DrawSeenMark()
@@ -204,7 +204,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// MEM-20: 회상을 끝까지 본 것으로 표시한다.
+        /// 회상을 끝까지 본 것으로 표시한다.
         /// color(기억의 자리 색)를 사용하며, _seen과 _seenColor를 바꾸고 다시 그리게 한다.
         /// </summary>
         public void MarkSeen(Color color)
@@ -226,7 +226,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// MEM-20: 회상 본 표시를 지운다.
+        /// 회상 본 표시를 지운다.
         /// 입력값은 없으며, _seen과 _linked를 끄고 다시 그리게 한다.
         /// </summary>
         public void ClearSeen()
@@ -238,7 +238,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// MEM-19: 회상 뒤에 나타나는 파편을 미로에 나타낸다.
+        /// 회상 뒤에 나타나는 파편을 미로에 나타낸다.
         /// 입력값은 없으며, _appeared를 켜고 오브젝트를 켠다.
         /// </summary>
         public void Appear()
@@ -248,7 +248,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// MEM-19: 회상 뒤에 나타나는 파편을 다시 숨긴다.
+        /// 회상 뒤에 나타나는 파편을 다시 숨긴다.
         /// 입력값은 없으며, _appeared를 끄고 오브젝트를 끈다.
         /// </summary>
         public void Hide()
@@ -257,7 +257,7 @@ namespace EyeMaze
             gameObject.SetActive(false);
         }
 
-        // MEM-01: 층이 돌아도 마름모가 같은 모양으로 찍히도록 Play 중 회전과 화면 픽셀 위치를 고정
+        // 층이 돌아도 마름모가 같은 모양으로 찍히도록 Play 중 회전과 화면 픽셀 위치를 고정
         void LateUpdate()
         {
             if (!Application.isPlaying || _maze == null) return;

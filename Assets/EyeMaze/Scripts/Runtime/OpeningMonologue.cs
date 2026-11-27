@@ -77,7 +77,7 @@ namespace EyeMaze
             if (!_playing) return;
 
             // 빨리감기 배속이 줄 간격과 암전 해제에도 적용되도록 timeScale을 따른다.
-            // DLG-36: 배속 중에는 줄 간격과 암전 해제도 빨라진다.
+            // DLG-32: 배속 중에는 줄 간격과 암전 해제도 빨라진다.
             float dt = Time.deltaTime;
             if (_finishing)
             {

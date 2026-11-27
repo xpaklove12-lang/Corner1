@@ -1,38 +1,22 @@
 ﻿# 스펙 규칙 검사: docs/specs가 docs/CONTRIBUTING.md의 규칙을 지키는지 확인한다.
-# 사용: powershell -ExecutionPolicy Bypass -File Tools/check-specs.ps1 [-WriteStatus] [-CommitMessageFile <파일>]
-# -WriteStatus를 주면 각 스펙의 "진행 중" 줄을 모아 docs/specs/STATUS.md를 다시 쓴다.
+# 사람이 직접 돌리지 않는다. 커밋 훅(.githooks)과 GitHub 자동 검사(.github/workflows/spec-check.yml)가 부른다.
 # -CommitMessageFile을 주면 커밋 제목의 괄호가 요구사항 ID 형식인지도 본다(.githooks/commit-msg).
-# 종료 코드: 0 통과, 1 규칙 위반. 커밋 훅(.githooks)과 GitHub 자동 검사(.github/workflows/spec-check.yml)가 같이 쓴다.
-param([string]$CommitMessageFile = '', [switch]$WriteStatus)
+# 종료 코드: 0 통과(경고는 통과), 1 규칙 위반.
+param([string]$CommitMessageFile = '')
 
 $ErrorActionPreference = 'Stop'
 # Git 창(UTF-8)에서 안내 글이 깨지지 않게 출력 인코딩을 맞춘다.
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 $root = Split-Path -Parent $PSScriptRoot
 $specDir = Join-Path $root 'docs/specs'
-$statusPath = Join-Path $specDir 'STATUS.md'
-$metaFiles = @('README.md', '_TEMPLATE.md', 'STATUS.md')
+$metaFiles = @('README.md', '_TEMPLATE.md')
 $errors = New-Object System.Collections.Generic.List[string]
-$board = New-Object System.Collections.Generic.List[object]
-$doneIds = New-Object System.Collections.Generic.List[string]
 $warnings = New-Object System.Collections.Generic.List[string]
+$doneIds = New-Object System.Collections.Generic.List[string]
+$allIds = @{}
 
 function Read-Utf8([string]$Path) {
     return [IO.File]::ReadAllText($Path, [Text.Encoding]::UTF8)
-}
-
-# 요구사항 줄의 첫 문장만 남겨 진행판 한 칸에 들어가게 줄인다.
-function Get-Summary([string]$Text) {
-    $t = $Text.Trim()
-    $m = [regex]::Match($t, '^(.*?다\.)')
-    if ($m.Success) { $t = $m.Groups[1].Value }
-    if ($t.Length -gt 90) {
-        $t = $t.Substring(0, 90)
-        # 잘린 자리가 코드 표기 안이면 닫아 준다.
-        if ((($t.ToCharArray() | Where-Object { $_ -eq '`' }).Count % 2) -eq 1) { $t += '`' }
-        $t += '…'
-    }
-    return $t.Replace('|', '\|')
 }
 
 # 커밋 제목 검사: 괄호에는 요구사항 ID(예: BLINK-03,MEM-12)만 쓴다. Merge·Revert 제목은 건너뛴다.
@@ -48,10 +32,17 @@ if ($CommitMessageFile) {
 $readmePath = Join-Path $specDir 'README.md'
 $readme = if (Test-Path $readmePath) { Read-Utf8 $readmePath } else { $errors.Add('docs/specs/README.md가 없다.'); '' }
 
-# README "영역" 표에서 접두어와 파일을 읽는다. 표 순서가 진행판 순서다.
+# README "영역" 표에서 접두어와 파일을 읽는다. 같은 접두어를 두 영역이 쓰면 오류다.
 $registered = [ordered]@{}
+$prefixOwner = @{}
 foreach ($m in [regex]::Matches($readme, '(?m)^\|\s*`([A-Z]+)`\s*\|\s*\[?`([a-z0-9-]+\.md)`')) {
-    $registered[$m.Groups[2].Value] = $m.Groups[1].Value
+    $prefix = $m.Groups[1].Value
+    $file = $m.Groups[2].Value
+    if ($prefixOwner.ContainsKey($prefix)) {
+        $errors.Add("접두어 $prefix 를 $($prefixOwner[$prefix]) 와 $file 가 함께 쓴다. 새 영역은 겹치지 않는 접두어를 쓴다.")
+    }
+    $prefixOwner[$prefix] = $file
+    $registered[$file] = $prefix
 }
 
 foreach ($file in Get-ChildItem $specDir -Filter '*.md' | Sort-Object Name) {
@@ -93,7 +84,7 @@ foreach ($name in $registered.Keys) {
         $errors.Add("docs/specs/$name 에 '## 흐름' 절과 Mermaid 차트가 없다.")
     }
 
-    # 파일 전체의 요구사항 줄로 접두어, 중복, 다음 번호를 본다.
+    # 요구사항 줄로 접두어, 중복, 다음 번호를 본다.
     $seen = @{}
     foreach ($m in [regex]::Matches($text, '(?m)^\s*-\s*\*\*([A-Z]+)-(\d{2,3})\*\*')) {
         $id = "$($m.Groups[1].Value)-$($m.Groups[2].Value)"
@@ -101,72 +92,51 @@ foreach ($name in $registered.Keys) {
             $errors.Add("docs/specs/$name 의 $id 는 이 파일의 접두어 $prefix 와 다르다.")
         }
         if ($seen.ContainsKey($id)) {
-            $errors.Add("docs/specs/$name 에서 $id 가 두 번 나온다. 새 요구사항은 다음 번호를 쓴다.")
+            $errors.Add("docs/specs/$name 에서 $id 가 두 번 나온다. 브랜치를 합치다 번호가 겹쳤다면 늦게 합친 쪽이 다음 번호로 바꾼다.")
         }
         if ([int]$m.Groups[2].Value -ge $nextNumber) {
             $errors.Add("docs/specs/$name 의 $id 가 다음 번호보다 작지 않다. 다음 번호를 올린다.")
         }
         $seen[$id] = $true
+        $allIds[$id] = $true
     }
 
     if ($progress.Success) {
         foreach ($m in [regex]::Matches($progress.Groups[1].Value, '(?m)^-\s*\*\*([A-Z]+-\d{2,3})\*\*(.*)$')) {
-            $id = $m.Groups[1].Value
-            $tag = [regex]::Match($m.Groups[2].Value, '^\s*`\[(제안|개발중)\]`\s*(.*)$')
-            if (-not $tag.Success) {
-                $errors.Add("docs/specs/$name 진행 중의 $id 에 상태 태그(``[제안]``, ``[개발중]``)가 없다.")
-                continue
+            if ($m.Groups[2].Value -notmatch '^\s*`\[(제안|개발중)\]`') {
+                $errors.Add("docs/specs/$name 진행 중의 $($m.Groups[1].Value) 에 상태 태그(``[제안]``, ``[개발중]``)가 없다.")
             }
-            $board.Add([pscustomobject]@{ Id = $id; Status = $tag.Groups[1].Value; File = $name; Text = (Get-Summary $tag.Groups[2].Value) })
         }
     }
     if ($done.Success) {
-        foreach ($m in [regex]::Matches($done.Groups[1].Value, '(?m)^-\s*\*\*([A-Z]+-\d{2,3})\*\*\s*`\[')) {
-            $errors.Add("docs/specs/$name 완료의 $($m.Groups[1].Value) 에 상태 태그가 남아 있다. 완료 줄에는 태그를 쓰지 않는다.")
-        }
-        # 줄 끝에 "(데이터)"를 붙인 요구사항은 CSV 데이터로 충족되므로 코드 주석을 찾지 않는다.
         foreach ($m in [regex]::Matches($done.Groups[1].Value, '(?m)^-\s*\*\*([A-Z]+-\d{2,3})\*\*(.*)$')) {
+            if ($m.Groups[2].Value -match '^\s*`\[') {
+                $errors.Add("docs/specs/$name 완료의 $($m.Groups[1].Value) 에 상태 태그가 남아 있다. 완료 줄에는 태그를 쓰지 않는다.")
+            }
+            # 줄 끝에 "(데이터)"를 붙인 요구사항은 CSV 데이터로 충족되므로 코드 주석을 찾지 않는다.
             if ($m.Groups[2].Value.TrimEnd() -notmatch '\(데이터\)$') { $doneIds.Add($m.Groups[1].Value) }
         }
     }
 }
 
-# 완료 ID가 코드 주석에 있는지 본다. 데이터만 정하는 요구사항도 있으므로 경고만 한다.
-# GitHub 검사처럼 Assets가 없는 체크아웃에서는 건너뛴다.
+# 코드 주석의 요구사항 ID를 본다. GitHub 검사처럼 Assets가 없는 체크아웃에서는 건너뛴다.
 $assetsDir = Join-Path $root 'Assets'
 if (Test-Path $assetsDir) {
-    $code = (Get-ChildItem $assetsDir -Recurse -Include '*.cs', '*.shader' | ForEach-Object { Read-Utf8 $_.FullName }) -join "`n"
-    $missing = @($doneIds | Where-Object { $code -notmatch ('(?<![A-Z])' + [regex]::Escape($_) + '(?!\d)') })
+    $prefixPattern = ($prefixOwner.Keys | Sort-Object) -join '|'
+    $codeIds = @{}
+    foreach ($f in Get-ChildItem $assetsDir -Recurse -Include '*.cs', '*.shader') {
+        foreach ($m in [regex]::Matches((Read-Utf8 $f.FullName), "(?<![A-Z])(?:$prefixPattern)-\d{2,3}(?!\d)")) {
+            if (-not $codeIds.ContainsKey($m.Value)) { $codeIds[$m.Value] = $f.Name }
+        }
+    }
+    $missing = @($doneIds | Where-Object { -not $codeIds.ContainsKey($_) })
     if ($missing.Count -gt 0) {
-        $warnings.Add("완료 ID $($missing.Count)개가 코드 주석에 없다(구현한 곳에 ID 주석을 단다): $($missing -join ', ')")
+        $warnings.Add("완료 ID $($missing.Count)개가 코드 주석에 없다. 그 요구사항을 판단하거나 시작하는 곳에 ID 주석을 단다: $($missing -join ', ')")
     }
-}
-
-# 진행판 STATUS.md를 만든다.
-$lines = New-Object System.Collections.Generic.List[string]
-$lines.Add('# 진행 상황')
-$lines.Add('')
-$lines.Add('각 스펙 "진행 중"에서 자동으로 만든다. 손으로 고치지 않고 `Tools/check-specs.ps1 -WriteStatus`로 다시 만든다.')
-foreach ($status in @('개발중', '제안')) {
-    $lines.Add('')
-    $lines.Add("## $status")
-    $lines.Add('')
-    $rows = @($board | Where-Object { $_.Status -eq $status })
-    if ($rows.Count -eq 0) {
-        $lines.Add('없음')
-        continue
+    $orphans = @($codeIds.Keys | Where-Object { -not $allIds.ContainsKey($_) } | Sort-Object | ForEach-Object { "$_($($codeIds[$_]))" })
+    if ($orphans.Count -gt 0) {
+        $warnings.Add("코드 주석에 스펙에 없는 ID가 있다. 지운 요구사항이면 주석에서 ID를 뗀다: $($orphans -join ', ')")
     }
-    $lines.Add('| ID | 스펙 | 내용 |')
-    $lines.Add('|---|---|---|')
-    foreach ($r in $rows) { $lines.Add("| $($r.Id) | [``$($r.File)``]($($r.File)) | $($r.Text) |") }
-}
-$statusText = ($lines -join "`n") + "`n"
-
-if ($WriteStatus) {
-    [IO.File]::WriteAllText($statusPath, $statusText, (New-Object Text.UTF8Encoding($false)))
-    Write-Output 'docs/specs/STATUS.md를 다시 만들었다.'
-} elseif (-not (Test-Path $statusPath) -or ((Read-Utf8 $statusPath) -replace "`r`n", "`n") -ne $statusText) {
-    $errors.Add('docs/specs/STATUS.md가 스펙과 다르다. Tools/check-specs.ps1 -WriteStatus로 다시 만든다.')
 }
 
 $warnings | ForEach-Object { Write-Output "[경고] $_" }

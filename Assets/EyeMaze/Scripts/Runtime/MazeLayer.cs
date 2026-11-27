@@ -18,12 +18,12 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("displayName")] private string _displayName = "층";
         [Tooltip("현재 회전량 (칸 단위, 반시계 +)")]
         [SerializeField, FormerlySerializedAs("offset")] private int _offset;
-        // BLINK-09: 깜빡임 층 회전 설정 제거
+        // BLINK-05: 깜빡임 층 회전 설정 제거
 
         private IrisMaze _maze;
         // BLINK-17: 깜빡임 회전 때 화면에만 더하는 각도 추가
         private float _blinkVisualDeg;
-        // BLINK-26: 벽과 문에 전달한 표시 투명도와 조회용 목록 추가
+        // 벽과 문에 전달한 표시 투명도와 조회용 목록 추가
         private float _wallVisualAlpha = 1f;
         private readonly List<MazeWall> _wallBuffer = new List<MazeWall>();
         private readonly List<MazeGate> _gateBuffer = new List<MazeGate>();
@@ -56,7 +56,7 @@ namespace EyeMaze
             if (_maze == null) _maze = GetComponentInParent<IrisMaze>();
             if (_maze == null) return;
             if (transform.localPosition != Vector3.zero) transform.localPosition = Vector3.zero;
-            // BLINK-17: 칸 회전량에 화면 표시용 각도를 더함
+            // 칸 회전량에 화면 표시용 각도를 더함
             Quaternion rot = Quaternion.Euler(0f, 0f, _offset * _maze.SectorDeg + _blinkVisualDeg);
             if (transform.localRotation != rot) transform.localRotation = rot;
         }

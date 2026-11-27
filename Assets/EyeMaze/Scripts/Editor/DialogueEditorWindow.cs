@@ -133,7 +133,7 @@ namespace EyeMaze.EditorTools
             return Mathf.Floor(Mathf.Clamp(width * _split, MIN_VIEW_WIDTH, width - MIN_VIEW_WIDTH - 4f));
         }
 
-        // EDITOR-15: 분할선을 끌어 두 뷰의 너비를 바꾼다.
+        // EDITOR-10: 분할선을 끌어 두 뷰의 너비를 바꾼다.
         /// <summary>
         /// 두 뷰 사이 분할선을 끌어 너비 비율을 바꾸고, 놓을 때 에디터 설정에 저장한다.
         /// handle과 body를 사용하며, _split을 바꾼다.
@@ -381,7 +381,7 @@ namespace EyeMaze.EditorTools
             return style;
         }
 
-        // EDITOR-06: 문법 요소별로 색을 입힌다.
+        // EDITOR-02: 문법 요소별로 색을 입힌다.
         /// <summary>
         /// 텍스트 뷰의 각 줄에 문법별 색 태그를 붙인다. 라벨은 청록, 선택지는 노랑, Line: 대사는 기본색,
         /// [eye]는 보라, [goto]는 파랑, 오류가 난 줄은 빨강이다. 글자 자체는 바꾸지 않는다.
@@ -424,7 +424,7 @@ namespace EyeMaze.EditorTools
         /// </summary>
         private static string EscapeRichText(string s) => s.IndexOf('<') < 0 ? s : s.Replace("<", "<\u200B");
 
-        // EDITOR-07: Tab과 Shift+Tab으로 들여쓰기를 바꾼다.
+        // Tab과 Shift+Tab으로 들여쓰기를 바꾼다.
         /// <summary>
         /// 텍스트 입력 중 Tab과 Shift+Tab을 받아 커서가 있는 줄 맨 앞의 탭 문자를 하나 넣거나 뺀다.
         /// 기본 동작(포커스 이동)은 막는다. 이벤트와 에디터 텍스트 편집기를 사용하며, _draft를 바꾼다.
@@ -670,7 +670,7 @@ namespace EyeMaze.EditorTools
             catch (IOException ex) { error = "Flags.csv 저장 실패: " + ex.Message; return false; }
         }
 
-        // EDITOR-30: 파편 획득 문구를 Flags.csv에 저장한다.
+        // EDITOR-04: 파편 획득 문구를 Flags.csv에 저장한다.
         /// <summary>
         /// 파편 Flag ID의 획득 문구를 Flags.csv에 저장하고 대화 편집과 같은 기록에 추가한다.
         /// </summary>

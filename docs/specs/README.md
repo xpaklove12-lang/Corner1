@@ -1,6 +1,6 @@
 # 스펙 목록
 
-지금 개발 중인 것은 [`STATUS.md`](STATUS.md), 작업 절차와 쓰는 법은 [`../CONTRIBUTING.md`](../CONTRIBUTING.md), 양식은 [`_TEMPLATE.md`](_TEMPLATE.md)에 있다.
+작업 절차와 쓰는 법은 [`../CONTRIBUTING.md`](../CONTRIBUTING.md), 양식은 [`_TEMPLATE.md`](_TEMPLATE.md)에 있다. 진행 중인 것은 각 스펙의 "진행 중" 절에 있다.
 
 ## 영역
 
@@ -24,10 +24,10 @@
 | 화면에 새 문구 | 그 문구의 영역 + `Data/Strings.csv` key |
 | 대사 CSV나 `Flashbacks.csv`에 새 열 | `dialogue-editor` + 그 열을 쓰는 영역 |
 | 새 감정이나 감정 사물 | `emotion-maze` + `dialogue-editor`(`emotion` 열) + 밀려남을 쓰면 `burden` |
-| 깜빡임·회상 중 멈추는 것 | `blink-maze` + `burden`(BURDEN-01) + `memory-fragments`(MEM-21, MEM-24) |
-| 층 문 여는 조건 | `dialogue`(DLG-20~23, DLG-40~44) + `memory-fragments`(MEM-34) + `burden`(BURDEN-21) |
+| 깜빡임·회상 중 멈추는 것 | `blink-maze` + `burden`(BURDEN-01) + `memory-fragments`(MEM-06) |
+| 층 문 여는 조건 | `dialogue`(DLG-20, DLG-40, DLG-42) + `memory-fragments`(MEM-34) + `burden`(BURDEN-21) |
 | 새 회상 | `memory-fragments` + 감정이 바뀌면 `emotion-maze` + 문을 열면 `dialogue` |
-| 눈 위 표현(눈물, 떨림, 눈꺼풀) | `burden` + `emotion-maze`(EMO-03, EMO-11) + `blink-maze`(BLINK-12) |
-| 시간을 멈추는 새 창 | 그 영역 + `dialogue`(DLG-29) + `memory-fragments`(MEM-41) |
+| 눈 위 표현(눈물, 떨림, 눈꺼풀) | `burden` + `emotion-maze`(EMO-03) + `blink-maze`(BLINK-12) |
+| 시간을 멈추는 새 창 | 그 영역 + `dialogue`(DLG-28) + `memory-fragments`(MEM-38) |
 | 새 컷신 구간 | 그 영역 + `dialogue`(DLG-32 빨리감기) |
-| 엔딩 조건 | `dialogue-editor`(EDITOR-21~25, EDITOR-38) + `burden`(BURDEN-03) |
+| 엔딩 조건 | `dialogue-editor`(EDITOR-21) + `burden`(BURDEN-03) |

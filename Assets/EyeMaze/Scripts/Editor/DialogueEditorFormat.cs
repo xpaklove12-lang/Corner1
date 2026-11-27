@@ -72,7 +72,7 @@ namespace EyeMaze.EditorTools
             IdColumn = "id",
             BodyColumn = TEXT,
             GroupColumns = new[] { "situation", "back" },
-            // EMO-15: 선택지 속성에 emotion 추가
+            // 선택지 속성에 emotion 추가
             ItemColumns = new[] { "response", "need", "set", "trust", "dilation", "spring", "memo", "ending", "rest", "ending_need", "emotion" },
             NumberColumns = new[] { "trust", "dilation", "spring" },
         };
@@ -162,7 +162,7 @@ namespace EyeMaze.EditorTools
 
         // ---------------------------------------------------------------- CSV → 모델
 
-        // EDITOR-11: section, actor, id로 행을 나누고 값과 순서를 보존한다.
+        // EDITOR-01: section, actor, id로 행을 나누고 값과 순서를 보존한다.
         /// <summary>
         /// CSV를 공통 모델로 읽는다. 같은 section·actor·id의 행은 처음 나온 그룹에 순서대로 모으고, 그룹 칸은 처음 적힌 값을 쓴다.
         /// asset, kind, path를 사용하며, 새 문서를 반환하고 읽기 문제는 errors에 남긴다.
@@ -733,7 +733,7 @@ namespace EyeMaze.EditorTools
             return null;
         }
 
-        // EDITOR-27: 이 회차를 쓰는 손님의 파편 플래그를 모은다.
+        // EDITOR-03: 이 회차를 쓰는 손님의 파편 플래그를 모은다.
         /// <summary>
         /// 이 회차 손님의 파편 Flag ID를 모은다. 같은 Flag가 둘 이상인 것은 빼서 열쇠 파편 후보로 쓰지 않는다.
         /// path를 사용하며, (손님, 고유한 Flag 목록)을 반환한다. 손님이 없으면 (null, 빈 목록)이다.

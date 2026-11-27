@@ -37,10 +37,10 @@ namespace EyeMaze
         [SerializeField] private float _coverFadeSeconds = 0.5f;
         [Tooltip("장면 그림이 방 테두리 크기로 줄어드는 시간(초)")]
         [SerializeField] private float _enterSeconds = 2f;
-        // MEM-09: 줄어드는 그림이 흐려지기 시작하는 시점 추가
+        // MEM-08: 줄어드는 그림이 흐려지기 시작하는 시점 추가
         [Tooltip("장면 그림이 줄어드는 시간 중 흐려지기 시작하는 지점 (0이면 줄어들기 시작할 때부터 함께 흐려진다)")]
         [SerializeField, Range(0f, 0.9f)] private float _enterFadeStart = 0.35f;
-        // MEM-09: 진입 연출의 가속 곡선, 방이 다가오는 카메라 배율 추가
+        // 진입 연출의 가속 곡선, 방이 다가오는 카메라 배율 추가
         [Tooltip("장면 그림이 줄어드는 빠르기 곡선 (가로 0~1 시간, 세로 0~1 진행)")]
         [SerializeField] private AnimationCurve _enterCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
         [Tooltip("진입을 시작할 때 방 카메라 크기 배율. 1보다 크면 방이 멀리서 다가오듯 보인다")]
@@ -87,7 +87,7 @@ namespace EyeMaze
 
         /// <summary>회상 연출이 미로 투명도에 곱하는 값. 회상 중이 아니면 1</summary>
         public float MazeAlpha => _mazeAlpha;
-        // MEM-08: 데이터 검사가 FindRoom과 같은 방을 고르도록 방 목록 공개
+        // 데이터 검사가 FindRoom과 같은 방을 고르도록 방 목록 공개
         /// <summary>회상 방 목록. 같은 플래그의 방이 여럿이면 앞의 방이 재생된다</summary>
         public FlashbackRoom[] Rooms => _rooms;
 
@@ -200,14 +200,14 @@ namespace EyeMaze
         {
             EnterRoom();
             AimCoverAtFrame();
-            // MEM-09: 방을 조금 멀리서 시작해 그림이 줄어드는 동안 다가오게 한다.
+            // 방을 조금 멀리서 시작해 그림이 줄어드는 동안 다가오게 한다.
             _camera.orthographicSize = _room.CameraSize * _enterCameraZoom;
             _phase = Phase.Enter;
             _phaseT = 0f;
         }
 
         /// <summary>
-        /// MEM-09: 장면 그림이 방 테두리를 가로와 세로 모두 덮도록 줄어들 배율과 기준점을 정한다. 그림 비율을 지키며 테두리를 덮는 가장 작은 크기를 고른다.
+        /// 장면 그림이 방 테두리를 가로와 세로 모두 덮도록 줄어들 배율과 기준점을 정한다. 그림 비율을 지키며 테두리를 덮는 가장 작은 크기를 고른다.
         /// _room.Frame, _camera, _cameraView와 장면 그림의 화면 영역을 사용하며, _coverFit과 장면 그림의 기준점을 바꾼다.
         /// </summary>
         private void AimCoverAtFrame()
@@ -229,7 +229,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// MEM-12: 월드 위치를 카메라 화면을 띄운 _cameraView 위의 화면 위치로 바꾼다.
+        /// MEM-11: 월드 위치를 카메라 화면을 띄운 _cameraView 위의 화면 위치로 바꾼다.
         /// world, _camera, _cameraView를 사용하며, 화면 공간의 위치를 반환한다.
         /// </summary>
         private Vector3 WorldToCanvas(Vector3 world)
@@ -288,7 +288,7 @@ namespace EyeMaze
         {
             _phase = Phase.Room;
             _phaseT = 0f;
-            // MEM-10: 방에 들어오면 도입 줄을 먼저 보인다.
+            // 방에 들어오면 도입 줄을 먼저 보인다.
             if (_script.Intro.Count > 0) OpenLines(_script.Intro, LineKind.Intro);
             else if (_script.Steps.Count == 0) BeginExit();
         }
@@ -307,13 +307,13 @@ namespace EyeMaze
                 return;
             }
             FieldPlayer actor = _room.Actor;
-            // MEM-11: 글 칸이 닫혀 있으면 좌우 키로 내담자가 걷는다.
+            // 글 칸이 닫혀 있으면 좌우 키로 내담자가 걷는다.
             actor.Steer(new Vector2(moveX, 0f), dt);
             FlashbackProp near = FindNearest();
             // 수정(016): 사물 이름만 보이던 안내에 누를 키를 함께 보인다.
             string hint = near != null ? string.Format(_hintFormat, near.HintText) : "";
             if (_hintText.text != hint) _hintText.text = hint;
-            // MEM-12: 안내 글을 화면 아래 고정 위치 대신 가까운 사물 위에 띄운다.
+            // 안내 글을 화면 아래 고정 위치 대신 가까운 사물 위에 띄운다.
             if (near != null) PlaceHint(near.HintPoint);
             if (press && near != null) Interact(near);
         }
@@ -342,7 +342,7 @@ namespace EyeMaze
             return best;
         }
 
-        // MEM-13, MEM-14: 지금 단계 사물이면 대본을, 아니면 살펴보기 글만 보인다.
+        // 지금 단계 사물이면 대본을, 아니면 살펴보기 글만 보인다.
         /// <summary>
         /// 사물에 상호작용한다. 지금 단계의 사물이면 그 단계의 줄을, 아니면 살펴보기 글 한 줄을 보여 준다.
         /// prop과 지금 단계를 사용하며, 글 칸 상태를 바꾼다. 살펴보기 글이 비어 있으면 아무것도 하지 않는다.
@@ -355,7 +355,7 @@ namespace EyeMaze
                 OpenLines(step.Lines, LineKind.Step);
                 return;
             }
-            // MEM-15: 이미 쓴 사물은 쓴 뒤의 글을 보여 앞선 단계와 어긋나지 않게 한다
+            // 이미 쓴 사물은 쓴 뒤의 글을 보여 앞선 단계와 어긋나지 않게 한다
             string lookText = WasUsed(prop) && !string.IsNullOrEmpty(prop.LookTextAfter) ? prop.LookTextAfter : prop.LookText;
             if (string.IsNullOrEmpty(lookText)) return;
             var look = new List<FlashbackScript.Line> { new FlashbackScript.Line { Speaker = "", Text = lookText } };
@@ -363,7 +363,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// MEM-15: 이 사물을 쓰는 단계를 이미 한 번이라도 지났는지 판단한다.
+        /// 이 사물을 쓰는 단계를 이미 한 번이라도 지났는지 판단한다.
         /// prop의 id와 _script의 단계, _stepIndex를 사용하며, 지났으면 true를 반환한다.
         /// </summary>
         private bool WasUsed(FlashbackProp prop)
@@ -401,11 +401,11 @@ namespace EyeMaze
             Typewriter.SetText(_bodyText, line.Text);
             if (_lineKind == LineKind.Look) return;
             Sprite portrait = string.IsNullOrEmpty(line.Speaker) ? null : FieldNPC.PortraitOf(line.Speaker);
-            // MEM-22: 회상 대본 줄을 대화 기록에 남긴다.
+            // 회상 대본 줄을 대화 기록에 남긴다.
             DialogueLog.Add(line.Speaker, line.Text, false, portrait);
         }
 
-        // MEM-16: 단계 끝이면 글 칸을 닫고 다음 단계로 간다.
+        // 단계 끝이면 글 칸을 닫고 다음 단계로 간다.
         /// <summary>
         /// 다음 줄로 넘긴다. 묶음의 마지막 줄이었으면 글 칸을 닫고, 단계 줄이었으면 다음 단계로 넘어가며, 남은 단계가 없으면 회상을 끝낸다.
         /// _lines, _lineIndex, _lineKind, _stepIndex를 사용하며, 글 칸과 단계 번호, 재생 단계를 바꾼다.
@@ -467,7 +467,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// MEM-12: 안내 글을 월드 위치가 화면에 보이는 자리로 옮긴다.
+        /// 안내 글을 월드 위치가 화면에 보이는 자리로 옮긴다.
         /// worldPoint, _camera, _cameraView를 사용하며, _hintText의 위치를 바꾼다.
         /// </summary>
         private void PlaceHint(Vector3 worldPoint)

@@ -140,7 +140,7 @@ namespace EyeMaze
                     if (_motherArrived && _playerStepT >= 1f) { _step = Step.Pause; _timer = _talkDelay; }
                     break;
 
-                // OPEN-05: 두 이동이 끝난 뒤 _talkDelay초를 기다려 어머니 대사를 시작한다.
+                // 두 이동이 끝난 뒤 _talkDelay초를 기다려 어머니 대사를 시작한다.
                 case Step.Pause:
                     _timer -= Time.deltaTime;
                     if (_timer <= 0f) _step = Step.Talk;

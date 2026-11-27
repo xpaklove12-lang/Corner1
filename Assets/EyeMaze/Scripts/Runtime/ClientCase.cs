@@ -29,10 +29,10 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("fragmentGroups")] private List<GameObject> _fragmentGroups = new List<GameObject>();
         [Tooltip("미로 모양 (seed)")]
         [SerializeField, FormerlySerializedAs("mazeSeed")] private int _mazeSeed = 12345;
-        // EMO-14: 이 인물의 미로 사물 묶음 추가
+        // EMO-04: 이 인물의 미로 사물 묶음 추가
         [Tooltip("이 인물의 미로 사물 묶음들 (층마다 하나, 해당 MazeLayer 아래)")]
         [SerializeField] private List<GameObject> _propGroups = new List<GameObject>();
-        // DLG-41: 층 문을 여는 플래그 목록 추가
+        // DLG-40: 층 문을 여는 플래그 목록 추가
         [Tooltip("층 문을 여는 플래그. 0번이 1층으로 들어가는 문이다. 비우면 그 문은 신뢰로 열린다")]
         [SerializeField] private string[] _gateFlags = new string[0];
 
@@ -64,9 +64,9 @@ namespace EyeMaze
         public EndingScript EndingData => EndingScript.Get(_dialogueCsv);
         public List<GameObject> FragmentGroups => _fragmentGroups;
         public int MazeSeed => _mazeSeed;
-        // EMO-01, EMO-14: 사물 묶음과 시작 감정 공개
+        // 사물 묶음과 시작 감정 공개
         public List<GameObject> PropGroups => _propGroups;
-        // DLG-41: 문 플래그 목록 공개
+        // 문 플래그 목록 공개
         public string[] GateFlags => _gateFlags;
         public ClientEmotion StartEmotion => _startEmotion;
         public string IntroMessage => EndingData?.Text(EndingScript.Intro) ?? _introMessage;
@@ -105,7 +105,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// EMO-14: 이 케이스의 사물 묶음 안에 있는 미로 사물을 모두 모은다 (꺼진 것 포함).
+        /// 이 케이스의 사물 묶음 안에 있는 미로 사물을 모두 모은다 (꺼진 것 포함).
         /// 입력값은 없으며, 사물 목록을 반환한다.
         /// </summary>
         public List<MazeProp> Props()
@@ -117,7 +117,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// EMO-03: 감정의 눈 표현을 찾는다.
+        /// 감정의 눈 표현을 찾는다.
         /// emotion과 _emotionLooks를 사용하며, 처음 맞는 표현 또는 (없으면) null을 반환한다.
         /// </summary>
         public EmotionLook LookOf(ClientEmotion emotion)
