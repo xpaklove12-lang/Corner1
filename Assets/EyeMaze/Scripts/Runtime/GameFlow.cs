@@ -108,8 +108,8 @@ namespace EyeMaze
             bool interact = false;
             bool leave = false;
             Vector2 move = Vector2.zero;
-            // 스펙 007: 대화 기록 창이 열려 있으면 키 입력을 처리하지 않는다.
-            // 스펙 019: 파편 요약 패널이 열려 있어도 키 입력을 처리하지 않는다.
+            // 대화 기록 창이 열려 있으면 키 입력을 처리하지 않는다.
+            // 파편 요약 패널이 열려 있어도 키 입력을 처리하지 않는다.
             bool blocked = DialogueLog.BlocksInput || FragmentRecapUI.BlocksInput;
             Keyboard kb = blocked ? null : Keyboard.current;
             Gamepad pad = blocked ? null : Gamepad.current;
@@ -140,7 +140,7 @@ namespace EyeMaze
                 // 수정(016): 패드로는 회상 글이 다 찍힐 때까지 기다려야 하던 것을 아래 버튼으로 줄 전체를 바로 보이게 바꿨다.
                 if (FlashbackPlayer.IsPlaying && pad.buttonSouth.wasPressedThisFrame && Typewriter.AnyTyping) Typewriter.SkipAll();
             }
-            // 스펙 016: 회상이 재생되는 동안에는 Q(자리 떠나기)를 처리하지 않는다
+            // 회상이 재생되는 동안에는 Q(자리 떠나기)를 처리하지 않는다
             if (FlashbackPlayer.IsPlaying) leave = false;
 
             switch (_state)
@@ -196,7 +196,7 @@ namespace EyeMaze
                             else _director.NextHeartLine();
                         }
                         else if (_director.IsReadingResponse && interact) _director.NextResponseLine();
-                        // 스펙 011: 대화 중 Q는 휴식 신호가 있으면 승낙을 기록하고 바로 나간다.
+                        // 대화 중 Q는 휴식 신호가 있으면 승낙을 기록하고 바로 나간다.
                         else if (_director.CurrentMode == EyeMazeDirector.Mode.Talk && leave) LeaveTalk();
                     }
                     break;
@@ -401,7 +401,7 @@ namespace EyeMaze
                 if (ending != null && !string.IsNullOrEmpty(ending.AfterLine)) _currentNpc.LineAfterResolved = ending.AfterLine;
                 ShowConversation(_currentNpc.DisplayName, _currentNpc.Portrait, new List<string> { _currentNpc.LineAfterResolved }, null);
             }
-            // 스펙 011: 쉬어 주고 돌아오면 상담실에서 내담자의 리액션을 보여 준다.
+            // 쉬어 주고 돌아오면 상담실에서 내담자의 리액션을 보여 준다.
             else if (_director != null && _director.RestAccepted && _currentNpc != null) _currentNpc.TryTalk(this, TalkScript.Rest, null, null);
             _returnResolved = false;
         }
@@ -416,8 +416,9 @@ namespace EyeMaze
             string line = _convLines[i];
             if (_convSpeakers != null && i < _convSpeakers.Count) _convSpeaker = _convSpeakers[i];
             if (_convPortraits != null && i < _convPortraits.Count) _fieldPortrait = _convPortraits[i];
-            _fieldText = string.IsNullOrEmpty(_convSpeaker) ? line : $"{_convSpeaker}\n{line}";
-            // 스펙 007: 글 상자에 나온 줄을 얼굴과 함께 대화 기록에 남긴다. 같은 줄을 다시 보여줘도 한 번만 남는다.
+            // 화면에는 현재 언어 이름을 보이고, 기록과 초상화는 원래 이름으로 둔다.
+            _fieldText = string.IsNullOrEmpty(_convSpeaker) ? line : $"{Strings.Name(_convSpeaker)}\n{line}";
+            // 글 상자에 나온 줄을 얼굴과 함께 대화 기록에 남긴다. 같은 줄을 다시 보여줘도 한 번만 남는다.
             DialogueLog.Add(_convSpeaker, line, false, string.IsNullOrEmpty(_convSpeaker) ? null : _fieldPortrait);
         }
 

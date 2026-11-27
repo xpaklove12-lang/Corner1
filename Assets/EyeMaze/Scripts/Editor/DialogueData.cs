@@ -18,8 +18,8 @@ namespace EyeMaze.EditorTools
         public const string DataFolder = "Assets/EyeMaze/Data";
         public const string FlagsPath = DataFolder + "/Flags.csv";
         public const string DialogueFolder = DataFolder + "/Dialogue";
-        // 스펙 016: 회상 대본 경로와 권장 최대 줄 수 추가
-        // 스펙 016: 상수 이름 FlashbacksPath → FLASHBACKS_PATH
+        // 회상 대본 경로와 권장 최대 줄 수 추가
+        // 상수 이름 FlashbacksPath → FLASHBACKS_PATH
         public const string FLASHBACKS_PATH = DataFolder + "/Flashbacks.csv";
         private const int FLASHBACK_MAX_LINES = 12;
 
@@ -262,13 +262,15 @@ namespace EyeMaze.EditorTools
                 if (string.IsNullOrEmpty(f.Flag)) Warn($"파편 '{f.Title}'에 플래그가 없다.", f);
                 else if (!known.Contains(f.Flag)) Err($"파편 '{f.Title}'의 플래그 '{f.Flag}'가 Flags.csv에 없다.", f);
             }
-            // 스펙 016: 회상 대본의 길이, 플래그, 사물 id를 검사한다
+            // 회상 대본의 길이, 플래그, 사물 id를 검사한다
             ValidateFlashbacks(known, Err, Warn);
+            // 공용 문구와 씬 문구 파일의 번역을 검사한다
+            TranslationCheck.Validate(Err, Warn);
             return issues;
         }
 
         /// <summary>
-        /// 스펙 016: 회상 대본(Flashbacks.csv)을 검사한다. 대본 줄이 12줄을 넘으면 경고, flag가 Flags.csv에 없거나 prop이 그 방에 없으면 오류로 알린다.
+        /// 회상 대본(Flashbacks.csv)을 검사한다. 대본 줄이 12줄을 넘으면 경고, flag가 Flags.csv에 없거나 prop이 그 방에 없으면 오류로 알린다.
         /// 방은 FlashbackPlayer.FindRoom과 같은 규칙으로 실제 재생될 방 하나다. 방은 플래그가 같은 첫 방이다.
         /// 방이 없는 회상은 글로 나오므로 prop을 검사하지 않는다. 같은 플래그의 방이 둘 이상이면 경고한다.
         /// known(Flags.csv의 id), err, warn과 열린 씬의 회상 방을 사용하며, err와 warn으로 문제를 남긴다. 파일이 없으면 검사하지 않는다.
@@ -280,7 +282,7 @@ namespace EyeMaze.EditorTools
             var errors = new List<string>();
             Dictionary<string, FlashbackScript.Flashback> flashbacks = FlashbackScript.Parse(asset, errors);
             foreach (string e in errors) err("Flashbacks.csv: " + e, asset);
-            // 스펙 016: 후보 방을 합치지 않고 FindRoom처럼 실제 재생될 방 하나만 본다
+            // 후보 방을 합치지 않고 FindRoom처럼 실제 재생될 방 하나만 본다
             FlashbackRoom[] rooms = PlayerRooms();
             foreach (IGrouping<string, FlashbackRoom> g in rooms.GroupBy(r => r.Flag).Where(g => g.Count() > 1))
                 warn($"회상 방 플래그 '{g.Key}'를 쓰는 방이 {g.Count()}개다. 회상 재생기 목록의 첫 방 '{g.First().name}'만 재생된다.", g.First());
@@ -302,7 +304,7 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// 스펙 016: 회상 재생기가 쓰는 회상 방 목록을 가져온다. 씬에 회상 재생기가 없으면 열린 씬의 모든 회상 방을 쓴다.
+        /// 회상 재생기가 쓰는 회상 방 목록을 가져온다. 씬에 회상 재생기가 없으면 열린 씬의 모든 회상 방을 쓴다.
         /// 열린 씬의 FlashbackPlayer와 FlashbackRoom을 사용하며, 빈 칸을 뺀 방 목록을 반환한다.
         /// </summary>
         private static FlashbackRoom[] PlayerRooms()
@@ -313,7 +315,7 @@ namespace EyeMaze.EditorTools
         }
 
         /// <summary>
-        /// 스펙 016: FlashbackPlayer.FindRoom과 같은 규칙으로 플래그가 같은 첫 방을 찾는다.
+        /// FlashbackPlayer.FindRoom과 같은 규칙으로 플래그가 같은 첫 방을 찾는다.
         /// rooms와 flag를 사용하며, 찾은 방 또는 null을 반환한다.
         /// </summary>
         private static FlashbackRoom FirstRoom(FlashbackRoom[] rooms, string flag)
@@ -348,8 +350,7 @@ namespace EyeMaze.EditorTools
             string actor = Path.GetFileNameWithoutExtension(path);
             int day = actor.LastIndexOf("_Day", System.StringComparison.Ordinal);
             if (day > 0) actor = actor.Substring(0, day);
-            // 스펙 015: 새 파일 머리글에 emotion 추가
-            // 선택지 spring 수치 제거
+            // 새 파일 머리글에 emotion 추가
             var columns = new List<string> { "section", "actor", "id", "situation", "text", "response", "need", "set", "trust", "dilation", "goto", "ending", "back", "title", "after", "speaker", "memo", "truth_trust", "key_flag", "leave_trust", "burden_limit", "rest", "ending_need", "emotion" };
             var sb = new System.Text.StringBuilder(string.Join(",", columns)).Append("\r\n");
             void Row(string section, string id, params (string column, string value)[] cells)
@@ -387,7 +388,7 @@ namespace EyeMaze.EditorTools
             TalkScript.Invalidate();
             EndingScript.Invalidate();
             Flags.ReloadDefinitions();
-            // 스펙 016: 회상 대본도 다시 읽는다
+            // 회상 대본도 다시 읽는다
             FlashbackScript.Reload();
             Strings.Reload();
             // 에셋 임포트 도중에는 씬 검색이 불안정하므로 한 프레임 뒤에 검사한다.

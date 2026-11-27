@@ -38,11 +38,11 @@ namespace EyeMaze
         [Header("문 앞 호출")]
         [Tooltip("독백이 걷히고 띵-동이 뜬 뒤 첫 혼잣말이 나오기까지 (초)")]
         [SerializeField] private float _firstCallDelay = 2f;
-        [Tooltip("첫 혼잣말. Strings.csv의 field.call_first가 있으면 그걸 쓴다")]
+        [Tooltip("첫 혼잣말. Loc/UI.csv의 field.call_first가 있으면 그걸 쓴다")]
         [SerializeField, TextArea(1, 3)] private string _firstCallLine = "뭐야? 한창 분위기 잡고있는데.";
-        [Tooltip("두 번째 혼잣말. Strings.csv의 field.call_second가 있으면 그걸 쓴다")]
+        [Tooltip("두 번째 혼잣말. Loc/UI.csv의 field.call_second가 있으면 그걸 쓴다")]
         [SerializeField, TextArea(1, 3)] private string _secondCallLine = "아직 첫 상담까지는 시간이 남았을 텐데...";
-        [Tooltip("문을 열어 줄 때까지 필드 조작 안내 자리에 띄우는 문구. Strings.csv의 hint.door가 있으면 그걸 쓴다")]
+        [Tooltip("문을 열어 줄 때까지 필드 조작 안내 자리에 띄우는 문구. Loc/UI.csv의 hint.door가 있으면 그걸 쓴다")]
         [SerializeField] private string _doorGuide = "문을 열어서 손님을 맞이하세요.";
 
         [Header("첫 손님 맞이")]

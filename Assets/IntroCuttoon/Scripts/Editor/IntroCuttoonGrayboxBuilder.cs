@@ -18,15 +18,15 @@ namespace IntroCuttoon.EditorTools
     /// </summary>
     public static class IntroCuttoonGrayboxBuilder
     {
-        // CUT-01, CUT-14: 씬을 옮긴 자리 Assets/Scenes/Intro.unity에 저장한다.
+        // 씬을 옮긴 자리 Assets/Scenes/Intro.unity에 저장한다.
         private const string SCENE_PATH = "Assets/Scenes/Intro.unity";
         private const string SCENE_FOLDER = "Assets/Scenes";
         private const string SPRITE_FOLDER = "Assets/IntroCuttoon/Sprites";
         private const string CIRCLE_PATH = "Assets/IntroCuttoon/Sprites/GB_Circle.png";
         private const string TRIANGLE_PATH = "Assets/IntroCuttoon/Sprites/GB_Triangle.png";
-        // CUT-30: 2-2 운석 둘레의 짓눌려 달아오른 공기 그림이다.
+        // 2-2 운석 둘레의 짓눌려 달아오른 공기 그림이다.
         private const string GLOW_PATH = "Assets/IntroCuttoon/Sprites/GB_Glow.png";
-        // CUT-34: 2-2 띠 가운데 구름을 향한 뜨거운 쪽 그림이다.
+        // 2-2 띠 가운데 구름을 향한 뜨거운 쪽 그림이다.
         private const string GLOW_HOT_PATH = "Assets/IntroCuttoon/Sprites/GB_GlowHot.png";
         private const string FONT_PATH = "Assets/EyeMaze/Fonts/Galmuri11.ttf";
         private const string ROUNDED_SPRITE = "UI/Skin/UISprite.psd";
@@ -55,26 +55,26 @@ namespace IntroCuttoon.EditorTools
         private const int QUESTION_FONT_SIZE = 60;
         private const float QUESTION_GAP = 26f;
         private const float QUESTION_HEIGHT_RATIO = 0.75f;
-        // CUT-23: 1-3 카메라 시작 자리는 최종 카메라보다 머리에 이만큼 가깝다(미터).
+        // 1-3 카메라 시작 자리는 최종 카메라보다 머리에 이만큼 가깝다(미터).
         private const float BUST_START_CLOSER = 0.5f;
-        // CUT-26: 1-2 새 떼는 칸이 열리고 이만큼 뒤에 날아오르기 시작한다(초). 칸이 다 나타난 직후다.
+        // 1-2 새 떼는 칸이 열리고 이만큼 뒤에 날아오르기 시작한다(초). 칸이 다 나타난 직후다.
         private const float BIRD_START_DELAY = 0.5f;
-        // CUT-26: 1-2 운석 그림자와 칸 어두워짐은 칸이 열리고 이만큼 뒤에 시작한다(초). 새 떼가 모두 칸을 벗어난 뒤 그림자가 칸에 들어오는 때다.
+        // 1-2 운석 그림자와 칸 어두워짐은 칸이 열리고 이만큼 뒤에 시작한다(초). 새 떼가 모두 칸을 벗어난 뒤 그림자가 칸에 들어오는 때다.
         private const float SHADOW_DELAY = 1.4f;
-        // CUT-26: 새가 칸을 지나가는 시간은 카메라에서 떨어진 거리(미터)에 이 값을 곱한다. 가까운 새일수록 빨리 지나간다.
+        // 새가 칸을 지나가는 시간은 카메라에서 떨어진 거리(미터)에 이 값을 곱한다. 가까운 새일수록 빨리 지나간다.
         private const float BIRD_SECONDS_PER_METER = 0.082f;
-        // CUT-26: 새가 출발하고 도착하는 칸 화면 가로 위치다. 칸 오른쪽 밖에서 왼쪽 밖으로 간다.
+        // 새가 출발하고 도착하는 칸 화면 가로 위치다. 칸 오른쪽 밖에서 왼쪽 밖으로 간다.
         private const float BIRD_START_X = 1.25f;
         private const float BIRD_END_X = -0.25f;
-        // CUT-26: 새가 칸을 지나며 오르는 높이의 절반(칸 화면 세로 비율)이다. 오른쪽 아래에서 왼쪽 위로 비스듬히 난다.
+        // 새가 칸을 지나며 오르는 높이의 절반(칸 화면 세로 비율)이다. 오른쪽 아래에서 왼쪽 위로 비스듬히 난다.
         private const float BIRD_RISE = 0.55f;
         private const float BIRD_FLAP_AMPLITUDE = 50f;
-        // CUT-28: 2-1 얼굴 카메라의 시야각(도), 표정 가운데 거리에서 칸에 담을 가로 폭(미터), 표정 가운데가 놓일 칸 화면 세로 위치다.
+        // 2-1 얼굴 카메라의 시야각(도), 표정 가운데 거리에서 칸에 담을 가로 폭(미터), 표정 가운데가 놓일 칸 화면 세로 위치다.
         // 가로 폭은 두 눈 바깥 끝이 칸 양옆에 닿는 정도로, 익스트림 클로즈업보다 조금 떨어진 거리다. 세로 위치는 턱 끝이 칸 아래 끝에 닿아 목이 보이지 않는 높이다.
         private const float FACE_FOV = 30f;
         private const float FACE_FRAME_WIDTH = 0.8f;
         private const float FACE_VIEW_Y = 0.24f;
-        // CUT-32: 2-1 표정이 바뀌는 부위별 시작 시각과 시간(초)이다. 눈썹, 눈과 시선, 동공, 입 순서로 조금씩 늦게 시작해 겹치며 바뀐다.
+        // 2-1 표정이 바뀌는 부위별 시작 시각과 시간(초)이다. 눈썹, 눈과 시선, 동공, 입 순서로 조금씩 늦게 시작해 겹치며 바뀐다.
         private const float BROW_CHANGE_DELAY = 0.6f;
         private const float BROW_CHANGE_DURATION = 1.2f;
         private const float EYE_OPEN_DELAY = 0.7f;
@@ -83,7 +83,7 @@ namespace IntroCuttoon.EditorTools
         private const float PUPIL_DILATE_DURATION = 1.4f;
         private const float MOUTH_OPEN_DELAY = 1f;
         private const float MOUTH_OPEN_DURATION = 1.6f;
-        // CUT-37: 동공에 비친 운석의 끝 몸체 지름(미터), 동공 가운데에서 앞으로 나온 거리(미터), 몸체 밝기다.
+        // 동공에 비친 운석의 끝 몸체 지름(미터), 동공 가운데에서 앞으로 나온 거리(미터), 몸체 밝기다.
         // 칸이 열릴 때는 끝 크기의 REFLECTION_START배(동공에 견준 크기)이고, REFLECTION_DELAY초부터 REFLECTION_DURATION초 동안 커진다.
         // 동공 확장(2.2초)과 입(2.6초)이 끝난 뒤에도 잠시 혼자 커져서, 반사가 커지는 것이 동공 확장에 묻히지 않는다.
         private const float REFLECTION_BODY_DIAMETER = 0.047f;
@@ -92,42 +92,42 @@ namespace IntroCuttoon.EditorTools
         private const float REFLECTION_START = 0.46f;
         private const float REFLECTION_DELAY = 0f;
         private const float REFLECTION_DURATION = 3.2f;
-        // CUT-28, CUT-29: 2-1과 2-2 카메라 배경(하늘) 밝기다.
+        // 2-1과 2-2 카메라 배경(하늘) 밝기다.
         private const float SKY_GRAY = 0.5f;
-        // CUT-29: 2-2 시민 눈높이(미터), 올려다보는 각도(도), 좌우 각도(도), 시야각(도)이다.
+        // 2-2 시민 눈높이(미터), 올려다보는 각도(도), 좌우 각도(도), 시야각(도)이다.
         private const float POV_EYE_HEIGHT = 1.7f;
         private const float POV_PITCH = 60f;
         private const float POV_YAW = 0f;
         private const float POV_FOV = 66f;
-        // CUT-30: 2-2 운석 반지름(미터), 처음 보이는 반지름 각도(도), 다 다가온 거리(미터, 시민 눈에서 운석 중심까지), 다가오기 시작과 시간(초)이다.
+        // 2-2 운석 반지름(미터), 처음 보이는 반지름 각도(도), 다 다가온 거리(미터, 시민 눈에서 운석 중심까지), 다가오기 시작과 시간(초)이다.
         // 처음 거리는 반지름이 처음 각도로 보이는 거리(약 1,067m)다. 다 다가오면 운석이 칸 위아래를 넘치게 차고, 바닥은 건물 꼭대기보다 약 5m 높다.
         private const float POV_METEOR_RADIUS = 150f;
         private const float POV_METEOR_START_ANGLE = 8f;
         private const float POV_METEOR_DISTANCE = 230f;
         private const float POV_APPROACH_DELAY = 0.2f;
         private const float POV_APPROACH_DURATION = 2.6f;
-        // CUT-30: 다가옴 곡선의 끝 기울기다. 처음 기울기가 0이라 거의 멈춘 듯 떠나고, 1.3이면 마지막 0.6초에 거리의 31%를 간다.
+        // 다가옴 곡선의 끝 기울기다. 처음 기울기가 0이라 거의 멈춘 듯 떠나고, 1.3이면 마지막 0.6초에 거리의 31%를 간다.
         private const float POV_APPROACH_END_SLOPE = 1.3f;
-        // CUT-30: 처음 거리의 운석 뒤쪽까지 그리도록 넓힌 2-2 카메라 원평면 거리(미터)다.
+        // 처음 거리의 운석 뒤쪽까지 그리도록 넓힌 2-2 카메라 원평면 거리(미터)다.
         private const float POV_FAR = 1400f;
-        // CUT-30: 달아오른 공기 그림에서 투명한 안쪽 원의 반지름과 가장 진한 구간이 끝나는 반지름(그림 반지름 비율)이다.
+        // 달아오른 공기 그림에서 투명한 안쪽 원의 반지름과 가장 진한 구간이 끝나는 반지름(그림 반지름 비율)이다.
         // 안쪽 원은 띠 판 위에서 운석 반지름에 놓인다. 판 위의 운석 윤곽은 운석 반지름의 1.01~1.10배라 1.125배까지 가장 진하게 둔다.
         // 바깥 끝은 운석 반지름의 1.47배로, 다 다가왔을 때 띠가 운석 화면 반지름의 1.33배까지 번진다.
         private const float GLOW_INNER = 0.68f;
         private const float GLOW_PLATEAU = 0.765f;
-        // CUT-34: 하늘색 막은 구덩이까지 덮도록 운석보다 이 배율만큼 크고, 처음 투명도에서 0으로 걷힌다.
+        // 하늘색 막은 구덩이까지 덮도록 운석보다 이 배율만큼 크고, 처음 투명도에서 0으로 걷힌다.
         private const float HAZE_SCALE = 1.05f;
         private const float HAZE_START = 0.425f;
-        // CUT-35: 바람에 구름이 칸 왼쪽으로 흐르는 거리(미터)다.
+        // 바람에 구름이 칸 왼쪽으로 흐르는 거리(미터)다.
         private const float CLOUD_DRIFT = 5f;
-        // CUT-34: 띠의 뜨거운 쪽이 향할 구름 번호, 밝아지는 시작과 시간(초), 끝 투명도, 흐르며 도는 각도(도)와 시간(초)이다.
+        // 띠의 뜨거운 쪽이 향할 구름 번호, 밝아지는 시작과 시간(초), 끝 투명도, 흐르며 도는 각도(도)와 시간(초)이다.
         private const int HOT_CLOUD = 2;
         private const float GLOW_HOT_DELAY = 1.5f;
         private const float GLOW_HOT_DURATION = 1f;
         private const float GLOW_HOT_ALPHA = 0.75f;
         private const float GLOW_HOT_SWEEP = 12f;
         private const float GLOW_HOT_SWEEP_DURATION = 1.3f;
-        // CUT-35: 띠가 HOT_CLOUD 구름 윗면에 닿아 가장자리가 뜯기는 때와 시간(초)이다.
+        // 띠가 HOT_CLOUD 구름 윗면에 닿아 가장자리가 뜯기는 때와 시간(초)이다.
         // 왼쪽 덩이가 떨어져 나가는 방향(도, 0이 칸 오른쪽, 90이 위)과 거리(미터), 윗면 조각이 날아가는 방향과 거리다.
         private const float TEAR_DELAY = 2.32f;
         private const float TEAR_DURATION = 0.3f;
@@ -154,58 +154,58 @@ namespace IntroCuttoon.EditorTools
         private static readonly Vector3 _bodyTurn = new Vector3(0f, -30f, 0f);
         private static readonly Vector3 _bustCameraPosition = new Vector3(1.4f, 3.23f, -3.84f);
         private static readonly Vector3 _bustLookTarget = new Vector3(1.75f, 2f, 0f);
-        // CUT-23: 1-3 카메라 시작 자리에서 머리 중심이 놓일 칸 안 정규화 위치다. 라벨 상자에 걸리지 않게 가운데보다 조금 아래에 둔다.
+        // 1-3 카메라 시작 자리에서 머리 중심이 놓일 칸 안 정규화 위치다. 라벨 상자에 걸리지 않게 가운데보다 조금 아래에 둔다.
         private static readonly Vector2 _bustStartHeadViewport = new Vector2(0.5f, 0.39f);
         private static readonly Vector2 _questionSize = new Vector2(80f, 90f);
         private static readonly Vector3 _headDown = new Vector3(-8f, 0f, 0f);
         private static readonly Vector3 _headUp = new Vector3(32f, 0f, 0f);
-        // CUT-19: 정면 구간에서 고개를 드는 최대 각도다. 카메라가 빠지는 동안 _headUp으로 내려온다.
+        // 정면 구간에서 고개를 드는 최대 각도다. 카메라가 빠지는 동안 _headUp으로 내려온다.
         private static readonly Vector3 _headPeak = new Vector3(40f, 0f, 0f);
 
-        // CUT-26: 새마다 다른 값이다. 시민이 보이는 높이에서 벗어난 정도, 카메라에서 떨어진 거리(미터), 출발 늦춤(초), 날갯짓 시작 자리, 1초당 날갯짓 횟수.
+        // 새마다 다른 값이다. 시민이 보이는 높이에서 벗어난 정도, 카메라에서 떨어진 거리(미터), 출발 늦춤(초), 날갯짓 시작 자리, 1초당 날갯짓 횟수.
         private static readonly float[] _birdLanes = { 0.05f, -0.12f, 0.18f, -0.02f, 0.24f, -0.20f, 0.10f, -0.08f, 0.15f };
         private static readonly float[] _birdDepths = { 10.5f, 12.5f, 9.0f, 13.5f, 11.0f, 8.5f, 12.0f, 14.0f, 9.5f };
         private static readonly float[] _birdDelays = { 0.00f, 0.05f, 0.10f, 0.14f, 0.19f, 0.24f, 0.29f, 0.34f, 0.40f };
         private static readonly float[] _birdPhases = { 0.00f, 0.37f, 0.71f, 0.18f, 0.55f, 0.90f, 0.26f, 0.63f, 0.44f };
         private static readonly float[] _birdFrequencies = { 5.0f, 4.6f, 5.4f, 4.8f, 5.2f, 5.6f, 4.7f, 5.1f, 4.9f };
 
-        // CUT-28, CUT-29: 2쪽 얼굴 세트와 올려다보기 세트 자리, 얼굴이 위를 보는 각도다.
+        // 2쪽 얼굴 세트와 올려다보기 세트 자리, 얼굴이 위를 보는 각도다.
         private static readonly Vector3 _faceSetPosition = new Vector3(4000f, 0f, 0f);
         private static readonly Vector3 _povSetPosition = new Vector3(5000f, 0f, 0f);
         private static readonly Vector3 _faceTilt = new Vector3(25f, 0f, 0f);
-        // CUT-35: 구름마다 다른 값이다. 시민 눈에서의 거리(미터), 칸 화면에서 운석 중심 둘레로 놓인 방향(도, 0이 오른쪽, 90이 위), 시선에서 떨어진 각도(도), 크기 배율.
+        // 구름마다 다른 값이다. 시민 눈에서의 거리(미터), 칸 화면에서 운석 중심 둘레로 놓인 방향(도, 0이 오른쪽, 90이 위), 시선에서 떨어진 각도(도), 크기 배율.
         // 첫 구름은 운석 처음 자리의 왼쪽 위 가장자리를 가리고 운석이 지나는 거리에 있어, 운석이 다가오며 그 구름 앞으로 나온다.
         private static readonly float[] _cloudDistances = { 220f, 320f, 160f };
         private static readonly float[] _cloudAngles = { 135f, 50f, 270f };
         private static readonly float[] _cloudOffsets = { 9.5f, 27f, 26f };
         private static readonly float[] _cloudSizes = { 1.6f, 1.3f, 1.4f };
-        // CUT-34: 달아오른 공기 띠의 처음 색(흰빛, 투명도 0.3)과 끝 색(옅은 살구빛, 투명도 1)이다.
+        // 달아오른 공기 띠의 처음 색(흰빛, 투명도 0.3)과 끝 색(옅은 살구빛, 투명도 1)이다.
         private static readonly Color _glowStartColor = new Color(1f, 1f, 1f, 0.3f);
         private static readonly Color _glowEndColor = new Color(0.93f, 0.81f, 0.7f, 1f);
-        // CUT-34: 띠의 뜨거운 쪽 색(흰빛에 가까움)이다.
+        // 띠의 뜨거운 쪽 색(흰빛에 가까움)이다.
         private static readonly Color _glowHotColor = new Color(1f, 0.96f, 0.9f, 1f);
-        // CUT-35: 떨어져 나가며 작아진 왼쪽 덩이의 크기, 윗면 조각이 숨어 있는 자리와 다 생긴 크기(구름 묶음 기준 로컬 값)다.
+        // 떨어져 나가며 작아진 왼쪽 덩이의 크기, 윗면 조각이 숨어 있는 자리와 다 생긴 크기(구름 묶음 기준 로컬 값)다.
         private static readonly Vector3 _tornPuffScale = new Vector3(8f, 5.5f, 5.5f);
         private static readonly Vector3 _shredStart = new Vector3(-4f, 4f, 0f);
         private static readonly Vector3 _shredScale = new Vector3(5f, 3.5f, 3.5f);
-        // CUT-32: 2-1 입 구멍의 다문 자리와 크기, 벌린 크기(입 축 기준 로컬 값)다. 다문 선을 위쪽에 두어 아래로 벌어지게 한다.
+        // 2-1 입 구멍의 다문 자리와 크기, 벌린 크기(입 축 기준 로컬 값)다. 다문 선을 위쪽에 두어 아래로 벌어지게 한다.
         private static readonly Vector3 _mouthClosedPosition = new Vector3(0f, 0.1f, 0f);
         private static readonly Vector3 _mouthClosedScale = new Vector3(0.28f, 0.035f, 0.1f);
         private static readonly Vector3 _mouthOpenScale = new Vector3(0.34f, 0.32f, 0.1f);
-        // CUT-32: 눈썹의 호기심 어린 자리·각도와 놀란 자리·각도다. 값은 왼쪽, 오른쪽 순서다.
+        // 눈썹의 호기심 어린 자리·각도와 놀란 자리·각도다. 값은 왼쪽, 오른쪽 순서다.
         // 처음에는 칸 오른쪽 눈썹만 조금 높고 바깥 끝이 올라가 갸웃하는 표정이고, 끝에는 두 눈썹이 높이 올라가 안쪽 끝이 더 높다. 자리의 Z는 이마 곡면을 따른다.
         private static readonly Vector3[] _browCuriousPositions = { new Vector3(-0.27f, 1.06f, -0.596f), new Vector3(0.27f, 1.11f, -0.58f) };
         private static readonly float[] _browCuriousAngles = { -3f, 6f };
         private static readonly Vector3[] _browShockedPositions = { new Vector3(-0.27f, 1.15f, -0.565f), new Vector3(0.27f, 1.15f, -0.565f) };
         private static readonly float[] _browShockedAngles = { 14f, -14f };
-        // CUT-32: 눈 크기(흰자와 테의 세로 배율), 시선(홍채 묶음 자리), 동공 크기의 처음과 끝 값이다.
+        // 눈 크기(흰자와 테의 세로 배율), 시선(홍채 묶음 자리), 동공 크기의 처음과 끝 값이다.
         // 처음에는 홍채가 위아래 테에 닿는 보통 눈이고, 끝에는 홍채 둘레로 흰자가 다 보인다.
         private static readonly Vector3 _eyeCuriousOpening = new Vector3(1f, 0.56f, 1f);
         private static readonly Vector3 _gazeCurious = new Vector3(0.02f, 0f, 0f);
         private static readonly Vector3 _gazeShocked = new Vector3(0.02f, 0.04f, 0f);
         private static readonly Vector3 _pupilNormal = new Vector3(0.055f, 0.055f, 0.03f);
         private static readonly Vector3 _pupilDilated = new Vector3(0.11f, 0.11f, 0.03f);
-        // CUT-37: 동공에 비친 운석 띠의 색이다. 2-2 처음 화면의 흰 띠처럼 보이게 한다.
+        // 동공에 비친 운석 띠의 색이다. 2-2 처음 화면의 흰 띠처럼 보이게 한다.
         private static readonly Color _reflectionBandColor = new Color(1f, 1f, 1f, 0.65f);
 
         private static Sprite _circle;
@@ -351,8 +351,8 @@ namespace IntroCuttoon.EditorTools
             CuttoonTween darken = AddTween(shadowPanel, dim.rectTransform, SHADOW_DELAY, 2.2f);
             TweenAlpha(darken, dimGroup, 0f, 0.35f);
             SetCurve(darken, EaseInCurve());
-            // CUT-22 폐기: 운석이 부딪히기 전이라 1-2 칸 흔들림을 넣지 않는다.
-            // CUT-26: 어두워지는 하늘을 먼저 느낀 흰 새 떼가 카메라 가까이를 지나 달아나고, 그 뒤 그림자가 들어온다.
+            // 운석이 부딪히기 전이라 1-2 칸 흔들림을 넣지 않는다.
+            // 어두워지는 하늘을 먼저 느낀 흰 새 떼가 카메라 가까이를 지나 달아나고, 그 뒤 그림자가 들어온다.
             CreateBirdFlock(zoomSet, shadowCamera, zoomSet.TransformPoint(_citizenEnd), shadowPanel);
             CreateLabel(shadowPanel, shadowSize, "1-2", "그림자", "같은 각도로 줌인, 놀란 흰 새 떼가 앞을 지나간 뒤 그림자가 점점 빨리 덮쳐 온다");
             panels.Add(FinishPanel(shadowPanel));
@@ -362,7 +362,7 @@ namespace IntroCuttoon.EditorTools
             Camera bustCamera = CreateSetCamera("Camera_1-3", bustSet, _bustCameraPosition, _bustLookTarget, 50f, Gray(0.4f), EnsureRenderTexture("1-3", lookUpSize));
             RawImage lookUpView = CreateView(lookUp, bustCamera);
 
-            // CUT-23: 카메라는 몸 정면 쪽 위의 가까운 자리에서 기다리다가, 고개를 다 든 뒤 머리 둘레로 돌며 뒤로 빠져 최종 구도에 멈춘다.
+            // 카메라는 몸 정면 쪽 위의 가까운 자리에서 기다리다가, 고개를 다 든 뒤 머리 둘레로 돌며 뒤로 빠져 최종 구도에 멈춘다.
             float raiseDelay = 0.4f;
             float raiseDuration = 1f;
             float dollyDelay = 1.5f;
@@ -407,12 +407,12 @@ namespace IntroCuttoon.EditorTools
             CanvasGroup questionGroup = question.gameObject.AddComponent<CanvasGroup>();
             questionGroup.blocksRaycasts = false;
             questionGroup.interactable = false;
-            // CUT-19: 정면 구간에서는 _headPeak까지 들고, 카메라가 빠지는 동안 _headUp으로 내려온다. 끝 값은 _headUp이다.
+            // 정면 구간에서는 _headPeak까지 들고, 카메라가 빠지는 동안 _headUp으로 내려온다. 끝 값은 _headUp이다.
             float raiseTotal = dollyDelay + dollyDuration - raiseDelay;
             CuttoonTransformTween raise = AddTransformTween(lookUp, headPivot, raiseDelay, raiseTotal);
             TweenLocalRotation(raise, _headDown, _headUp);
             SetCurve(raise, HeadRaiseCurve(raiseDuration / raiseTotal, (dollyDelay - raiseDelay) / raiseTotal, (_headPeak.x - _headDown.x) / (_headUp.x - _headDown.x)));
-            // CUT-19: ?는 고개를 다 든 뒤 나타난다.
+            // ?는 고개를 다 든 뒤 나타난다.
             CuttoonTween fadeIn = AddTween(lookUp, question.rectTransform, raiseDelay + raiseDuration, 0.9f);
             TweenAlpha(fadeIn, questionGroup, 0f, 1f);
             SetCurve(fadeIn, EaseInCurve());
@@ -546,14 +546,14 @@ namespace IntroCuttoon.EditorTools
             CreateFaceEye(faceHead, "EyeLeft", new Vector3(-0.26f, 0.85f, -0.6f), dark);
             CreateFaceEye(faceHead, "EyeRight", new Vector3(0.26f, 0.85f, -0.6f), dark);
 
-            // 눈썹은 호기심 어린 자리에서 시작하고, 2-1이 열리면 놀란 자리로 올라간다(CUT-32).
+            // 눈썹은 호기심 어린 자리에서 시작하고, 2-1이 열리면 놀란 자리로 올라간다.
             Transform browLeft = CreatePrimitive(MENU_CUBE, faceHead, "BrowLeft", _browCuriousPositions[0], new Vector3(0.3f, 0.055f, 0.07f), dark);
             browLeft.localRotation = Quaternion.Euler(0f, 0f, _browCuriousAngles[0]);
             Transform browRight = CreatePrimitive(MENU_CUBE, faceHead, "BrowRight", _browCuriousPositions[1], new Vector3(0.3f, 0.055f, 0.07f), dark);
             browRight.localRotation = Quaternion.Euler(0f, 0f, _browCuriousAngles[1]);
             CreatePrimitive(MENU_SPHERE, faceHead, "Nose", new Vector3(0f, 0.69f, -0.68f), new Vector3(0.17f, 0.22f, 0.17f), skin);
 
-            // 입은 얼굴 아래쪽 곡면을 따라 아래로 기울인 어두운 타원이다. 처음에는 다문 선이고, 2-1이 열리면 벌어진다(CUT-32).
+            // 입은 얼굴 아래쪽 곡면을 따라 아래로 기울인 어두운 타원이다. 처음에는 다문 선이고, 2-1이 열리면 벌어진다.
             Transform mouth = CreateFromMenu(MENU_EMPTY_CHILD, faceHead, "Mouth").transform;
             mouth.localPosition = new Vector3(0f, 0.4f, -0.53f);
             mouth.localRotation = Quaternion.Euler(-32f, 0f, 0f);
@@ -584,7 +584,7 @@ namespace IntroCuttoon.EditorTools
             CreatePrimitive(MENU_SPHERE, gaze, "Iris", new Vector3(0f, 0f, -0.05f), new Vector3(0.17f, 0.17f, 0.05f), EnsureMaterial("GB_Iris", 0.3f));
             Transform pupil = CreatePrimitive(MENU_SPHERE, gaze, "Pupil", new Vector3(0f, 0f, -0.066f), _pupilNormal, EnsureMaterial("GB_Pupil", 0.04f));
 
-            // CUT-37: 동공 가운데 앞에 2-2 처음 운석과 같은 모습(흐린 회색 몸체와 흰 띠)의 비친 운석을 둔다.
+            // 동공 가운데 앞에 2-2 처음 운석과 같은 모습(흐린 회색 몸체와 흰 띠)의 비친 운석을 둔다.
             // 동공의 자식이라 크기 값은 동공 끝 크기(_pupilDilated) 기준 로컬 값이고, 띠 그림의 안쪽 원이 몸체 둘레에 놓인다.
             Transform reflection = CreateFromMenu(MENU_EMPTY_CHILD, pupil, "Reflection").transform;
             reflection.localPosition = new Vector3(0f, 0f, -REFLECTION_DEPTH / _pupilDilated.z);
@@ -625,7 +625,7 @@ namespace IntroCuttoon.EditorTools
                 CuttoonTransformTween dilate = AddTransformTween(panel, eye.Find("Gaze/Pupil"), PUPIL_DILATE_DELAY, PUPIL_DILATE_DURATION);
                 TweenLocalScale(dilate, _pupilNormal, _pupilDilated);
 
-                // CUT-37: 동공에 비친 운석이 고르게 커지고, 눈이 다 커진 뒤에도 잠시 더 커져 운석이 2-2 전부터 다가오고 있음을 보여 준다.
+                // 동공에 비친 운석이 고르게 커지고, 눈이 다 커진 뒤에도 잠시 더 커져 운석이 2-2 전부터 다가오고 있음을 보여 준다.
                 CuttoonTransformTween reflect = AddTransformTween(panel, eye.Find("Gaze/Pupil/Reflection"), REFLECTION_DELAY, REFLECTION_DURATION);
                 TweenLocalScale(reflect, Vector3.one * REFLECTION_START, Vector3.one);
                 SetCurve(reflect, AnimationCurve.Linear(0f, 0f, 1f, 1f));
@@ -671,7 +671,7 @@ namespace IntroCuttoon.EditorTools
             Vector3 eye = new Vector3(0f, POV_EYE_HEIGHT, 0f);
             Quaternion look = Quaternion.Euler(-POV_PITCH, POV_YAW, 0f);
             Vector3 forward = look * Vector3.forward;
-            // CUT-30: 운석은 반지름이 처음 각도로 보이는 먼 거리에서 출발한다. 크기는 그대로라 다가오면 화면 크기가 거리에 반비례해 커진다.
+            // 운석은 반지름이 처음 각도로 보이는 먼 거리에서 출발한다. 크기는 그대로라 다가오면 화면 크기가 거리에 반비례해 커진다.
             float radius = POV_METEOR_RADIUS;
             float startDistance = radius / Mathf.Tan(POV_METEOR_START_ANGLE * Mathf.Deg2Rad);
             povMeteor = CreatePrimitive(MENU_SPHERE, root, "Meteor", eye + forward * startDistance, Vector3.one * (radius * 2f), EnsureMaterial("GB_Meteor", 0.3f));
@@ -689,12 +689,12 @@ namespace IntroCuttoon.EditorTools
                 pit.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
             }
 
-            // CUT-34: 하늘색 막은 구덩이까지 덮도록 운석보다 조금 크다. 처음 투명도로 저장하고 연출이 걷어 낸다.
+            // 하늘색 막은 구덩이까지 덮도록 운석보다 조금 크다. 처음 투명도로 저장하고 연출이 걷어 낸다.
             Color hazeColor = new Color(SKY_GRAY, SKY_GRAY, SKY_GRAY, HAZE_START);
             Transform haze = CreatePrimitive(MENU_SPHERE, povMeteor, "Haze", Vector3.zero, Vector3.one * HAZE_SCALE, EnsureTransparentMaterial("GB_Haze", hazeColor, null, 1));
-            // CUT-30: 띠 판은 운석과 함께 돌아 앞면(-Z)이 시민을 본다. 띠 그림의 안쪽 원이 운석 반지름에 놓이는 크기라, 안쪽은 운석 몸체에 가려진다.
+            // 띠 판은 운석과 함께 돌아 앞면(-Z)이 시민을 본다. 띠 그림의 안쪽 원이 운석 반지름에 놓이는 크기라, 안쪽은 운석 몸체에 가려진다.
             Transform glow = CreatePrimitive(MENU_QUAD, povMeteor, "Glow", Vector3.zero, Vector3.one / GLOW_INNER, EnsureTransparentMaterial("GB_Glow", _glowStartColor, _glow.texture, 0));
-            // CUT-34: 뜨거운 쪽 판은 띠 판과 같은 크기이고, 그림 오른쪽이 HOT_CLOUD 구름 방향을 보게 돌린다. 처음엔 투명하고 막과 띠보다 나중에 그린다.
+            // 뜨거운 쪽 판은 띠 판과 같은 크기이고, 그림 오른쪽이 HOT_CLOUD 구름 방향을 보게 돌린다. 처음엔 투명하고 막과 띠보다 나중에 그린다.
             Color hotClear = new Color(_glowHotColor.r, _glowHotColor.g, _glowHotColor.b, 0f);
             Transform glowHot = CreatePrimitive(MENU_QUAD, povMeteor, "GlowHot", Vector3.zero, Vector3.one / GLOW_INNER, EnsureTransparentMaterial("GB_GlowHot", hotClear, _glowHot.texture, 2));
             glowHot.localRotation = Quaternion.Euler(0f, 0f, _cloudAngles[HOT_CLOUD] - GLOW_HOT_SWEEP * 0.5f);
@@ -705,7 +705,7 @@ namespace IntroCuttoon.EditorTools
                 layerRenderer.receiveShadows = false;
             }
 
-            // CUT-35: 구름은 칸 화면에 똑바로 서도록 시선과 같은 방향으로 돌린다. 구름 묶음의 로컬 X가 칸 가로다.
+            // 구름은 칸 화면에 똑바로 서도록 시선과 같은 방향으로 돌린다. 구름 묶음의 로컬 X가 칸 가로다.
             Vector3 right = look * Vector3.right;
             Vector3 up = look * Vector3.up;
             clouds = new Transform[_cloudDistances.Length];
@@ -720,7 +720,7 @@ namespace IntroCuttoon.EditorTools
                 CreatePrimitive(MENU_SPHERE, puff, "Middle", Vector3.zero, new Vector3(18f, 11f, 11f), cloud);
                 CreatePrimitive(MENU_SPHERE, puff, "Left", new Vector3(-9f, -1.5f, 0f), new Vector3(12f, 8f, 8f), cloud);
                 CreatePrimitive(MENU_SPHERE, puff, "Right", new Vector3(9f, -1.5f, 0f), new Vector3(12f, 8f, 8f), cloud);
-                // CUT-35: HOT_CLOUD 구름은 운석 바로 아래에 있어 윗면이 운석을 향한다. 윗면 왼쪽에 뜯겨 나갈 조각을 크기 0으로 숨겨 둔다.
+                // HOT_CLOUD 구름은 운석 바로 아래에 있어 윗면이 운석을 향한다. 윗면 왼쪽에 뜯겨 나갈 조각을 크기 0으로 숨겨 둔다.
                 if (i == HOT_CLOUD)
                 {
                     CreatePrimitive(MENU_SPHERE, puff, "Shred", _shredStart, Vector3.zero, cloud);
@@ -793,7 +793,7 @@ namespace IntroCuttoon.EditorTools
         {
             camera.aspect = (float)camera.targetTexture.width / camera.targetTexture.height;
             Vector2 subjectView = camera.WorldToViewportPoint(subject);
-            // CUT-26: 새는 흰색이다.
+            // 새는 흰색이다.
             Material material = EnsureMaterial("GB_Bird", 0.92f);
             for (int i = 0; i < _birdDepths.Length; i++)
             {
@@ -1103,42 +1103,42 @@ namespace IntroCuttoon.EditorTools
             RectTransform page = CreatePage(pagesRoot, "Page2");
             List<CuttoonPanel> panels = new List<CuttoonPanel>();
 
-            // CUT-28: 2-1 시민의 얼굴. 위를 올려다보는 얼굴을 정면에서, 표정이 칸을 꽉 채우게 찍는다.
+            // 2-1 시민의 얼굴. 위를 올려다보는 얼굴을 정면에서, 표정이 칸을 꽉 채우게 찍는다.
             RectTransform facePanel = CreatePanel(page, "2-1", 0f, 0f, 0.24f, 1f, Gray(0.14f), out Vector2 faceSize);
             FaceCameraPose(faceSet, faceHead, faceSize.x / faceSize.y, out Vector3 faceCameraPosition, out Vector3 faceLookTarget);
             Camera faceCamera = CreateSetCamera("Camera_2-1", faceSet, faceCameraPosition, faceLookTarget, FACE_FOV, Gray(SKY_GRAY), EnsureRenderTexture("2-1", faceSize));
             CreateView(facePanel, faceCamera);
-            // CUT-32: 호기심 어린 표정이 눈썹, 눈, 동공, 입 순서로 조금씩 겹치며 경악한 표정으로 바뀐다.
+            // 호기심 어린 표정이 눈썹, 눈, 동공, 입 순서로 조금씩 겹치며 경악한 표정으로 바뀐다.
             AddFaceChange(facePanel, faceHead);
             CreateLabel(facePanel, faceSize, "2-1", "시민의 얼굴", "위를 올려다본 얼굴 정면, 호기심 어린 표정이 점점 경악으로 바뀐다. 동공에 비친 운석이 점점 커진다");
             panels.Add(FinishPanel(facePanel));
 
-            // CUT-29: 2-2 운석. 2-1의 시민이 길 양옆 건물 사이로 올려다본 하늘이다. 운석은 화면 가운데에 있다.
+            // 2-2 운석. 2-1의 시민이 길 양옆 건물 사이로 올려다본 하늘이다. 운석은 화면 가운데에 있다.
             RectTransform meteorPanel = CreatePanel(page, "2-2", 0.24f, 0f, 1f, 1f, Gray(0.16f), out Vector2 meteorSize);
             Vector3 eye = new Vector3(0f, POV_EYE_HEIGHT, 0f);
             Quaternion look = Quaternion.Euler(-POV_PITCH, POV_YAW, 0f);
             Vector3 forward = look * Vector3.forward;
             Camera povCamera = CreateSetCamera("Camera_2-2", povSet, eye, eye + forward * 10f, POV_FOV, Gray(SKY_GRAY), EnsureRenderTexture("2-2", meteorSize));
-            // CUT-30: 처음 거리의 운석과 그 뒤의 구름까지 그린다.
+            // 처음 거리의 운석과 그 뒤의 구름까지 그린다.
             povCamera.farClipPlane = POV_FAR;
             CreateView(meteorPanel, povCamera);
 
-            // CUT-30: 운석은 크기 그대로 시선 방향으로 다가온다. 거의 멈춘 듯 묵직하게 떠나 점점 빨라지고, 끝에는 칸 위아래를 넘치게 차서 하늘을 닫는다.
+            // 운석은 크기 그대로 시선 방향으로 다가온다. 거의 멈춘 듯 묵직하게 떠나 점점 빨라지고, 끝에는 칸 위아래를 넘치게 차서 하늘을 닫는다.
             CuttoonTransformTween approach = AddTransformTween(meteorPanel, povMeteor, POV_APPROACH_DELAY, POV_APPROACH_DURATION);
             TweenLocalPosition(approach, povMeteor.localPosition, eye + forward * POV_METEOR_DISTANCE);
             SetCurve(approach, new AnimationCurve(new Keyframe(0f, 0f, 0f, 0f), new Keyframe(1f, 1f, POV_APPROACH_END_SLOPE, 0f)));
 
-            // CUT-34: 멀 때는 하늘색 막이 운석 몸체와 구덩이를 하늘빛에 묻고, 다가올수록 걷혀 운석이 짙고 또렷해진다.
+            // 멀 때는 하늘색 막이 운석 몸체와 구덩이를 하늘빛에 묻고, 다가올수록 걷혀 운석이 짙고 또렷해진다.
             CuttoonColorTween clear = AddColorTween(meteorPanel, povMeteor.Find("Haze").GetComponent<Renderer>(), POV_APPROACH_DELAY, POV_APPROACH_DURATION);
             TweenColor(clear, new Color(SKY_GRAY, SKY_GRAY, SKY_GRAY, HAZE_START), new Color(SKY_GRAY, SKY_GRAY, SKY_GRAY, 0f));
             SetCurve(clear, EaseInCurve());
 
-            // CUT-30, CUT-34: 운석 앞에서 짓눌려 달아오른 공기는 흰빛으로 옅게 시작해 다가올수록 진해지며 옅은 살구빛이 된다.
+            // 운석 앞에서 짓눌려 달아오른 공기는 흰빛으로 옅게 시작해 다가올수록 진해지며 옅은 살구빛이 된다.
             CuttoonColorTween heat = AddColorTween(meteorPanel, povMeteor.Find("Glow").GetComponent<Renderer>(), POV_APPROACH_DELAY, POV_APPROACH_DURATION);
             TweenColor(heat, _glowStartColor, _glowEndColor);
             SetCurve(heat, EaseInCurve());
 
-            // CUT-34: 운석이 가까워지면 띠 가운데 HOT_CLOUD 구름을 향한 쪽이 흰빛에 가깝게 세지고, 들쭉날쭉한 폭이 천천히 흐른다.
+            // 운석이 가까워지면 띠 가운데 HOT_CLOUD 구름을 향한 쪽이 흰빛에 가깝게 세지고, 들쭉날쭉한 폭이 천천히 흐른다.
             // 달아오른 공기가 그 구름을 스치기 직전임을 먼저 보여 준다.
             Transform glowHot = povMeteor.Find("GlowHot");
             Color hotClear = new Color(_glowHotColor.r, _glowHotColor.g, _glowHotColor.b, 0f);
@@ -1149,7 +1149,7 @@ namespace IntroCuttoon.EditorTools
             TweenLocalRotation(flow, new Vector3(0f, 0f, hotAngle - GLOW_HOT_SWEEP * 0.5f), new Vector3(0f, 0f, hotAngle + GLOW_HOT_SWEEP * 0.5f));
             SetCurve(flow, AnimationCurve.Linear(0f, 0f, 1f, 1f));
 
-            // CUT-35: 구름은 운석에 밀리지 않고 바람에 아주 천천히 칸 왼쪽으로 흐른다. 같은 거리를 흘러 가까운 구름이 화면에서 더 빨리 움직인다.
+            // 구름은 운석에 밀리지 않고 바람에 아주 천천히 칸 왼쪽으로 흐른다. 같은 거리를 흘러 가까운 구름이 화면에서 더 빨리 움직인다.
             Vector3 wind = look * Vector3.left * CLOUD_DRIFT;
             foreach (Transform cloud in clouds)
             {
@@ -1158,7 +1158,7 @@ namespace IntroCuttoon.EditorTools
                 SetCurve(drift, AnimationCurve.Linear(0f, 0f, 1f, 1f));
             }
 
-            // CUT-35: 띠가 HOT_CLOUD 구름 윗면에 닿는 순간, 왼쪽 덩이가 운석 가장자리를 따라 옆으로 떨어져 나가며 작아지고 윗면 조각 하나가 더 멀리 날아간다.
+            // 띠가 HOT_CLOUD 구름 윗면에 닿는 순간, 왼쪽 덩이가 운석 가장자리를 따라 옆으로 떨어져 나가며 작아지고 윗면 조각 하나가 더 멀리 날아간다.
             // 구름 묶음은 시선과 같은 방향으로 돌아 있어 로컬 X·Y가 칸 가로·세로다. 거리는 묶음 크기로 나눠 미터로 맞춘다.
             Transform hotCloud = clouds[HOT_CLOUD];
             Transform edge = hotCloud.Find("Left");
@@ -1174,8 +1174,8 @@ namespace IntroCuttoon.EditorTools
             TweenLocalScale(fling, Vector3.zero, _shredScale);
             SetCurve(fling, EaseOutCurve());
 
-            // CUT-31 폐기: 효과음 글자는 싸 보여서 넣지 않는다.
-            // CUT-09 폐기: 원인이 화면에 없는 2쪽 흔들림은 넣지 않는다.
+            // 효과음 글자는 싸 보여서 넣지 않는다.
+            // 원인이 화면에 없는 2쪽 흔들림은 넣지 않는다.
             CreateLabel(meteorPanel, meteorSize, "2-2", "운석", "시민이 올려다본 하늘, 흐릿하던 운석이 점점 빨라지며 하늘을 덮고, 달아오른 공기에 아래 구름이 뜯긴다");
             panels.Add(FinishPanel(meteorPanel));
 
@@ -1880,13 +1880,13 @@ namespace IntroCuttoon.EditorTools
                 WriteShapeTexture(TRIANGLE_PATH, TriangleCoverage);
             }
 
-            // CUT-30: 2-2 운석 둘레의 달아오른 공기 그림을 더했다.
+            // 2-2 운석 둘레의 달아오른 공기 그림을 더했다.
             if (!File.Exists(GLOW_PATH))
             {
                 WriteShapeTexture(GLOW_PATH, GlowCoverage);
             }
 
-            // CUT-34: 띠 가운데 구름을 향한 뜨거운 쪽 그림을 더했다.
+            // 띠 가운데 구름을 향한 뜨거운 쪽 그림을 더했다.
             if (!File.Exists(GLOW_HOT_PATH))
             {
                 WriteShapeTexture(GLOW_HOT_PATH, GlowHotCoverage);

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a26fcaa4f34d4684a05ebfefdc119bab, type: 3}
+  m_Name: LocConfig
+  m_EditorClassIdentifier: 
+  _languages:
+  - _code: ko
+    _name: "한국어"
+    _font: {fileID: 0}
+  - _code: en
+    _name: English
+    _font: {fileID: 0}
+  - _code: ja
+    _name: "日本語"
+    _font: {fileID: 0}
+  _sceneTexts: {fileID: 4900000, guid: 7a865dee0ca047cbab6d5d7b2a556870, type: 3}
+  _detectSystemLanguage: 1
+  _fallbackLanguage: en
+  _languagePrefKey: EyeMaze.Language

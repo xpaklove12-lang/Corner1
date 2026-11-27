@@ -27,7 +27,7 @@ namespace IntroCuttoon
         [Tooltip("끝 로컬 회전(오일러 각, 도)")]
         [SerializeField] private Vector3 _toRotation = Vector3.zero;
 
-        // CUT-20: 2-2 운석과 구름의 크기를 바꾸려고 로컬 크기 항목을 더했다.
+        // 2-2 운석과 구름의 크기를 바꾸려고 로컬 크기 항목을 더했다.
         [Header("크기")]
         [SerializeField] private bool _animateScale = false;
         [SerializeField] private Vector3 _fromScale = Vector3.one;

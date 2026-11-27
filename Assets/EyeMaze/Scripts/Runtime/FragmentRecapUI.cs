@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace EyeMaze
 {
     /// <summary>
-    /// 스펙 019: 기억 목록에서 고른 파편의 요약 패널. 제목과 획득 문구를 보여 주고, 회상이 있으면 다시 재생한다.
+    /// 기억 목록에서 고른 파편의 요약 패널. 제목과 획득 문구를 보여 주고, 회상이 있으면 다시 재생한다.
     /// 패널이 열려 있는 동안 게임 시간을 멈춘다.
     /// </summary>
     public class FragmentRecapUI : MonoBehaviour

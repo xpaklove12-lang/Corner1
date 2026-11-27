@@ -28,11 +28,11 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("fragmentGroups")] private List<GameObject> _fragmentGroups = new List<GameObject>();
         [Tooltip("미로 모양 (seed)")]
         [SerializeField, FormerlySerializedAs("mazeSeed")] private int _mazeSeed = 12345;
-        // 스펙 018: 층 문을 여는 플래그 목록 추가
+        // 층 문을 여는 플래그 목록 추가
         [Tooltip("층 문을 여는 플래그. 0번이 1층으로 들어가는 문이다. 비우면 그 문은 신뢰로 열린다")]
         [SerializeField] private string[] _gateFlags = new string[0];
 
-        // 스펙 015: 시작 감정과 감정별 눈 표현 추가
+        // 시작 감정과 감정별 눈 표현 추가
         [Header("감정")]
         [Tooltip("상담 시작 때의 감정")]
         [SerializeField] private ClientEmotion _startEmotion = ClientEmotion.Calm;
@@ -44,7 +44,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("idleSituation"), TextArea(2, 4)] private string _idleSituation;
         [SerializeField, FormerlySerializedAs("abyssMessage"), TextArea(1, 3)] private string _abyssMessage;
         [Tooltip("이 사람이 들어와 앉은 뒤 하는 첫마디 (없으면 생략)")]
-        [SerializeField, FormerlySerializedAs("entryLine"), TextArea(1, 3)] private string _entryLine;
+        [SerializeField, FormerlySerializedAs("entryLine"), SceneText(3)] private string _entryLine;
 
         [Header("결말")]
         [SerializeField, FormerlySerializedAs("endings")] private List<EndingDef> _endings = new List<EndingDef>();
@@ -60,14 +60,14 @@ namespace EyeMaze
         public EndingScript EndingData => EndingScript.Get(_dialogueCsv);
         public List<GameObject> FragmentGroups => _fragmentGroups;
         public int MazeSeed => _mazeSeed;
-        // 스펙 015: 시작 감정 공개
-        // 스펙 018: 문 플래그 목록 공개
+        // 시작 감정 공개
+        // 문 플래그 목록 공개
         public string[] GateFlags => _gateFlags;
         public ClientEmotion StartEmotion => _startEmotion;
         public string IntroMessage => EndingData?.Text(EndingScript.Intro) ?? _introMessage;
         public string IdleSituation => EndingData?.Text(EndingScript.Idle) ?? _idleSituation;
         public string AbyssMessage => EndingData?.Text(EndingScript.Abyss) ?? _abyssMessage;
-        public string EntryLine => _entryLine;
+        public string EntryLine => Strings.Scene(_entryLine);
         /// <summary>결말 목록. 엔딩 CSV가 있으면 그걸, 없으면 인스펙터의 목록을 쓴다.</summary>
         public List<EndingDef> Endings
         {
@@ -100,7 +100,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 감정의 눈 표현을 찾는다.
+        /// 감정의 눈 표현을 찾는다.
         /// emotion과 _emotionLooks를 사용하며, 처음 맞는 표현 또는 (없으면) null을 반환한다.
         /// </summary>
         public EmotionLook LookOf(ClientEmotion emotion)

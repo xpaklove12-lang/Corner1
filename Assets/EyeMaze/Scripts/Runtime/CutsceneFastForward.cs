@@ -29,7 +29,7 @@ namespace EyeMaze
         [SerializeField] private float _autoAdvanceInterval = 0.15f;
 
         [Header("안내")]
-        [Tooltip("컷신 중 필드 조작 안내 자리에 함께 띄우는 문구. Strings.csv의 hint.fast_forward가 있으면 그걸 쓴다")]
+        [Tooltip("컷신 중 필드 조작 안내 자리에 함께 띄우는 문구. Loc/UI.csv의 hint.fast_forward가 있으면 그걸 쓴다")]
         [SerializeField] private string _hintText = "Ctrl  빨리감기";
 
         private bool _active;

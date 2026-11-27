@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace EyeMaze
 {
     /// <summary>
-    /// 스펙 007: 대화 기록 창. L 키나 게임패드 Select로 열고 닫으며, 열린 동안 게임을 멈추고 기록을 보여준다.
+    /// 대화 기록 창. L 키나 게임패드 Select로 열고 닫으며, 열린 동안 게임을 멈추고 기록을 보여준다.
     /// 메신저처럼 플레이어가 고른 말은 오른쪽 말풍선, 상대의 말은 왼쪽 얼굴과 말풍선(위에 이름), 서술은 가운데 글로 보여준다.
     /// 줄 칸은 프리팹에 미리 만들어 두고, 여기서는 켜고 끄며 글과 색만 바꾼다.
     /// </summary>
@@ -69,10 +69,19 @@ namespace EyeMaze
             DialogueLog.MaxEntries = _rows.Length;
         }
 
+        void OnEnable() => Loc.LanguageChanged += MarkDirty;
+
         void OnDisable()
         {
+            Loc.LanguageChanged -= MarkDirty;
             if (DialogueLog.IsOpen) Close();
         }
+
+        /// <summary>
+        /// 언어가 바뀌면 열려 있는 기록을 다음 프레임에 현재 언어로 다시 그리게 한다.
+        /// 입력값은 없으며, _drawnVersion을 바꾼다.
+        /// </summary>
+        private void MarkDirty() => _drawnVersion = -1;
 
         void Update()
         {
@@ -159,7 +168,7 @@ namespace EyeMaze
             // 플레이어 말은 이름 없이 오른쪽, 상대 말은 얼굴과 이름을 두고 왼쪽에 붙인다.
             bool other = !e.IsPlayer && !narration;
             if (row.Name.gameObject.activeSelf != other) row.Name.gameObject.SetActive(other);
-            if (other) row.Name.text = e.Speaker;
+            if (other) row.Name.text = Strings.Name(e.Speaker);
             if (row.Face.gameObject.activeSelf != other) row.Face.gameObject.SetActive(other);
             // 얼굴이 없는 사람도 말풍선 위치가 같도록 칸은 남기고 그림만 끈다.
             row.Face.sprite = e.Portrait;

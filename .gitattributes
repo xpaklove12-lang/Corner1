@@ -1,0 +1,65 @@
+# 줄바꿈: 텍스트 파일은 저장소와 작업 폴더 모두 LF로 둔다.
+# 사람마다 core.autocrlf 설정이 달라도 같은 결과가 나오게 해서, 줄바꿈만 바뀐 변경과 충돌을 막는다.
+* text=auto eol=lf
+
+# Windows 배치 파일만 CRLF로 둔다.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 스크립트와 문서
+*.cs   text diff=csharp
+*.md   text diff=markdown
+*.csv  text
+*.json text
+*.ps1  text
+*.sh   text
+
+# Unity가 쓰는 YAML 파일. 씬·프리팹 등은 Unity의 UnityYAMLMerge로 합친다.
+# 병합 도구는 PC마다 등록해야 한다(Tools/setup-git.ps1). 등록하지 않은 PC에서는 Git 기본 병합을 쓴다.
+*.unity              text merge=unityyamlmerge
+*.prefab             text merge=unityyamlmerge
+*.asset              text merge=unityyamlmerge
+*.mat                text merge=unityyamlmerge
+*.anim               text merge=unityyamlmerge
+*.controller         text merge=unityyamlmerge
+*.overrideController text merge=unityyamlmerge
+*.physicMaterial     text merge=unityyamlmerge
+*.physicsMaterial2D  text merge=unityyamlmerge
+*.mask               text merge=unityyamlmerge
+*.playable           text merge=unityyamlmerge
+*.lighting           text merge=unityyamlmerge
+*.signal             text merge=unityyamlmerge
+*.preset             text merge=unityyamlmerge
+*.spriteatlas        text merge=unityyamlmerge
+*.spriteatlasv2      text merge=unityyamlmerge
+*.terrainlayer       text merge=unityyamlmerge
+*.giparams           text merge=unityyamlmerge
+*.renderTexture      text merge=unityyamlmerge
+*.meta               text
+
+# 바이너리: 줄바꿈 변환과 텍스트 병합을 하지 않는다.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.psd  binary
+*.tga  binary
+*.tif  binary
+*.tiff binary
+*.exr  binary
+*.hdr  binary
+*.ttf  binary
+*.otf  binary
+*.wav  binary
+*.mp3  binary
+*.ogg  binary
+*.aif  binary
+*.fbx  binary
+*.obj  binary
+*.blend binary
+*.mp4  binary
+*.mov  binary
+*.dll  binary
+*.so   binary
+*.a    binary
+*.zip  binary

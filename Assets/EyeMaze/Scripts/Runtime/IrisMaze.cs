@@ -42,7 +42,7 @@ namespace EyeMaze
         [Header("연결")]
         [SerializeField, FormerlySerializedAs("person")] private Person _person;
 
-        // 스펙 018: 층 문을 여는 플래그 목록. 0번이 1층으로 들어가는 문이다.
+        // 층 문을 여는 플래그 목록. 0번이 1층으로 들어가는 문이다.
         [NonSerialized] private readonly List<string> _gateFlags = new List<string>();
 
         public int Rings => _rings;
@@ -53,7 +53,7 @@ namespace EyeMaze
         public float WallAlpha { get => _wallAlpha; set => _wallAlpha = value; }
         public float Focus { get => _focus; set => _focus = value; }
         public Person Person => _person;
-        // 스펙 010: 연출 오브젝트가 같은 선 재질을 쓰도록 공개
+        // 연출 오브젝트가 같은 선 재질을 쓰도록 공개
         public Material LineMaterial => _lineMaterial;
 
         public float FocusAlpha => Mathf.Lerp(0.12f, 1f, _focus * _focus);
@@ -205,7 +205,7 @@ namespace EyeMaze
         // 생성
 
         /// <summary>
-        /// 스펙 018: 층 문을 여는 플래그 목록을 정한다. 다음 Generate부터 문을 만들 때 넣는다.
+        /// 층 문을 여는 플래그 목록을 정한다. 다음 Generate부터 문을 만들 때 넣는다.
         /// flags(0번이 1층으로 들어가는 문)를 사용하며, _gateFlags를 바꾼다.
         /// </summary>
         public void SetGateFlags(IEnumerable<string> flags)
@@ -291,7 +291,7 @@ namespace EyeMaze
                     string locked = layerIndex == 1
                         ? "단단히 닫힌 문이다. 은재가 조금 더 마음을 열어야 한다."
                         : "더 깊은 곳은 아직 잠겨 있다.";
-                    // 스펙 018: 문 플래그가 있으면 선택지로 여는 문, 없으면 신뢰로 여는 문을 만든다.
+                    // 문 플래그가 있으면 선택지로 여는 문, 없으면 신뢰로 여는 문을 만든다.
                     string flag = layerIndex - 1 < _gateFlags.Count ? _gateFlags[layerIndex - 1] : "";
                     bool byFlag = !string.IsNullOrEmpty(flag);
                     MakeGate(container, rb, gs, byFlag ? $"문 {layerIndex} (선택지로 열림)" : $"문 {layerIndex} (신뢰 {layerIndex} 필요)",
@@ -317,7 +317,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 스펙 015: 층 안 칸 cur의 이웃 칸과 그 사이 벽의 키를 모은다. 같은 고리의 양옆과 같은 층 안의 안쪽, 바깥쪽 칸이다.
+        /// 층 안 칸 cur의 이웃 칸과 그 사이 벽의 키를 모은다. 같은 고리의 양옆과 같은 층 안의 안쪽, 바깥쪽 칸이다.
         /// cur, r0, r1(층의 첫, 끝 고리)을 사용하며, nbrs를 다시 채운다.
         /// </summary>
         private void CollectNeighbors((int r, int s) cur, int r0, int r1, List<(int r, int s, (MazeWall.Kind, int, int) key)> nbrs)

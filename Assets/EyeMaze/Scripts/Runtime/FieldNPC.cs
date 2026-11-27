@@ -15,7 +15,7 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("height")] private float _height = 0.95f;
         [SerializeField, FormerlySerializedAs("bodyColor")] private Color _bodyColor = Color.white;
         [SerializeField, FormerlySerializedAs("lineBefore"), TextArea(2, 4)] private string _lineBefore = "…";
-        [SerializeField, FormerlySerializedAs("lineAfterResolved"), TextArea(2, 4)] private string _lineAfterResolved = "\"…고마워요. 오늘은 조금 말하고 싶어졌어요.\"";
+        [SerializeField, FormerlySerializedAs("lineAfterResolved"), SceneText(4)] private string _lineAfterResolved = "\"…고마워요. 오늘은 조금 말하고 싶어졌어요.\"";
         [Tooltip("한 번이라도 눈을 들여다봤는지")]
         [SerializeField, FormerlySerializedAs("met")] private bool _met;
         [Tooltip("상담이 끝났는지")]
@@ -35,7 +35,7 @@ namespace EyeMaze
         [Tooltip("talkOnly일 때 Space로 한 줄씩 넘기는 대사")]
         [SerializeField, FormerlySerializedAs("talkLines"), TextArea(1, 3)] private List<string> _talkLines = new List<string>();
         [Tooltip("대화를 마친 뒤 다시 말을 걸면 나오는 말")]
-        [SerializeField, FormerlySerializedAs("lineAfterTalk"), TextArea(1, 2)] private string _lineAfterTalk = "…";
+        [SerializeField, FormerlySerializedAs("lineAfterTalk"), SceneText(2)] private string _lineAfterTalk = "…";
         [Tooltip("대화를 마치면 방을 나간다")]
         [SerializeField, FormerlySerializedAs("leavesAfterTalk")] private bool _leavesAfterTalk;
         [Tooltip("대화를 마치면 이 사람이 들어온다")]
@@ -82,7 +82,7 @@ namespace EyeMaze
 
         public bool Met { get => _met; set => _met = value; }
         public bool Resolved { get => _resolved; set => _resolved = value; }
-        public string LineAfterResolved { get => _lineAfterResolved; set => _lineAfterResolved = value; }
+        public string LineAfterResolved { get => Strings.Scene(_lineAfterResolved); set => _lineAfterResolved = value; }
         public Sprite Portrait => _portrait;
         public bool TalkOnly => _talkOnly;
         public List<string> TalkLines => _talkLines;
@@ -102,7 +102,7 @@ namespace EyeMaze
         }
 
         public override bool Available => Present;
-        public override string Verb => _talkOnly || _resolved ? Strings.Get("verb.talk", "이야기하기") : Strings.Get("verb.gaze", "눈을 마주하기");
+        public override string Verb => _talkOnly || _resolved ? Strings.Get("verb.talk") : Strings.Get("verb.gaze");
 
         void OnEnable() { _drawnKey = int.MinValue; }
         protected override void OnValidate() { _drawnKey = int.MinValue; base.OnValidate(); }
@@ -170,14 +170,14 @@ namespace EyeMaze
             {
                 bool first = !_talked;
                 if (TryTalk(flow, null, null, first ? () => FinishTalk(flow) : (Action)null)) return;
-                if (_talked) { flow.ShowConversation(DisplayName, _portrait, new List<string> { _lineAfterTalk }, null); return; }
+                if (_talked) { flow.ShowConversation(DisplayName, _portrait, new List<string> { Strings.Scene(_lineAfterTalk) }, null); return; }
                 flow.ShowConversation(DisplayName, _portrait, _talkLines, () => FinishTalk(flow));
                 return;
             }
             if (_resolved)
             {
                 if (TryTalk(flow, null, null, null)) return;
-                flow.ShowConversation(DisplayName, _portrait, new List<string> { _lineAfterResolved }, null);
+                flow.ShowConversation(DisplayName, _portrait, new List<string> { LineAfterResolved }, null);
             }
             else flow.BeginEncounter(this);
         }
@@ -213,7 +213,7 @@ namespace EyeMaze
             return true;
         }
 
-        // 스펙 007: 대화 기록에서 만남 상대의 얼굴을 찾도록 공개
+        // 대화 기록에서 만남 상대의 얼굴을 찾도록 공개
         /// <summary>
         /// 이름으로 씬의 다른 사람 초상화를 찾는다 (speaker 칸에 다른 사람 이름을 쓴 줄, 대화 기록의 얼굴용).
         /// name을 사용하며, 찾은 초상화 또는 null을 반환한다.

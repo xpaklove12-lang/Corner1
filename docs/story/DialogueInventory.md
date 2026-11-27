@@ -1,6 +1,6 @@
 # 대사 목록
 
-> 기준: `Assets/EyeMaze/Data/`의 CSV(`Strings.csv`, 인물·회차 파일 `Dialogue/*_Day1.csv` 등). CSV에 없는 대사는 `Assets/Scenes/EyeMaze.unity`의 직렬화 값.
+> 기준: `Assets/EyeMaze/Data/`의 CSV(`Loc/UI.csv`, 인물·회차 파일 `Dialogue/*_Day1.csv` 등). CSV에 없는 대사는 `Assets/Scenes/EyeMaze.unity`의 직렬화 값.
 > 이 문서는 실제 저장된 대사와 서술을 옮긴 목록이다. 코드가 상황에 따라 조합하는 문구는 마지막 절에 규칙으로 표기한다.
 
 ## 시작 독백
