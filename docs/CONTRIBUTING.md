@@ -1,6 +1,6 @@
 # 협업 안내
 
-게임이 어떻게 동작해야 하는지는 `docs/specs/`의 영역 스펙이 정하고, 코드는 스펙을 따른다. 스펙 목록은 [`specs/README.md`](specs/README.md), 양식은 [`specs/_TEMPLATE.md`](specs/_TEMPLATE.md), 코드 규칙은 루트 `AGENTS.md`에 있다. 이 문서의 절차는 에이전트가 따르고, 사람은 무엇을 만들지 말하고 승인만 한다.
+게임이 어떻게 동작해야 하는지는 `docs/specs/`의 영역 스펙이 정하고, 코드는 스펙을 따른다. 기획, 이야기, 아트, 기술 자료가 어디 있는지는 [`README.md`](README.md)를 본다. 이 문서의 규칙은 스펙에만 적용한다. 스펙 목록은 [`specs/README.md`](specs/README.md), 양식은 [`specs/_TEMPLATE.md`](specs/_TEMPLATE.md), 코드 규칙은 루트 `AGENTS.md`에 있다. 이 문서의 절차는 에이전트가 따르고, 사람은 무엇을 만들지 말하고 승인만 한다.
 
 ## 진행 상황
 
@@ -17,6 +17,7 @@
 - 스펙에 없는 동작을 코드에만 넣지 않는다. 구현 중 스펙에 없는 요구가 나오면 멈추고 스펙 수정을 제안한다.
 - 스펙이 모호하면 추측하지 않고 묻는다.
 - 같은 기능에 새 스펙 파일을 만들지 않는다. 새 스펙은 README에서 맞는 영역이 없을 때만 만든다. `_TEMPLATE.md`를 `영역-이름.md`(소문자 영어, 번호 없음)로 복사하고, 다른 영역과 겹치지 않는 대문자 접두어로 README 표에 등록한다.
+- 스펙이 15편쯤 넘으면 `specs/gameplay/`, `specs/ui/`, `specs/tools/`, `specs/art/`처럼 분야별 하위 폴더로 나누고, README 표에 `gameplay/blink-maze.md`처럼 경로로 적는다.
 
 ## 여러 브랜치에서 일할 때
 

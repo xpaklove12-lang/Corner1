@@ -35,7 +35,8 @@ $readme = if (Test-Path $readmePath) { Read-Utf8 $readmePath } else { $errors.Ad
 # README "영역" 표에서 접두어와 파일을 읽는다. 같은 접두어를 두 영역이 쓰면 오류다.
 $registered = [ordered]@{}
 $prefixOwner = @{}
-foreach ($m in [regex]::Matches($readme, '(?m)^\|\s*`([A-Z]+)`\s*\|\s*\[?`([a-z0-9-]+\.md)`')) {
+# 파일은 docs/specs 기준 경로다. 영역이 늘면 하위 폴더(예: gameplay/blink-maze.md)에 둘 수 있다.
+foreach ($m in [regex]::Matches($readme, '(?m)^\|\s*`([A-Z]+)`\s*\|\s*\[?`([a-z0-9/-]+\.md)`')) {
     $prefix = $m.Groups[1].Value
     $file = $m.Groups[2].Value
     if ($prefixOwner.ContainsKey($prefix)) {
@@ -45,10 +46,10 @@ foreach ($m in [regex]::Matches($readme, '(?m)^\|\s*`([A-Z]+)`\s*\|\s*\[?`([a-z0
     $registered[$file] = $prefix
 }
 
-foreach ($file in Get-ChildItem $specDir -Filter '*.md' | Sort-Object Name) {
-    $name = $file.Name
-    if ($metaFiles -contains $name) { continue }
-    if ($name -match '^\d') {
+foreach ($file in Get-ChildItem $specDir -Filter '*.md' -Recurse | Sort-Object FullName) {
+    if ($metaFiles -contains $file.Name) { continue }
+    $name = $file.FullName.Substring([IO.Path]::GetFullPath($specDir).Length).TrimStart([char[]]@('\', '/')).Replace('\', '/')
+    if ($file.Name -match '^\d') {
         $errors.Add("번호 스펙 파일은 만들지 않는다: docs/specs/$name. README에서 담당 영역 스펙을 찾아 요구사항을 더한다.")
         continue
     }

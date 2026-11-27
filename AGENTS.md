@@ -159,7 +159,7 @@ using Game.System;
 
 ## 10. Spec-Driven Development (SDD)
 
-- 기능 구현 전에 `docs/CONTRIBUTING.md`를 먼저 읽고, 그 안의 규칙과 절차를 따른다.
+- 작업 전에 `docs/README.md`에서 해당 문서 폴더를 찾는다. 기능 구현은 `docs/CONTRIBUTING.md`를 먼저 읽고 그 규칙과 절차를 따른다. `docs/design`, `docs/story`, `docs/art`, `docs/tech`는 자유 형식 자료이고 스펙 규칙을 따르지 않는다.
 - 스펙 없이 기능 구현을 시작하지 않는다. 기능 스펙은 번호 없는 영역 파일 `docs/specs/영역-이름.md`이며, 목록과 걸치는 변경은 `docs/specs/README.md`, 양식은 `docs/specs/_TEMPLATE.md`를 따른다.
 - 같은 기능에 새 스펙 파일을 만들지 않고 그 영역 스펙에 요구사항을 더한다. 요구사항 ID(`BLINK-03` 등)는 다시 쓰지 않는다.
 - 구현은 `[개발중]` 요구사항 ID 단위로 하고, 끝나면 그 기능을 "완료"로 옮기고 ID별 충족 코드를 보고한다.
