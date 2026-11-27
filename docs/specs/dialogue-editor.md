@@ -33,7 +33,6 @@
 - **EDITOR-11** `Dialogue/<인물>_DayN.csv`는 `section`·`actor`·`id`로 행을 구분하고 값과 순서를 보존한다.
 - **EDITOR-12** 씬의 상담(`ClientCase`)과 필드 인물(`FieldNPC`)은 연결된 회차 CSV로 상담, 엔딩, actor별 필드 대사를 실행한다.
 - **EDITOR-13** 노드 뷰는 등장 Talk에서 상담 시작, 분기, 엔딩까지 이어서 보여 준다.
-- **EDITOR-14** 은재·지수 1회차의 Talk·Dialogue·Ending을 각 Day1 CSV로 합치고 씬 참조를 옮겼다.
 
 ### 수치와 엔딩 조건
 

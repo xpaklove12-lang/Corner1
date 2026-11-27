@@ -11,7 +11,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $specDir = Join-Path $root 'docs/specs'
 $statusPath = Join-Path $specDir 'STATUS.md'
-$metaFiles = @('README.md', '_TEMPLATE.md', 'STATUS.md', 'LEGACY-IDS.md')
+$metaFiles = @('README.md', '_TEMPLATE.md', 'STATUS.md')
 $errors = New-Object System.Collections.Generic.List[string]
 $board = New-Object System.Collections.Generic.List[object]
 
