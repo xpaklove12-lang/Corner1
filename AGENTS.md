@@ -1,6 +1,7 @@
 # AGENTS.md
 
 ## 0. Git
+- `dev`와 `master`에는 직접 푸시하지 않는다. 작업 브랜치에 커밋하고 PR로만 올린다.
 - 커밋 메세지에 Co-Authored-By 등 AI 공동 작성자 줄을 넣지 않는다
 
 ## 1. Comment
