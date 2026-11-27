@@ -1,6 +1,6 @@
 # 필드 인물 표시
 
-접두어 `FIELD` · 다음 번호 `FIELD-13`
+접두어 `FIELD` · 다음 번호 `FIELD-05`
 
 상담실 필드의 인물이 흑백 전신 모습으로 보이고, 걷고 앉고 나가는 모습이 자연스럽게 이어진다. 말을 걸 수 있는 손님은 테두리로 알아본다.
 
@@ -12,7 +12,7 @@ flowchart TD
     B -->|멈춤| A
     A -->|컷신 착석| C[앉은 자세, 소파 앞부분이 가림 FIELD-03]
     A -->|컷신 퇴장| D[걸어 나가고 사라짐 FIELD-03]
-    A -->|상호작용 대상이 됨| E[실루엣 테두리 FIELD-11]
+    A -->|상호작용 대상이 됨| E[실루엣 테두리 FIELD-04]
     E -->|대상 아님, 대화·컷신| A
 ```
 
@@ -45,7 +45,7 @@ flowchart TD
 - 앉은 인물은 소파 앞부분에 몸 일부가 가려진다.
 - 확인: 은재가 앉아 다리 일부가 가려지고, 어머니가 걸어 나가 사라진다.
 
-### 말 걸 수 있는 인물 표시 (FIELD-11) `[개발중]`
+### 말 걸 수 있는 인물 표시 (FIELD-04) `[개발중]`
 
 말을 걸 수 있는 인물에게 다가가면 실루엣 테두리가 생긴다.
 
@@ -65,7 +65,7 @@ flowchart TD
 - `FIELD-01` 인물이 보이지 않는 동안에는 스프라이트도 보이지 않는다. 스프라이트를 연결하지 않은 인물은 기존 표시를 유지한다.
 - `FIELD-02` 걷기가 멈추면 서기 이미지로 돌아간다.
 - `FIELD-03` 앉을 때 기존 좌석 위치와 방향을 유지한다. 앉은 높이는 씬의 `_seatPoint`와 앉은 키로 정해진다.
-- `FIELD-11` 테두리 갱신은 대상 판정 뒤(`LateUpdate`)에 한다. 화면에 없거나 꺼진 NPC, 문과 단서에는 테두리를 그리지 않는다.
+- `FIELD-04` 테두리 갱신은 대상 판정 뒤(`LateUpdate`)에 한다. 화면에 없거나 꺼진 NPC, 문과 단서에는 테두리를 그리지 않는다.
 
 ### 하지 않는 것
 
@@ -88,4 +88,4 @@ flowchart TD
 | FIELD-01 | `FieldNPC`, `FieldPlayer` |
 | FIELD-02 | `FieldNPC`, `FieldPlayer` |
 | FIELD-03 | `FieldNPC`, `SofaForeground` |
-| FIELD-11 | `FieldNPC`, `NpcInteractionOutline` |
+| FIELD-04 | `FieldNPC`, `NpcInteractionOutline` |

@@ -1,6 +1,6 @@
 # 시작 독백과 첫 손님 입장
 
-접두어 `OPEN` · 다음 번호 `OPEN-07`
+접두어 `OPEN` · 다음 번호 `OPEN-06`
 
 주인공의 독백으로 이야기의 전제를 알리고, 초인종과 혼잣말로 첫 손님이 왔음을 느끼게 한다. 플레이어가 문을 열어 은재 어머니를 맞고, 사연을 들은 뒤 은재와 마주 앉는다.
 
@@ -45,7 +45,7 @@ flowchart TD
 - 둘 다 멈추고 잠시 뒤 어머니 대사 10줄이 나온다. 첫 줄 이름은 "???"다.
 - 어머니가 나가고 은재가 앉은 뒤 서술 3줄이 이어진다.
 
-### 대사 넘김 표시 (OPEN-06)
+### 대사 넘김 표시 (OPEN-05)
 
 필드 대사창에서 한 줄이 다 나오면 오른쪽 아래에 ▼가 오르내린다.
 
@@ -84,7 +84,7 @@ flowchart TD
 | OPEN-02 | `FieldCutscene`, `FieldDoor.Ring` |
 | OPEN-03 | `FieldCutscene`, `FieldDoor.Interact` |
 | OPEN-04 | `FieldCutscene.BeginArrival` |
-| OPEN-06 | `GameFlowUI.UpdateAdvanceMark` |
+| OPEN-05 | `GameFlowUI.UpdateAdvanceMark` |
 
 ### 메모
 

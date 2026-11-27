@@ -24,10 +24,10 @@
 | 화면에 새 문구 | 그 문구의 영역 + `Data/Strings.csv` key |
 | 대사 CSV나 `Flashbacks.csv`에 새 열 | `dialogue-editor` + 그 열을 쓰는 영역 |
 | 새 감정이나 감정 사물 | `emotion-maze` + `dialogue-editor`(`emotion` 열) + 밀려남을 쓰면 `burden` |
-| 깜빡임·회상 중 멈추는 것 | `blink-maze` + `burden`(BURDEN-01) + `memory-fragments`(MEM-06) |
-| 층 문 여는 조건 | `dialogue`(DLG-20, DLG-40, DLG-42) + `memory-fragments`(MEM-34) + `burden`(BURDEN-21) |
+| 깜빡임·회상 중 멈추는 것 | `blink-maze` + `burden`(BURDEN-01) + `memory-fragments`(MEM-03) |
+| 층 문 여는 조건 | `dialogue`(DLG-06, DLG-11, DLG-12) + `memory-fragments`(MEM-08) + `burden`(BURDEN-07) |
 | 새 회상 | `memory-fragments` + 감정이 바뀌면 `emotion-maze` + 문을 열면 `dialogue` |
-| 눈 위 표현(눈물, 떨림, 눈꺼풀) | `burden` + `emotion-maze`(EMO-03) + `blink-maze`(BLINK-12) |
-| 시간을 멈추는 새 창 | 그 영역 + `dialogue`(DLG-28) + `memory-fragments`(MEM-38) |
-| 새 컷신 구간 | 그 영역 + `dialogue`(DLG-32 빨리감기) |
-| 엔딩 조건 | `dialogue-editor`(EDITOR-21) + `burden`(BURDEN-03) |
+| 눈 위 표현(눈물, 떨림, 눈꺼풀) | `burden` + `emotion-maze`(EMO-02) + `blink-maze`(BLINK-05) |
+| 시간을 멈추는 새 창 | 그 영역 + `dialogue`(DLG-08) + `memory-fragments`(MEM-09) |
+| 새 컷신 구간 | 그 영역 + `dialogue`(DLG-09 빨리감기) |
+| 엔딩 조건 | `dialogue-editor`(EDITOR-10) + `burden`(BURDEN-03) |
