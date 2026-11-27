@@ -67,7 +67,9 @@
 
 ## 규칙 검사
 
-사람이 직접 돌리지 않는다. 커밋할 때 훅이, `dev`·`master` 푸시와 PR에서 GitHub `spec-check`가 `Tools/check-specs.ps1`을 돌린다. 훅은 `git config core.hooksPath`가 `.githooks`여야 동작하며, 에이전트가 작업을 시작할 때 확인해 맞춘다.
+사람이 직접 돌리지 않는다. 커밋할 때 훅이, `dev`·`master` 푸시와 PR에서 GitHub `spec-check`가 `Tools/check-specs.ps1`을 돌린다. 훅은 PC마다 켜야 동작한다. 리포를 받은 뒤 `Tools/setup-git.ps1`을 한 번 실행하면 커밋 훅과 씬·프리팹 병합 도구(UnityYAMLMerge)가 등록된다. 에이전트는 작업을 시작할 때 이 설정을 확인해 맞춘다.
+
+줄바꿈은 루트 `.gitattributes`가 모든 텍스트 파일을 LF로 고정한다. 사람마다 `core.autocrlf` 설정이 달라도 줄바꿈만 바뀐 변경이 생기지 않는다.
 
 - 오류(커밋이 막힘)
   - 영역 스펙: 번호 스펙 파일, README 표에 없는 스펙, 겹치는 접두어, 흐름 차트 없음, "기능" 절 없음, 진행 상태 절(진행 중, 진행 현황, 완료)이나 상태 태그가 있음, 접두어 불일치, 중복 ID, 다음 번호 이상인 ID, 옛 형식 요구사항 줄(`- **ID**`).

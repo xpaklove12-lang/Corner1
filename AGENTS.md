@@ -166,5 +166,5 @@ using Game.System;
 - 구현은 `[개발중]` 작업 문서 단위로 하고 할 일을 체크한다. 끝나면 기능을 영역 스펙의 "기능"에 반영하고, 작업 문서를 `[완료]`로 바꿔 결과(ID별 충족 코드, 확인한 것, 확인하지 못한 것)를 쓴 뒤 `docs/tasks/done/`으로 옮긴다.
 - 코드에는 요구사항 ID나 스펙 번호를 쓰지 않는다. 기능의 코드는 스펙의 "코드 단서" 표와 커밋 제목의 ID(`git log --grep=<ID>`)로 찾는다.
 - 진행 상황을 물으면 `docs/tasks/`에서 `[제안]`, `[개발중]` 작업 문서를 모아 답한다. 영역 스펙에는 진행 상태를 쓰지 않는다.
-- 작업을 시작할 때 `git config core.hooksPath`가 `.githooks`가 아니면 맞춘다. 스펙 검사(`Tools/check-specs.ps1`)는 훅과 CI가 돌린다.
+- 작업을 시작할 때 `git config core.hooksPath`가 `.githooks`가 아니거나 `merge.unityyamlmerge.driver`가 없으면 `Tools/setup-git.ps1`을 실행한다(커밋 훅, 씬·프리팹 병합 도구 등록). 스펙 검사(`Tools/check-specs.ps1`)는 훅과 CI가 돌린다.
 - 커밋 메세지 제안 시 스펙 작업은 요구사항 ID를 범위로 쓰고(예: `feat(BLINK-03,MEM-12): 깜빡임 뒤 파편 강조 추가`), 스펙 없는 정리 작업은 범위 없이 쓴다(예: `chore: 사용하지 않는 에셋 정리`).
