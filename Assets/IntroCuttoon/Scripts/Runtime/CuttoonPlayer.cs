@@ -1,3 +1,6 @@
+// 소리 담당에 알릴 이벤트 형식을 쓰려고 System을 더함
+using System;
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -47,6 +50,27 @@ namespace IntroCuttoon
         private PlayState _state;
         private int _pageIndex;
         private float _timer;
+
+        // 소리 담당이 칸 진행에 맞춰 소리를 내도록 알림 네 개를 더함
+        /// <summary>
+        /// 칸이 열린 직후 쪽 번호와 그 쪽의 칸 번호를 0부터 센 값으로 알린다.
+        /// </summary>
+        public event Action<int, int> PanelOpened;
+
+        /// <summary>
+        /// 다음 칸 입력으로 진행 중인 칸 연출을 끝 상태로 맞추기 직전에 알린다.
+        /// </summary>
+        public event Action FinishingOpened;
+
+        /// <summary>
+        /// 처음으로 돌아가거나 쪽 바로 가기로 모든 쪽을 되돌리기 직전에, 다시 시작할 쪽 번호를 0부터 센 값으로 알린다.
+        /// </summary>
+        public event Action<int> Restarting;
+
+        /// <summary>
+        /// 암전이 시작될 때 화면이 검게 덮이는 시간(초)을 알린다.
+        /// </summary>
+        public event Action<float> BlackoutStarted;
 
         private CuttoonPage CurrentPage => _pages[_pageIndex];
 
@@ -124,6 +148,9 @@ namespace IntroCuttoon
         /// </summary>
         public void Restart()
         {
+            // 처음부터 다시 시작함을 소리 담당에 알림
+            Restarting?.Invoke(0);
+
             foreach (CuttoonPage page in _pages)
             {
                 page.ResetPage();
@@ -150,6 +177,8 @@ namespace IntroCuttoon
 
             if (CurrentPage.IsBusy)
             {
+                // 연출을 끝 상태로 맞추기 전에 소리 담당에 알림
+                FinishingOpened?.Invoke();
                 CurrentPage.FinishOpened();
                 return;
             }
@@ -185,6 +214,9 @@ namespace IntroCuttoon
             CurrentPage.OpenNext();
             _state = PlayState.Showing;
             _timer = 0f;
+
+            // 열린 칸의 쪽 번호와 칸 번호를 소리 담당에 알림
+            PanelOpened?.Invoke(_pageIndex, CurrentPage.OpenedCount - 1);
         }
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -194,6 +226,9 @@ namespace IntroCuttoon
         /// </summary>
         private void JumpToPage(int index)
         {
+            // 이 쪽부터 다시 시작함을 소리 담당에 알림
+            Restarting?.Invoke(index);
+
             foreach (CuttoonPage page in _pages)
             {
                 page.ResetPage();
@@ -274,6 +309,9 @@ namespace IntroCuttoon
                 {
                     _state = PlayState.Blackout;
                     _timer = 0f;
+
+                    // 암전이 시작됨을 덮이는 시간과 함께 소리 담당에 알림
+                    BlackoutStarted?.Invoke(_blackoutDuration);
                 }
 
                 return;

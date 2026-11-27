@@ -27,3 +27,9 @@ Splice와 Suno에서 받은 원본 음원은 저장소에 올리지 않는다(`A
 | `ComputerRoomBeeps_SFXB.3634.wav` | Splice | 팩 이름 확인 필요 | Splice 라이선스 | 사용자 | `event:/AMB/Intro/CryoBay` |
 | `ComputerRoomBeeps_SFXB.3632.wav` | Splice | 팩 이름 확인 필요 | Splice 라이선스 | 사용자 | `event:/AMB/Intro/CryoBay`(예비) |
 | `536807__egomassive__ice.ogg` | Freesound | egomassive, Ice.ogg, https://freesound.org/people/egomassive/sounds/536807/ | CC0 | 사용자 | `event:/SFX/Intro/Frost` |
+| `AutoWindowUp_SFXB.4260.wav` | Splice | 팩 이름 확인 필요. 꼬리표: Auto, Window, Up, Automatic, Power, Automobile, Car | Splice 라이선스 | 사용자 | `event:/SFX/Intro/CapsuleLid`(미끄러짐, 편집본 `Assets/Licensed/SFX/sfx_intro_lid_slide.wav`) |
+| `AutoWindowDown_SFXB.4259.wav` | Splice | 팩 이름 확인 필요. 꼬리표: Auto, Window, Down, Automatic, Power, Automobile, Car | Splice 라이선스 | 사용자 | 쓰지 않음(뚜껑 미끄러짐 후보) |
+| `CarWindowClose_BW.52150.wav` | Splice | 팩 이름 확인 필요. 꼬리표: Auto, Car Window Close, Automatic, Pontiac Grand Am | Splice 라이선스 | 사용자 | 쓰지 않음(뚜껑 미끄러짐 후보) |
+| `BRS_Truck_GMC_Savana_Power_Window_Down_1.wav` | Splice(확인 필요) | 꼬리표: 2010 GMC Savana, Power Window, Down 1, J.R. Fountain, 2016 Big Room Sound (FFX 2010) | 확인 필요 | 사용자 | 쓰지 않음(뚜껑 미끄러짐 후보) |
+| `457555__florianreichelt__a-huge-city-in-the-distant-recorded-from-a-skyscraper-in-dubai.wav` | Freesound | florianreichelt, A huge city in the distant recorded from a Skyscraper in Dubai, https://freesound.org/people/florianreichelt/sounds/457555/ | CC0(원작자의 표기 부탁은 `CREDITS.md` 2절) | 사용자 | `event:/AMB/Intro/City`(편집본 `Assets/Licensed/AMB/amb_intro_city.wav`) |
+| `MECHHydr_Pneumatic cylinder small 1 (ID 1491)_BigSoundBank.com.wav` | BigSoundBank | Joseph SARDIN, Pneumatic cylinder, small #1, https://bigsoundbank.com/pneumatic-cylinder-small-1-s1491.html | CC0 | 사용자 | `event:/SFX/Intro/CapsuleLid`(잠김, 편집본 `Assets/Licensed/SFX/sfx_intro_lid_lock.wav`) |

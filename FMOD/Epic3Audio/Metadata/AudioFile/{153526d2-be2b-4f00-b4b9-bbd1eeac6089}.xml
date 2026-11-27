@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.04.00">
+	<object class="AudioFile" id="{153526d2-be2b-4f00-b4b9-bbd1eeac6089}">
+		<property name="assetPath">
+			<value>Licensed/SFX/sfx_intro_birds_01.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>1.6000000000000001</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{eede489c-ed4d-4348-a8e0-b7511639aefd}</destination>
+		</relationship>
+	</object>
+</objects>

@@ -23,4 +23,4 @@ CC BY 4.0 음원을 잘라 쓰거나 다른 소리와 섞으면 표기 문구 �
 
 | 쓰이는 곳 | 원작자 | 원본 주소 | 부탁 내용 |
 | --- | --- | --- | --- |
-| (아직 없음) | | | |
+| 인트로 1-1 먼 도시(`event:/AMB/Intro/City`), 2026-11-27 받아서 이벤트에 넣음 | florianreichelt | A huge city in the distant recorded from a Skyscraper in Dubai, https://freesound.org/people/florianreichelt/sounds/457555/ (CC0) | 설명에 자기 인스타그램(https://www.instagram.com/florianreichelt/)을 태그해 달라고 부탁함. 의무 아님 |

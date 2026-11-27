@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.04.00">
+	<object class="ParameterPreset" id="{c282e95c-4aca-4590-b156-6e0ecc0c34b5}">
+		<property name="name">
+			<value>Hush</value>
+		</property>
+		<relationship name="folder">
+			<destination>{f8b6e4b1-ac68-4a9c-a734-fb282331aab7}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{54f9f498-7bce-4fb9-a2bd-a70ed2758b13}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{54f9f498-7bce-4fb9-a2bd-a70ed2758b13}" />
+</objects>

@@ -1,0 +1,522 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4451053618957815416
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5288722742430616005}
+  - component: {fileID: 3297812505045972366}
+  - component: {fileID: 5771096205822141386}
+  m_Layer: 0
+  m_Name: IntroCuttoonSound
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5288722742430616005
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4451053618957815416}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3297812505045972366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4451053618957815416}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aac34f51a87d6aa4daed4fba90f5a90f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameSound.IntroCuttoonSound
+  _panels:
+  - _page: 1
+    _panel: 1
+    _cues:
+    - _kind: 1
+      _event:
+        Guid:
+          Data1: -1479085029
+          Data2: 1122355929
+          Data3: -1050712149
+          Data4: 1439444809
+        Path: event:/AMB/Intro/City
+      _delay: 0
+      _duration: 0.45
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+  - _page: 1
+    _panel: 2
+    _cues:
+    - _kind: 0
+      _event:
+        Guid:
+          Data1: 1141121195
+          Data2: 1328857175
+          Data3: -887539039
+          Data4: 99624161
+        Path: event:/SFX/Intro/BirdsFlyby
+      _delay: 0.5
+      _duration: 0
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+    - _kind: 4
+      _event:
+        Guid:
+          Data1: -1479085029
+          Data2: 1122355929
+          Data3: -1050712149
+          Data4: 1439444809
+        Path: event:/AMB/Intro/City
+      _delay: 1.4
+      _duration: 2.2
+      _parameter: Hush
+      _from: 0
+      _to: 1
+      _easeIn: 1
+      _keepOnSkip: 0
+  - _page: 2
+    _panel: 1
+    _cues:
+    - _kind: 1
+      _event:
+        Guid:
+          Data1: 839177551
+          Data2: 1173427589
+          Data3: 1368888198
+          Data4: 1738158151
+        Path: event:/AMB/Intro/MeteorRumble
+      _delay: 0.6
+      _duration: 2
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+    - _kind: 2
+      _event:
+        Guid:
+          Data1: -1479085029
+          Data2: 1122355929
+          Data3: -1050712149
+          Data4: 1439444809
+        Path: event:/AMB/Intro/City
+      _delay: 0.6
+      _duration: 2
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+  - _page: 2
+    _panel: 2
+    _cues:
+    - _kind: 0
+      _event:
+        Guid:
+          Data1: 1096662005
+          Data2: 1208319222
+          Data3: -1162392191
+          Data4: -1939312184
+        Path: event:/SFX/Intro/MeteorApproach
+      _delay: 0.2
+      _duration: 0
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+    - _kind: 4
+      _event:
+        Guid:
+          Data1: 839177551
+          Data2: 1173427589
+          Data3: 1368888198
+          Data4: 1738158151
+        Path: event:/AMB/Intro/MeteorRumble
+      _delay: 0.2
+      _duration: 2.6
+      _parameter: Intensity
+      _from: 0
+      _to: 1
+      _easeIn: 1
+      _keepOnSkip: 0
+  - _page: 3
+    _panel: 1
+    _cues:
+    - _kind: 3
+      _event:
+        Guid:
+          Data1: 1096662005
+          Data2: 1208319222
+          Data3: -1162392191
+          Data4: -1939312184
+        Path: event:/SFX/Intro/MeteorApproach
+      _delay: 0
+      _duration: 0
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+    - _kind: 3
+      _event:
+        Guid:
+          Data1: 839177551
+          Data2: 1173427589
+          Data3: 1368888198
+          Data4: 1738158151
+        Path: event:/AMB/Intro/MeteorRumble
+      _delay: 0
+      _duration: 0
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+    - _kind: 0
+      _event:
+        Guid:
+          Data1: -1688135719
+          Data2: 1303341727
+          Data3: 1763101323
+          Data4: -2104736819
+        Path: event:/SFX/Intro/Impact
+      _delay: 0
+      _duration: 0
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 1
+  - _page: 3
+    _panel: 2
+    _cues:
+    - _kind: 1
+      _event:
+        Guid:
+          Data1: -265592350
+          Data2: 1153918930
+          Data3: -2131218515
+          Data4: -148112296
+        Path: event:/AMB/Intro/Space
+      _delay: 0
+      _duration: 1
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+    - _kind: 0
+      _event:
+        Guid:
+          Data1: 328301221
+          Data2: 1186846689
+          Data3: -1354818380
+          Data4: 1639975032
+        Path: event:/SFX/Intro/ShipDepart
+      _delay: 0.4
+      _duration: 0
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+  - _page: 3
+    _panel: 3
+    _cues:
+    - _kind: 1
+      _event:
+        Guid:
+          Data1: -1808860612
+          Data2: 1308854415
+          Data3: 886032057
+          Data4: 1932659023
+        Path: event:/AMB/Intro/ShipEngine
+      _delay: 0
+      _duration: 0.45
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+  - _page: 4
+    _panel: 1
+    _cues:
+    - _kind: 1
+      _event:
+        Guid:
+          Data1: -163168338
+          Data2: 1085576846
+          Data3: 1555951250
+          Data4: -1636759904
+        Path: event:/AMB/Intro/ShipInterior
+      _delay: 0
+      _duration: 0.8
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+    - _kind: 2
+      _event:
+        Guid:
+          Data1: -265592350
+          Data2: 1153918930
+          Data3: -2131218515
+          Data4: -148112296
+        Path: event:/AMB/Intro/Space
+      _delay: 0
+      _duration: 0.8
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+    - _kind: 2
+      _event:
+        Guid:
+          Data1: -1808860612
+          Data2: 1308854415
+          Data3: 886032057
+          Data4: 1932659023
+        Path: event:/AMB/Intro/ShipEngine
+      _delay: 0
+      _duration: 0.8
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+  - _page: 4
+    _panel: 2
+    _cues:
+    - _kind: 0
+      _event:
+        Guid:
+          Data1: 1127046545
+          Data2: 1287742884
+          Data3: -492187745
+          Data4: -1476371566
+        Path: event:/SFX/Intro/CrowdWeep
+      _delay: 0.4
+      _duration: 0
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+  - _page: 4
+    _panel: 3
+    _cues:
+    - _kind: 0
+      _event:
+        Guid:
+          Data1: 1564087819
+          Data2: 1233058153
+          Data3: -1232504406
+          Data4: 1910171585
+        Path: event:/SFX/Intro/Breath
+      _delay: 0.5
+      _duration: 0
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+  - _page: 5
+    _panel: 1
+    _cues:
+    - _kind: 1
+      _event:
+        Guid:
+          Data1: 1347437251
+          Data2: 1262894073
+          Data3: 1352000937
+          Data4: 1411099518
+        Path: event:/AMB/Intro/CryoBay
+      _delay: 0
+      _duration: 0.8
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+    - _kind: 2
+      _event:
+        Guid:
+          Data1: -163168338
+          Data2: 1085576846
+          Data3: 1555951250
+          Data4: -1636759904
+        Path: event:/AMB/Intro/ShipInterior
+      _delay: 0
+      _duration: 0.8
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+  - _page: 5
+    _panel: 2
+    _cues:
+    - _kind: 0
+      _event:
+        Guid:
+          Data1: 1073125027
+          Data2: 1251483143
+          Data3: -505617533
+          Data4: -490389422
+        Path: event:/SFX/Intro/CapsuleLid
+      _delay: 0.3
+      _duration: 0
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+    - _kind: 0
+      _event:
+        Guid:
+          Data1: 158397410
+          Data2: 1288617682
+          Data3: 515158457
+          Data4: 1418329142
+        Path: event:/SFX/Intro/Frost
+      _delay: 1.7
+      _duration: 0
+      _parameter: 
+      _from: 0
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+  - _page: 5
+    _panel: 3
+    _cues:
+    - _kind: 4
+      _event:
+        Guid:
+          Data1: 1347437251
+          Data2: 1262894073
+          Data3: 1352000937
+          Data4: 1411099518
+        Path: event:/AMB/Intro/CryoBay
+      _delay: 0.6
+      _duration: 0.3
+      _parameter: Fade
+      _from: 0
+      _to: 0.33333334
+      _easeIn: 0
+      _keepOnSkip: 0
+    - _kind: 4
+      _event:
+        Guid:
+          Data1: 1347437251
+          Data2: 1262894073
+          Data3: 1352000937
+          Data4: 1411099518
+        Path: event:/AMB/Intro/CryoBay
+      _delay: 1.5
+      _duration: 0.3
+      _parameter: Fade
+      _from: 0.33333334
+      _to: 0.6666667
+      _easeIn: 0
+      _keepOnSkip: 0
+    - _kind: 4
+      _event:
+        Guid:
+          Data1: 1347437251
+          Data2: 1262894073
+          Data3: 1352000937
+          Data4: 1411099518
+        Path: event:/AMB/Intro/CryoBay
+      _delay: 2.4
+      _duration: 0.3
+      _parameter: Fade
+      _from: 0.6666667
+      _to: 1
+      _easeIn: 0
+      _keepOnSkip: 0
+  _pageStarts:
+  - _page: 2
+    _ambiences:
+    - _event:
+        Guid:
+          Data1: -1479085029
+          Data2: 1122355929
+          Data3: -1050712149
+          Data4: 1439444809
+        Path: event:/AMB/Intro/City
+      _parameter: Hush
+      _value: 1
+  - _page: 4
+    _ambiences:
+    - _event:
+        Guid:
+          Data1: -265592350
+          Data2: 1153918930
+          Data3: -2131218515
+          Data4: -148112296
+        Path: event:/AMB/Intro/Space
+      _parameter: 
+      _value: 0
+    - _event:
+        Guid:
+          Data1: -1808860612
+          Data2: 1308854415
+          Data3: 886032057
+          Data4: 1932659023
+        Path: event:/AMB/Intro/ShipEngine
+      _parameter: 
+      _value: 0
+  - _page: 5
+    _ambiences:
+    - _event:
+        Guid:
+          Data1: -163168338
+          Data2: 1085576846
+          Data3: 1555951250
+          Data4: -1636759904
+        Path: event:/AMB/Intro/ShipInterior
+      _parameter: 
+      _value: 0
+  _skipOneShotFade: 0.15
+  _skipSettleTime: 0.2
+  _restartFade: 0.1
+--- !u!114 &5771096205822141386
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4451053618957815416}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86c6556701af9e04380698b89f691b6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FMODUnity::FMODUnity.StudioListener
+  nonRigidbodyVelocity: 0
+  attenuationObject: {fileID: 0}
