@@ -118,6 +118,7 @@ namespace EyeMaze
             _director.BlinkPaused = _pauseBlink;
             _director.GridOverride = _move;
             _director.SquareGrid = _square;
+            _square.PixelSize = LocalPerPixel();
             if (_director.CurrentMode != EyeMazeDirector.Mode.Gaze)
             {
                 if (_running) StopRun();
@@ -127,6 +128,7 @@ namespace EyeMaze
 
             CollectSafeZones();
             TrackCheckpoint();
+            if (!IsPaused) TakeShard();
             if (!IsPaused) Advance(Time.deltaTime);
             EvaluateCells();
             DrawCells();
@@ -270,7 +272,8 @@ namespace EyeMaze
                         for (int y = 0; y < rows; y++)
                         {
                             var cell = new Vector2Int(x, y);
-                            if (!_square.IsMazeCell(cell) || IsSafe(cell) || !w.Covers(x, y, k)) continue;
+                            // 사각 미로의 조각 칸과 문 양쪽 칸은 안전지대로 칠하지 않지만 터지지도 않는다.
+                            if (!_square.IsMazeCell(cell) || IsSafe(cell) || _square.IsProtected(cell) || !w.Covers(x, y, k)) continue;
                             if (value > target[x, y]) target[x, y] = value;
                         }
                     }
@@ -350,12 +353,21 @@ namespace EyeMaze
         /// </summary>
         private float GridLineWidth()
         {
-            int pixels = _camera.targetTexture != null ? _camera.targetTexture.height : _camera.pixelHeight;
-            float worldPerPixel = 2f * _camera.orthographicSize / Mathf.Max(1, pixels);
-            float localPerPixel = worldPerPixel / Mathf.Max(1e-4f, Mathf.Abs(Maze.transform.lossyScale.y));
+            float localPerPixel = LocalPerPixel();
             // 픽셀 정수배로 맞춰 화면 크기나 확대가 바뀌어도 선마다 굵기가 덜 들쭉날쭉하게 한다.
             int px = Mathf.Max(_gridMinPixels, Mathf.RoundToInt(_gridWidth / localPerPixel));
             return px * localPerPixel;
+        }
+
+        /// <summary>
+        /// 카메라가 그리는 화면(픽셀 카메라면 낮은 해상도 텍스처)에서 한 픽셀이 미로 기준으로 얼마인지 계산한다. 격자선과 사각 미로 벽 굵기를 픽셀에 맞추는 데 쓴다.
+        /// _camera의 직교 크기와 그리는 높이, 미로의 크기 배율을 사용하며, 미로 기준 길이를 반환한다.
+        /// </summary>
+        private float LocalPerPixel()
+        {
+            int pixels = _camera.targetTexture != null ? _camera.targetTexture.height : _camera.pixelHeight;
+            float worldPerPixel = 2f * _camera.orthographicSize / Mathf.Max(1, pixels);
+            return worldPerPixel / Mathf.Max(1e-4f, Mathf.Abs(Maze.transform.lossyScale.y));
         }
 
         /// <summary>
@@ -451,7 +463,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 칸 경계마다 곧은 세로선과 가로선을 만든다. 미로 칸에 닿는 경계만 그리고, 끊기지 않은 구간은 선 하나로 잇는다. 옛 격자는 지운다.
+        /// 칸 경계마다 곧은 세로선과 가로선을 만든다. 미로 칸에 닿는 경계만 그리고, 끊기지 않은 구간은 선 하나로 이어 원 안쪽만 남긴다. 옛 격자는 지운다.
         /// 사각 미로의 칸 수와 크기, _gridWidth, _gridSortingOrder를 사용하며, _gridLines와 자식 오브젝트를 바꾼다.
         /// </summary>
         private void BuildGrid()
@@ -476,8 +488,7 @@ namespace EyeMaze
                     if (drawn && runStart < 0) runStart = y;
                     if (drawn || runStart < 0) continue;
                     float ex = left + x * size;
-                    LineRenderer lr = MakeGridLine(container, $"세로 {x}-{runStart}");
-                    Shapes.SetPoints(lr, new[] { new Vector3(ex, bottom + runStart * size, 0f), new Vector3(ex, bottom + y * size, 0f) }, false);
+                    AddGridLine(container, $"세로 {x}-{runStart}", new Vector3(ex, bottom + runStart * size, 0f), new Vector3(ex, bottom + y * size, 0f));
                     runStart = -1;
                 }
             }
@@ -490,11 +501,31 @@ namespace EyeMaze
                     if (drawn && runStart < 0) runStart = x;
                     if (drawn || runStart < 0) continue;
                     float ey = bottom + y * size;
-                    LineRenderer lr = MakeGridLine(container, $"가로 {y}-{runStart}");
-                    Shapes.SetPoints(lr, new[] { new Vector3(left + runStart * size, ey, 0f), new Vector3(left + x * size, ey, 0f) }, false);
+                    AddGridLine(container, $"가로 {y}-{runStart}", new Vector3(left + runStart * size, ey, 0f), new Vector3(left + x * size, ey, 0f));
                     runStart = -1;
                 }
             }
+        }
+
+        /// <summary>
+        /// 격자선 한 구간을 원 안쪽만 남게 잘라 만든다. 원 밖이면 만들지 않는다.
+        /// container, name, 양 끝 a와 b, 사각 미로의 원 자르기를 사용하며, 격자선을 만들어 _gridLines를 바꾼다.
+        /// </summary>
+        private void AddGridLine(Transform container, string name, Vector3 a, Vector3 b)
+        {
+            if (!_square.ClipSegment(ref a, ref b)) return;
+            LineRenderer lr = MakeGridLine(container, name);
+            Shapes.SetPoints(lr, new[] { a, b }, false);
+        }
+
+        /// <summary>
+        /// 시선이 있는 칸에 아직 먹지 않은 조각이 있으면 먹고, 안쪽 문이 열렸다고 알린다. 동공 안에서는 넘어간다.
+        /// 시선 칸과 사각 미로의 조각을 사용하며, 조각과 문 상태, 디렉터 문구를 바꾼다.
+        /// </summary>
+        private void TakeShard()
+        {
+            if (_director.InAbyss) return;
+            if (_square.TryTakeShard(CursorCell())) _director.Message = _square.GateOpenMessage;
         }
 
         /// <summary>

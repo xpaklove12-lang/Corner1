@@ -1146,8 +1146,8 @@ namespace EyeMaze
 
         /// <summary>
         /// 사각 미로에서 화면 기준으로 한 칸 간다. W(위)는 화면 위, S(아래)는 화면 아래, A(왼쪽)는 화면 왼쪽, D(오른쪽)는 화면 오른쪽 칸이다.
-        /// 막혔으면 막은 벽을 빛내고 튕기며, 동공 자리로 들어서면 가운데 파편까지 곧장 간다.
-        /// axis(화면 기준), 지금 시선 위치, 사각 미로의 벽을 사용하며, 걸음 상태와 막혔을 때의 벽 빛남, _bumpFlash를 바꾼다.
+        /// 막혔으면 막은 벽을 빛내고 튕기며, 닫힌 문이면 문 안내도 띄운다. 동공 자리로 들어서면 가운데 파편까지 곧장 간다.
+        /// axis(화면 기준), 지금 시선 위치, 사각 미로의 벽과 문을 사용하며, 걸음 상태와 막혔을 때의 벽 빛남, _bumpFlash, 문구를 바꾼다.
         /// </summary>
         private void StepSquare(Vector2 axis)
         {
@@ -1155,6 +1155,7 @@ namespace EyeMaze
             Vector2Int dir = SquareGrid.GridDirection(axis);
             if (!SquareGrid.IsOpen(cell, dir))
             {
+                if (SquareGrid.IsClosedGate(cell, dir)) _message = SquareGrid.GateLockedMessage;
                 SquareGrid.GlowWall(cell, dir, Grid.WallGlowColor, Grid.WallGlowSeconds);
                 _bumpFlash = Mathf.Max(_bumpFlash, 0.3f);
                 StartSquareBounce(dir);
