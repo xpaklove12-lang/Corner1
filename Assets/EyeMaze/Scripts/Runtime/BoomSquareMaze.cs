@@ -8,7 +8,7 @@ namespace EyeMaze
     /// <summary>
     /// 폭발 미로의 사각 미로. 홍채 원 안을 가로세로 칸이 바둑판처럼 채운다. 칸 전체가 원 안에 드는 칸만 시선이 다니는 미로 칸이고,
     /// 원에 걸친 바깥 칸은 쓰지 않고 그리지도 않는다. 미로를 두르는 테두리 선은 없다. 벽은 칸 경계를 따라 곧은 선이다.
-    /// 미로는 바깥에서 안으로 원을 따라 층(외각, 내각, 심층)으로 나뉘고, 층 경계와 동공 자리 둘레에 문이 하나씩 있다.
+    /// 미로는 바깥에서 안으로 원을 따라 층(외각, 내각)으로 나뉘고, 층 경계와 동공 자리 둘레에 문이 하나씩 있다.
     /// 층마다 조각이 하나 있어 먹으면 그 층의 안쪽 문이 열린다. 칸 좌표는 열(0 = 왼쪽)과 행(0 = 아래)이고, 이 오브젝트의 로컬 원점이 원의 한가운데다.
     /// 켜져 있는 동안 원형 미로 층의 벽과 문 그림을 숨긴다. 원형 벽의 판정은 건드리지 않는다.
     /// </summary>
@@ -19,7 +19,7 @@ namespace EyeMaze
         private const int SHARD_SORTING_ORDER = 7;
         private const float FIT_EPSILON = 1e-4f;
 
-        /// <summary>층 사이(또는 심층과 동공 자리 사이)의 문 하나</summary>
+        /// <summary>층 사이(또는 가장 안쪽 층과 동공 자리 사이)의 문 하나</summary>
         private class Gate
         {
             public Vector2Int Cell;
@@ -39,8 +39,8 @@ namespace EyeMaze
         [SerializeField] private Vector2Int _startCell = new Vector2Int(10, 0);
 
         [Header("층")]
-        [Tooltip("층 경계 원의 반지름. 바깥부터 적는다. 칸 한가운데가 이 원보다 안쪽이면 안쪽 층이다. 두 개면 외각, 내각, 심층 세 층이 된다")]
-        [SerializeField] private List<float> _layerRadii = new List<float> { 2.2f, 1.55f };
+        [Tooltip("층 경계 원의 반지름. 바깥부터 적는다. 칸 한가운데가 이 원보다 안쪽이면 안쪽 층이다. 하나면 외각, 내각 두 층이 된다")]
+        [SerializeField] private List<float> _layerRadii = new List<float> { 1.9f };
 
         [Header("생성")]
         [Tooltip("미로를 만드는 시드. 같은 시드면 언제나 같은 미로다")]
@@ -85,7 +85,7 @@ namespace EyeMaze
         // 그려진 벽과 문. 경계 하나에 선 하나다. 열린 경계와 원 테두리 쪽 경계는 없다.
         private LineRenderer[,] _wallV;
         private LineRenderer[,] _wallH;
-        // 층 경계(층이 다른 두 칸이나 심층과 동공 자리 사이) 경계인지. 굵게 그린다.
+        // 층 경계(층이 다른 두 칸이나 가장 안쪽 층과 동공 자리 사이) 경계인지. 굵게 그린다.
         private bool[,] _layerEdgeV;
         private bool[,] _layerEdgeH;
         // 벽과 테두리가 빛나기 시작한 시각(빛나지 않으면 -1), 빛나는 시간과 색
