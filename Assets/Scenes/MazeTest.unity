@@ -11806,6 +11806,7 @@ MonoBehaviour:
   _person: {fileID: 1802569233}
   _minRadius: 0.3
   _maxRadius: 0.82
+  _fitMaze: {fileID: 1624392688}
   _pulse: 0
   _trembleDistance: 0.05
   _trembleSpeed: 28
@@ -15518,6 +15519,7 @@ MonoBehaviour:
   _acceleration: 10
   _wallMargin: 0.07
   _editNudge: 0.2
+  _cornerAssist: 1
   _blinkInterval: 8
   _blinkPresets:
   - _name: "F5 \uB3D9\uACF5 \uD30C\uBB38"
@@ -44579,6 +44581,7 @@ Transform:
   - {fileID: 988311609}
   - {fileID: 1501518340}
   - {fileID: 329404231}
+  - {fileID: 734000002}
   m_Father: {fileID: 1265701163}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1624392688
@@ -58686,8 +58689,35 @@ MonoBehaviour:
   _director: {fileID: 534245099}
   _openAllGates: 1
   _pauseBurden: 1
+  _showScars: 0
   _escapeMessage: "미로를 빠져나왔다. (걸린 시간 {seconds}초)
 R = 다시 하기"
+--- !u!1001 &734000001
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1624392687}
+    m_Modifications:
+    - target: {fileID: 732000003, guid: fc85397328084495a13adb45a8e26f23, type: 3}
+      propertyPath: _director
+      value:
+      objectReference: {fileID: 534245099}
+    - target: {fileID: 732000003, guid: fc85397328084495a13adb45a8e26f23, type: 3}
+      propertyPath: _camera
+      value:
+      objectReference: {fileID: 1413807250}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: fc85397328084495a13adb45a8e26f23, type: 3}
+--- !u!4 &734000002 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 732000002, guid: fc85397328084495a13adb45a8e26f23, type: 3}
+  m_PrefabInstance: {fileID: 734000001}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

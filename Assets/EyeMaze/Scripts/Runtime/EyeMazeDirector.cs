@@ -20,6 +20,9 @@ namespace EyeMaze
     {
         public enum Mode { Talk, Gaze, Ending }
 
+        // 칸 단위 이동의 한 걸음 방향
+        private enum GridStep { None, In, Out, Ccw, Cw }
+
         // 기본 후보를 F6 자물쇠 맞춤으로 지정
         private const int BLINK_DEFAULT_PRESET_INDEX = 1;
         /// <summary>공용 문구의 손님 이름 칸</summary>
@@ -99,6 +102,14 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("wallMargin")] private float _wallMargin = 0.07f;
         [Tooltip("에디트 모드에서 버튼 한 번에 움직이는 거리")]
         [SerializeField, FormerlySerializedAs("editNudge")] private float _editNudge = 0.2f;
+        [Tooltip("켜면 통로 입구를 살짝 빗나가도 입구 쪽으로 비켜 들어가고, 벽에 비스듬히 밀면 벽을 따라 제 속도로 미끄러진다")]
+        [SerializeField] private bool _cornerAssist;
+        [Tooltip("입구 쪽으로 비켜 주는 거리. 시선이 칸 경계에서 이만큼 안에 있으면 옆 칸의 열린 입구로 비켜 간다")]
+        [SerializeField, Min(0f)] private float _cornerAssistDistance = 0.12f;
+        [Tooltip("벽을 따라 미끄러질 때, 입력 중 벽을 따라가는 성분이 이 비율 이상이면 제 속도로 미끄러진다")]
+        [SerializeField, Range(0f, 1f)] private float _slideMinRatio = 0.2f;
+        [Tooltip("칸 단위 이동 설정. 폭발 미로처럼 다른 곳이 설정을 넘겨주면 그쪽 값을 쓴다")]
+        [SerializeField] private GridMoveSettings _grid = new GridMoveSettings();
 
         [Header("눈 깜빡임")]
         [Tooltip("들여다보는 동안 몇 초마다 눈을 깜빡이는지 (0이면 깜빡이지 않음)")]
@@ -278,6 +289,23 @@ namespace EyeMaze
         // 회상 중인 파편, 시선이 칸을 벗어날 때까지 줍지 않는 새로 나타난 파편
         [NonSerialized] private MemoryFragment _flashbackFragment;
         [NonSerialized] private readonly List<MemoryFragment> _pickupWait = new List<MemoryFragment>();
+        // 칸 단위 이동: 걸음 진행(음수면 멈춤), 출발과 도착 위치, 도착하면 심연에 들어가는지
+        [NonSerialized] private float _gridStepT = -1f;
+        [NonSerialized] private float _gridFromR;
+        [NonSerialized] private float _gridFromA;
+        [NonSerialized] private float _gridToR;
+        [NonSerialized] private float _gridDeltaA;
+        [NonSerialized] private bool _gridToAbyss;
+        // 이번 걸음이 누르고 있어 이어 가는 걸음인지, 막혀서 튕겼다 돌아오는 걸음인지
+        [NonSerialized] private bool _gridChained;
+        [NonSerialized] private bool _gridBounce;
+        // 이번 걸음의 방향(미로 기준 단위 벡터)과 착지 찌그러짐 경과(음수면 없음)
+        [NonSerialized] private Vector2 _gridMoveDir = Vector2.right;
+        [NonSerialized] private float _gridLandT = -1f;
+        // 누르고 있는 방향, 누른 시간, 새로 눌러 아직 한 칸 가지 않았는지
+        [NonSerialized] private Vector2 _gridHeld;
+        [NonSerialized] private float _gridHoldT;
+        [NonSerialized] private bool _gridPressPending;
 
         /// <summary>화면에 보여줄 선택지 하나 (뒤로가기 포함)</summary>
         public struct ChoiceView
@@ -299,6 +327,15 @@ namespace EyeMaze
         public bool GazeLocked { get; set; }
         /// <summary>켜져 있으면 들여다보는 동안 부담감이 차지 않는다. 테스트 씬에서 쓴다.</summary>
         public bool BurdenPaused { get; set; }
+        /// <summary>켜져 있으면 들여다보는 동안 깜빡임 시간을 세지 않아 눈이 깜빡이지 않는다. 테스트 씬에서 쓴다.</summary>
+        public bool BlinkPaused { get; set; }
+        /// <summary>눈을 깜빡이는 중이거나 뜬 직후라 움직일 수 없는지</summary>
+        public bool IsBlinking => _blinkPhase >= 0f || _blinkRecoverT > 0f;
+        /// <summary>
+        /// 값이 있으면 디렉터 Inspector의 칸 단위 이동 설정 대신 쓴다. 폭발 미로처럼 이동 방식을 함께 들고 다니는 쪽이 넘겨주고, 비우면 Inspector 값으로 돌아간다.
+        /// </summary>
+        public GridMoveSettings GridOverride { get; set; }
+        private GridMoveSettings Grid => GridOverride ?? _grid;
         /// <summary>가장 반짝이는 파편에 닿았을 때 엔딩 대신 부를 처리. 비어 있으면 엔딩을 시작한다.</summary>
         public Action CoreTouchOverride { get; set; }
         /// <summary>켜져 있으면 의심 플래그와 상관없이 의심이 풀린 것으로 본다. 테스트 씬에서 쓰고, 리셋하면 꺼진다.</summary>
@@ -517,7 +554,7 @@ namespace EyeMaze
             if (_mode == Mode.Gaze && !_inAbyss && !_reading)
             {
                 // 벽 변화 연출 중에는 깜빡임 시간을 세지 않는다.
-                if (_respawnEffectT < 0f) TickBlink(dt);
+                if (_respawnEffectT < 0f && !BlinkPaused) TickBlink(dt);
                 // 깜빡임 회전과 벽 변화 연출 중에는 부담감을 채우지 않음
                 if (Application.isPlaying && !_blinkTurning && !_wallChange.IsPlaying && !BurdenPaused) TickBurden(dt);
             }
@@ -630,7 +667,9 @@ namespace EyeMaze
             if (!CanGaze) return;
             _mode = Mode.Gaze;
             _velocity = Vector2.zero;
-            if (_cursor != null) _cursor.Visible = true;
+            _gridStepT = -1f;
+            _gridLandT = -1f;
+            if (_cursor != null) { _cursor.Visible = true; _cursor.Stretch = Vector2.zero; }
             _lastLayer = _maze != null && _cursor != null ? _maze.LayerOfRing(_cursor.Ring) : -1;
             _message = Strings.Get("msg.gaze_on", ("name", Strings.Name(Name)));
         }
@@ -646,7 +685,9 @@ namespace EyeMaze
             // 대화로 돌아오면 해금 안내를 끈다.
             _newTalkReady = false;
             _velocity = Vector2.zero;
-            if (_cursor != null) _cursor.Visible = false;
+            _gridStepT = -1f;
+            _gridLandT = -1f;
+            if (_cursor != null) { _cursor.Visible = false; _cursor.Stretch = Vector2.zero; }
             _message = why;
             // 밀려남과 초점 요동을 멈춘다.
             StopBump();
@@ -665,6 +706,8 @@ namespace EyeMaze
             if (_mode != Mode.Gaze || _reading || _blinkPhase >= 0f || _blinkRecoverT > 0f || _respawnEffectT >= 0f) { _velocity = Vector2.zero; return; }
             // 밀려나는 동안에는 이동 입력을 받지 않는다.
             if (_knockbackT >= 0f) { _velocity = Vector2.zero; return; }
+            // 칸 단위 이동은 미로 안에서만 쓰고, 심연에서는 아래의 자유 이동을 쓴다.
+            if (Grid.Enabled && !_inAbyss) { _velocity = Vector2.zero; SteerGrid(input, dt); return; }
             Vector2 target = Vector2.ClampMagnitude(input, 1f) * _moveSpeed;
             _velocity = Vector2.MoveTowards(_velocity, target, _acceleration * _moveSpeed * dt);
             if (_velocity.sqrMagnitude <= 1e-8f) return;
@@ -806,6 +849,299 @@ namespace EyeMaze
         }
 
         /// <summary>
+        /// 칸 단위 이동을 한 프레임 처리한다. 진행 중인 걸음을 마저 하고, 새로 누른 방향은 바로, 누르고 있는 방향은 잠깐 뒤부터 이어서 한 칸씩 간다.
+        /// input(화면 기준 방향), dt, 이동 설정의 이어 가기 시간을 사용하며, 누른 방향 기록과 걸음 상태, 시선 위치를 바꾼다.
+        /// </summary>
+        private void SteerGrid(Vector2 input, float dt)
+        {
+            // 누르고 있는지는 칸 방향이 아니라 누른 키(화면 축)로 판단한다. 화면 기준에서는 같은 키라도 칸마다 걸음 방향이 바뀐다.
+            Vector2 axis = InputAxis(input);
+            if (axis != _gridHeld)
+            {
+                _gridHeld = axis;
+                _gridHoldT = 0f;
+                _gridPressPending = axis != Vector2.zero;
+            }
+            else if (axis != Vector2.zero) _gridHoldT += dt;
+
+            TickGridLanding(dt);
+            if (_gridStepT >= 0f && !AdvanceGridStep(dt)) return;
+            if (axis == Vector2.zero || _mode != Mode.Gaze || _inAbyss) return;
+            if (!_gridPressPending && _gridHoldT < Grid.RepeatDelay) return;
+            // 누르고 있어 이어 가는 걸음은 따로 정한 시간을 쓴다.
+            _gridChained = !_gridPressPending;
+            _gridPressPending = false;
+            if (Grid.Control == GridControl.Ring) TryGridStep(RingDirection(axis), true);
+            else StepTowardScreen(axis);
+        }
+
+        /// <summary>
+        /// 진행 중인 한 칸 걸음을 dt만큼 옮긴다. 다 가면 걸음을 끝내고 착지 찌그러짐을 시작하며, 심연으로 가는 걸음이면 심연에 들어가 가운데 파편에 닿는다.
+        /// 걷는 동안 시선이 움직이는 쪽으로 늘어나고, 튕기는 걸음은 막힌 쪽으로 살짝 갔다가 찌그러지며 돌아온다.
+        /// dt, 이동 설정의 시간과 늘어남, 걸음의 출발·도착 위치와 종류를 사용하며, 시선 위치와 모양, 걸음 진행을 바꾸고, 걸음이 끝났으면 true를 반환한다.
+        /// </summary>
+        private bool AdvanceGridStep(float dt)
+        {
+            float seconds = Mathf.Max(0.01f, _gridBounce ? Grid.BumpSeconds : _gridChained ? Grid.ChainStepSeconds : Grid.StepSeconds);
+            _gridStepT = Mathf.Min(1f, _gridStepT + dt / seconds);
+            float t = GridEase(_gridStepT);
+            _cursor.Radius = Mathf.Max(0f, Mathf.Lerp(_gridFromR, _gridToR, t));
+            _cursor.Angle = Mathf.Repeat(_gridFromA + _gridDeltaA * t, 360f);
+            // 걷는 동안은 가는 쪽으로 늘어나고, 벽에 튕길 때는 벽 쪽으로 납작해진다.
+            float wave = Mathf.Sin(_gridStepT * Mathf.PI);
+            _cursor.Stretch = _gridBounce ? Perp(_gridMoveDir) * (Grid.Stretch * wave) : _gridMoveDir * (Grid.Stretch * wave);
+            OnMoved();
+            if (_gridStepT < 1f) return false;
+            _gridStepT = -1f;
+            _cursor.Stretch = Vector2.zero;
+            if (_gridBounce) { _gridBounce = false; return true; }
+            // 칸에 내려앉는 순간 가는 방향과 수직으로 살짝 찌그러졌다 돌아온다.
+            _gridLandT = 0f;
+            if (_gridToAbyss && _mode == Mode.Gaze)
+            {
+                EnterAbyss();
+                // 가운데에 도착했으므로 파편 닿음 판정을 바로 한다.
+                MoveInAbyss(Vector2.zero);
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 착지 찌그러짐을 한 프레임 진행한다. 내려앉은 직후 가는 방향과 수직으로 납작해졌다가 원래 모양으로 돌아온다.
+        /// dt, 이동 설정의 착지 찌그러짐 세기와 시간, 마지막 걸음 방향을 사용하며, _gridLandT와 시선 모양을 바꾼다.
+        /// </summary>
+        private void TickGridLanding(float dt)
+        {
+            if (_gridLandT < 0f || _gridStepT >= 0f) return;
+            _gridLandT += dt;
+            float k = 1f - _gridLandT / Mathf.Max(0.01f, Grid.LandSquashSeconds);
+            if (k <= 0f)
+            {
+                _gridLandT = -1f;
+                _cursor.Stretch = Vector2.zero;
+                return;
+            }
+            _cursor.Stretch = Perp(_gridMoveDir) * (Grid.LandSquash * k * k);
+        }
+
+        /// <summary>
+        /// 벡터를 90도 돌린다.
+        /// v를 사용하며, 돌린 벡터를 반환한다.
+        /// </summary>
+        private static Vector2 Perp(Vector2 v) => new Vector2(-v.y, v.x);
+
+        /// <summary>
+        /// 걸음 진행(0~1)을 움직인 비율로 바꾼다. 튕김은 갔다가 돌아오고(끝에서 0), 심연으로 가는 걸음은 부드럽게 멈추며,
+        /// 그 밖의 걸음은 빠르게 튀어 나가 칸 한가운데를 살짝 지나쳤다가 되돌아와 앉는다(ease-out-back).
+        /// t, _gridBounce, _gridToAbyss, 이동 설정의 지나침 세기를 사용하며, 출발에서 도착까지 움직인 비율을 반환한다.
+        /// </summary>
+        private float GridEase(float t)
+        {
+            if (_gridBounce) return Mathf.Sin(t * Mathf.PI) * (1f - 0.35f * t);
+            // 심연은 동공 한가운데로 들어가므로 지나치면 반대편으로 넘어간다. 지나침 없이 멈춘다.
+            if (_gridToAbyss) return t * t * t * (t * (t * 6f - 15f) + 10f);
+            float c1 = Grid.Overshoot;
+            float c3 = c1 + 1f;
+            float u = t - 1f;
+            return 1f + c3 * u * u * u + c1 * u * u;
+        }
+
+        /// <summary>
+        /// 입력을 위·아래·왼쪽·오른쪽 중 한 축으로 바꾼다. 두 축을 함께 누르면 더 크게 누른 축 하나만 쓴다.
+        /// input(화면 기준)을 사용하며, 단위 축 벡터 또는 누르지 않았으면 0 벡터를 반환한다.
+        /// </summary>
+        private static Vector2 InputAxis(Vector2 input)
+        {
+            if (input.sqrMagnitude < 0.25f) return Vector2.zero;
+            return Mathf.Abs(input.x) >= Mathf.Abs(input.y) ? new Vector2(Mathf.Sign(input.x), 0f) : new Vector2(0f, Mathf.Sign(input.y));
+        }
+
+        /// <summary>
+        /// 원 기준으로 누른 축을 걸음 방향으로 바꾼다. 위 = 바깥쪽, 아래 = 안쪽(동공 쪽), 왼쪽 = 반시계, 오른쪽 = 시계다.
+        /// axis를 사용하며, 걸음 방향을 반환한다.
+        /// </summary>
+        private static GridStep RingDirection(Vector2 axis)
+        {
+            if (axis.y > 0f) return GridStep.Out;
+            if (axis.y < 0f) return GridStep.In;
+            return axis.x < 0f ? GridStep.Ccw : GridStep.Cw;
+        }
+
+        /// <summary>
+        /// 월드(화면) 좌표 기준으로 한 칸 간다. 지금 칸에서 옆 칸 한가운데로 가는 방향이 누른 방향과 가장 가까운 칸부터 해 보고,
+        /// 막혔으면 이동 설정의 비껴 가기 기준 이상으로 비슷한 다음 칸으로 비껴 간다. 모두 막히면 가장 가까운 쪽 벽에 막힌 것으로 알린다.
+        /// axis(화면 기준), 지금 칸, 미로 회전을 사용하며, 걸음 상태와 막혔을 때의 표시를 바꾼다.
+        /// </summary>
+        private void StepTowardScreen(Vector2 axis)
+        {
+            Vector2 m = ScreenToMaze(axis);
+            int ring = _cursor.Ring;
+            int s = _cursor.Sector;
+            Vector2 here = _maze.CellLocal(ring, s);
+            GridStep best = GridStep.None;
+            GridStep second = GridStep.None;
+            float bestDot = -2f;
+            float secondDot = -2f;
+            foreach (GridStep dir in new[] { GridStep.In, GridStep.Out, GridStep.Ccw, GridStep.Cw })
+            {
+                if (dir == GridStep.Out && ring == 0) continue;
+                float dot = Vector2.Dot(m, (NeighborCenter(ring, s, dir) - here).normalized);
+                if (dot > bestDot) { second = best; secondDot = bestDot; best = dir; bestDot = dot; }
+                else if (dot > secondDot) { second = dir; secondDot = dot; }
+            }
+            if (bestDot <= 0f) return;
+            if (TryGridStep(best, false)) return;
+            if (secondDot >= Grid.SlideMinDot && TryGridStep(second, false)) return;
+            TryGridStep(best, true);
+        }
+
+        /// <summary>
+        /// 옆 칸 한가운데의 미로 기준 좌표를 계산한다. 가장 안쪽 고리에서 안쪽은 동공 한가운데다.
+        /// ring, s, dir을 사용하며, 미로 기준 좌표를 반환한다.
+        /// </summary>
+        private Vector2 NeighborCenter(int ring, int s, GridStep dir)
+        {
+            switch (dir)
+            {
+                case GridStep.In: return ring == _maze.Rings - 1 ? Vector2.zero : (Vector2)_maze.CellLocal(ring + 1, s);
+                case GridStep.Out: return _maze.CellLocal(ring - 1, s);
+                case GridStep.Ccw: return _maze.CellLocal(ring, _maze.Mod(s + 1));
+                default: return _maze.CellLocal(ring, _maze.Mod(s - 1));
+            }
+        }
+
+        /// <summary>
+        /// 지금 칸에서 dir 쪽 옆 칸으로 한 칸 걸음을 시작한다. 벽이나 잠긴 문에 막히면 가지 않고, report가 켜져 있으면 시선을 번쩍여 알린다.
+        /// dir, report, 지금 칸, 미로의 벽과 문을 사용하며, 걸음의 출발·도착 위치와 _gridStepT, 막혔을 때의 문구와 _bumpFlash를 바꾼다. 걸음을 시작했으면 true를 반환한다.
+        /// </summary>
+        private bool TryGridStep(GridStep dir, bool report)
+        {
+            int ring = _cursor.Ring;
+            int s = _cursor.Sector;
+            int toRing = ring;
+            int toSector = s;
+            bool open;
+            MazeGate gate = null;
+            MazeWall wall;
+            _gridToAbyss = false;
+            switch (dir)
+            {
+                case GridStep.In:
+                    open = _maze.IsArcOpen(ring, s, out gate);
+                    wall = _maze.ArcWallAt(ring, s);
+                    if (ring == _maze.Rings - 1) _gridToAbyss = true;
+                    else toRing = ring + 1;
+                    break;
+                case GridStep.Out:
+                    // 가장 바깥 고리 밖으로는 나갈 수 없다.
+                    if (ring == 0)
+                    {
+                        if (report) StartGridBounce(dir);
+                        return false;
+                    }
+                    open = _maze.IsArcOpen(ring - 1, s, out gate);
+                    wall = _maze.ArcWallAt(ring - 1, s);
+                    toRing = ring - 1;
+                    break;
+                case GridStep.Ccw:
+                    open = _maze.IsRadialOpen(ring, s);
+                    wall = _maze.RadialWallAt(ring, s);
+                    toSector = _maze.Mod(s + 1);
+                    break;
+                default:
+                    open = _maze.IsRadialOpen(ring, _maze.Mod(s - 1));
+                    wall = _maze.RadialWallAt(ring, _maze.Mod(s - 1));
+                    toSector = _maze.Mod(s - 1);
+                    break;
+            }
+            if (open && gate != null && !gate.CanPass(_person))
+            {
+                if (!report) return false;
+                GateBlocked(gate);
+                StartGridBounce(dir);
+                return false;
+            }
+            if (!open)
+            {
+                if (!report) return false;
+                TouchScar(wall);
+                // 막은 벽이 빛나고 시선은 벽에 부딪혔다 튕겨 나온다.
+                if (wall != null) wall.Glow(Grid.WallGlowColor, Grid.WallGlowSeconds);
+                _bumpFlash = Mathf.Max(_bumpFlash, 0.3f);
+                StartGridBounce(dir);
+                return false;
+            }
+
+            _gridFromR = _cursor.Radius;
+            _gridFromA = _cursor.Angle;
+            _gridToR = _gridToAbyss ? 0f : _maze.RingMid(toRing);
+            // 심연으로 들어갈 때는 각도를 그대로 두고 가운데로 곧장 간다.
+            _gridDeltaA = _gridToAbyss ? 0f : Mathf.DeltaAngle(_gridFromA, (toSector + 0.5f) * _maze.SectorDeg);
+            _gridBounce = false;
+            SetGridMoveDir();
+            _gridLandT = -1f;
+            _gridStepT = 0f;
+            return true;
+        }
+
+        /// <summary>
+        /// 이번 걸음의 출발점에서 도착점으로 가는 방향을 미로 기준 단위 벡터로 정한다. 늘어남과 찌그러짐의 방향에 쓴다.
+        /// 걸음의 출발·도착 반지름과 각도를 사용하며, _gridMoveDir을 바꾼다.
+        /// </summary>
+        private void SetGridMoveDir()
+        {
+            Vector2 from = Shapes.Polar(_gridFromR, _gridFromA);
+            Vector2 to = Shapes.Polar(_gridToR, _gridFromA + _gridDeltaA);
+            Vector2 d = to - from;
+            if (d.sqrMagnitude > 1e-10f) _gridMoveDir = d.normalized;
+        }
+
+        /// <summary>
+        /// 막힌 쪽으로 살짝 밀렸다가 제자리로 돌아오는 튕김 걸음을 시작한다. 밀리는 거리는 칸 반 폭을 넘지 않아 칸을 벗어나지 않는다.
+        /// dir(막힌 방향), 이동 설정의 튕김 거리, 지금 시선 위치를 사용하며, 걸음의 출발·도착 위치와 _gridBounce, _gridStepT를 바꾼다.
+        /// </summary>
+        private void StartGridBounce(GridStep dir)
+        {
+            float r = _cursor.Radius;
+            float half = _maze.RingWidth * 0.45f;
+            float distance = Mathf.Min(Grid.BumpDistance, half);
+            _gridFromR = r;
+            _gridFromA = _cursor.Angle;
+            _gridToR = r;
+            _gridDeltaA = 0f;
+            _gridToAbyss = false;
+            switch (dir)
+            {
+                case GridStep.In: _gridToR = r - distance; break;
+                case GridStep.Out: _gridToR = r + distance; break;
+                case GridStep.Ccw: _gridDeltaA = distance / Mathf.Max(0.2f, r) * Mathf.Rad2Deg; break;
+                default: _gridDeltaA = -distance / Mathf.Max(0.2f, r) * Mathf.Rad2Deg; break;
+            }
+            _gridBounce = true;
+            SetGridMoveDir();
+            _gridLandT = -1f;
+            _gridStepT = 0f;
+        }
+
+        /// <summary>
+        /// 들여다보는 중의 시선을 벽 판정 없이 칸 한가운데로 옮기고, 속도와 밀려남을 멈춘 뒤 시선을 번쩍인다.
+        /// ring, sector(미로 기준)를 사용하며, 시선 위치, _velocity, _lastLayer, _bumpFlash를 바꾼다. 들여다보는 중이 아니면 아무것도 하지 않는다.
+        /// </summary>
+        public void WarpGaze(int ring, int sector)
+        {
+            if (_mode != Mode.Gaze || _inAbyss || _maze == null || _cursor == null) return;
+            StopBump();
+            _velocity = Vector2.zero;
+            _gridStepT = -1f;
+            _gridLandT = -1f;
+            _cursor.Stretch = Vector2.zero;
+            _cursor.SnapTo(ring, sector);
+            _lastLayer = _maze.LayerOfRing(_cursor.Ring);
+            _bumpFlash = 1f;
+            StartGlitch();
+        }
+
+        /// <summary>
         /// 에디트 모드 버튼용으로 화면 방향으로 editNudge만큼 움직인다.
         /// dir을 사용하며, 시선 위치를 바꾼다.
         /// </summary>
@@ -835,11 +1171,32 @@ namespace EyeMaze
                 var tangentU = new Vector2(-Mathf.Sin(rad), Mathf.Cos(rad));
                 float dr = Vector2.Dot(step, radialU);
                 float dTan = Vector2.Dot(step, tangentU);
+                float len = step.magnitude;
+                // 이번 걸음에서 막힌 축만 따로 보고, 끝나면 이번 이동 전체의 기록에 합친다.
+                int hitRadialBefore = _hitRadial;
+                int hitTangentBefore = _hitTangent;
+                _hitRadial = 0;
+                _hitTangent = 0;
 
                 if (Mathf.Abs(dr) > 1e-6f) ResolveRadial(ref r, ref a, dr);
                 if (_mode != Mode.Gaze) return;
+                bool radialBlocked = _hitRadial != 0;
+                if (_cornerAssist && radialBlocked && !_inAbyss)
+                {
+                    // 주로 안쪽/바깥쪽으로 가려던 걸음이면 옆 칸 입구로 비켜 가고, 아니면 벽을 따라 제 속도로 미끄러진다.
+                    bool rounded = Mathf.Abs(dr) > Mathf.Abs(dTan) && TryRoundCorner(r, ref a, dr, len);
+                    if (!rounded && Mathf.Abs(dTan) >= _slideMinRatio * len) dTan = Mathf.Sign(dTan) * len;
+                }
                 if (!_inAbyss && Mathf.Abs(dTan) > 1e-6f) ResolveAngular(ref r, ref a, dTan);
+                // 둘레로 막혔으면 남은 걸음을 안쪽/바깥쪽 이동에 돌려 벽을 따라 제 속도로 미끄러진다.
+                if (_cornerAssist && _hitTangent != 0 && !radialBlocked && !_inAbyss && Mathf.Abs(dr) >= _slideMinRatio * len)
+                {
+                    ResolveRadial(ref r, ref a, Mathf.Sign(dr) * (len - Mathf.Abs(dr)));
+                    if (_mode != Mode.Gaze) return;
+                }
 
+                if (_hitRadial == 0) _hitRadial = hitRadialBefore;
+                if (_hitTangent == 0) _hitTangent = hitTangentBefore;
                 _cursor.Radius = r;
                 _cursor.Angle = Mathf.Repeat(a, 360f);
             }
@@ -1403,6 +1760,9 @@ namespace EyeMaze
             _blinkRecoverT = 0f;
             _burden = 0f;
             _velocity = Vector2.zero;
+            _gridStepT = -1f;
+            _gridLandT = -1f;
+            if (_cursor != null) _cursor.Stretch = Vector2.zero;
             // 옳은 대답으로 얻은 신뢰도 함께 초기화
             if (_person != null) { _person.Trust = 0; _person.EarnedTrust = 0; _person.Dilation = 0.2f; }
             ShowEncounterGuide(true);
@@ -1669,6 +2029,43 @@ namespace EyeMaze
             float local = Mathf.Repeat(a, 360f) - sector * d;
             if (local < mDeg) a += mDeg - local;
             else if (local > d - mDeg) a -= local - (d - mDeg);
+            return true;
+        }
+
+        /// <summary>
+        /// 안쪽/바깥쪽으로 가다 막혔을 때, 칸 경계 가까이에 옆 칸의 열린 입구가 있으면 그쪽으로 비켜 간다. 가까운 경계부터 본다.
+        /// r, a(참조), dr(막힌 방향), len(이번 걸음 길이), _cornerAssistDistance를 사용하며, 비켜 갔으면 true를 반환하고 a를 바꾼다.
+        /// </summary>
+        private bool TryRoundCorner(float r, ref float a, float dr, float len)
+        {
+            int ring = _maze.RingAt(r);
+            int arcRing = dr > 0f ? ring - 1 : ring;
+            if (arcRing < 0) return false;
+            int s = _maze.SectorAt(a);
+            float d = _maze.SectorDeg;
+            float rr = Mathf.Max(0.2f, r);
+            float local = Mathf.Repeat(a, 360f) - s * d;
+            float toNext = (d - local) * Mathf.Deg2Rad * rr;
+            float toPrev = local * Mathf.Deg2Rad * rr;
+            if (toNext <= toPrev)
+                return TryRoundTo(ring, arcRing, s, 1, toNext, rr, len, ref a) || TryRoundTo(ring, arcRing, s, -1, toPrev, rr, len, ref a);
+            return TryRoundTo(ring, arcRing, s, -1, toPrev, rr, len, ref a) || TryRoundTo(ring, arcRing, s, 1, toNext, rr, len, ref a);
+        }
+
+        /// <summary>
+        /// 옆 칸(side +1 반시계, -1 시계)의 입구가 열려 있고 그 사이 칸막이도 열려 있으면, 이번 걸음 길이만큼 그쪽으로 비켜 간다.
+        /// ring, arcRing, s, side, dist(경계까지 거리), rr, len을 사용하며, 비켜 갔으면 true를 반환하고 a를 바꾼다.
+        /// </summary>
+        private bool TryRoundTo(int ring, int arcRing, int s, int side, float dist, float rr, float len, ref float a)
+        {
+            if (dist > _cornerAssistDistance) return false;
+            int next = _maze.Mod(s + side);
+            if (!_maze.IsRadialOpen(ring, side > 0 ? s : next)) return false;
+            if (!_maze.IsArcOpen(arcRing, next, out MazeGate gate)) return false;
+            if (gate != null && !gate.CanPass(_person)) return false;
+            // 경계를 넘어 벽 간격만큼 들어갈 때까지만 옮긴다.
+            float move = Mathf.Min(len, dist + _wallMargin);
+            a += side * move / rr * Mathf.Rad2Deg;
             return true;
         }
 

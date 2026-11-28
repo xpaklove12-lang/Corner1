@@ -28,6 +28,7 @@ namespace EyeMaze
         [NonSerialized] private int _drawnKey = int.MinValue;
         // 깜빡임 회전 때 화면에만 더하는 각도 추가
         [NonSerialized] private float _blinkVisualDeg;
+        [NonSerialized] private Vector2 _stretch;
         private IrisMaze _maze;
 
         public float Radius { get => _radius; set => _radius = value; }
@@ -36,6 +37,10 @@ namespace EyeMaze
         public Color Color { get => _color; set => _color = value; }
         /// <summary>깜빡임 회전 때 화면에만 더하는 각도(도). 벽 판정에는 쓰지 않는다.</summary>
         public float BlinkVisualDeg { get => _blinkVisualDeg; set => _blinkVisualDeg = value; }
+        /// <summary>
+        /// 시선 점을 늘이는 방향(미로 기준)과 세기(길이 0~1). 그 방향으로 길어지고 수직으로 가늘어진다. 0이면 둥근 점이다. 그림에만 쓴다.
+        /// </summary>
+        public Vector2 Stretch { get => _stretch; set => _stretch = value; }
 
         /// <summary>현재 고리 (0 = 가장 바깥)</summary>
         public int Ring => Maze != null ? Maze.RingAt(_radius) : 0;
@@ -73,13 +78,29 @@ namespace EyeMaze
             }
             Apply();
 
-            int key = HashCode.Combine(_visible, _color, Maze.RingWidth);
+            int key = HashCode.Combine(_visible, _color, Maze.RingWidth, _stretch);
             if (_line == null || key == _drawnKey) return;
             _drawnKey = key;
-            Shapes.SetBlob(_line, Maze.RingWidth * 0.5f);
+            DrawDot(Maze.RingWidth * 0.5f);
             Shapes.SetColor(_line, _color);
             _line.sortingOrder = 12;
             _line.enabled = _visible;
+        }
+
+        /// <summary>
+        /// 시선 점을 그린다. 늘이기가 있으면 그 방향으로 긴 둥근 막대로, 없으면 둥근 점으로 그린다. 넓이가 크게 변하지 않게 길어지는 만큼 가늘어진다.
+        /// diameter와 _stretch를 사용하며, _line의 점 목록과 굵기를 바꾼다.
+        /// </summary>
+        private void DrawDot(float diameter)
+        {
+            float amount = Mathf.Clamp01(_stretch.magnitude);
+            if (amount < 1e-3f) { Shapes.SetBlob(_line, diameter); return; }
+            Vector2 dir = _stretch / _stretch.magnitude;
+            float width = diameter * (1f - 0.4f * amount);
+            // 둥근 끝을 포함한 전체 길이가 지름의 (1 + 세기)배가 되도록 가운데 선 길이를 정한다.
+            float half = Mathf.Max(0.0005f, (diameter * (1f + amount) - width) * 0.5f);
+            Shapes.SetPoints(_line, new[] { (Vector3)(-dir * half), (Vector3)(dir * half) }, false);
+            _line.widthMultiplier = width;
         }
 
         /// <summary>

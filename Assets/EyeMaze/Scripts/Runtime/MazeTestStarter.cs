@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,6 +10,7 @@ namespace EyeMaze
     /// Play하면 필드와 대화 없이 바로 만남 화면에 들어가 눈을 들여다보고, 리셋 뒤에도 다시 들여다본다.
     /// 동공 한가운데에 닿으면 엔딩 대신 탈출 안내와 걸린 시간을 보여 주고, R로 처음부터 다시 한다.
     /// 대화가 없으므로 T로 손님의 의심이 풀린 상태(상처가 보이는지)를 켜고 끄고, [ ]로 상처 단계를 앞뒤로 옮긴다.
+    /// 파편 숨기기가 켜져 있으면 기억 파편을 꺼서 회상 없이 미로만 한다.
     /// </summary>
     public class MazeTestStarter : MonoBehaviour
     {
@@ -22,6 +25,8 @@ namespace EyeMaze
         [SerializeField] private bool _pauseBurden = true;
         [Tooltip("시작할 때와 리셋한 뒤 손님의 의심이 풀린 상태로 두어 상처를 모두 보이게 한다. T로 바꿀 수 있다")]
         [SerializeField] private bool _showScars = true;
+        [Tooltip("켜면 기억 파편을 모두 숨겨 회상이나 파편 글 없이 미로만 한다. 끄면 숨긴 파편이 다시 나타난다")]
+        [SerializeField] private bool _hideFragments = true;
 
         [Header("탈출 안내")]
         [Tooltip("공용 문구 파일에 msg.maze_test_escape가 없을 때 쓰는 글. {seconds} = 걸린 시간")]
@@ -43,6 +48,8 @@ namespace EyeMaze
 
         private float _gazeStartTime;
         private bool _escaped;
+        // 파편 숨기기로 끈 파편. 숨기기를 풀면 이 파편만 다시 켠다.
+        private readonly List<MemoryFragment> _hiddenFragments = new List<MemoryFragment>();
 
         void Start()
         {
@@ -68,12 +75,32 @@ namespace EyeMaze
 
         /// <summary>
         /// Inspector의 테스트 조건을 미로와 디렉터에 적용한다.
-        /// _openAllGates와 _pauseBurden을 사용하며, 미로의 OpenAllGates와 디렉터의 BurdenPaused를 바꾼다.
+        /// _openAllGates, _pauseBurden, _hideFragments를 사용하며, 미로의 OpenAllGates, 디렉터의 BurdenPaused, 파편의 활성 상태를 바꾼다.
         /// </summary>
         private void ApplyConditions()
         {
             _director.Maze.OpenAllGates = _openAllGates;
             _director.BurdenPaused = _pauseBurden;
+            ApplyFragmentVisibility();
+        }
+
+        /// <summary>
+        /// 파편 숨기기가 켜져 있으면 미로에 보이는 파편을 모두 끄고, 꺼져 있으면 숨겼던 파편을 다시 켠다.
+        /// _hideFragments와 디렉터의 지금 파편 목록을 사용하며, 파편의 활성 상태와 _hiddenFragments를 바꾼다.
+        /// </summary>
+        private void ApplyFragmentVisibility()
+        {
+            if (_hideFragments)
+            {
+                foreach (MemoryFragment f in _director.Fragments)
+                {
+                    f.gameObject.SetActive(false);
+                    _hiddenFragments.Add(f);
+                }
+                return;
+            }
+            foreach (MemoryFragment f in _hiddenFragments) f.gameObject.SetActive(true);
+            _hiddenFragments.Clear();
         }
 
         /// <summary>

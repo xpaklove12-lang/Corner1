@@ -5,7 +5,10 @@ using UnityEngine.Serialization;
 
 namespace EyeMaze
 {
-    /// <summary>동공. 인물의 dilation(0~1)에 따라 커지고 작아진다.</summary>
+    /// <summary>
+    /// 동공. 인물의 dilation(0~1)에 따라 커지고 작아진다.
+    /// 맞출 미로를 연결하면 dilation을 쓰지 않고 늘 미로 안쪽 원 크기로 그린다. 움찔 수축과 떨림은 그대로 보인다.
+    /// </summary>
     [ExecuteAlways]
     public class Pupil : MonoBehaviour
     {
@@ -15,6 +18,10 @@ namespace EyeMaze
         [Header("크기")]
         [SerializeField, FormerlySerializedAs("minRadius")] private float _minRadius = 0.3f;
         [SerializeField, FormerlySerializedAs("maxRadius")] private float _maxRadius = 0.82f;
+        [Tooltip("연결하면 동공 크기를 이 미로의 안쪽 원에 맞춘다. 손님의 동공 크기 값으로 커지고 작아지지 않는다. 비우면 위의 최소·최대 크기를 쓴다")]
+        [SerializeField] private IrisMaze _fitMaze;
+        [Tooltip("미로에 맞출 때 안쪽 원보다 이만큼 작게 그린다 (미로 기준 거리)")]
+        [SerializeField, Min(0f)] private float _fitInset;
         [Tooltip("1을 넣으면 한 번 움찔 수축했다가 돌아온다")]
         [SerializeField, FormerlySerializedAs("pulse"), Range(0f, 1f)] private float _pulse;
 
@@ -49,7 +56,7 @@ namespace EyeMaze
         public float EmotionTrembleSpeed { get => _emotionTrembleSpeed; set => _emotionTrembleSpeed = value; }
         /// <summary>감정 표현의 시선 피함. 동공 위치에만 더하고 크기는 바꾸지 않는다.</summary>
         public Vector2 EmotionShift { get => _emotionShift; set => _emotionShift = value; }
-        public float TargetRadius => Mathf.Lerp(_minRadius, _maxRadius, _person != null ? _person.Dilation : 0.5f);
+        public float TargetRadius => _fitMaze != null ? FitRadius() : Mathf.Lerp(_minRadius, _maxRadius, _person != null ? _person.Dilation : 0.5f);
 
         void OnEnable() { _drawnKey = int.MinValue; }
         void OnValidate() { _drawnKey = int.MinValue; EyeHooks.Repaint(); }
@@ -81,6 +88,16 @@ namespace EyeMaze
                 Shapes.SetColor(_catchlight, new Color(1f, 1f, 1f, 0.85f));
                 _catchlight.sortingOrder = 9;
             }
+        }
+
+        /// <summary>
+        /// 미로 안쪽 원에 맞는 동공 반지름을 계산한다. 미로와 동공의 크기 배율이 달라도 화면에서 같은 크기가 되게 한다.
+        /// _fitMaze의 안쪽 반지름과 크기 배율, _fitInset, 이 오브젝트의 크기 배율을 사용하며, 동공 기준 반지름을 반환한다.
+        /// </summary>
+        private float FitRadius()
+        {
+            float world = (_fitMaze.InnerRadius - _fitInset) * Mathf.Abs(_fitMaze.transform.lossyScale.x);
+            return Mathf.Max(0f, world / Mathf.Max(1e-4f, Mathf.Abs(transform.lossyScale.x)));
         }
 
         /// <summary>

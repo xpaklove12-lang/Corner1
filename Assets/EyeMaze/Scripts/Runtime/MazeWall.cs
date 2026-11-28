@@ -32,6 +32,10 @@ namespace EyeMaze
         [NonSerialized] private float _carveSeconds = 0.5f;
         // 시선이 부딪혀 찾아낸 상처인지
         [NonSerialized] private bool _discovered;
+        // 시선이 부딪혀 빛나기 시작한 시각(빛나지 않으면 -1), 빛나는 시간과 색
+        [NonSerialized] private float _glowStart = -1f;
+        [NonSerialized] private float _glowSeconds = 0.4f;
+        [NonSerialized] private Color _glowColor = Color.white;
         private IrisMaze _maze;
 
         public Kind WallKind => _kind;
@@ -64,6 +68,30 @@ namespace EyeMaze
         /// 입력값은 없으며, _flashStart를 지금 시각으로 바꾼다.
         /// </summary>
         public void Flash() => _flashStart = Time.time;
+
+        /// <summary>
+        /// 벽을 지금부터 color로 빛나게 했다가 seconds 동안 원래 색으로 돌아오게 한다. 보통 벽과 상처 모두 빛난다.
+        /// color, seconds를 사용하며, _glowStart, _glowSeconds, _glowColor를 바꾼다.
+        /// </summary>
+        public void Glow(Color color, float seconds)
+        {
+            _glowStart = Time.time;
+            _glowSeconds = Mathf.Max(0.01f, seconds);
+            _glowColor = color;
+        }
+
+        /// <summary>
+        /// 빛남이 얼마나 남았는지 계산한다. 시작 직후 1에서 _glowSeconds 동안 0으로 줄어든다.
+        /// _glowStart와 지금 시각을 사용하며, 0~1 값을 반환하고 끝나면 _glowStart를 지운다.
+        /// </summary>
+        private float GlowAmount()
+        {
+            if (_glowStart < 0f) return 0f;
+            float amount = 1f - (Time.time - _glowStart) / _glowSeconds;
+            if (amount > 0f) return amount * amount;
+            _glowStart = -1f;
+            return 0f;
+        }
 
         /// <summary>
         /// 번쩍임이 얼마나 남았는지 계산한다. 시작 직후 1에서 미로의 HiddenWallFlashSeconds 동안 0으로 줄어든다.
@@ -124,13 +152,14 @@ namespace EyeMaze
             bool carving = false;
             if (IsHidden) CarveState(out drawn, out glimpse, out carving);
             float heat = Mathf.Max(flash, carving ? 1f : 0f);
+            float glow = GlowAmount();
             // 보통 벽은 상처가 드러나는 만큼 어두워져 상처를 돋보이게 한다.
             float hiddenAlpha = IsHidden
                 ? (drawn > 0f ? Mathf.Max(Mathf.Max(_maze.HiddenWallAlpha, _discovered ? 1f : 0f), Mathf.Max(glimpse, flash)) : 0f)
                 : _maze.NormalWallAlpha;
             Color baseColor = IsHidden ? _maze.HiddenWallColor : _maze.WallColor;
             // 표시 투명도가 바뀌어도 다시 칠하도록 키에 포함
-            int key = HashCode.Combine(HashCode.Combine(_kind, _ring, _sector, _maze.GeometryKey), baseColor, _maze.WallWidthNow, _visualAlpha, hiddenAlpha, heat, drawn);
+            int key = HashCode.Combine(HashCode.Combine(_kind, _ring, _sector, _maze.GeometryKey), baseColor, _maze.WallWidthNow, _visualAlpha, hiddenAlpha, heat, HashCode.Combine(drawn, glow));
             if (key == _drawnKey) return;
             _drawnKey = key;
 
@@ -150,9 +179,15 @@ namespace EyeMaze
                 Shapes.SetPoints(_line, new[] { Shapes.Polar(outer, a), Shapes.Polar(inner, a) }, false);
             }
             // 드러난 상처는 굵게 그리고, 새기거나 번쩍이는 동안 더 굵고 흰빛에 가깝게 그린다.
-            _line.widthMultiplier = _maze.WallWidthNow * (IsHidden ? _maze.HiddenWallWidthScale * (1f + heat * 0.6f) : 1f);
+            _line.widthMultiplier = _maze.WallWidthNow * (IsHidden ? _maze.HiddenWallWidthScale * (1f + heat * 0.6f) : 1f) * (1f + glow);
             Color color = baseColor;
             if (heat > 0f) color = Color.Lerp(color, new Color(1f, 1f, 1f, color.a), heat * 0.7f);
+            // 부딪혀 빛나는 동안 빛남 색으로 물들고 굵어진다. 숨은 상처도 이때는 보인다.
+            if (glow > 0f)
+            {
+                color = Color.Lerp(color, new Color(_glowColor.r, _glowColor.g, _glowColor.b, color.a), glow);
+                hiddenAlpha = Mathf.Max(hiddenAlpha, glow);
+            }
             // 벽 색에 표시 투명도를 곱하고, 상처는 보여야 하는 만큼만 보인다.
             color.a *= _visualAlpha * hiddenAlpha;
             Shapes.SetColor(_line, color);
