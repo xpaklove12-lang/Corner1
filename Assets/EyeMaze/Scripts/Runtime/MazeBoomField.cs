@@ -6,16 +6,14 @@ using UnityEngine;
 namespace EyeMaze
 {
     /// <summary>
-    /// 폭발 미로. 들여다보는 동안 순서표의 무늬대로 미로 칸이 경고한 뒤 터지고, 시선이 터진 칸에 있으면 층 입구로 돌려보낸다.
-    /// 미로(IrisMaze) 아래에 두어 미로가 돌면 함께 돈다. 칸 그림은 Play 중 이 오브젝트 아래에 만든다.
+    /// 폭발 미로. 들여다보는 동안 순서표의 무늬대로 사각 미로 칸이 경고한 뒤 터지고, 시선이 터진 칸에 있으면 최근 안전지대로 돌려보낸다.
+    /// 미로(IrisMaze) 아래에 두어 미로가 돌면 함께 돈다. 칸 그림과 격자는 Play 중 이 오브젝트 아래에 만든다.
     /// 순서표는 한 바퀴 끝나면 처음부터 다시 돌고, 바퀴마다 조금씩 빨라진다.
     /// </summary>
     public class MazeBoomField : MonoBehaviour
     {
         private const string CELL_CONTAINER_NAME = "폭발 칸";
         private const string GRID_CONTAINER_NAME = "격자";
-        private const int GRID_CIRCLE_SEGMENTS = 96;
-        private const int ARC_SEGMENTS = 8;
         // 칸 상태 배열에서 경고나 폭발이 없는 칸의 값
         private const float NONE = -1f;
 
@@ -23,6 +21,8 @@ namespace EyeMaze
         [SerializeField] private EyeMazeDirector _director;
         [Tooltip("미로를 그리는 카메라. 격자선을 화면에서 최소 몇 픽셀 굵기로 그릴지 계산하는 데 쓴다")]
         [SerializeField] private Camera _camera;
+        [Tooltip("칸, 벽, 동공 자리를 정하는 사각 미로")]
+        [SerializeField] private BoomSquareMaze _square;
 
         [Header("진행")]
         [Tooltip("켜면 폭발 미로를 쓰는 동안 눈이 깜빡이지 않아 미로가 돌지 않는다")]
@@ -30,7 +30,7 @@ namespace EyeMaze
 
         [Header("이동")]
         [Tooltip("폭발 미로를 쓰는 동안의 칸 단위 이동 설정. 디렉터 Inspector의 같은 설정 대신 이 값을 쓴다")]
-        [SerializeField] private GridMoveSettings _move = new GridMoveSettings(true, GridControl.Ring);
+        [SerializeField] private GridMoveSettings _move = new GridMoveSettings(true, GridControl.Screen);
         [Tooltip("순서표가 한 바퀴 끝난 뒤 다시 돌기까지 쉬는 시간(초)")]
         [SerializeField, Min(0f)] private float _loopGapSeconds = 1f;
         [Tooltip("한 바퀴 돌 때마다 더해지는 배속")]
@@ -92,7 +92,7 @@ namespace EyeMaze
         private float _cellWidth;
         // 칸마다 경고 진행(0~1)과 폭발 뒤 남은 비율(1~0). 없으면 NONE이다.
         private float[,] _warn;
-        // 고리 경계 원과 칸 경계 선
+        // 칸 경계의 가로선과 세로선
         private readonly List<LineRenderer> _gridLines = new List<LineRenderer>();
         private float[,] _burst;
         private bool _running;
@@ -100,8 +100,7 @@ namespace EyeMaze
         private int _loop;
         private float _graceT;
         private int _hits;
-        private int _checkpointRing;
-        private int _checkpointSector;
+        private Vector2Int _checkpoint;
         // 칸마다 안전지대 오브젝트가 놓였는지. 매 프레임 다시 모아 Play 중에 옮겨도 바로 반영한다.
         private bool[,] _safeMap;
 
@@ -118,6 +117,7 @@ namespace EyeMaze
         {
             _director.BlinkPaused = _pauseBlink;
             _director.GridOverride = _move;
+            _director.SquareGrid = _square;
             if (_director.CurrentMode != EyeMazeDirector.Mode.Gaze)
             {
                 if (_running) StopRun();
@@ -141,12 +141,13 @@ namespace EyeMaze
             {
                 _director.BlinkPaused = false;
                 _director.GridOverride = null;
+                _director.SquareGrid = null;
             }
             if (_running) StopRun();
         }
 
         /// <summary>
-        /// 기본 폭발 순서표를 만든다. 체크 무늬, 도는 나선, 흩뿌림, 빠른 체크 무늬 순서로 이어진다.
+        /// 기본 폭발 순서표를 만든다. 체크 무늬, 대각선 줄 무늬, 흩뿌림, 빠른 체크 무늬 순서로 이어진다.
         /// 입력값은 없으며, 새 무늬 목록을 반환한다.
         /// </summary>
         private static List<BoomWave> CreateDefaultWaves()
@@ -154,15 +155,15 @@ namespace EyeMaze
             return new List<BoomWave>
             {
                 new BoomWave("체크 무늬", BoomShape.Checker, 1f, 4, 1.8f, 1.4f, 0.4f),
-                new BoomWave("도는 나선", BoomShape.Spiral, 8.6f, 8, 0.55f, 1.2f, 0.4f, sectorStep: 1, arms: 2, twist: 1),
+                new BoomWave("대각선 줄 무늬", BoomShape.Diagonal, 8.6f, 8, 0.55f, 1.2f, 0.4f, stripeGap: 3, stripeStep: 1),
                 new BoomWave("흩뿌림", BoomShape.Scatter, 14.6f, 4, 1.5f, 1.4f, 0.4f, density: 0.3f, seed: 1),
                 new BoomWave("빠른 체크 무늬", BoomShape.Checker, 21.3f, 6, 1.2f, 1f, 0.35f)
             };
         }
 
         /// <summary>
-        /// 들여다보기가 시작될 때 순서표를 처음부터 돌리고, 지금 시선 칸을 첫 입구로 정한다.
-        /// 시선 위치를 사용하며, _running, _time, _loop, _hits, _graceT, 입구 칸과 칸 그림을 바꾼다.
+        /// 들여다보기가 시작될 때 사각 미로를 만들고 순서표를 처음부터 돌린다. 시선을 시작 칸에 놓고 그 칸을 돌아갈 칸으로 정한다.
+        /// 사각 미로의 시작 칸을 사용하며, _running, _time, _loop, _hits, _graceT, 돌아갈 칸, 시선 위치와 칸 그림을 바꾼다.
         /// </summary>
         private void BeginRun()
         {
@@ -171,8 +172,10 @@ namespace EyeMaze
             _loop = 0;
             _hits = 0;
             _graceT = 0f;
-            GazeCursor cursor = _director.Cursor;
-            SetCheckpoint(cursor.Ring, cursor.Sector);
+            _square.Generate();
+            _square.Active = true;
+            SetCheckpoint(_square.StartCell);
+            _director.WarpGazeTo(_square.CellCenterMaze(_square.StartCell), false);
             EnsureCells();
         }
 
@@ -183,6 +186,7 @@ namespace EyeMaze
         private void StopRun()
         {
             _running = false;
+            _square.Active = false;
             if (_cells == null) return;
             foreach (LineRenderer lr in _cells) if (lr != null) lr.enabled = false;
             foreach (LineRenderer lr in _gridLines) if (lr != null) lr.enabled = false;
@@ -190,13 +194,15 @@ namespace EyeMaze
 
         /// <summary>
         /// 휩쓸렸을 때 돌아갈 칸을 정한다.
-        /// ring, sector(미로 기준)를 사용하며, _checkpointRing과 _checkpointSector를 바꾼다.
+        /// cell(열, 행)을 사용하며, _checkpoint를 바꾼다.
         /// </summary>
-        private void SetCheckpoint(int ring, int sector)
-        {
-            _checkpointRing = ring;
-            _checkpointSector = sector;
-        }
+        private void SetCheckpoint(Vector2Int cell) => _checkpoint = cell;
+
+        /// <summary>
+        /// 지금 시선이 있는 사각 미로 칸을 계산한다.
+        /// 시선 위치를 사용하며, 칸(열, 행)을 반환한다.
+        /// </summary>
+        private Vector2Int CursorCell() => _square.CellAtMaze(_director.Cursor.LocalPos);
 
         /// <summary>
         /// 시선이 안전지대 칸에 서면 그 칸을 돌아갈 칸으로 정한다. _respawnAtLastSafe가 꺼져 있으면 시작 칸을 유지한다.
@@ -205,8 +211,8 @@ namespace EyeMaze
         private void TrackCheckpoint()
         {
             if (!_respawnAtLastSafe || _director.InAbyss) return;
-            GazeCursor cursor = _director.Cursor;
-            if (IsSafeZone(cursor.Ring, cursor.Sector)) SetCheckpoint(cursor.Ring, cursor.Sector);
+            Vector2Int cell = CursorCell();
+            if (IsSafeZone(cell)) SetCheckpoint(cell);
         }
 
         /// <summary>
@@ -239,14 +245,14 @@ namespace EyeMaze
 
         /// <summary>
         /// 지금 무늬 시간에서 칸마다 경고 진행과 폭발 뒤 남은 비율을 계산한다. 여러 무늬가 겹치면 큰 값을 쓴다.
-        /// _time, _waves, 미로의 고리·칸 수를 사용하며, _warn과 _burst를 바꾼다.
+        /// _time, _waves, 사각 미로의 칸 수를 사용하며, _warn과 _burst를 바꾼다. 동공 자리와 원 밖의 칸은 터지지 않는다.
         /// </summary>
         private void EvaluateCells()
         {
-            int rings = Maze.Rings;
-            int sectors = Maze.Sectors;
-            for (int r = 0; r < rings; r++)
-                for (int s = 0; s < sectors; s++) { _warn[r, s] = NONE; _burst[r, s] = NONE; }
+            int columns = _square.Columns;
+            int rows = _square.Rows;
+            for (int x = 0; x < columns; x++)
+                for (int y = 0; y < rows; y++) { _warn[x, y] = NONE; _burst[x, y] = NONE; }
 
             foreach (BoomWave w in _waves)
             {
@@ -259,9 +265,15 @@ namespace EyeMaze
                     // 경고는 0에서 1로 차오르고, 폭발은 1에서 0으로 가라앉는다.
                     float value = bursting ? 1f - (local - w.WarnSeconds) / w.BurstSeconds : local / w.WarnSeconds;
                     float[,] target = bursting ? _burst : _warn;
-                    for (int r = 0; r < rings; r++)
-                        for (int s = 0; s < sectors; s++)
-                            if (!IsSafe(r, s) && w.Covers(r, s, k, rings, sectors) && value > target[r, s]) target[r, s] = value;
+                    for (int x = 0; x < columns; x++)
+                    {
+                        for (int y = 0; y < rows; y++)
+                        {
+                            var cell = new Vector2Int(x, y);
+                            if (!_square.IsMazeCell(cell) || IsSafe(cell) || !w.Covers(x, y, k)) continue;
+                            if (value > target[x, y]) target[x, y] = value;
+                        }
+                    }
                 }
             }
         }
@@ -273,14 +285,15 @@ namespace EyeMaze
         private void DrawCells()
         {
             float modeAlpha = Maze.WallAlpha;
-            for (int r = 0; r < Maze.Rings; r++)
+            for (int x = 0; x < _square.Columns; x++)
             {
-                for (int s = 0; s < Maze.Sectors; s++)
+                for (int y = 0; y < _square.Rows; y++)
                 {
-                    LineRenderer lr = _cells[r, s];
-                    float burst = _burst[r, s];
-                    float warn = _warn[r, s];
-                    bool safe = IsSafe(r, s);
+                    LineRenderer lr = _cells[x, y];
+                    if (lr == null) continue;
+                    float burst = _burst[x, y];
+                    float warn = _warn[x, y];
+                    bool safe = IsSafe(new Vector2Int(x, y));
                     if (burst < 0f && warn < 0f && !safe) { if (lr.enabled) lr.enabled = false; continue; }
 
                     Color c;
@@ -305,7 +318,8 @@ namespace EyeMaze
                     c.a *= modeAlpha;
                     Shapes.SetColor(lr, c);
                     // 부풀어도 칸 폭을 넘지 않아 옆 칸을 덮지 않는다.
-                    lr.widthMultiplier = Mathf.Min(_cellWidth * scale, Maze.RingWidth);
+                    float size = Mathf.Min(_cellWidth * scale, _square.CellSize);
+                    Shapes.SetFilledRect(lr, size, size);
                     if (!lr.enabled) lr.enabled = true;
                 }
             }
@@ -346,29 +360,29 @@ namespace EyeMaze
 
         /// <summary>
         /// 칸이 터지지 않는 칸인지 판단한다. 안전지대이거나, _checkpointSafe가 켜져 있으면 돌아갈 칸도 포함한다.
-        /// ring, sector(미로 기준)와 돌아갈 칸을 사용하며, 터지지 않으면 true를 반환한다.
+        /// cell(열, 행)과 돌아갈 칸을 사용하며, 터지지 않으면 true를 반환한다.
         /// </summary>
-        private bool IsSafe(int ring, int sector)
+        private bool IsSafe(Vector2Int cell)
         {
-            if (_checkpointSafe && ring == _checkpointRing && sector == _checkpointSector) return true;
-            return IsSafeZone(ring, sector);
+            if (_checkpointSafe && cell == _checkpoint) return true;
+            return IsSafeZone(cell);
         }
 
         /// <summary>
         /// 칸에 안전지대 오브젝트가 놓였는지 판단한다.
-        /// ring, sector(미로 기준)와 _safeMap을 사용하며, 안전지대면 true를 반환한다.
+        /// cell(열, 행)과 _safeMap을 사용하며, 안전지대면 true를 반환한다.
         /// </summary>
-        private bool IsSafeZone(int ring, int sector) => _safeMap[ring, sector];
+        private bool IsSafeZone(Vector2Int cell) => _safeMap[cell.x, cell.y];
 
         /// <summary>
         /// 이 오브젝트 아래의 켜진 안전지대 오브젝트를 모아 칸마다 안전지대인지 기록한다.
-        /// 자식 BoomSafeZone의 고리와 칸 번호를 사용하며, _safeMap을 바꾼다.
+        /// 자식 BoomSafeZone의 열과 행을 사용하며, _safeMap을 바꾼다.
         /// </summary>
         private void CollectSafeZones()
         {
             Array.Clear(_safeMap, 0, _safeMap.Length);
             foreach (BoomSafeZone z in GetComponentsInChildren<BoomSafeZone>())
-                _safeMap[Mathf.Clamp(z.Ring, 0, Maze.Rings - 1), Maze.Mod(z.Sector)] = true;
+                _safeMap[Mathf.Clamp(z.Cell.x, 0, _square.Columns - 1), Mathf.Clamp(z.Cell.y, 0, _square.Rows - 1)] = true;
         }
 
         /// <summary>
@@ -378,30 +392,29 @@ namespace EyeMaze
         private void CheckHit()
         {
             if (_graceT > 0f || _director.InAbyss) return;
-            GazeCursor cursor = _director.Cursor;
-            if (_burst[cursor.Ring, cursor.Sector] >= 0f) Hit();
+            Vector2Int cell = CursorCell();
+            if (_burst[cell.x, cell.y] >= 0f) Hit();
         }
 
         /// <summary>
-        /// 휩쓸린 횟수를 올리고 시선을 입구 칸으로 돌려보낸 뒤 안내를 띄운다.
-        /// 입구 칸, _hitGraceSeconds, _hitMessage를 사용하며, _hits, _graceT, 시선 위치, 디렉터 문구를 바꾼다.
+        /// 휩쓸린 횟수를 올리고 시선을 돌아갈 칸으로 돌려보낸 뒤 안내를 띄운다.
+        /// 돌아갈 칸, _hitGraceSeconds, _hitMessage를 사용하며, _hits, _graceT, 시선 위치, 디렉터 문구를 바꾼다.
         /// </summary>
         private void Hit()
         {
             _hits++;
             _graceT = _hitGraceSeconds;
-            _director.WarpGaze(_checkpointRing, _checkpointSector);
+            _director.WarpGazeTo(_square.CellCenterMaze(_checkpoint), true);
             _director.Message = Strings.Get("msg.boom_hit", _hitMessage, ("hits", _hits));
         }
 
         /// <summary>
-        /// 칸마다 원호 그림을 만든다. 미로 모양이 바뀌었으면 옛 그림을 지우고 다시 만든다.
-        /// 미로의 고리·칸 수, 반지름, 선 재질과 _fillScale, _sortingOrder를 사용하며, _cells, _warn, _burst와 자식 오브젝트를 바꾼다.
+        /// 칸마다 사각 그림을 만든다. 사각 미로 모양이 바뀌었으면 옛 그림을 지우고 다시 만든다. 미로 칸에만 만든다.
+        /// 사각 미로의 칸 수와 크기, 선 재질과 _fillScale, _sortingOrder를 사용하며, _cells, _warn, _burst, _safeMap과 자식 오브젝트를 바꾼다.
         /// </summary>
         private void EnsureCells()
         {
-            IrisMaze maze = Maze;
-            int key = HashCode.Combine(maze.GeometryKey, _fillScale);
+            int key = HashCode.Combine(_square.GeometryKey, _fillScale);
             if (_cells != null && key == _cellsKey) return;
             _cellsKey = key;
 
@@ -410,39 +423,38 @@ namespace EyeMaze
             Transform container = new GameObject(CELL_CONTAINER_NAME).transform;
             container.SetParent(transform, false);
 
-            int rings = maze.Rings;
-            int sectors = maze.Sectors;
-            _cells = new LineRenderer[rings, sectors];
-            _warn = new float[rings, sectors];
-            _burst = new float[rings, sectors];
-            _safeMap = new bool[rings, sectors];
-            float width = maze.RingWidth * _fillScale;
-            _cellWidth = width;
-            for (int r = 0; r < rings; r++)
+            int columns = _square.Columns;
+            int rows = _square.Rows;
+            _cells = new LineRenderer[columns, rows];
+            _warn = new float[columns, rows];
+            _burst = new float[columns, rows];
+            _safeMap = new bool[columns, rows];
+            // 이웃 칸과 붙지 않도록 칸보다 조금 작게 채운다.
+            _cellWidth = _square.CellSize * _fillScale;
+            for (int x = 0; x < columns; x++)
             {
-                float mid = maze.RingMid(r);
-                // 이웃 칸과 붙지 않도록 고리 사이 틈과 같은 길이만큼 양끝을 줄인다.
-                float insetDeg = (maze.RingWidth - width) * 0.5f / mid * Mathf.Rad2Deg;
-                for (int s = 0; s < sectors; s++)
+                for (int y = 0; y < rows; y++)
                 {
-                    var go = new GameObject($"칸 {r}-{s}");
+                    var cell = new Vector2Int(x, y);
+                    if (!_square.IsMazeCell(cell)) continue;
+                    var go = new GameObject($"칸 {x}-{y}");
                     go.transform.SetParent(container, false);
-                    LineRenderer lr = Shapes.Ensure(go, maze.LineMaterial, 0);
-                    Shapes.SetArc(lr, mid, s * maze.SectorDeg + insetDeg, (s + 1) * maze.SectorDeg - insetDeg, ARC_SEGMENTS);
-                    lr.widthMultiplier = width;
+                    go.transform.localPosition = _square.CellCenterLocal(cell);
+                    LineRenderer lr = Shapes.Ensure(go, Maze.LineMaterial, 0);
+                    Shapes.SetFilledRect(lr, _cellWidth, _cellWidth);
                     lr.sortingOrder = _sortingOrder;
                     lr.enabled = false;
-                    _cells[r, s] = lr;
+                    _cells[x, y] = lr;
                 }
             }
-            BuildGrid(maze);
+            BuildGrid();
         }
 
         /// <summary>
-        /// 고리 경계마다 원을, 칸 경계마다 안쪽에서 바깥까지 이어지는 선을 만든다. 옛 격자는 지운다.
-        /// maze의 고리·칸 수와 반지름, _gridWidth, _gridSortingOrder를 사용하며, _gridLines와 자식 오브젝트를 바꾼다.
+        /// 칸 경계마다 곧은 세로선과 가로선을 만든다. 미로 칸에 닿는 경계만 그리고, 끊기지 않은 구간은 선 하나로 잇는다. 옛 격자는 지운다.
+        /// 사각 미로의 칸 수와 크기, _gridWidth, _gridSortingOrder를 사용하며, _gridLines와 자식 오브젝트를 바꾼다.
         /// </summary>
-        private void BuildGrid(IrisMaze maze)
+        private void BuildGrid()
         {
             Transform old = transform.Find(GRID_CONTAINER_NAME);
             if (old != null) Destroy(old.gameObject);
@@ -450,29 +462,50 @@ namespace EyeMaze
             Transform container = new GameObject(GRID_CONTAINER_NAME).transform;
             container.SetParent(transform, false);
 
-            // 가장 바깥 원부터 동공 둘레까지 고리 경계를 그린다.
-            for (int r = 0; r <= maze.Rings; r++)
+            int columns = _square.Columns;
+            int rows = _square.Rows;
+            float size = _square.CellSize;
+            float left = -columns * 0.5f * size;
+            float bottom = -rows * 0.5f * size;
+            for (int x = 0; x <= columns; x++)
             {
-                LineRenderer lr = MakeGridLine(container, $"원 {r}", maze);
-                Shapes.SetCircle(lr, r < maze.Rings ? maze.RingOuter(r) : maze.RingInner(maze.Rings - 1), GRID_CIRCLE_SEGMENTS);
+                int runStart = -1;
+                for (int y = 0; y <= rows; y++)
+                {
+                    bool drawn = y < rows && _square.HasEdgeV(x, y);
+                    if (drawn && runStart < 0) runStart = y;
+                    if (drawn || runStart < 0) continue;
+                    float ex = left + x * size;
+                    LineRenderer lr = MakeGridLine(container, $"세로 {x}-{runStart}");
+                    Shapes.SetPoints(lr, new[] { new Vector3(ex, bottom + runStart * size, 0f), new Vector3(ex, bottom + y * size, 0f) }, false);
+                    runStart = -1;
+                }
             }
-            for (int s = 0; s < maze.Sectors; s++)
+            for (int y = 0; y <= rows; y++)
             {
-                LineRenderer lr = MakeGridLine(container, $"선 {s}", maze);
-                float deg = s * maze.SectorDeg;
-                Shapes.SetPoints(lr, new[] { Shapes.Polar(maze.InnerRadius, deg), Shapes.Polar(maze.OuterRadius, deg) }, false);
+                int runStart = -1;
+                for (int x = 0; x <= columns; x++)
+                {
+                    bool drawn = x < columns && _square.HasEdgeH(x, y);
+                    if (drawn && runStart < 0) runStart = x;
+                    if (drawn || runStart < 0) continue;
+                    float ey = bottom + y * size;
+                    LineRenderer lr = MakeGridLine(container, $"가로 {y}-{runStart}");
+                    Shapes.SetPoints(lr, new[] { new Vector3(left + runStart * size, ey, 0f), new Vector3(left + x * size, ey, 0f) }, false);
+                    runStart = -1;
+                }
             }
         }
 
         /// <summary>
         /// 격자선 하나를 만들어 목록에 넣는다. 처음에는 꺼 둔다.
-        /// container, name, maze의 선 재질, _gridWidth, _gridSortingOrder를 사용하며, 만든 LineRenderer를 반환하고 _gridLines를 바꾼다.
+        /// container, name, 미로의 선 재질, _gridWidth, _gridSortingOrder를 사용하며, 만든 LineRenderer를 반환하고 _gridLines를 바꾼다.
         /// </summary>
-        private LineRenderer MakeGridLine(Transform container, string name, IrisMaze maze)
+        private LineRenderer MakeGridLine(Transform container, string name)
         {
             var go = new GameObject(name);
             go.transform.SetParent(container, false);
-            LineRenderer lr = Shapes.Ensure(go, maze.LineMaterial, 0);
+            LineRenderer lr = Shapes.Ensure(go, Maze.LineMaterial, 0);
             lr.widthMultiplier = _gridWidth;
             lr.sortingOrder = _gridSortingOrder;
             lr.enabled = false;

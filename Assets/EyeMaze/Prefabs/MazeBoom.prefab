@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 732000002}
   - component: {fileID: 732000003}
+  - component: {fileID: 732000004}
   m_Layer: 0
   m_Name: "폭발 (Maze Boom)"
   m_TagString: Untagged
@@ -52,10 +53,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.MazeBoomField
   _director: {fileID: 0}
   _camera: {fileID: 0}
+  _square: {fileID: 732000004}
   _pauseBlink: 1
   _move:
     _enabled: 1
-    _control: 1
+    _control: 0
   _warnColor: {r: 0.35, g: 0.08, b: 0.05, a: 0.1}
   _warnEndColor: {r: 0.6, g: 0.12, b: 0.06, a: 0.45}
   _burstColor: {r: 1, g: 0.62, b: 0.18, a: 1}
@@ -66,6 +68,25 @@ MonoBehaviour:
   _gridWidth: 0.03
   _gridMinPixels: 1
   _gridSortingOrder: 4
+--- !u!114 &732000004
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 732000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39c297d6339749b28b6f65f2ce0530b4, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.BoomSquareMaze
+  _cellSize: 0.4
+  _outerRadius: 3
+  _innerRadius: 0.9
+  _startCell: {x: 7, y: 1}
+  _seed: 7
+  _loopChance: 0.08
+  _gizmoColor: {r: 1, g: 1, b: 1, a: 0.25}
 --- !u!1 &733000011
 GameObject:
   m_ObjectHideFlags: 0
@@ -92,7 +113,7 @@ Transform:
   m_GameObject: {fileID: 733000011}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.37504, y: 2.05789, z: 0}
+  m_LocalPosition: {x: -1.6, y: -1.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -110,8 +131,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4df659183af84ee78df4328d02cab2cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.BoomSafeZone
-  _ring: 1
-  _sector: 2
+  _column: 3
+  _row: 3
 --- !u!1 &733000021
 GameObject:
   m_ObjectHideFlags: 0
@@ -138,7 +159,7 @@ Transform:
   m_GameObject: {fileID: 733000021}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.37504, y: -2.05789, z: 0}
+  m_LocalPosition: {x: 1.6, y: 1.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -156,8 +177,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4df659183af84ee78df4328d02cab2cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.BoomSafeZone
-  _ring: 1
-  _sector: 10
+  _column: 11
+  _row: 11
 --- !u!1 &733000031
 GameObject:
   m_ObjectHideFlags: 0
@@ -184,7 +205,7 @@ Transform:
   m_GameObject: {fileID: 733000031}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.76687, y: 1.18059, z: 0}
+  m_LocalPosition: {x: 1.6, y: -1.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -202,8 +223,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4df659183af84ee78df4328d02cab2cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.BoomSafeZone
-  _ring: 2
-  _sector: 6
+  _column: 11
+  _row: 3
 --- !u!1 &733000041
 GameObject:
   m_ObjectHideFlags: 0
@@ -230,7 +251,7 @@ Transform:
   m_GameObject: {fileID: 733000041}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.76687, y: -1.18059, z: 0}
+  m_LocalPosition: {x: -1.6, y: 1.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -248,8 +269,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4df659183af84ee78df4328d02cab2cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.BoomSafeZone
-  _ring: 2
-  _sector: 14
+  _column: 3
+  _row: 11
 --- !u!1 &733000051
 GameObject:
   m_ObjectHideFlags: 0
@@ -276,7 +297,7 @@ Transform:
   m_GameObject: {fileID: 733000051}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.39762, y: 0.278, z: 0}
+  m_LocalPosition: {x: -2, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -294,8 +315,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4df659183af84ee78df4328d02cab2cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.BoomSafeZone
-  _ring: 4
-  _sector: 0
+  _column: 2
+  _row: 7
 --- !u!1 &733000061
 GameObject:
   m_ObjectHideFlags: 0
@@ -322,7 +343,7 @@ Transform:
   m_GameObject: {fileID: 733000061}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.39762, y: -0.278, z: 0}
+  m_LocalPosition: {x: 2, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -340,5 +361,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4df659183af84ee78df4328d02cab2cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EyeMaze.BoomSafeZone
-  _ring: 4
-  _sector: 8
+  _column: 12
+  _row: 7
