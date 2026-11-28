@@ -18,6 +18,8 @@
 | `EDITOR` | [`dialogue-editor.md`](dialogue-editor.md) | 인물·회차 대사 CSV, 대사 편집기, 엔딩 조건 |
 | `LOC` | [`localization.md`](localization.md) | 언어 선택과 폰트, 화면 문구와 대사 번역, 번역 도구 |
 | `CUT` | [`intro-cuttoon.md`](intro-cuttoon.md) | 운석 충돌부터 수면 캡슐까지 만화 칸이 차례로 열리는 인트로 컷툰, 그레이 박스 씬 |
+| `LAYOUT` | [`maze-layout.md`](maze-layout.md) | 미로 모양 만들기, 기억을 모을수록 새겨지는 상처 무늬, 부딪히거나 의심이 풀리면 드러나는 상처 |
+| `MTEST` | [`maze-test.md`](maze-test.md) | 필드와 대화 없이 눈 미로만 바로 플레이하는 테스트 씬, 테스트 조건, 탈출과 다시 하기 |
 
 ## 여러 스펙에 걸치는 변경
 

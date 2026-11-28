@@ -39,11 +39,43 @@ namespace EyeMaze
         [SerializeField, FormerlySerializedAs("loopChance"), Range(0f, 0.4f)] private float _loopChance = 0.08f;
         [SerializeField, FormerlySerializedAs("pupilDilationRequired"), Range(0f, 1f)] private float _pupilDilationRequired = 0.75f;
 
+        [Header("상처 무늬")]
+        [Tooltip("드러난 상처(숨은 무늬 벽)의 색. 보통 벽과 구분되게 칠한다")]
+        [SerializeField] private Color _hiddenWallColor = new Color(0.95f, 0.35f, 0.42f, 1f);
+        [Tooltip("드러난 상처의 굵기 배율 (보통 벽 = 1)")]
+        [SerializeField] private float _hiddenWallWidthScale = 1.6f;
+        [Tooltip("상처가 드러나는 순간 밝게 번쩍였다가 가라앉는 시간(초)")]
+        [SerializeField] private float _hiddenWallFlashSeconds = 1.2f;
+        [Tooltip("상처가 다 드러났을 때 보통 벽의 밝기. 낮을수록 상처 무늬가 또렷하게 떠오른다")]
+        [SerializeField, Range(0f, 1f)] private float _revealedNormalWallAlpha = 0.35f;
+        [Tooltip("파편을 읽어 새 상처가 생길 때, 금 하나가 끝까지 번지는 시간(초)")]
+        [SerializeField] private float _scarCarveSeconds = 0.5f;
+        [Tooltip("새 상처가 동공 쪽부터 가장 바깥까지 번져 나가는 데 걸리는 시간(초)")]
+        [SerializeField] private float _scarSpreadSeconds = 0.8f;
+        [Tooltip("새겨진 상처가 다 그려진 뒤 보이는 채로 머무는 시간(초)")]
+        [SerializeField] private float _scarGlimpseSeconds = 0.6f;
+        [Tooltip("머문 뒤 상처가 다시 보이지 않게 가라앉는 시간(초)")]
+        [SerializeField] private float _scarFadeSeconds = 0.8f;
+        [Tooltip("부딪혀 찾아낸 상처가 금 가듯 그려지는 시간(초)")]
+        [SerializeField] private float _scarDiscoverSeconds = 0.25f;
+
         [Header("연결")]
         [SerializeField, FormerlySerializedAs("person")] private Person _person;
 
         // 층 문을 여는 플래그 목록. 0번이 1층으로 들어가는 문이다.
         [NonSerialized] private readonly List<string> _gateFlags = new List<string>();
+        // 손님의 홍채 무늬 장 목록. 파편을 읽을 때마다 한 장씩 숨은 벽으로 막힌다.
+        [NonSerialized] private readonly List<IrisPatternSheet> _patternSheets = new List<IrisPatternSheet>();
+        // 무늬가 모두 막히기까지의 단계 수와 지금 단계
+        [NonSerialized] private int _complexityStages;
+        [NonSerialized] private int _complexityStage;
+        [NonSerialized] private float _hiddenWallAlpha;
+        // 지금 미로에 무늬 벽이 있는지
+        [NonSerialized] private bool _hasPattern;
+        // 마지막으로 알린 무늬 경고. 벽을 다시 만들 때마다 같은 경고를 반복하지 않는다.
+        [NonSerialized] private string _lastPatternWarning = "";
+        // 부딪혀 찾아낸 상처 자리 (종류, 고리, 층 기준 칸). 층을 다시 만들어도 남는다.
+        [NonSerialized] private readonly HashSet<(MazeWall.Kind, int, int)> _discovered = new HashSet<(MazeWall.Kind, int, int)>();
 
         public int Rings => _rings;
         public int Sectors => _sectors;
@@ -53,11 +85,27 @@ namespace EyeMaze
         public float WallAlpha { get => _wallAlpha; set => _wallAlpha = value; }
         public float Focus { get => _focus; set => _focus = value; }
         public Person Person => _person;
+        /// <summary>켜져 있으면 조건과 상관없이 모든 층 문을 지나갈 수 있다. 테스트 씬에서 쓴다.</summary>
+        public bool OpenAllGates { get; set; }
+        /// <summary>무늬 장이 모두 막히기까지의 단계 수. 다음 Generate부터 무늬 장을 이 수만큼 나눠 막는다. 0이면 무늬를 쓰지 않는다.</summary>
+        public int ComplexityStages { get => _complexityStages; set => _complexityStages = Mathf.Max(0, value); }
+        /// <summary>지금 복잡도 단계. 이 단계 이하에서 막히는 무늬 벽이 켜져 있다.</summary>
+        public int ComplexityStage => _complexityStage;
+        /// <summary>무늬 벽(숨은 벽)의 표시 투명도(0~1). 판정에는 쓰지 않는다.</summary>
+        public float HiddenWallAlpha { get => _hiddenWallAlpha; set => _hiddenWallAlpha = Mathf.Clamp01(value); }
+        /// <summary>보통 벽에 곱하는 밝기. 무늬가 있으면 숨은 벽이 드러나는 만큼 어두워져 무늬가 떠오른다.</summary>
+        public float NormalWallAlpha => _hasPattern ? Mathf.Lerp(1f, _revealedNormalWallAlpha, _hiddenWallAlpha) : 1f;
         // 연출 오브젝트가 같은 선 재질을 쓰도록 공개
         public Material LineMaterial => _lineMaterial;
 
         public float FocusAlpha => Mathf.Lerp(0.12f, 1f, _focus * _focus);
         public Color WallColor => new Color(_wallColorBase.r, _wallColorBase.g, _wallColorBase.b, _wallColorBase.a * _wallAlpha * FocusAlpha);
+        /// <summary>드러난 숨은 벽의 색. 보통 벽처럼 모드 투명도와 초점을 곱한다.</summary>
+        public Color HiddenWallColor => new Color(_hiddenWallColor.r, _hiddenWallColor.g, _hiddenWallColor.b, _hiddenWallColor.a * _wallAlpha * FocusAlpha);
+        public float HiddenWallWidthScale => _hiddenWallWidthScale;
+        public float HiddenWallFlashSeconds => _hiddenWallFlashSeconds;
+        public float ScarGlimpseSeconds => _scarGlimpseSeconds;
+        public float ScarFadeSeconds => _scarFadeSeconds;
         public float WallWidthNow => _wallWidth * (1f + (1f - _focus) * 3f);
         public int GeometryKey => HashCode.Combine(_rings, _sectors, _ringsPerLayer, _outerRadius, _innerRadius);
 
@@ -202,6 +250,63 @@ namespace EyeMaze
             return w == null || !w.gameObject.activeSelf;
         }
 
+        /// <summary>
+        /// ring r 칸의 안쪽 원호 자리에 켜져 있는 벽을 찾는다.
+        /// r, worldSector를 사용하며, 켜진 MazeWall 또는 null을 반환한다.
+        /// </summary>
+        public MazeWall ArcWallAt(int r, int worldSector)
+        {
+            MazeWall w = FindWall(MazeWall.Kind.Arc, r, Mod(worldSector - Offset(ArcOwner(r))));
+            return w != null && w.gameObject.activeSelf ? w : null;
+        }
+
+        /// <summary>
+        /// ring r에서 worldBoundary 칸과 그 다음 칸 사이에 켜져 있는 벽을 찾는다.
+        /// r, worldBoundary를 사용하며, 켜진 MazeWall 또는 null을 반환한다.
+        /// </summary>
+        public MazeWall RadialWallAt(int r, int worldBoundary)
+        {
+            MazeWall w = FindWall(MazeWall.Kind.Radial, r, Mod(worldBoundary - Offset(LayerOfRing(r))));
+            return w != null && w.gameObject.activeSelf ? w : null;
+        }
+
+        // 상처
+
+        /// <summary>
+        /// 시선이 부딪힌 숨은 상처를 찾아낸 것으로 기록하고, 금이 번지듯 드러낸다. 찾아낸 상처는 리셋 전까지 보인다.
+        /// 층을 다시 만들어도 같은 자리의 상처가 다시 보이도록 자리로 기억한다.
+        /// w를 사용하며, 새로 찾아냈으면 true를 반환하고 _discovered와 벽의 표시 상태를 바꾼다.
+        /// </summary>
+        public bool Discover(MazeWall w)
+        {
+            if (w == null || !w.IsHidden || w.Discovered) return false;
+            _discovered.Add((w.WallKind, w.Ring, w.Sector));
+            w.Discovered = true;
+            w.Carve(0f, _scarDiscoverSeconds);
+            w.Flash();
+            return true;
+        }
+
+        /// <summary>
+        /// 찾아낸 상처 기록을 모두 지우고 다시 숨긴다. 리셋할 때 쓴다.
+        /// 입력값은 없으며, _discovered와 벽의 Discovered를 바꾼다.
+        /// </summary>
+        public void ClearDiscovered()
+        {
+            _discovered.Clear();
+            foreach (MazeWall w in GetComponentsInChildren<MazeWall>(true)) w.Discovered = false;
+        }
+
+        /// <summary>
+        /// 상처가 새겨질 때 동공에서 바깥으로 번져 나가도록, 벽 자리에 따라 새김을 늦출 시간을 계산한다.
+        /// w의 고리와 _scarSpreadSeconds를 사용하며, 늦출 초를 반환한다.
+        /// </summary>
+        private float CarveDelay(MazeWall w)
+        {
+            float t = Mathf.InverseLerp(_innerRadius, _outerRadius, RingMid(w.Ring));
+            return t * _scarSpreadSeconds;
+        }
+
         // 생성
 
         /// <summary>
@@ -234,6 +339,9 @@ namespace EyeMaze
             }
 
             int sectorCount = _sectors;
+            var warnings = new List<string>();
+            // 다시 만들지 않고 남겨 둔 층의 무늬도 무늬로 친다.
+            _hasPattern = keepLayer >= 0 && GetComponentsInChildren<MazeWall>(true).Any(w => w.IsHidden);
             foreach (MazeLayer layer in Layers)
             {
                 int layerIndex = layer.Index;
@@ -255,6 +363,9 @@ namespace EyeMaze
                     }
                 }
 
+                // 홍채 무늬 벽 자리와 막히는 단계를 먼저 정한다.
+                Dictionary<(MazeWall.Kind, int, int), int> pattern = PlanPattern(walls, layerIndex, r0, r1, warnings);
+
                 // 층 안은 무작위 깊이 우선 탐색으로 모든 칸이 이어진 미로를 만든다.
                 var rng = new System.Random(_seed * 31 + layerIndex * 7 + 1);
                 int rc = r1 - r0 + 1;
@@ -268,7 +379,8 @@ namespace EyeMaze
                 {
                     (int r, int s) cur = stack.Peek();
                     CollectNeighbors(cur, r0, r1, nbrs);
-                    nbrs.RemoveAll(n => vis[n.r - r0, n.s]);
+                    // 무늬 벽 자리는 뚫지 않는다. 무늬는 층이 끊기지 않게 골라 두었으므로 모든 칸에 닿는다.
+                    nbrs.RemoveAll(n => vis[n.r - r0, n.s] || pattern.ContainsKey(n.key));
                     if (nbrs.Count == 0) { stack.Pop(); continue; }
                     (int r, int s, (MazeWall.Kind, int, int) key) n = nbrs[rng.Next(nbrs.Count)];
                     walls[n.key].gameObject.SetActive(false);
@@ -276,7 +388,15 @@ namespace EyeMaze
                     stack.Push((n.r, n.s));
                 }
                 foreach (MazeWall w in walls.Values)
-                    if (w.gameObject.activeSelf && rng.NextDouble() < _loopChance) w.gameObject.SetActive(false);
+                    if (w.gameObject.activeSelf && !pattern.ContainsKey((w.WallKind, w.Ring, w.Sector)) && rng.NextDouble() < _loopChance) w.gameObject.SetActive(false);
+                // 무늬 벽은 정한 단계에서 막히는 숨은 벽이 된다.
+                foreach (KeyValuePair<(MazeWall.Kind, int, int), int> p in pattern)
+                {
+                    walls[p.Key].CloseAtStage = p.Value;
+                    // 다시 만든 층에서도 이미 찾아낸 상처는 보인다.
+                    walls[p.Key].Discovered = _discovered.Contains(p.Key);
+                }
+                if (pattern.Count > 0) _hasPattern = true;
 
                 // 바깥 층과의 경계는 이 층 소속이고 문이 하나 있다.
                 if (layerIndex > 0)
@@ -313,7 +433,130 @@ namespace EyeMaze
 
                 EyeHooks.Created(container.gameObject);
             }
+            ApplyComplexity();
+            ReportPatternWarnings(warnings);
             EyeHooks.Repaint();
+        }
+
+        /// <summary>
+        /// 홍채 무늬 장 목록을 정한다. 다음 Generate부터 무늬 벽으로 쓴다.
+        /// sheets를 사용하며, _patternSheets를 바꾼다.
+        /// </summary>
+        public void SetPatternSheets(IEnumerable<IrisPatternSheet> sheets)
+        {
+            _patternSheets.Clear();
+            if (sheets != null) _patternSheets.AddRange(sheets.Where(sheet => sheet != null));
+        }
+
+        /// <summary>
+        /// 복잡도 단계를 바꾸고, 그 단계 이하에서 막히는 무늬 벽을 켠다.
+        /// stage를 사용하며, _complexityStage와 무늬 벽의 활성 상태를 바꾼다.
+        /// </summary>
+        public void SetComplexityStage(int stage)
+        {
+            _complexityStage = Mathf.Max(0, stage);
+            ApplyComplexity();
+        }
+
+        /// <summary>
+        /// 무늬 벽마다 지금 단계에서 막혀 있어야 하는지 보고 켜거나 끈다. 처음부터 있던 벽은 건드리지 않는다.
+        /// _complexityStage와 벽의 CloseAtStage를 사용하며, 무늬 벽의 활성 상태를 바꾼다.
+        /// </summary>
+        private void ApplyComplexity()
+        {
+            foreach (MazeWall w in GetComponentsInChildren<MazeWall>(true))
+            {
+                if (!w.IsHidden) continue;
+                bool closed = _complexityStage >= w.CloseAtStage;
+                if (w.gameObject.activeSelf == closed) continue;
+                w.gameObject.SetActive(closed);
+                // 새로 생긴 상처는 동공에서 바깥으로 금이 번지듯 새겨지고, 잠깐 보였다가 가라앉는다.
+                if (closed && Application.isPlaying) w.Carve(CarveDelay(w), _scarCarveSeconds);
+            }
+        }
+
+        /// <summary>
+        /// 지금 막혀 있는 숨은 벽을 모두 번쩍이게 한다. 의심이 풀려 숨은 벽이 드러나는 순간에 쓴다.
+        /// 입력값은 없으며, 켜진 숨은 벽의 번쩍임 시작 시각을 바꾼다.
+        /// </summary>
+        public void FlashHiddenWalls()
+        {
+            foreach (MazeWall w in GetComponentsInChildren<MazeWall>(false))
+                if (w.IsHidden) w.Flash();
+        }
+
+        /// <summary>
+        /// 이 층에 들어가는 홍채 무늬 벽 자리와 막히는 단계를 정한다. 장 순서대로 벽을 더하되, 더하면 층 안 칸이 끊기는 벽은 빼고 warnings에 적는다.
+        /// 장 i는 1 + i * 단계 수 / 장 수 단계에 막혀, 장이 단계 수로 고르게 나뉜다.
+        /// walls(층 안 벽), layerIndex, r0, r1(층의 첫, 끝 고리), _patternSheets, _complexityStages를 사용하며, 벽 자리별 막히는 단계를 반환한다.
+        /// </summary>
+        private Dictionary<(MazeWall.Kind, int, int), int> PlanPattern(Dictionary<(MazeWall.Kind, int, int), MazeWall> walls, int layerIndex, int r0, int r1, List<string> warnings)
+        {
+            var pattern = new Dictionary<(MazeWall.Kind, int, int), int>();
+            if (_complexityStages <= 0 || _patternSheets.Count == 0) return pattern;
+            var keys = new List<(MazeWall.Kind kind, int ring, int sector)>();
+            var closed = new HashSet<(MazeWall.Kind, int, int)>();
+            for (int i = 0; i < _patternSheets.Count; i++)
+            {
+                int stage = 1 + i * _complexityStages / _patternSheets.Count;
+                keys.Clear();
+                _patternSheets[i].CollectWalls(_sectors, keys);
+                int dropped = 0;
+                foreach ((MazeWall.Kind kind, int ring, int sector) k in keys)
+                {
+                    // 다른 층의 벽은 이 층의 무늬가 아니다.
+                    if (k.ring < r0 || k.ring > r1) continue;
+                    var key = (k.kind, k.ring, k.sector);
+                    // 층 안에 없는 자리는 층 경계 원호뿐이다. 경계는 문 자리라 무늬로 쓰지 않는다.
+                    if (!walls.ContainsKey(key)) { dropped++; continue; }
+                    if (pattern.ContainsKey(key)) continue;
+                    closed.Add(key);
+                    if (!IsLayerConnected(r0, r1, closed)) { closed.Remove(key); dropped++; continue; }
+                    pattern[key] = stage;
+                }
+                if (dropped > 0) warnings.Add($"'{_patternSheets[i].Name}' 장의 벽 {dropped}개를 {layerIndex}층에서 뺐다 (층 경계 원호이거나, 막으면 칸이 갇힘).");
+            }
+            return pattern;
+        }
+
+        /// <summary>
+        /// closed 자리가 모두 막혀도 층 안의 모든 칸이 이어져 있는지 확인한다.
+        /// r0, r1(층의 첫, 끝 고리)과 closed를 사용하며, 이어져 있으면 true를 반환한다.
+        /// </summary>
+        private bool IsLayerConnected(int r0, int r1, HashSet<(MazeWall.Kind, int, int)> closed)
+        {
+            int cellCount = (r1 - r0 + 1) * _sectors;
+            bool[] seen = new bool[cellCount];
+            var queue = new Queue<(int r, int s)>();
+            var nbrs = new List<(int r, int s, (MazeWall.Kind, int, int) key)>();
+            seen[0] = true;
+            queue.Enqueue((r0, 0));
+            int reached = 1;
+            while (queue.Count > 0)
+            {
+                CollectNeighbors(queue.Dequeue(), r0, r1, nbrs);
+                foreach ((int r, int s, (MazeWall.Kind, int, int) key) n in nbrs)
+                {
+                    int index = (n.r - r0) * _sectors + n.s;
+                    if (seen[index] || closed.Contains(n.key)) continue;
+                    seen[index] = true;
+                    reached++;
+                    queue.Enqueue((n.r, n.s));
+                }
+            }
+            return reached == cellCount;
+        }
+
+        /// <summary>
+        /// 무늬 장에서 뺀 벽을 콘솔에 알린다. 지난번과 같은 내용이면 다시 알리지 않는다.
+        /// warnings와 _lastPatternWarning을 사용하며, _lastPatternWarning을 바꾼다.
+        /// </summary>
+        private void ReportPatternWarnings(List<string> warnings)
+        {
+            string text = string.Join("\n", warnings);
+            if (text == _lastPatternWarning) return;
+            _lastPatternWarning = text;
+            if (text.Length > 0) Debug.LogWarning($"[홍채 무늬] {text}", this);
         }
 
         /// <summary>

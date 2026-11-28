@@ -130,6 +130,10 @@ namespace EyeMaze
         [Tooltip("회상을 본 파편 자리(기억의 자리)에 남는 표시 색")]
         [SerializeField] private Color _seenMarkColor = new Color(0.6f, 0.95f, 1f, 0.45f);
 
+        [Header("숨은 벽")]
+        [Tooltip("손님의 의심이 풀렸을 때 숨은 벽이 다 나타나기까지 걸리는 시간(초)")]
+        [SerializeField] private float _hiddenWallRevealSeconds = 0.6f;
+
         [Header("부담감")]
         [Tooltip("지금 부담감 (0~1). 들여다보는 동안 차오르고, 가득 차면 leave 엔딩이 된다")]
         [SerializeField, Range(0f, 1f)] private float _burden;
@@ -209,6 +213,10 @@ namespace EyeMaze
         // 화면 회전 진행 상태와 재생 중인 후보, 층 목록 추가
         [NonSerialized] private bool _blinkTurning;
         [NonSerialized] private MazeLayer[] _blinkLayers = Array.Empty<MazeLayer>();
+        // 지난 프레임에 의심이 풀려 있었는지. 풀리는 순간 숨은 벽을 번쩍이는 데 쓴다.
+        [NonSerialized] private bool _doubtWasCleared;
+        // 테스트용으로 정한 상처 단계. 음수면 주운 파편 수를 따른다.
+        [NonSerialized] private int _stageOverride = -1;
         [NonSerialized] private BlinkTurnPreset _activePreset;
         [NonSerialized] private float _blinkOpenFrom;
         // 눈을 뜬 직후 입력 유예 시간 추가
@@ -287,6 +295,16 @@ namespace EyeMaze
         public Mode CurrentMode => _mode;
         public bool AcceptInput { get => _acceptInput; set => _acceptInput = value; }
         public string Message { get => _message; set => _message = value; }
+        /// <summary>켜져 있으면 Space로 시선을 거두지 못하고 미로에 머문다. 테스트 씬에서 쓴다.</summary>
+        public bool GazeLocked { get; set; }
+        /// <summary>켜져 있으면 들여다보는 동안 부담감이 차지 않는다. 테스트 씬에서 쓴다.</summary>
+        public bool BurdenPaused { get; set; }
+        /// <summary>가장 반짝이는 파편에 닿았을 때 엔딩 대신 부를 처리. 비어 있으면 엔딩을 시작한다.</summary>
+        public Action CoreTouchOverride { get; set; }
+        /// <summary>켜져 있으면 의심 플래그와 상관없이 의심이 풀린 것으로 본다. 테스트 씬에서 쓰고, 리셋하면 꺼진다.</summary>
+        public bool ForceDoubtCleared { get; set; }
+        /// <summary>손님의 의심이 풀려 숨은 벽을 보여 줄 때인지. 의심 플래그가 없는 손님은 처음부터 풀린 것으로 본다.</summary>
+        public bool DoubtCleared => ForceDoubtCleared || _activeCase == null || string.IsNullOrEmpty(_activeCase.DoubtFlag) || Flags.IsOn(_activeCase.DoubtFlag);
         public string IdleSituation => _activeCase != null && !string.IsNullOrEmpty(_activeCase.IdleSituation) ? _activeCase.IdleSituation : _idleSituation;
         /// <summary>지금 손님의 결말 목록 (엔딩 CSV가 바뀌면 바로 반영된다)</summary>
         public List<EndingDef> Endings => _activeCase != null ? _activeCase.Endings : _endings;
@@ -400,6 +418,8 @@ namespace EyeMaze
             if (Application.isPlaying) ResetEmotion();
             // 씬에 저장된 상담으로 시작해도 층 문 플래그가 들어간 미로로 새로 만든다.
             if (Application.isPlaying && _activeCase != null) RebuildMaze(_activeCase, true);
+            // 처음부터 의심이 풀려 있는 손님은 숨은 벽을 번쩍이지 않고 바로 보인다.
+            if (Application.isPlaying) SyncHiddenWalls();
         }
 
         /// <summary>
@@ -410,6 +430,9 @@ namespace EyeMaze
         {
             // 이 손님의 층 문을 여는 플래그를 미로에 알린다.
             _maze.SetGateFlags(c.GateFlags);
+            // 손님의 홍채 무늬 장과, 그 장을 나눠 막을 단계 수(파편 수)를 미로에 알린다.
+            _maze.SetPatternSheets(c.IrisPattern);
+            _maze.ComplexityStages = c.Fragments().Count;
             if (generate) _maze.Generate(c.MazeSeed);
         }
 
@@ -462,6 +485,14 @@ namespace EyeMaze
 
             float dt = Time.deltaTime;
             _bumpFlash = Mathf.MoveTowards(_bumpFlash, 0f, dt * 3f);
+            // 의심이 풀리면 숨은 벽을 번쩍이며 서서히 보이고, 다시 의심하면 서서히 숨긴다.
+            if (_maze != null)
+            {
+                bool cleared = DoubtCleared;
+                if (cleared && !_doubtWasCleared) _maze.FlashHiddenWalls();
+                _doubtWasCleared = cleared;
+                _maze.HiddenWallAlpha = Mathf.MoveTowards(_maze.HiddenWallAlpha, cleared ? 1f : 0f, dt / Mathf.Max(0.01f, _hiddenWallRevealSeconds));
+            }
 
             // 감기, 완전히 감김, 뜨기 순서로 진행하고 눈꺼풀 값을 눈 그림에 전달한다.
             if (_blinkRecoverT > 0f) _blinkRecoverT -= dt;
@@ -488,7 +519,7 @@ namespace EyeMaze
                 // 벽 변화 연출 중에는 깜빡임 시간을 세지 않는다.
                 if (_respawnEffectT < 0f) TickBlink(dt);
                 // 깜빡임 회전과 벽 변화 연출 중에는 부담감을 채우지 않음
-                if (Application.isPlaying && !_blinkTurning && !_wallChange.IsPlaying) TickBurden(dt);
+                if (Application.isPlaying && !_blinkTurning && !_wallChange.IsPlaying && !BurdenPaused) TickBurden(dt);
             }
             if (_reading) _readT += dt;
 
@@ -593,6 +624,7 @@ namespace EyeMaze
         {
             if (_mode == Mode.Ending) return;
             if (_mode == Mode.Gaze && _inAbyss) { _message = AbyssText; return; }
+            if (_mode == Mode.Gaze && GazeLocked) return;
             // 관찰을 멈출 때의 문구를 "관찰을 잠시 멈추고 생각에 잠긴다."로 변경
             if (_mode == Mode.Gaze) { ExitGaze(Strings.Get("msg.gaze_off")); return; }
             if (!CanGaze) return;
@@ -820,7 +852,8 @@ namespace EyeMaze
         /// </summary>
         public void RespawnMaze()
         {
-            if (!_respawnMazeAfterReading || _maze == null) return;
+            // 벽을 다시 만들지 않아도 읽은 파편 수만큼 상처 무늬를 새긴다.
+            if (!_respawnMazeAfterReading || _maze == null) { UpdateComplexityStage(); return; }
             int keep = _cursor != null ? _maze.LayerOfRing(_cursor.Ring) : -1;
             // 깜빡임이나 다른 벽 변화 연출과 겹치지 않을 때만 옛 벽을 잔상으로 남긴다.
             bool animate = Application.isPlaying && _blinkPhase < 0f && !_wallChange.IsPlaying;
@@ -832,7 +865,40 @@ namespace EyeMaze
                 _wallChange.Tick(0f);
                 _respawnEffectT = 0f;
             }
+            // 벽을 새로 만든 뒤에 단계를 올려야 모든 층의 새 상처가 금이 번지듯 새겨진다.
+            UpdateComplexityStage();
             _message = Strings.Get("msg.respawn");
+        }
+
+        /// <summary>
+        /// 숨은 벽의 표시를 지금 의심 상태에 바로 맞춘다. 연출 없이 보이거나 숨긴다.
+        /// DoubtCleared를 사용하며, 미로의 HiddenWallAlpha와 _doubtWasCleared를 바꾼다.
+        /// </summary>
+        private void SyncHiddenWalls()
+        {
+            _doubtWasCleared = DoubtCleared;
+            if (_maze != null) _maze.HiddenWallAlpha = _doubtWasCleared ? 1f : 0f;
+        }
+
+        /// <summary>
+        /// 지금 손님의 주운 파편 수(테스트로 정한 단계가 있으면 그 단계)를 미로의 복잡도 단계로 정한다.
+        /// Fragments의 수집 상태, _stageOverride, 미로의 ComplexityStages를 사용하며, 미로의 복잡도 단계와 무늬 벽을 바꾼다.
+        /// </summary>
+        private void UpdateComplexityStage()
+        {
+            if (_maze == null) return;
+            int stage = _stageOverride >= 0 ? _stageOverride : Fragments.Count(f => f.Collected);
+            _maze.SetComplexityStage(Mathf.Min(stage, _maze.ComplexityStages));
+        }
+
+        /// <summary>
+        /// 테스트용으로 상처 단계를 바로 정한다. 정한 단계는 파편을 읽어도 바뀌지 않고, 리셋하면 풀린다.
+        /// stage(음수면 주운 파편 수를 다시 따른다)를 사용하며, _stageOverride와 미로의 복잡도 단계를 바꾼다.
+        /// </summary>
+        public void SetStageOverride(int stage)
+        {
+            _stageOverride = stage;
+            UpdateComplexityStage();
         }
 
         /// <summary>
@@ -923,11 +989,12 @@ namespace EyeMaze
 
         /// <summary>
         /// 가장 반짝이는 파편에 닿아 마음이 들린다. 신뢰와 열쇠 파편에 따라 truth / half 엔딩이 된다.
-        /// 상대의 신뢰와 열쇠 파편을 사용하며, 엔딩을 시작한다.
+        /// 상대의 신뢰와 열쇠 파편을 사용하며, 엔딩을 시작한다. CoreTouchOverride가 있으면 엔딩 대신 그것을 부른다.
         /// </summary>
         public void TouchCore()
         {
             if (_core != null) _core.Touch();
+            if (CoreTouchOverride != null) { CoreTouchOverride(); return; }
             int trust = _person != null ? _person.Trust : 0;
             // key_flag가 정해져 있으면 그 파편을 주웠을 때만 충족된다. 파편을 못 찾았으면 충족되지 않는다.
             bool keyOk = string.IsNullOrEmpty(_keyFlag) ? _keyFragment == null || _keyFragment.Collected : _keyFragment != null && _keyFragment.Collected;
@@ -1340,6 +1407,11 @@ namespace EyeMaze
             if (_person != null) { _person.Trust = 0; _person.EarnedTrust = 0; _person.Dilation = 0.2f; }
             ShowEncounterGuide(true);
             foreach (MemoryFragment f in Fragments) f.Collected = false;
+            // 무늬 벽을 다시 열고 숨은 벽을 바로 숨긴다.
+            ForceDoubtCleared = false;
+            _stageOverride = -1;
+            if (_maze != null) { _maze.SetComplexityStage(0); _maze.ClearDiscovered(); }
+            SyncHiddenWalls();
             // 기억의 자리를 지우고, 회상 뒤에 나타나는 파편을 다시 숨긴다
             ResetFlashbackFragments();
             if (_maze != null) foreach (MazeLayer l in _maze.Layers) l.Offset = 0;
@@ -1513,8 +1585,9 @@ namespace EyeMaze
                 if (target <= outerB - m) { r = target; return; }
                 if (ring > 0 && CanCrossArc(ring - 1, s, r, ref a)) { r = target; return; }
                 r = Mathf.Min(r, outerB - m);
-                // 바깥쪽으로 가다 막혔음을 기록한다.
+                // 바깥쪽으로 가다 막혔음을 기록하고, 막은 벽이 숨은 상처면 드러낸다.
                 _hitRadial = 1;
+                if (ring > 0) TouchScar(_maze.ArcWallAt(ring - 1, s));
             }
             else
             {
@@ -1527,8 +1600,9 @@ namespace EyeMaze
                     return;
                 }
                 r = Mathf.Max(r, innerB + m);
-                // 안쪽으로 가다 막혔음을 기록한다.
+                // 안쪽으로 가다 막혔음을 기록하고, 막은 벽이 숨은 상처면 드러낸다.
                 _hitRadial = -1;
+                TouchScar(_maze.ArcWallAt(ring, s));
             }
         }
 
@@ -1555,8 +1629,9 @@ namespace EyeMaze
                 if (target <= d - mDeg) { a += dDeg; return; }
                 if (_maze.IsRadialOpen(ring, s)) { KeepInBand(ref r, ring); a += dDeg; return; }
                 a = s * d + Mathf.Max(local, d - mDeg);
-                // 반시계 방향으로 가다 막혔음을 기록한다.
+                // 반시계 방향으로 가다 막혔음을 기록하고, 막은 벽이 숨은 상처면 드러낸다.
                 _hitTangent = 1;
+                TouchScar(_maze.RadialWallAt(ring, s));
             }
             else
             {
@@ -1564,9 +1639,20 @@ namespace EyeMaze
                 if (target >= mDeg) { a += dDeg; return; }
                 if (_maze.IsRadialOpen(ring, _maze.Mod(s - 1))) { KeepInBand(ref r, ring); a += dDeg; return; }
                 a = s * d + Mathf.Min(local, mDeg);
-                // 시계 방향으로 가다 막혔음을 기록한다.
+                // 시계 방향으로 가다 막혔음을 기록하고, 막은 벽이 숨은 상처면 드러낸다.
                 _hitTangent = -1;
+                TouchScar(_maze.RadialWallAt(ring, _maze.Mod(s - 1)));
             }
+        }
+
+        /// <summary>
+        /// 시선을 막은 벽이 아직 찾지 못한 숨은 상처면 금이 번지듯 드러내고 시선을 번쩍인다. Play 중에만 한다.
+        /// wall을 사용하며, 미로의 찾아낸 상처 기록과 _bumpFlash를 바꾼다.
+        /// </summary>
+        private void TouchScar(MazeWall wall)
+        {
+            if (!Application.isPlaying || wall == null) return;
+            if (_maze.Discover(wall)) _bumpFlash = Mathf.Max(_bumpFlash, 0.5f);
         }
 
         /// <summary>
