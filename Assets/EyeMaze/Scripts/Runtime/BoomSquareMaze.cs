@@ -7,7 +7,7 @@ namespace EyeMaze
 {
     /// <summary>
     /// 폭발 미로의 사각 미로. 홍채 원 안을 가로세로 칸이 바둑판처럼 채운다. 칸 전체가 원 안에 드는 칸만 시선이 다니는 미로 칸이고,
-    /// 원에 걸친 바깥 칸은 격자선만 보이는 그림 칸이다. 미로를 두르는 테두리 선은 없고 홍채 가장자리가 끝으로 보인다. 벽은 칸 경계를 따라 곧은 선이다.
+    /// 원에 걸친 바깥 칸은 쓰지 않고 그리지도 않는다. 미로를 두르는 테두리 선은 없다. 벽은 칸 경계를 따라 곧은 선이다.
     /// 미로는 바깥에서 안으로 원을 따라 층(외각, 내각, 심층)으로 나뉘고, 층 경계와 동공 자리 둘레에 문이 하나씩 있다.
     /// 층마다 조각이 하나 있어 먹으면 그 층의 안쪽 문이 열린다. 칸 좌표는 열(0 = 왼쪽)과 행(0 = 아래)이고, 이 오브젝트의 로컬 원점이 원의 한가운데다.
     /// 켜져 있는 동안 원형 미로 층의 벽과 문 그림을 숨긴다. 원형 벽의 판정은 건드리지 않는다.
@@ -91,7 +91,7 @@ namespace EyeMaze
         // 벽과 테두리가 빛나기 시작한 시각(빛나지 않으면 -1), 빛나는 시간과 색
         private float[,] _glowStartV;
         private float[,] _glowStartH;
-        // 미로 칸과 그림 칸 사이 경계인지. 평소에는 꺼 두고 부딪혀 빛나는 동안만 보인다.
+        // 미로 칸과 바깥(원에 걸친 칸이나 원 밖) 사이 경계인지. 평소에는 꺼 두고 부딪혀 빛나는 동안만 보인다.
         private bool[,] _rimEdgeV;
         private bool[,] _rimEdgeH;
         private float _glowSeconds = 0.4f;
@@ -182,20 +182,6 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 칸이 원에 걸쳐 일부만 원 안에 드는 그림 칸인지 판단한다. 그림 칸은 격자선만 그리고 들어갈 수 없다.
-        /// cell(열, 행), _outerRadius, 칸 크기를 사용하며, 그림 칸이면 true를 반환한다.
-        /// </summary>
-        public bool IsDecorCell(Vector2Int cell)
-        {
-            if (!InBounds(cell) || IsHole(cell) || IsMazeCell(cell)) return false;
-            Vector2 c = CellCenterLocal(cell);
-            float h = _cellSize * 0.5f;
-            float nx = Mathf.Max(0f, Mathf.Abs(c.x) - h);
-            float ny = Mathf.Max(0f, Mathf.Abs(c.y) - h);
-            return nx * nx + ny * ny < _outerRadius * _outerRadius;
-        }
-
-        /// <summary>
         /// 미로 칸이 몇 번째 층인지 계산한다. 칸 한가운데가 층 경계 원보다 안쪽일수록 안쪽 층이다.
         /// cell(열, 행), _layerRadii를 사용하며, 층 번호(0 = 외각)를 반환한다. 미로 칸이 아니면 -1이다.
         /// </summary>
@@ -280,31 +266,6 @@ namespace EyeMaze
             return _cellSize * Mathf.Abs(transform.lossyScale.x) / Mathf.Max(1e-4f, Mathf.Abs(Maze.transform.lossyScale.x));
         }
 
-        // 원으로 자르기
-
-        /// <summary>
-        /// 선분을 바깥 테두리 원 안쪽 부분만 남게 자른다.
-        /// a, b(참조, 로컬 좌표)와 _outerRadius를 사용하며, 남는 부분이 있으면 a, b를 바꾸고 true를 반환한다.
-        /// </summary>
-        public bool ClipSegment(ref Vector3 a, ref Vector3 b)
-        {
-            Vector2 p = a;
-            Vector2 d = (Vector2)b - p;
-            float qa = Vector2.Dot(d, d);
-            float qb = 2f * Vector2.Dot(p, d);
-            float qc = Vector2.Dot(p, p) - _outerRadius * _outerRadius;
-            float disc = qb * qb - 4f * qa * qc;
-            if (qa < 1e-10f || disc <= 0f) return false;
-            float s = Mathf.Sqrt(disc);
-            float t0 = Mathf.Max(0f, (-qb - s) / (2f * qa));
-            float t1 = Mathf.Min(1f, (-qb + s) / (2f * qa));
-            if (t1 - t0 < 1e-4f) return false;
-            Vector3 start = a;
-            a = start + (b - start) * t0;
-            b = start + (b - start) * t1;
-            return true;
-        }
-
         // 길과 문
 
         /// <summary>
@@ -368,7 +329,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 칸의 dir 쪽 벽을 color로 빛나게 했다가 seconds 동안 원래 색으로 돌아오게 한다. 그림 칸 쪽 경계는 평소 안 보이다가 빛나는 동안만 보인다.
+        /// 칸의 dir 쪽 벽을 color로 빛나게 했다가 seconds 동안 원래 색으로 돌아오게 한다. 바깥 쪽 경계는 평소 안 보이다가 빛나는 동안만 보인다.
         /// cell(열, 행), dir(칸 방향), color, seconds를 사용하며, 그 경계의 빛남 시작 시각과 빛남 색, 시간을 바꾼다.
         /// </summary>
         public void GlowWall(Vector2Int cell, Vector2Int dir, Color color, float seconds)
@@ -617,25 +578,19 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 세로 경계가 미로 칸이나 그림 칸에 닿아 격자선을 그릴 경계인지 판단한다. 동공 자리 안쪽과 원 밖의 경계는 그리지 않는다.
+        /// 세로 경계가 미로 칸에 닿아 격자선을 그릴 경계인지 판단한다. 동공 자리 안쪽과 미로 바깥의 경계는 그리지 않는다.
         /// x(경계 열), y(행)를 사용하며, 그릴 경계면 true를 반환한다.
         /// </summary>
-        public bool HasEdgeV(int x, int y) => IsGridCell(new Vector2Int(x - 1, y)) || IsGridCell(new Vector2Int(x, y));
+        public bool HasEdgeV(int x, int y) => IsMazeCell(new Vector2Int(x - 1, y)) || IsMazeCell(new Vector2Int(x, y));
 
         /// <summary>
-        /// 가로 경계가 미로 칸이나 그림 칸에 닿아 격자선을 그릴 경계인지 판단한다. 동공 자리 안쪽과 원 밖의 경계는 그리지 않는다.
+        /// 가로 경계가 미로 칸에 닿아 격자선을 그릴 경계인지 판단한다. 동공 자리 안쪽과 미로 바깥의 경계는 그리지 않는다.
         /// x(열), y(경계 행)를 사용하며, 그릴 경계면 true를 반환한다.
         /// </summary>
-        public bool HasEdgeH(int x, int y) => IsGridCell(new Vector2Int(x, y - 1)) || IsGridCell(new Vector2Int(x, y));
+        public bool HasEdgeH(int x, int y) => IsMazeCell(new Vector2Int(x, y - 1)) || IsMazeCell(new Vector2Int(x, y));
 
         /// <summary>
-        /// 칸에 격자선을 그리는지 판단한다. 미로 칸과 그림 칸에 그린다.
-        /// cell(열, 행)을 사용하며, 그리면 true를 반환한다.
-        /// </summary>
-        private bool IsGridCell(Vector2Int cell) => IsMazeCell(cell) || IsDecorCell(cell);
-
-        /// <summary>
-        /// 경계가 미로 칸과 그 밖(그림 칸이나 원 밖) 사이인지 판단한다. 이런 경계는 늘 막혀 있고, 평소에는 선 없이 부딪힐 때만 빛난다.
+        /// 경계가 미로 칸과 그 바깥(원에 걸친 칸이나 원 밖) 사이인지 판단한다. 이런 경계는 늘 막혀 있고, 평소에는 선 없이 부딪힐 때만 빛난다.
         /// a, b(경계 양쪽 칸)를 사용하며, 바깥 경계면 true를 반환한다.
         /// </summary>
         private bool IsRimEdge(Vector2Int a, Vector2Int b)

@@ -36,7 +36,7 @@ flowchart TD
 테스트 씬의 폭발 미로는 동심원 고리 대신 가로세로 사각 칸으로 된 미로이고, 테두리 선 없이 눈(홍채) 가장자리가 그대로 미로의 끝이다.
 
 - 홍채 원 안을 사각 칸이 바둑판처럼 채운다. 칸 전체가 원 안에 드는 칸만 시선이 다니는 미로 칸이다.
-- 원에 걸친 바깥 칸은 눈 모양을 채우는 그림일 뿐이다. 검정 바탕에 회색 격자선만 보이고 원 가장자리에서 잘리며, 들어갈 수 없다. 벽, 폭발, 안전지대, 조각, 문이 없다.
+- 원에 걸친 바깥 칸은 쓰지 않고 그리지도 않는다. 미로 칸 바깥에는 격자선도 없이 홍채 바탕만 보이고, 들어갈 수 없다.
 - 미로를 두르는 테두리 선은 없다. 안쪽 벽은 칸 경계를 따라 곧은 가로선, 세로선이고, 원형 벽은 보이지 않는다.
 - 벽 굵기는 화면에서 늘 정수 픽셀이라 보통 벽은 어디서나 1픽셀, 층 경계 벽과 문은 어디서나 2픽셀이다.
 - 가운데 동공 원에 걸치는 칸은 동공 자리로 비워 둔다. 동공 자리로 들어가면 가운데 파편까지 가서 탈출한다.
@@ -106,7 +106,7 @@ flowchart TD
 
 들여다보는 동안 칸을 나누는 옅은 격자선이 보인다.
 
-- 미로 칸 경계를 따라 곧은 가로선과 세로선(십자 모양)이 어두운 반투명 회색으로 그려진다. 원에 걸친 바깥 칸에도 그려지고 원 가장자리에서 잘린다. 동공 자리 안쪽에는 없다. 흰 벽보다 가늘고 어두워 벽이 먼저 보인다.
+- 미로 칸 경계를 따라 곧은 가로선과 세로선(십자 모양)이 어두운 반투명 회색으로 그려진다. 미로 칸 경계에만 그려져, 미로 가장자리가 옅은 회색 계단 모양으로 보인다. 동공 자리 안쪽과 미로 바깥에는 없다. 흰 벽보다 가늘고 어두워 벽이 먼저 보인다.
 - 화면에서 1픽셀 굵기이고, 화면 크기나 카메라 확대가 바뀌어도 1픽셀 아래로 가늘어져 사라지지 않는다.
 - 칸 그림 위, 벽 아래에 그려진다.
 
@@ -148,7 +148,7 @@ flowchart TD
 ### 구성
 
 - `Assets/EyeMaze/Prefabs/MazeBoom.prefab`의 루트 `폭발 (Maze Boom)`에 `MazeBoomField`와 `BoomSquareMaze`가 있고, 자식으로 `안전지대 1~6`(`BoomSafeZone`)이 있다.
-- 사각 미로는 루트의 로컬 원점이 원의 한가운데다. 기본은 칸 0.3, 바깥 반지름 3(홍채, 눈 그림의 홍채 원판은 3.1), 안쪽 반지름 0.9(동공)로 21×21 바둑판에서 칸 전체가 원 안에 드는 232칸이 미로 칸, 원에 걸친 80칸이 그림 칸이다. 시작 칸은 (10, 1)이다. 층 경계 반지름은 2.2, 1.55다.
+- 사각 미로는 루트의 로컬 원점이 원의 한가운데다. 기본은 칸 0.3, 바깥 반지름 3(홍채, 눈 그림의 홍채 원판은 3.1), 안쪽 반지름 0.9(동공)로 21×21 바둑판에서 칸 전체가 원 안에 드는 232칸이 미로 칸이고, 원에 걸친 칸은 쓰지 않는다. 시작 칸은 (10, 1)이다. 층 경계 반지름은 2.2, 1.55다.
 - 사각 미로가 켜져 있는 동안 원형 미로 층의 벽과 문 그림(LineRenderer)만 끈다. 원형 벽 오브젝트와 판정은 그대로다.
 - 테스트 씬은 `미로 (Iris Maze)` 아래에 프리팹 인스턴스를 두어 미로가 돌면 함께 돈다. 디렉터와 카메라 연결만 인스턴스 오버라이드다.
 - 칸 그림(`폭발 칸`), 격자(`격자`), 사각 벽(`사각 벽`, 문, 바깥 경계 빛남 선, 조각 포함)은 Play 중 프리팹 루트 아래에 LineRenderer로 만든다. 정렬 순서는 칸 그림 3, 격자선 4, 벽 5, 조각 7이다.
@@ -168,7 +168,7 @@ flowchart TD
 | BOOM-06 | `EyeMazeDirector.StepSquare`, `EyeMazeDirector.GridEase`, `GridMoveSettings` |
 | BOOM-07 | `MazeBoomField.BuildGrid`, `MazeBoomField.GridLineWidth` |
 | BOOM-08 | `EyeMazeDirector.StartSquareBounce`, `BoomSquareMaze.GlowWall` |
-| BOOM-09 | `BoomSquareMaze.Generate`, `BoomSquareMaze.IsMazeCell`, `BoomSquareMaze.IsDecorCell`, `BoomSquareMaze.SnapWidth` |
+| BOOM-09 | `BoomSquareMaze.Generate`, `BoomSquareMaze.IsMazeCell`, `BoomSquareMaze.SnapWidth` |
 | BOOM-10 | `BoomSquareMaze.TryTakeShard`, `BoomSquareMaze.PickGate`, `MazeBoomField.TakeShard` |
 
 ### 메모

@@ -463,7 +463,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 칸 경계마다 곧은 세로선과 가로선을 만든다. 미로 칸에 닿는 경계만 그리고, 끊기지 않은 구간은 선 하나로 이어 원 안쪽만 남긴다. 옛 격자는 지운다.
+        /// 칸 경계마다 곧은 세로선과 가로선을 만든다. 미로 칸에 닿는 경계만 그리고, 끊기지 않은 구간은 선 하나로 잇는다. 옛 격자는 지운다.
         /// 사각 미로의 칸 수와 크기, _gridWidth, _gridSortingOrder를 사용하며, _gridLines와 자식 오브젝트를 바꾼다.
         /// </summary>
         private void BuildGrid()
@@ -508,12 +508,11 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 격자선 한 구간을 원 안쪽만 남게 잘라 만든다. 원 밖이면 만들지 않는다.
-        /// container, name, 양 끝 a와 b, 사각 미로의 원 자르기를 사용하며, 격자선을 만들어 _gridLines를 바꾼다.
+        /// 격자선 한 구간을 만든다.
+        /// container, name, 양 끝 a와 b를 사용하며, 격자선을 만들어 _gridLines를 바꾼다.
         /// </summary>
         private void AddGridLine(Transform container, string name, Vector3 a, Vector3 b)
         {
-            if (!_square.ClipSegment(ref a, ref b)) return;
             LineRenderer lr = MakeGridLine(container, name);
             Shapes.SetPoints(lr, new[] { a, b }, false);
         }
