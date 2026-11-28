@@ -51,8 +51,8 @@ namespace EyeMaze
         [Header("문")]
         [Tooltip("닫힌 문의 색. 보통 벽과 구분되게 칠한다")]
         [SerializeField] private Color _gateColor = new Color(1f, 0.78f, 0.3f, 1f);
-        [Tooltip("층 경계 벽과 문의 굵기 배율 (보통 벽 = 1). 층이 구분되어 보이게 굵게 그린다")]
-        [SerializeField, Min(1f)] private float _layerWallWidthScale = 2f;
+        [Tooltip("층 경계 벽과 문의 굵기 배율 (보통 벽 = 1). 1이면 보통 벽과 같은 굵기다")]
+        [SerializeField, Min(1f)] private float _layerWallWidthScale = 1f;
         [Tooltip("문이 열릴 때 번쩍이며 사라지는 시간(초)")]
         [SerializeField, Min(0.05f)] private float _gateOpenSeconds = 0.6f;
         [Tooltip("공용 문구 파일에 msg.boom_gate_open이 없을 때 쓰는 글")]
