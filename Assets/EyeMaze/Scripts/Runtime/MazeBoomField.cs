@@ -101,6 +101,9 @@ namespace EyeMaze
         // 칸 경계의 가로선과 세로선
         private readonly List<LineRenderer> _gridLines = new List<LineRenderer>();
         private float[,] _burst;
+        // 칸마다 앞 프레임에 터져 있었는지와, 이번 프레임에 막 터졌는지. 막 터진 칸에서만 휩쓸린다.
+        private bool[,] _wasBursting;
+        private bool[,] _justBurst;
         private bool _running;
         private float _time;
         private int _loop;
@@ -295,6 +298,24 @@ namespace EyeMaze
                     }
                 }
             }
+            MarkJustBurst();
+        }
+
+        /// <summary>
+        /// 앞 프레임에는 터져 있지 않다가 이번 프레임에 터진 칸을 표시한다. 무늬 시간이 멈춘 동안에는 새로 터지는 칸이 없다.
+        /// _burst와 _wasBursting을 사용하며, _justBurst와 _wasBursting을 바꾼다.
+        /// </summary>
+        private void MarkJustBurst()
+        {
+            for (int x = 0; x < _square.Columns; x++)
+            {
+                for (int y = 0; y < _square.Rows; y++)
+                {
+                    bool bursting = _burst[x, y] >= 0f;
+                    _justBurst[x, y] = bursting && !_wasBursting[x, y];
+                    _wasBursting[x, y] = bursting;
+                }
+            }
         }
 
         /// <summary>
@@ -414,14 +435,14 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 시선이 터진 칸에 있으면 휩쓸림을 처리한다. 유예 중이거나 동공 안이면 넘어간다.
-        /// 시선 위치, _burst, _graceT를 사용하며, 휩쓸리면 Hit을 부른다.
+        /// 시선이 있는 칸이 이번 프레임에 막 터졌으면 휩쓸림을 처리한다. 터진 뒤 불꽃이 남은 칸에서는 휩쓸리지 않는다. 유예 중이거나 동공 안이면 넘어간다.
+        /// 시선 위치, _justBurst, _graceT를 사용하며, 휩쓸리면 Hit을 부른다.
         /// </summary>
         private void CheckHit()
         {
             if (_graceT > 0f || _director.InAbyss) return;
             Vector2Int cell = CursorCell();
-            if (_burst[cell.x, cell.y] >= 0f) Hit();
+            if (_justBurst[cell.x, cell.y]) Hit();
         }
 
         /// <summary>
@@ -438,7 +459,7 @@ namespace EyeMaze
 
         /// <summary>
         /// 칸마다 사각 그림을 만든다. 사각 미로 모양이 바뀌었으면 옛 그림을 지우고 다시 만든다. 미로 칸에만 만든다.
-        /// 사각 미로의 칸 수와 크기, 선 재질과 _fillScale, _sortingOrder를 사용하며, _cells, _warn, _burst, _safeMap과 자식 오브젝트를 바꾼다.
+        /// 사각 미로의 칸 수와 크기, 선 재질과 _fillScale, _sortingOrder를 사용하며, _cells, _warn, _burst, _wasBursting, _justBurst, _safeMap과 자식 오브젝트를 바꾼다.
         /// </summary>
         private void EnsureCells()
         {
@@ -456,6 +477,8 @@ namespace EyeMaze
             _cells = new LineRenderer[columns, rows];
             _warn = new float[columns, rows];
             _burst = new float[columns, rows];
+            _wasBursting = new bool[columns, rows];
+            _justBurst = new bool[columns, rows];
             _safeMap = new bool[columns, rows];
             // 이웃 칸과 붙지 않도록 칸보다 조금 작게 채운다.
             _cellWidth = _square.CellSize * _fillScale;

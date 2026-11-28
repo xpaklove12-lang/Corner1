@@ -65,8 +65,9 @@ flowchart TD
 
 ### 휩쓸림 (BOOM-02)
 
-시선이 터지는 칸에 있으면 휩쓸려 가장 최근에 밟은 안전지대로 돌아간다.
+칸이 펑 터지는 순간 시선이 그 칸에 있으면 휩쓸려 가장 최근에 밟은 안전지대로 돌아간다.
 
+- 터진 뒤 불꽃이 남아 가라앉는 칸은 지나가거나 머물러도 휩쓸리지 않는다.
 - 아직 안전지대를 밟지 않았으면 시작 칸으로 돌아간다.
 - 시선이 번쩍이고 "폭발에 휩쓸렸다. (n번째)"가 보인다.
 - 돌아간 직후 1초 동안은 다시 휩쓸리지 않는다.
@@ -162,7 +163,7 @@ flowchart TD
 | 기능 | 찾을 곳 |
 |---|---|
 | BOOM-01 | `MazeBoomField.EvaluateCells`, `MazeBoomField.DrawCells`, `BoomWave`, `BoomStage` |
-| BOOM-02 | `MazeBoomField.CheckHit`, `EyeMazeDirector.WarpGazeTo` |
+| BOOM-02 | `MazeBoomField.CheckHit`, `MazeBoomField.MarkJustBurst`, `EyeMazeDirector.WarpGazeTo` |
 | BOOM-03 | `MazeBoomField`, `EyeMazeDirector.GridOverride` |
 | BOOM-04 | `BoomSafeZone`, `MazeBoomField.CollectSafeZones` |
 | BOOM-05 | `EyeMazeDirector.TryRoundCorner` |

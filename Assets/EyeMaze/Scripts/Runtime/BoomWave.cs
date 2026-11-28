@@ -37,7 +37,7 @@ namespace EyeMaze
         [SerializeField, Min(0.05f)] private float _interval = 1f;
         [Tooltip("터지기 전에 달아오르며 경고하는 시간(초)")]
         [SerializeField, Min(0.05f)] private float _warnSeconds = 1f;
-        [Tooltip("터진 뒤 칸에 남아 있는 시간(초). 이 동안 칸에 들어오면 휩쓸린다")]
+        [Tooltip("터진 뒤 불꽃이 칸에 남아 가라앉는 시간(초). 그림만 남고, 휩쓸리는 것은 터지는 순간뿐이다")]
         [SerializeField, Min(0.05f)] private float _burstSeconds = 0.3f;
 
         [Header("범위")]
