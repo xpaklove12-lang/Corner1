@@ -119,8 +119,6 @@ namespace EyeMaze
         public int Hits => _hits;
 
         private IrisMaze Maze => _director.Maze;
-        // 눈 그림의 동공. 폭발 미로가 켜져 있는 동안 동공 자리 크기에 맞춘다.
-        private Pupil _pupil;
         private BoomStage Stage => _stages.Count > 0 ? _stages[Mathf.Clamp(_stage, 0, _stages.Count - 1)] : null;
 
         // 깜빡임, 읽기, 회상, 창, 탈출 뒤에는 무늬 시간이 멈춘다.
@@ -178,7 +176,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 들여다보기가 시작될 때 사각 미로를 만들고 순서표를 처음부터 돌린다. 시선을 시작 칸에 놓고 그 칸을 돌아갈 칸으로 정하며, 동공을 동공 자리 크기에 맞춘다.
+        /// 들여다보기가 시작될 때 사각 미로를 만들고 순서표를 처음부터 돌린다. 시선을 시작 칸에 놓고 그 칸을 돌아갈 칸으로 정한다.
         /// 사각 미로의 시작 칸을 사용하며, _running, _time, _loop, _hits, _graceT, 돌아갈 칸, 시선 위치와 칸 그림을 바꾼다.
         /// </summary>
         private void BeginRun()
@@ -191,36 +189,22 @@ namespace EyeMaze
             _stage = 0;
             _square.Generate();
             _square.Active = true;
-            // 동공이 동공 자리 둘레의 벽과 문을 가리지 않도록 벽 굵기 절반(반 픽셀)만큼 작게 맞춘다.
-            FitPupil(_square.HoleRadius - _square.PixelSize * 0.5f);
             SetCheckpoint(_square.StartCell);
             _director.WarpGazeTo(_square.CellCenterMaze(_square.StartCell), false);
             EnsureCells();
         }
 
         /// <summary>
-        /// 들여다보기가 끝나면 순서표를 멈추고 칸 그림을 모두 숨기며, 동공 크기를 원래대로 돌린다.
-        /// 입력값은 없으며, _running, 칸 그림의 표시 상태, 동공 맞춤을 바꾼다.
+        /// 들여다보기가 끝나면 순서표를 멈추고 칸 그림을 모두 숨긴다.
+        /// 입력값은 없으며, _running과 칸 그림의 표시 상태를 바꾼다.
         /// </summary>
         private void StopRun()
         {
             _running = false;
             _square.Active = false;
-            // 씬을 닫는 중이면 동공이 먼저 사라질 수 있다.
-            if (_pupil != null) _pupil.FitRadiusOverride = 0f;
             if (_cells == null) return;
             foreach (LineRenderer lr in _cells) if (lr != null) lr.enabled = false;
             foreach (LineRenderer lr in _gridLines) if (lr != null) lr.enabled = false;
-        }
-
-        /// <summary>
-        /// 눈 그림의 동공이 맞출 반지름을 정한다. 동공은 미로 위 눈 그림 아래에서 찾는다.
-        /// radius(미로 기준)를 사용하며, _pupil과 동공의 FitRadiusOverride를 바꾼다.
-        /// </summary>
-        private void FitPupil(float radius)
-        {
-            if (_pupil == null) _pupil = Maze.GetComponentInParent<EyeVisual>().GetComponentInChildren<Pupil>(true);
-            _pupil.FitRadiusOverride = radius;
         }
 
         /// <summary>
@@ -518,7 +502,7 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 칸 경계마다 곧은 세로선과 가로선을 만든다. 미로 칸과 원에 걸친 칸에 닿는 경계만 그리고, 끊기지 않은 구간은 선 하나로 이어 홍채 원판 안쪽만 남긴다. 옛 격자는 지운다.
+        /// 칸 경계마다 곧은 세로선과 가로선을 만든다. 미로 칸에 닿는 경계만 그리고, 끊기지 않은 구간은 선 하나로 잇는다. 옛 격자는 지운다.
         /// 사각 미로의 칸 수와 크기, _gridWidth, _gridSortingOrder를 사용하며, _gridLines와 자식 오브젝트를 바꾼다.
         /// </summary>
         private void BuildGrid()
@@ -563,12 +547,11 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 격자선 한 구간을 홍채 원판 안쪽만 남게 잘라 만든다. 원 밖이면 만들지 않는다.
-        /// container, name, 양 끝 a와 b, 사각 미로의 원 자르기를 사용하며, 격자선을 만들어 _gridLines를 바꾼다.
+        /// 격자선 한 구간을 만든다.
+        /// container, name, 양 끝 a와 b를 사용하며, 격자선을 만들어 _gridLines를 바꾼다.
         /// </summary>
         private void AddGridLine(Transform container, string name, Vector3 a, Vector3 b)
         {
-            if (!_square.ClipSegment(ref a, ref b)) return;
             LineRenderer lr = MakeGridLine(container, name);
             Shapes.SetPoints(lr, new[] { a, b }, false);
         }

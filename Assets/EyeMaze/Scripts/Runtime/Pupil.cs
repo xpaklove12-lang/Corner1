@@ -56,10 +56,6 @@ namespace EyeMaze
         public float EmotionTrembleSpeed { get => _emotionTrembleSpeed; set => _emotionTrembleSpeed = value; }
         /// <summary>감정 표현의 시선 피함. 동공 위치에만 더하고 크기는 바꾸지 않는다.</summary>
         public Vector2 EmotionShift { get => _emotionShift; set => _emotionShift = value; }
-        /// <summary>
-        /// 0보다 크면 미로에 맞출 때 미로의 안쪽 원 대신 이 반지름(미로 기준)에 맞춘다. 폭발 미로가 켜져 있는 동안 동공 자리 크기를 넣는다.
-        /// </summary>
-        public float FitRadiusOverride { get; set; }
         public float TargetRadius => _fitMaze != null ? FitRadius() : Mathf.Lerp(_minRadius, _maxRadius, _person != null ? _person.Dilation : 0.5f);
 
         void OnEnable() { _drawnKey = int.MinValue; }
@@ -95,13 +91,12 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 미로 안쪽 원(FitRadiusOverride가 있으면 그 반지름)에 맞는 동공 반지름을 계산한다. 미로와 동공의 크기 배율이 달라도 화면에서 같은 크기가 되게 한다.
-        /// _fitMaze의 안쪽 반지름과 크기 배율, FitRadiusOverride, _fitInset, 이 오브젝트의 크기 배율을 사용하며, 동공 기준 반지름을 반환한다.
+        /// 미로 안쪽 원에 맞는 동공 반지름을 계산한다. 미로와 동공의 크기 배율이 달라도 화면에서 같은 크기가 되게 한다.
+        /// _fitMaze의 안쪽 반지름과 크기 배율, _fitInset, 이 오브젝트의 크기 배율을 사용하며, 동공 기준 반지름을 반환한다.
         /// </summary>
         private float FitRadius()
         {
-            float inner = FitRadiusOverride > 0f ? FitRadiusOverride : _fitMaze.InnerRadius;
-            float world = (inner - _fitInset) * Mathf.Abs(_fitMaze.transform.lossyScale.x);
+            float world = (_fitMaze.InnerRadius - _fitInset) * Mathf.Abs(_fitMaze.transform.lossyScale.x);
             return Mathf.Max(0f, world / Mathf.Max(1e-4f, Mathf.Abs(transform.lossyScale.x)));
         }
 

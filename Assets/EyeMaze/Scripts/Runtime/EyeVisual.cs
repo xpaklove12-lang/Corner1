@@ -100,8 +100,6 @@ namespace EyeMaze
         [NonSerialized] private float _emotionTearLevel;
 
         public float Focus { get => _focus; set => _focus = value; }
-        /// <summary>홍채 원판의 반지름. 원형 미로의 바깥 반지름에 원판 여백 절반을 더한 값이다.</summary>
-        public float IrisDiscRadius => (_maze != null ? _maze.OuterRadius : 3f) + _irisDiscPadding * 0.5f;
 
         /// <summary>감정 표현의 눈꺼풀 닫힘 (0~1). 깜빡임과 함께 있으면 큰 쪽으로 그린다.</summary>
         public float EmotionClosed { get => _emotionClosed; set => _emotionClosed = Mathf.Clamp01(value); }
