@@ -53,6 +53,8 @@ namespace EyeMaze
         public float WallAlpha { get => _wallAlpha; set => _wallAlpha = value; }
         public float Focus { get => _focus; set => _focus = value; }
         public Person Person => _person;
+        /// <summary>켜져 있으면 조건과 상관없이 모든 층 문을 지나갈 수 있다. 테스트 씬에서 쓴다.</summary>
+        public bool OpenAllGates { get; set; }
         // 연출 오브젝트가 같은 선 재질을 쓰도록 공개
         public Material LineMaterial => _lineMaterial;
 

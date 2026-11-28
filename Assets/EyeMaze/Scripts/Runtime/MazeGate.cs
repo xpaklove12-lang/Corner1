@@ -64,11 +64,14 @@ namespace EyeMaze
 
         /// <summary>
         /// 상대의 지금 상태로 이 문을 지나갈 수 있는지 판단한다.
-        /// p의 신뢰와 동공 열림, _requiredFlag를 사용하며, 지나갈 수 있으면 true를 반환한다.
+        /// p의 신뢰와 동공 열림, _requiredFlag, 미로의 OpenAllGates를 사용하며, 지나갈 수 있으면 true를 반환한다.
         /// </summary>
         public bool CanPass(Person p)
         {
             if (p == null) return true;
+            if (_maze == null) _maze = GetComponentInParent<IrisMaze>();
+            // 미로가 모든 문을 열어 두라고 하면 조건을 보지 않는다.
+            if (_maze != null && _maze.OpenAllGates) return true;
             // 여는 플래그가 적힌 문은 그 플래그로만 판단하고 신뢰는 보지 않는다.
             bool byFlag = !string.IsNullOrEmpty(_requiredFlag);
             // 안 좋은 말의 감점이 문을 막지 않도록 GateTrust로 판단

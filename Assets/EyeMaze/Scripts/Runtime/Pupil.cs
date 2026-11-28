@@ -40,6 +40,8 @@ namespace EyeMaze
         [NonSerialized] private float _emotionTrembleDistance;
         [NonSerialized] private float _emotionTrembleSpeed = 28f;
         [NonSerialized] private Vector2 _emotionShift;
+        // 시선을 피해 비켜나는 거리 (테스트 판의 회피 방어기제)
+        [NonSerialized] private Vector2 _dodgeShift;
 
         /// <summary>동공 떨림 세기 (0~1). 0이면 원래 자리로 돌아온다.</summary>
         public float Tremble { get => _tremble; set => _tremble = Mathf.Clamp01(value); }
@@ -49,6 +51,10 @@ namespace EyeMaze
         public float EmotionTrembleSpeed { get => _emotionTrembleSpeed; set => _emotionTrembleSpeed = value; }
         /// <summary>감정 표현의 시선 피함. 동공 위치에만 더하고 크기는 바꾸지 않는다.</summary>
         public Vector2 EmotionShift { get => _emotionShift; set => _emotionShift = value; }
+        /// <summary>시선을 피해 비켜나는 거리. 감정의 시선 피함과 함께 위치에만 더한다.</summary>
+        public Vector2 DodgeShift { get => _dodgeShift; set => _dodgeShift = value; }
+        /// <summary>지금 그려지는 동공 반지름 (동공 기준 단위)</summary>
+        public float ShownRadius => _shown < 0f ? TargetRadius : _shown;
         public float TargetRadius => Mathf.Lerp(_minRadius, _maxRadius, _person != null ? _person.Dilation : 0.5f);
 
         void OnEnable() { _drawnKey = int.MinValue; }
@@ -85,7 +91,7 @@ namespace EyeMaze
 
         /// <summary>
         /// 떨림 세기에 맞춰 동공을 원래 자리 주변으로 흔든다. 떨림이 끝나면 원래 자리로 되돌린다.
-        /// 휴식 신호 떨림과 감정 떨림 중 거리가 큰 쪽으로 흔들고, 감정의 시선 피함만큼 비켜 둔다.
+        /// 휴식 신호 떨림과 감정 떨림 중 거리가 큰 쪽으로 흔들고, 감정의 시선 피함과 회피 거리만큼 비켜 둔다.
         /// _tremble, _trembleDistance, _trembleSpeed, 감정 표현 값을 사용하며, Transform 위치와 _restPosition을 바꾼다.
         /// </summary>
         private void ApplyTremble()
@@ -95,7 +101,8 @@ namespace EyeMaze
             bool emotionWins = _emotionTrembleDistance > tearDistance;
             float distance = emotionWins ? _emotionTrembleDistance : tearDistance;
             float speed = emotionWins ? _emotionTrembleSpeed : _trembleSpeed;
-            if (distance <= 0f && _emotionShift == Vector2.zero)
+            Vector2 shift = _emotionShift + _dodgeShift;
+            if (distance <= 0f && shift == Vector2.zero)
             {
                 if (_trembling) transform.localPosition = _restPosition;
                 _trembling = false;
@@ -109,7 +116,7 @@ namespace EyeMaze
             // 떨림 거리와 빠르기를 큰 쪽 값으로 바꾸고 시선 피함을 더함
             float t = Time.time * speed;
             var offset = new Vector3(Mathf.PerlinNoise(t, 0f) - 0.5f, Mathf.PerlinNoise(0f, t) - 0.5f, 0f) * (2f * distance);
-            transform.localPosition = _restPosition + offset + (Vector3)_emotionShift;
+            transform.localPosition = _restPosition + offset + (Vector3)shift;
         }
     }
 }

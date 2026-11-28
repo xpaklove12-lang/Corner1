@@ -287,6 +287,19 @@ namespace EyeMaze
         public Mode CurrentMode => _mode;
         public bool AcceptInput { get => _acceptInput; set => _acceptInput = value; }
         public string Message { get => _message; set => _message = value; }
+        /// <summary>켜져 있으면 Space로 시선을 거두지 못하고 미로에 머문다. 테스트 씬에서 쓴다.</summary>
+        public bool GazeLocked { get; set; }
+        /// <summary>켜져 있으면 들여다보는 동안 부담감이 차지 않는다. 테스트 씬에서 쓴다.</summary>
+        public bool BurdenPaused { get; set; }
+        /// <summary>가장 반짝이는 파편에 닿았을 때 엔딩 대신 부를 처리. 비어 있으면 엔딩을 시작한다.</summary>
+        public Action CoreTouchOverride { get; set; }
+        /// <summary>
+        /// 시선 이동을 벽 판정 대신 계산하는 방법. (지금 미로 기준 위치, 이번 이동량)을 받아 새 위치를 돌려준다. 비어 있으면 미로 벽을 따른다.
+        /// 미로 없이 눈 하나로 하는 테스트 판에서 쓴다.
+        /// </summary>
+        public Func<Vector2, Vector2, Vector2> ArenaMove { get; set; }
+        /// <summary>지금 손님의 감정</summary>
+        public ClientEmotion Emotion => _emotion;
         public string IdleSituation => _activeCase != null && !string.IsNullOrEmpty(_activeCase.IdleSituation) ? _activeCase.IdleSituation : _idleSituation;
         /// <summary>지금 손님의 결말 목록 (엔딩 CSV가 바뀌면 바로 반영된다)</summary>
         public List<EndingDef> Endings => _activeCase != null ? _activeCase.Endings : _endings;
@@ -488,7 +501,7 @@ namespace EyeMaze
                 // 벽 변화 연출 중에는 깜빡임 시간을 세지 않는다.
                 if (_respawnEffectT < 0f) TickBlink(dt);
                 // 깜빡임 회전과 벽 변화 연출 중에는 부담감을 채우지 않음
-                if (Application.isPlaying && !_blinkTurning && !_wallChange.IsPlaying) TickBurden(dt);
+                if (Application.isPlaying && !_blinkTurning && !_wallChange.IsPlaying && !BurdenPaused) TickBurden(dt);
             }
             if (_reading) _readT += dt;
 
@@ -593,6 +606,7 @@ namespace EyeMaze
         {
             if (_mode == Mode.Ending) return;
             if (_mode == Mode.Gaze && _inAbyss) { _message = AbyssText; return; }
+            if (_mode == Mode.Gaze && GazeLocked) return;
             // 관찰을 멈출 때의 문구를 "관찰을 잠시 멈추고 생각에 잠긴다."로 변경
             if (_mode == Mode.Gaze) { ExitGaze(Strings.Get("msg.gaze_off")); return; }
             if (!CanGaze) return;
@@ -791,6 +805,12 @@ namespace EyeMaze
         public void MoveBy(Vector2 delta)
         {
             if (_maze == null || _cursor == null) return;
+            // 판 모드에서는 벽과 층을 보지 않고 정해진 방법으로만 움직인다.
+            if (ArenaMove != null)
+            {
+                if (_mode == Mode.Gaze) PlaceCursor(ArenaMove(_cursor.LocalPos, delta));
+                return;
+            }
             int steps = Mathf.Max(1, Mathf.CeilToInt(delta.magnitude / 0.04f));
             Vector2 step = delta / steps;
             for (int i = 0; i < steps && _mode == Mode.Gaze; i++)
@@ -813,6 +833,28 @@ namespace EyeMaze
             }
             OnMoved();
         }
+
+        /// <summary>
+        /// 시선을 미로 기준 위치로 바로 옮긴다.
+        /// p(미로 기준 위치)를 사용하며, 시선의 반지름과 각도를 바꾼다.
+        /// </summary>
+        public void PlaceCursor(Vector2 p)
+        {
+            _cursor.Radius = p.magnitude;
+            if (p.sqrMagnitude > 1e-8f) _cursor.Angle = Mathf.Repeat(Mathf.Atan2(p.y, p.x) * Mathf.Rad2Deg, 360f);
+        }
+
+        /// <summary>
+        /// 시선을 잠깐 번쩍이게 한다.
+        /// amount(0~1)를 사용하며, _bumpFlash를 바꾼다.
+        /// </summary>
+        public void FlashGaze(float amount) => _bumpFlash = Mathf.Max(_bumpFlash, Mathf.Clamp01(amount));
+
+        /// <summary>
+        /// 손님의 감정을 바꾸고 눈 표현을 천천히 그 감정으로 옮긴다.
+        /// emotion을 사용하며, 지금 감정과 눈 표현 전환 상태를 바꾼다.
+        /// </summary>
+        public void SetEmotion(ClientEmotion emotion) => ChangeEmotion(emotion);
 
         /// <summary>
         /// 파편을 읽은 뒤 지금 시선이 있는 층을 뺀 나머지 층의 벽을 무작위로 새로 만든다. Play 중에는 바뀌는 모습을 파문 교차 전환으로 보여 준다.
@@ -923,11 +965,12 @@ namespace EyeMaze
 
         /// <summary>
         /// 가장 반짝이는 파편에 닿아 마음이 들린다. 신뢰와 열쇠 파편에 따라 truth / half 엔딩이 된다.
-        /// 상대의 신뢰와 열쇠 파편을 사용하며, 엔딩을 시작한다.
+        /// 상대의 신뢰와 열쇠 파편을 사용하며, 엔딩을 시작한다. CoreTouchOverride가 있으면 엔딩 대신 그것을 부른다.
         /// </summary>
         public void TouchCore()
         {
             if (_core != null) _core.Touch();
+            if (CoreTouchOverride != null) { CoreTouchOverride(); return; }
             int trust = _person != null ? _person.Trust : 0;
             // key_flag가 정해져 있으면 그 파편을 주웠을 때만 충족된다. 파편을 못 찾았으면 충족되지 않는다.
             bool keyOk = string.IsNullOrEmpty(_keyFlag) ? _keyFragment == null || _keyFragment.Collected : _keyFragment != null && _keyFragment.Collected;
