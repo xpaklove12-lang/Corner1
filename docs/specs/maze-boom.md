@@ -60,6 +60,7 @@ flowchart TD
 - 터질 칸은 깜빡이지 않고 겨우 보이는 어두운 붉은빛에서 짙은 붉은빛까지만 천천히 달아오른다. 미로가 경고 색으로 덮여 보이지 않는다.
 - 터지는 순간 밝은 주황으로 확 부풀었다 돌아오고(자기 칸을 넘지 않는다), 빨강으로 식으며 사라진다.
 - 기본 순서는 체크 무늬, 대각선 줄 무늬(반복마다 한 칸씩 밀려남), 흩뿌림, 빠른 체크 무늬이고 한 바퀴는 약 30초다. 바퀴마다 조금씩 빨라진다(최대 1.6배).
+- 문을 열어 안쪽으로 들어갈수록 난이도 단계가 오른다. 외각은 1단계(빠르기 0.6배, 무늬가 고른 칸의 50%만 터짐), 내각 문을 열면 2단계(0.8배, 75%)이고 "폭발이 거세진다."가 문 열림 안내 아래에 뜬다. 빠지는 칸은 반복마다 다시 뽑힌다. 휩쓸려도 단계는 그대로이고 R로 다시 하면 1단계부터다. 단계 값은 프리팹에서 고친다.
 - 동공 자리와 원에 걸친 바깥 칸은 터지지 않는다.
 
 ### 휩쓸림 (BOOM-02)
@@ -160,7 +161,7 @@ flowchart TD
 
 | 기능 | 찾을 곳 |
 |---|---|
-| BOOM-01 | `MazeBoomField.EvaluateCells`, `MazeBoomField.DrawCells`, `BoomWave` |
+| BOOM-01 | `MazeBoomField.EvaluateCells`, `MazeBoomField.DrawCells`, `BoomWave`, `BoomStage` |
 | BOOM-02 | `MazeBoomField.CheckHit`, `EyeMazeDirector.WarpGazeTo` |
 | BOOM-03 | `MazeBoomField`, `EyeMazeDirector.GridOverride` |
 | BOOM-04 | `BoomSafeZone`, `MazeBoomField.CollectSafeZones` |

@@ -27,6 +27,7 @@ msg.maze_test_no_pattern,,,(테스트) 이 손님에게 상처 무늬가 없다.
 msg.boom_hit,,,폭발에 휩쓸렸다. ({hits}번째),,,폭발 미로에서 터진 칸에 휩쓸려 층 입구로 돌아갈 때. {hits} = 휩쓸린 횟수,,,
 msg.boom_gate_open,,,문이 열렸다.,,,폭발 미로에서 층 조각을 먹어 안쪽 문이 열릴 때,,,
 msg.boom_gate_locked,,,조각을 찾아야 열린다.,,,폭발 미로에서 조각을 먹기 전에 닫힌 문에 부딪힐 때,,,
+msg.boom_stage_up,,,폭발이 거세진다.,,,폭발 미로에서 문을 열어 폭발 난이도 단계가 오를 때 문 열림 안내 아래에 붙는다,,,
 msg.fragment,,,파편 — {title}\n{text},,,{title} {text} = 파편 이름/글 (Flags.csv),,,
 msg.no_talk_in_gaze,,,들여다보는 중에는 말할 수 없다. (Space로 관찰 중지),,,,,,
 msg.locked_choice,,,아직 모르는 이야기다. 눈 속에서 단서를 찾아야 한다.,,,??? 선택지를 골랐을 때,,,

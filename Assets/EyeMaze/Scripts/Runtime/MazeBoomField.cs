@@ -40,6 +40,12 @@ namespace EyeMaze
         [Tooltip("폭발 순서표. 시작 시각은 한 바퀴 안에서의 시각이다")]
         [SerializeField] private List<BoomWave> _waves = CreateDefaultWaves();
 
+        [Header("난이도 단계")]
+        [Tooltip("문을 하나 열 때마다 다음 단계로 오른다. 처음(외각)은 0번이고, 목록 끝에서 멈춘다")]
+        [SerializeField] private List<BoomStage> _stages = new List<BoomStage> { new BoomStage(0.6f, 0.5f), new BoomStage(0.8f, 0.75f) };
+        [Tooltip("공용 문구 파일에 msg.boom_stage_up이 없을 때 쓰는 글. 단계가 오를 때 문 열림 안내 아래에 붙는다")]
+        [SerializeField, TextArea(1, 2)] private string _stageUpMessage = "폭발이 거세진다.";
+
         [Header("휩쓸림")]
         [Tooltip("켜면 가장 최근에 밟은 안전지대로 돌아간다. 끄면 언제나 시작 칸으로 돌아간다")]
         [SerializeField] private bool _respawnAtLastSafe = true;
@@ -101,6 +107,8 @@ namespace EyeMaze
         private float _graceT;
         private int _hits;
         private Vector2Int _checkpoint;
+        // 지금 난이도 단계(_stages 번호)
+        private int _stage;
         // 칸마다 안전지대 오브젝트가 놓였는지. 매 프레임 다시 모아 Play 중에 옮겨도 바로 반영한다.
         private bool[,] _safeMap;
 
@@ -108,6 +116,7 @@ namespace EyeMaze
         public int Hits => _hits;
 
         private IrisMaze Maze => _director.Maze;
+        private BoomStage Stage => _stages.Count > 0 ? _stages[Mathf.Clamp(_stage, 0, _stages.Count - 1)] : null;
 
         // 깜빡임, 읽기, 회상, 창, 탈출 뒤에는 무늬 시간이 멈춘다.
         private bool IsPaused => !_director.AcceptInput || _director.IsReading || _director.IsBlinking
@@ -174,6 +183,7 @@ namespace EyeMaze
             _loop = 0;
             _hits = 0;
             _graceT = 0f;
+            _stage = 0;
             _square.Generate();
             _square.Active = true;
             SetCheckpoint(_square.StartCell);
@@ -218,12 +228,13 @@ namespace EyeMaze
         }
 
         /// <summary>
-        /// 무늬 시간을 배속만큼 진행하고, 한 바퀴가 끝나면 처음으로 돌리며 바퀴 수를 올린다. 휩쓸림 유예 시간도 줄인다.
+        /// 무늬 시간을 배속(바퀴 배속에 난이도 단계 빠르기를 곱한 값)만큼 진행하고, 한 바퀴가 끝나면 처음으로 돌리며 바퀴 수를 올린다. 휩쓸림 유예 시간도 줄인다.
         /// dt, _loop, _speedUpPerLoop, _maxSpeed, 순서표 길이를 사용하며, _time, _loop, _graceT를 바꾼다.
         /// </summary>
         private void Advance(float dt)
         {
             float speed = Mathf.Min(_maxSpeed, 1f + _loop * _speedUpPerLoop);
+            if (Stage != null) speed *= Stage.Speed;
             _time += dt * speed;
             float length = LoopLength();
             if (length > 0f && _time >= length)
@@ -247,7 +258,8 @@ namespace EyeMaze
 
         /// <summary>
         /// 지금 무늬 시간에서 칸마다 경고 진행과 폭발 뒤 남은 비율을 계산한다. 여러 무늬가 겹치면 큰 값을 쓴다.
-        /// _time, _waves, 사각 미로의 칸 수를 사용하며, _warn과 _burst를 바꾼다. 동공 자리와 원 밖의 칸은 터지지 않는다.
+        /// 난이도 단계의 터지는 칸 비율만큼만 터뜨린다.
+        /// _time, _waves, 난이도 단계, 사각 미로의 칸 수를 사용하며, _warn과 _burst를 바꾼다. 동공 자리와 원 밖의 칸은 터지지 않는다.
         /// </summary>
         private void EvaluateCells()
         {
@@ -256,8 +268,10 @@ namespace EyeMaze
             for (int x = 0; x < columns; x++)
                 for (int y = 0; y < rows; y++) { _warn[x, y] = NONE; _burst[x, y] = NONE; }
 
-            foreach (BoomWave w in _waves)
+            float ratio = Stage != null ? Stage.CellRatio : 1f;
+            for (int i = 0; i < _waves.Count; i++)
             {
+                BoomWave w = _waves[i];
                 if (w == null) continue;
                 for (int k = 0; k < w.Repeat; k++)
                 {
@@ -274,6 +288,8 @@ namespace EyeMaze
                             var cell = new Vector2Int(x, y);
                             // 사각 미로의 조각 칸과 문 양쪽 칸은 안전지대로 칠하지 않지만 터지지도 않는다.
                             if (!_square.IsMazeCell(cell) || IsSafe(cell) || _square.IsProtected(cell) || !w.Covers(x, y, k)) continue;
+                            // 난이도 단계 비율만큼만 터지고, 빠지는 칸은 반복마다 다시 뽑는다.
+                            if (ratio < 1f && Hash01(x, y, k, i) >= ratio) continue;
                             if (value > target[x, y]) target[x, y] = value;
                         }
                     }
@@ -519,12 +535,36 @@ namespace EyeMaze
 
         /// <summary>
         /// 시선이 있는 칸에 아직 먹지 않은 조각이 있으면 먹고, 안쪽 문이 열렸다고 알린다. 동공 안에서는 넘어간다.
-        /// 시선 칸과 사각 미로의 조각을 사용하며, 조각과 문 상태, 디렉터 문구를 바꾼다.
+        /// 연 문 수만큼 난이도 단계를 올리고, 단계가 올랐으면 단계 오름 안내를 문 열림 안내 아래에 붙인다.
+        /// 시선 칸과 사각 미로의 조각, 연 문 수, _stages를 사용하며, 조각과 문 상태, _stage, 디렉터 문구를 바꾼다.
         /// </summary>
         private void TakeShard()
         {
-            if (_director.InAbyss) return;
-            if (_square.TryTakeShard(CursorCell())) _director.Message = _square.GateOpenMessage;
+            if (_director.InAbyss || !_square.TryTakeShard(CursorCell())) return;
+            string message = _square.GateOpenMessage;
+            int stage = Mathf.Min(_square.OpenedGateCount, _stages.Count - 1);
+            if (stage > _stage)
+            {
+                _stage = stage;
+                message += "\n" + Strings.Get("msg.boom_stage_up", _stageUpMessage);
+            }
+            _director.Message = message;
+        }
+
+        /// <summary>
+        /// 칸 하나가 난이도 단계에서 빠질지 정하는 뽑기 값을 계산한다. 같은 칸, 반복, 무늬면 언제나 같은 값이다.
+        /// x, y(칸), repeat, wave(무늬 번호)를 사용하며, 0 이상 1 미만의 값을 반환한다.
+        /// </summary>
+        private static float Hash01(int x, int y, int repeat, int wave)
+        {
+            unchecked
+            {
+                uint h = (uint)x * 2654435761u + (uint)y * 2246822519u + (uint)repeat * 3266489917u + (uint)wave * 668265263u + 374761393u;
+                h = (h ^ (h >> 15)) * 2246822519u;
+                h = (h ^ (h >> 13)) * 3266489917u;
+                h ^= h >> 16;
+                return (h & 0xFFFFFFu) / 16777216f;
+            }
         }
 
         /// <summary>

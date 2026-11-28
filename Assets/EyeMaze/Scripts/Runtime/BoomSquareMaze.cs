@@ -118,6 +118,16 @@ namespace EyeMaze
         public int GeometryKey => HashCode.Combine(_cellSize, _outerRadius, _innerRadius);
         /// <summary>켜져 있으면 사각 벽을 그리고 원형 미로의 벽 그림을 숨긴다. 폭발 미로가 들여다보는 동안 켠다.</summary>
         public bool Active { get; set; }
+        /// <summary>지금까지 연 문 수. 폭발 난이도 단계에 쓴다.</summary>
+        public int OpenedGateCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (Gate g in _gates) if (g.Open) count++;
+                return count;
+            }
+        }
         /// <summary>문이 열릴 때 띄우는 안내</summary>
         public string GateOpenMessage => Strings.Get("msg.boom_gate_open", _gateOpenMessage);
         /// <summary>닫힌 문에 부딪혔을 때 띄우는 안내</summary>
